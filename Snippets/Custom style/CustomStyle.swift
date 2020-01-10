@@ -20,7 +20,7 @@ class CustomStyle {
     static let seventhShade = UIColor(#colorLiteral(red: 0.1176470588, green: 0.1294117647, blue: 0.1568627451, alpha: 1))
     static let primaryblack = UIColor(#colorLiteral(red: 0.1129432991, green: 0.1129470244, blue: 0.1129450426, alpha: 1))
     
-    // MARK: Onbording
+    // MARK: Onboarding
     
     static func styleRoundedSignUpButton(color: UIColor, image: UIImage ,button: UIButton) {
         button.backgroundColor = color
@@ -29,7 +29,7 @@ class CustomStyle {
         button.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 10)
     }
     
-    // Onbording text style
+    // Onboarding text style
     
     static func styleSignupHeading(view: UIView, title: String) -> UILabel {
         let label = UILabel()
@@ -62,6 +62,23 @@ class CustomStyle {
         label.attributedText = NSAttributedString(string: title, attributes: attributes)
         
         return label
+    }
+    
+    static func styleSignUpTextInput(view: UIView, placeholder: String) -> UITextField {
+        let textField =  UITextField(frame: CGRect(x: 0, y: 30, width: view.frame.width, height: 40))
+        textField.placeholder = placeholder
+        textField.backgroundColor = self.secondShade
+        textField.font = UIFont.systemFont(ofSize: 16)
+        textField.borderStyle = UITextField.BorderStyle.none
+        textField.autocorrectionType = UITextAutocorrectionType.no
+        textField.keyboardType = UIKeyboardType.default
+        textField.returnKeyType = UIReturnKeyType.done
+        textField.clearButtonMode = UITextField.ViewMode.whileEditing
+        textField.contentVerticalAlignment = UIControl.ContentVerticalAlignment.center
+        textField.layer.cornerRadius = 6.0
+        textField.layer.masksToBounds = true
+        textField.setLeftPadding(20)
+        return textField
     }
     
 }
