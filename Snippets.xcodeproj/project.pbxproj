@@ -7,17 +7,27 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4801619823C7BE500038318B /* CustomStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4801619723C7BE500038318B /* CustomStyle.swift */; };
+		48B8687823C7070A00EFEB88 /* SignUpNavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48B8687723C7070A00EFEB88 /* SignUpNavigationController.swift */; };
+		48B8687C23C7131A00EFEB88 /* CreateUserController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48B8687B23C7131A00EFEB88 /* CreateUserController.swift */; };
+		48B8688023C744B800EFEB88 /* CreateUsername.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48B8687F23C744B800EFEB88 /* CreateUsername.swift */; };
+		48B8688423C7586A00EFEB88 /* AddEmail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48B8688323C7586A00EFEB88 /* AddEmail.swift */; };
 		48DC720F23C6E998002AB21F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48DC720E23C6E998002AB21F /* AppDelegate.swift */; };
-		48DC721123C6E998002AB21F /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48DC721023C6E998002AB21F /* ViewController.swift */; };
+		48DC721123C6E998002AB21F /* InitialSignupController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48DC721023C6E998002AB21F /* InitialSignupController.swift */; };
 		48DC721423C6E998002AB21F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 48DC721223C6E998002AB21F /* Main.storyboard */; };
 		48DC721623C6E999002AB21F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 48DC721523C6E999002AB21F /* Assets.xcassets */; };
 		48DC721923C6E999002AB21F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 48DC721723C6E999002AB21F /* LaunchScreen.storyboard */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		4801619723C7BE500038318B /* CustomStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomStyle.swift; sourceTree = "<group>"; };
+		48B8687723C7070A00EFEB88 /* SignUpNavigationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignUpNavigationController.swift; sourceTree = "<group>"; };
+		48B8687B23C7131A00EFEB88 /* CreateUserController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateUserController.swift; sourceTree = "<group>"; };
+		48B8687F23C744B800EFEB88 /* CreateUsername.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateUsername.swift; sourceTree = "<group>"; };
+		48B8688323C7586A00EFEB88 /* AddEmail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddEmail.swift; sourceTree = "<group>"; };
 		48DC720B23C6E998002AB21F /* Snippets.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Snippets.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		48DC720E23C6E998002AB21F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		48DC721023C6E998002AB21F /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		48DC721023C6E998002AB21F /* InitialSignupController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InitialSignupController.swift; sourceTree = "<group>"; };
 		48DC721323C6E998002AB21F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		48DC721523C6E999002AB21F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		48DC721823C6E999002AB21F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
@@ -35,6 +45,42 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		4801619923C7F5FC0038318B /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				4801619B23C7F69A0038318B /* Views */,
+				4801619C23C7F6B20038318B /* Controllers */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		4801619A23C7F6170038318B /* Custom style */ = {
+			isa = PBXGroup;
+			children = (
+				4801619723C7BE500038318B /* CustomStyle.swift */,
+			);
+			path = "Custom style";
+			sourceTree = "<group>";
+		};
+		4801619B23C7F69A0038318B /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				48B8687F23C744B800EFEB88 /* CreateUsername.swift */,
+				48B8688323C7586A00EFEB88 /* AddEmail.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		4801619C23C7F6B20038318B /* Controllers */ = {
+			isa = PBXGroup;
+			children = (
+				48DC721023C6E998002AB21F /* InitialSignupController.swift */,
+				48B8687B23C7131A00EFEB88 /* CreateUserController.swift */,
+				48B8687723C7070A00EFEB88 /* SignUpNavigationController.swift */,
+			);
+			path = Controllers;
+			sourceTree = "<group>";
+		};
 		48DC720223C6E998002AB21F = {
 			isa = PBXGroup;
 			children = (
@@ -55,7 +101,8 @@
 			isa = PBXGroup;
 			children = (
 				48DC720E23C6E998002AB21F /* AppDelegate.swift */,
-				48DC721023C6E998002AB21F /* ViewController.swift */,
+				4801619A23C7F6170038318B /* Custom style */,
+				4801619923C7F5FC0038318B /* Onboarding */,
 				48DC721223C6E998002AB21F /* Main.storyboard */,
 				48DC721523C6E999002AB21F /* Assets.xcassets */,
 				48DC721723C6E999002AB21F /* LaunchScreen.storyboard */,
@@ -135,8 +182,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				48DC721123C6E998002AB21F /* ViewController.swift in Sources */,
+				48B8687C23C7131A00EFEB88 /* CreateUserController.swift in Sources */,
+				4801619823C7BE500038318B /* CustomStyle.swift in Sources */,
+				48B8688023C744B800EFEB88 /* CreateUsername.swift in Sources */,
+				48DC721123C6E998002AB21F /* InitialSignupController.swift in Sources */,
+				48B8688423C7586A00EFEB88 /* AddEmail.swift in Sources */,
 				48DC720F23C6E998002AB21F /* AppDelegate.swift in Sources */,
+				48B8687823C7070A00EFEB88 /* SignUpNavigationController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
