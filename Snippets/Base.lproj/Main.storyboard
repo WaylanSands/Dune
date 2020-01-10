@@ -102,10 +102,13 @@
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="o52-g9-V4M">
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="o52-g9-V4M">
                                 <rect key="frame" x="16" y="304" width="343" height="40"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <color key="backgroundColor" red="0.25490196079999999" green="0.4431372549" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="40" id="PI3-NZ-d79"/>
+                                    <constraint firstAttribute="width" constant="343" id="n37-Nw-Jxs"/>
+                                </constraints>
                                 <fontDescription key="fontDescription" type="system" weight="medium" pointSize="16"/>
                                 <state key="normal" title="Next">
                                     <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
@@ -114,8 +117,18 @@
                                     <action selector="nextSelected:" destination="4jx-AL-bfx" eventType="touchUpInside" id="l2Q-lg-qUa"/>
                                 </connections>
                             </button>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" image="white-lines-start" translatesAutoresizingMaskIntoConstraints="NO" id="vuW-nr-fuJ">
+                                <rect key="frame" x="175" y="93" width="25" height="41"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                            </imageView>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        <constraints>
+                            <constraint firstItem="o52-g9-V4M" firstAttribute="centerX" secondItem="waw-56-RNH" secondAttribute="centerX" id="TM9-fO-k6e"/>
+                            <constraint firstItem="o52-g9-V4M" firstAttribute="leading" secondItem="waw-56-RNH" secondAttribute="leading" constant="16" id="fMn-pe-uQc"/>
+                            <constraint firstItem="o52-g9-V4M" firstAttribute="top" secondItem="waw-56-RNH" secondAttribute="top" constant="240" id="oH9-QX-u6i"/>
+                            <constraint firstItem="waw-56-RNH" firstAttribute="trailing" secondItem="o52-g9-V4M" secondAttribute="trailing" constant="16" id="rKm-3e-6fm"/>
+                        </constraints>
                         <viewLayoutGuide key="safeArea" id="waw-56-RNH"/>
                     </view>
                     <navigationItem key="navigationItem" id="6qZ-Pz-wma">
@@ -153,5 +166,6 @@
     </scenes>
     <resources>
         <image name="white listens" width="21" height="33"/>
+        <image name="white-lines-start" width="25" height="41"/>
     </resources>
 </document>
