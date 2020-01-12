@@ -1,16 +1,16 @@
 //
-//  CreatePasswordView.swift
+//  AddBirthDate.swift
 //  Snippets
 //
-//  Created by Waylan Sands on 9/1/20.
+//  Created by Waylan Sands on 12/1/20.
 //  Copyright © 2020 Waylan Sands. All rights reserved.
 //
 
 import UIKit
 
-class AddEmail: UIView {
+class AddBirthDate: UIView {
     
-    var nextButtonTopAnchor: NSLayoutYAxisAnchor?
+    var authSuccess = false
     
     //initWithFrame to init view from code
     override init(frame: CGRect) {
@@ -23,20 +23,16 @@ class AddEmail: UIView {
         super.init(coder: aDecoder)
         setupView()
     }
-    
     //common func to init our view
     func setupView() {
-        let headingLabel = CustomStyle.styleSignupHeading(view: self, title: "Add your email address")
-        let subHeadingLabel = CustomStyle.styleSignupSubheading(view: self, title: "You’ll need to confirm this later")
-        let userTextField = CustomStyle.styleSignUpTextField(view: self, placeholder: "Email")
+        let headingLabel = CustomStyle.styleSignupHeading(view: self, title: "Add your date of birth")
+        let subHeadingLabel = CustomStyle.styleSignupSubheading(view: self, title: "This won’t be part of your public profile.")
+        let userTextField = CustomStyle.styleSignUpTextField(view: self, placeholder: "")
         userTextField.delegate = self
         
         addSubview(userTextField)
         addSubview(headingLabel)
         addSubview(subHeadingLabel)
-        
-        userTextField.becomeFirstResponder()
-        
         
         headingLabel.translatesAutoresizingMaskIntoConstraints = false
         subHeadingLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -52,17 +48,19 @@ class AddEmail: UIView {
             userTextField.heightAnchor.constraint(equalToConstant: 40),
             ])
     }
-    
-    func remove(_: Bool) {
-        self.removeFromSuperview()
-    }
 }
 
-extension AddEmail: UITextFieldDelegate {
+extension AddBirthDate: UITextFieldDelegate {
     func textFieldDidEndEditing(_ textField: UITextField) {
     }
     
     func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
+        
+        if textField.text! == "Code" {
+            authSuccess = true
+        }
+        
+        print("\(textField.text!)")
         return true
     }
 }

@@ -64,7 +64,7 @@ class CustomStyle {
         return label
     }
     
-    static func styleSignUpTextInput(view: UIView, placeholder: String) -> UITextField {
+    static func styleSignUpTextField(view: UIView, placeholder: String) -> UITextField {
         let textField =  UITextField(frame: CGRect(x: 0, y: 30, width: view.frame.width, height: 40))
         textField.placeholder = placeholder
         textField.backgroundColor = self.secondShade

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="14490.70" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="Xz3-Rk-5rg">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="14490.70" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
     <device id="retina4_7" orientation="portrait">
         <adaptation id="fullscreen"/>
     </device>
@@ -103,7 +103,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="o52-g9-V4M">
-                                <rect key="frame" x="16" y="304" width="343" height="40"/>
+                                <rect key="frame" x="16" y="310" width="343" height="40"/>
                                 <color key="backgroundColor" red="0.25490196079999999" green="0.4431372549" blue="1" alpha="1" colorSpace="calibratedRGB"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="40" id="PI3-NZ-d79"/>
@@ -114,19 +114,27 @@
                                     <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 </state>
                                 <connections>
-                                    <action selector="nextSelected:" destination="4jx-AL-bfx" eventType="touchUpInside" id="l2Q-lg-qUa"/>
+                                    <action selector="nextButtonPress" destination="4jx-AL-bfx" eventType="touchUpInside" id="eGY-Y5-Xls"/>
                                 </connections>
                             </button>
                             <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" image="white-lines-start" translatesAutoresizingMaskIntoConstraints="NO" id="vuW-nr-fuJ">
                                 <rect key="frame" x="175" y="93" width="25" height="41"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                             </imageView>
+                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="CAB-Eb-BfB">
+                                <rect key="frame" x="24" y="48" width="30" height="30"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <color key="tintColor" red="0.1176470588" green="0.12941176469999999" blue="0.15686274510000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <connections>
+                                    <action selector="backButtonPress" destination="4jx-AL-bfx" eventType="touchUpInside" id="qHI-QC-nvg"/>
+                                </connections>
+                            </button>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <constraints>
                             <constraint firstItem="o52-g9-V4M" firstAttribute="centerX" secondItem="waw-56-RNH" secondAttribute="centerX" id="TM9-fO-k6e"/>
                             <constraint firstItem="o52-g9-V4M" firstAttribute="leading" secondItem="waw-56-RNH" secondAttribute="leading" constant="16" id="fMn-pe-uQc"/>
-                            <constraint firstItem="o52-g9-V4M" firstAttribute="top" secondItem="waw-56-RNH" secondAttribute="top" constant="240" id="oH9-QX-u6i"/>
+                            <constraint firstItem="o52-g9-V4M" firstAttribute="top" secondItem="waw-56-RNH" secondAttribute="top" constant="290" id="oH9-QX-u6i"/>
                             <constraint firstItem="waw-56-RNH" firstAttribute="trailing" secondItem="o52-g9-V4M" secondAttribute="trailing" constant="16" id="rKm-3e-6fm"/>
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="waw-56-RNH"/>
@@ -135,33 +143,13 @@
                         <barButtonItem key="backBarButtonItem" title=" " id="pcj-EC-OKG"/>
                     </navigationItem>
                     <connections>
+                        <outlet property="backButton" destination="CAB-Eb-BfB" id="FOw-FM-PPa"/>
                         <outlet property="nextButton" destination="o52-g9-V4M" id="weA-AV-eJ0"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="pch-ed-lN6" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="2760.8000000000002" y="27.436281859070466"/>
-        </scene>
-        <!--Sign Up Navigation Controller-->
-        <scene sceneID="J9t-2j-aJO">
-            <objects>
-                <navigationController automaticallyAdjustsScrollViewInsets="NO" id="Xz3-Rk-5rg" customClass="SignUpNavigationController" customModule="Snippets" customModuleProvider="target" sceneMemberID="viewController">
-                    <toolbarItems/>
-                    <navigationBar key="navigationBar" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" id="D5a-hk-Sfo">
-                        <rect key="frame" x="0.0" y="20" width="375" height="44"/>
-                        <autoresizingMask key="autoresizingMask"/>
-                    </navigationBar>
-                    <nil name="viewControllers"/>
-                    <toolbar key="toolbar" opaque="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" id="4hs-OC-V47">
-                        <autoresizingMask key="autoresizingMask"/>
-                    </toolbar>
-                    <connections>
-                        <segue destination="BYZ-38-t0r" kind="relationship" relationship="rootViewController" id="InI-OM-mYz"/>
-                    </connections>
-                </navigationController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="jMj-EN-btQ" userLabel="First Responder" sceneMemberID="firstResponder"/>
-            </objects>
-            <point key="canvasLocation" x="1126" y="27"/>
         </scene>
     </scenes>
     <resources>

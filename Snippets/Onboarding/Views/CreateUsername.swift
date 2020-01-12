@@ -10,6 +10,8 @@ import UIKit
 
 class CreateUsername: UIView {
     
+    var authSuccess = false
+    
             //initWithFrame to init view from code
     override init(frame: CGRect) {
             super.init(frame: frame)
@@ -28,14 +30,13 @@ class CreateUsername: UIView {
             Create a username for your new account.
             You can always change it later
             """)
-            let userTextField = CustomStyle.styleSignUpTextInput(view: self, placeholder: "Username")
+            let userTextField = CustomStyle.styleSignUpTextField(view: self, placeholder: "Username")
+            userTextField.delegate = self
             
             addSubview(userTextField)
             addSubview(headingLabel)
             addSubview(subHeadingLabel)
             
-            userTextField.becomeFirstResponder()
-
             
             headingLabel.translatesAutoresizingMaskIntoConstraints = false
             subHeadingLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -51,15 +52,19 @@ class CreateUsername: UIView {
                 userTextField.heightAnchor.constraint(equalToConstant: 40),
                 ])
         }
-    
-        func remove(_: Bool) {
-            self.removeFromSuperview()
-        }
-    
-    func transitionOut() {
-        UIView.transition(with: self, duration: 0.5, options: [], animations: {self.frame.origin.x += -400}, completion: {(value: Bool) in
-            self.removeFromSuperview()
-        })
+}
+
+extension CreateUsername: UITextFieldDelegate {
+    func textFieldDidEndEditing(_ textField: UITextField) {
     }
     
+    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
+        
+        if textField.text! == "Code" {
+            authSuccess = true
+        }
+        
+        print("\(textField.text!)")
+        return true
+    }
 }
