@@ -26,7 +26,7 @@ class CustomStyle {
         button.backgroundColor = color
         button.layer.cornerRadius = 20.0
         button.setImage(image, for: .normal)
-        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 10)
+        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 20)
     }
     
     // Onboarding text style
@@ -64,10 +64,10 @@ class CustomStyle {
         return label
     }
     
-    static func styleSignUpTextField(view: UIView, placeholder: String) -> UITextField {
+    static func styleSignUpTextField(color: UIColor, view: UIView, placeholder: String) -> UITextField {
         let textField =  UITextField(frame: CGRect(x: 0, y: 30, width: view.frame.width, height: 40))
         textField.placeholder = placeholder
-        textField.backgroundColor = self.secondShade
+        textField.backgroundColor = color
         textField.font = UIFont.systemFont(ofSize: 16)
         textField.borderStyle = UITextField.BorderStyle.none
         textField.autocorrectionType = UITextAutocorrectionType.no

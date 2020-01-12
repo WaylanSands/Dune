@@ -11,6 +11,7 @@ import UIKit
 class AddBirthDate: UIView {
     
     var authSuccess = false
+    var nextButtonDelegate: NextButtonDelegate!
     
     //initWithFrame to init view from code
     override init(frame: CGRect) {
@@ -27,7 +28,7 @@ class AddBirthDate: UIView {
     func setupView() {
         let headingLabel = CustomStyle.styleSignupHeading(view: self, title: "Add your date of birth")
         let subHeadingLabel = CustomStyle.styleSignupSubheading(view: self, title: "This won’t be part of your public profile.")
-        let userTextField = CustomStyle.styleSignUpTextField(view: self, placeholder: "")
+        let userTextField = CustomStyle.styleSignUpTextField(color: CustomStyle.secondShade, view: self, placeholder: "")
         userTextField.delegate = self
         
         addSubview(userTextField)
@@ -39,9 +40,10 @@ class AddBirthDate: UIView {
         userTextField.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
+            headingLabel.centerXAnchor.constraint(equalTo: self.centerXAnchor),
+            headingLabel.centerYAnchor.constraint(equalTo: self.topAnchor, constant:30.0),
             subHeadingLabel.topAnchor.constraint(equalTo: headingLabel.bottomAnchor, constant: 10.0),
             subHeadingLabel.centerXAnchor.constraint(equalTo: self.centerXAnchor),
-            headingLabel.centerXAnchor.constraint(equalTo: self.centerXAnchor),
             userTextField.bottomAnchor.constraint(equalTo:self.bottomAnchor, constant: -12.0),
             userTextField.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 16.0),
             userTextField.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -16.0),

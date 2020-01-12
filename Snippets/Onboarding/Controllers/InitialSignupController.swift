@@ -10,7 +10,8 @@ import UIKit
 
 class InitialSignupController: UIViewController {
     
-    
+    lazy var signInController = SignInController()
+
     @IBOutlet weak var emailSignUpOutlet: UIButton!
     @IBOutlet weak var facebookSignUpOutlet: UIButton!
     @IBOutlet weak var appleSignUpOutlet: UIButton!
@@ -25,5 +26,4 @@ class InitialSignupController: UIViewController {
     
     @IBAction func emailSignUp(_ sender: UIButton) {
     }
-    
 }

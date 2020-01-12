@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		4801619823C7BE500038318B /* CustomStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4801619723C7BE500038318B /* CustomStyle.swift */; };
 		480161A123C84EC60038318B /* UsernameDataModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 480161A023C84EC60038318B /* UsernameDataModel.swift */; };
+		480485E223CBB60400F8CA89 /* UIViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 480485E123CBB60400F8CA89 /* UIViewController.swift */; };
+		48A4E0E823CAFE4300A58F61 /* SignInController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48A4E0E723CAFE4300A58F61 /* SignInController.swift */; };
 		48B8687C23C7131A00EFEB88 /* CreateUserController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48B8687B23C7131A00EFEB88 /* CreateUserController.swift */; };
 		48B8688023C744B800EFEB88 /* CreateUsername.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48B8687F23C744B800EFEB88 /* CreateUsername.swift */; };
 		48B8688423C7586A00EFEB88 /* AddEmail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48B8688323C7586A00EFEB88 /* AddEmail.swift */; };
@@ -24,6 +26,8 @@
 /* Begin PBXFileReference section */
 		4801619723C7BE500038318B /* CustomStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomStyle.swift; sourceTree = "<group>"; };
 		480161A023C84EC60038318B /* UsernameDataModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsernameDataModel.swift; sourceTree = "<group>"; };
+		480485E123CBB60400F8CA89 /* UIViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIViewController.swift; sourceTree = "<group>"; };
+		48A4E0E723CAFE4300A58F61 /* SignInController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignInController.swift; sourceTree = "<group>"; };
 		48B8687B23C7131A00EFEB88 /* CreateUserController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateUserController.swift; sourceTree = "<group>"; };
 		48B8687F23C744B800EFEB88 /* CreateUsername.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateUsername.swift; sourceTree = "<group>"; };
 		48B8688323C7586A00EFEB88 /* AddEmail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddEmail.swift; sourceTree = "<group>"; };
@@ -52,6 +56,7 @@
 		4801619923C7F5FC0038318B /* Onboarding */ = {
 			isa = PBXGroup;
 			children = (
+				480485E023CBB5AF00F8CA89 /* Extensions */,
 				4801619F23C849CF0038318B /* Models */,
 				4801619B23C7F69A0038318B /* Views */,
 				4801619C23C7F6B20038318B /* Controllers */,
@@ -83,6 +88,7 @@
 			children = (
 				48DC721023C6E998002AB21F /* InitialSignupController.swift */,
 				48B8687B23C7131A00EFEB88 /* CreateUserController.swift */,
+				48A4E0E723CAFE4300A58F61 /* SignInController.swift */,
 			);
 			path = Controllers;
 			sourceTree = "<group>";
@@ -93,6 +99,14 @@
 				480161A023C84EC60038318B /* UsernameDataModel.swift */,
 			);
 			path = Models;
+			sourceTree = "<group>";
+		};
+		480485E023CBB5AF00F8CA89 /* Extensions */ = {
+			isa = PBXGroup;
+			children = (
+				480485E123CBB60400F8CA89 /* UIViewController.swift */,
+			);
+			path = Extensions;
 			sourceTree = "<group>";
 		};
 		48DC720223C6E998002AB21F = {
@@ -199,6 +213,8 @@
 				48B8687C23C7131A00EFEB88 /* CreateUserController.swift in Sources */,
 				4801619823C7BE500038318B /* CustomStyle.swift in Sources */,
 				48B8688023C744B800EFEB88 /* CreateUsername.swift in Sources */,
+				480485E223CBB60400F8CA89 /* UIViewController.swift in Sources */,
+				48A4E0E823CAFE4300A58F61 /* SignInController.swift in Sources */,
 				48C084E123CA7166009F417F /* AddBirthDate.swift in Sources */,
 				48C084DF23CA7148009F417F /* CreatePassword.swift in Sources */,
 				48DC721123C6E998002AB21F /* InitialSignupController.swift in Sources */,

@@ -8,17 +8,22 @@
 
 import UIKit
 
+protocol NextButtonDelegate {
+    func activeNextButton(_: Bool)
+}
+
 class CreateUserController: UIViewController {
 
     @IBOutlet weak var nextButton: UIButton!
     @IBOutlet weak var backButton: UIButton!
+    @IBOutlet weak var progressBar: UIImageView!
     
     lazy var screenWidth = self.view.frame.size.width
     
-    lazy var createUsername = CreateUsername(frame: CGRect(x: 0, y: 150, width: self.screenWidth, height: 180))
-    lazy var addEmail = AddEmail(frame: CGRect(x: self.screenWidth, y: 150, width: self.screenWidth, height: 180))
-    lazy var createPassword = CreatePassword(frame: CGRect(x: self.screenWidth, y: 150, width: self.screenWidth, height: 180))
-    lazy var addBirthDate = AddBirthDate(frame: CGRect(x: self.screenWidth, y: 150, width: self.view.frame.size.width, height: 180))
+    lazy var createUsername = CreateUsername(frame: CGRect(x: 0, y: 190, width: self.screenWidth, height: 180))
+    lazy var addEmail = AddEmail(frame: CGRect(x: self.screenWidth, y: 190, width: self.screenWidth, height: 180))
+    lazy var createPassword = CreatePassword(frame: CGRect(x: self.screenWidth, y: 190, width: self.screenWidth, height: 180))
+    lazy var addBirthDate = AddBirthDate(frame: CGRect(x: self.screenWidth, y: 190, width: self.view.frame.size.width, height: 180))
     
     lazy var currentView: UIView = createUsername
 
@@ -28,17 +33,23 @@ class CreateUserController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        nextButton.backgroundColor = CustomStyle.primaryBlue.withAlphaComponent(0.7)
         self.view.addSubview(createUsername)
+        createUsername.nextButtonDelegate = self
         self.view.addSubview(addEmail)
+         addEmail.nextButtonDelegate = self
         self.view.addSubview(createPassword)
+         createPassword.nextButtonDelegate = self
         self.view.addSubview(addBirthDate)
-        
+         createUsername.nextButtonDelegate = self
+//        backButton.setImage(#imageLiteral(resourceName: "back-button-blk"), for: .normal)
+        nextButton.backgroundColor = CustomStyle.primaryBlue.withAlphaComponent(0.7)
         nextButton.layer.cornerRadius = 6.0
         nextButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 10)
-        
-        backButton.setImage(#imageLiteral(resourceName: "left-arrow-angle"), for: .normal)
     }
+    
+    @IBAction func signInButtonPress() {
+    }
+    
     
     // Transition functions
     
@@ -75,14 +86,13 @@ class CreateUserController: UIViewController {
      // SubViews Controls
 
     @IBAction func nextButtonPress() {
-        
         switch currentView {
         case createUsername:
-            transitionBackwards(view: currentView); transitionToCenter(view: addEmail); currentView = addEmail
+            transitionBackwards(view: currentView); transitionToCenter(view: addEmail); progressBar.image = #imageLiteral(resourceName: "progressBar-two"); currentView = addEmail
         case addEmail:
-            transitionBackwards(view: currentView); transitionToCenter(view: createPassword); currentView = createPassword
+            transitionBackwards(view: currentView); transitionToCenter(view: createPassword); progressBar.image = #imageLiteral(resourceName: "progressBar-three"); currentView = createPassword
         case createPassword:
-            transitionBackwards(view: currentView); transitionToCenter(view: addBirthDate); currentView = addBirthDate
+            transitionBackwards(view: currentView); transitionToCenter(view: addBirthDate); progressBar.image = #imageLiteral(resourceName: "progressBar-four"); currentView = addBirthDate
         default: return
         }
     }
@@ -90,14 +100,20 @@ class CreateUserController: UIViewController {
     @IBAction func backButtonPress() {
         switch currentView {
         case createUsername:
-            dismiss(animated: true, completion: nil)
+            createUsername.userTextField.resignFirstResponder() ; dismiss(animated: true, completion: nil)
         case addEmail:
-            transitionForward(view: currentView); transitionToCenter(view: createUsername); currentView = createUsername
+            transitionForward(view: currentView); transitionToCenter(view: createUsername); progressBar.image = #imageLiteral(resourceName: "progressBar-one"); currentView = createUsername
         case createPassword:
-            transitionForward(view: currentView); transitionToCenter(view: addEmail); currentView = addEmail
+            transitionForward(view: currentView); transitionToCenter(view: addEmail); progressBar.image = #imageLiteral(resourceName: "progressBar-two"); currentView = addEmail
         case addBirthDate:
-            transitionForward(view: currentView); transitionToCenter(view: createPassword); currentView = createPassword
+            transitionForward(view: currentView); transitionToCenter(view: createPassword); progressBar.image = #imageLiteral(resourceName: "progressBar-three");currentView = createPassword
         default: return
         }
+    }
+}
+
+extension CreateUserController: NextButtonDelegate {
+    func activeNextButton(_: Bool) {
+       nextButton.backgroundColor = CustomStyle.primaryBlue.withAlphaComponent(1)
     }
 }
