@@ -100,7 +100,7 @@ class CreateUserController: UIViewController {
     @IBAction func backButtonPress() {
         switch currentView {
         case createUsername:
-            createUsername.userTextField.resignFirstResponder() ; dismiss(animated: true, completion: nil)
+            createUsername.userTextField.resignFirstResponder() ; navigationController?.popViewController(animated: true)
         case addEmail:
             transitionForward(view: currentView); transitionToCenter(view: createUsername); progressBar.image = #imageLiteral(resourceName: "progressBar-one"); currentView = createUsername
         case createPassword:
