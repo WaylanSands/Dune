@@ -48,7 +48,7 @@ class CreatePassword: UIView {
             headingLabel.centerYAnchor.constraint(equalTo: self.topAnchor, constant:30.0),
             subHeadingLabel.topAnchor.constraint(equalTo: headingLabel.bottomAnchor, constant: 10.0),
             subHeadingLabel.centerXAnchor.constraint(equalTo: self.centerXAnchor),
-            userTextField.bottomAnchor.constraint(equalTo:self.bottomAnchor, constant: -12.0),
+            userTextField.bottomAnchor.constraint(equalTo:self.bottomAnchor, constant: -15.0),
             userTextField.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 16.0),
             userTextField.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -16.0),
             userTextField.heightAnchor.constraint(equalToConstant: 40),

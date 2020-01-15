@@ -23,20 +23,7 @@ class SignInController: UIViewController {
         styleTextFields(textField: passwordTextField, placeholder: "Enter password")
         backButton.setImage(#imageLiteral(resourceName: "back-button-white"), for: .normal)
         CustomStyle.styleRoundedSignUpButton(color: CustomStyle.primaryRed, image: #imageLiteral(resourceName: "signIn-button-icon"), button: signInButton)
-    
         emailTextField.delegate = self
-        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillChange(notification:)), name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
-    }
-        
-       @objc func keyboardWillChange(notification : Notification) {
-        guard let keyboardRect = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue else {
-            return
-        }
-        signInButton.frame.origin.y = self.view.frame.height - keyboardRect.height - 60
-    }
-    
-       deinit {
-        NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
     }
 
     @IBAction func backButtonPress() {
