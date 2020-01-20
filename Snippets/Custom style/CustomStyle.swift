@@ -21,7 +21,9 @@ class CustomStyle {
     static let sixthShade = UIColor(#colorLiteral(red: 0.1529411765, green: 0.168627451, blue: 0.2, alpha: 1))
     static let seventhShade = UIColor(#colorLiteral(red: 0.1176470588, green: 0.1294117647, blue: 0.1568627451, alpha: 1))
     static let primaryblack = UIColor(#colorLiteral(red: 0.1129432991, green: 0.1129470244, blue: 0.1129450426, alpha: 1))
+    static let onboardingBlack = UIColor(#colorLiteral(red: 0.09019607843, green: 0.09803921569, blue: 0.1098039216, alpha: 1))
     static let snapColor = UIColor(#colorLiteral(red: 1, green: 0.9882352941, blue: 0, alpha: 1))
+    
     
     // MARK: Onboarding
     
@@ -46,16 +48,14 @@ class CustomStyle {
     
     static func styleCategoryButtons(color: UIColor ,button: UIButton) {
         button.backgroundColor = color
-        button.layer.cornerRadius = 16.0
+        button.layer.cornerRadius = 20.0
         button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 15, bottom: 0, right: 15)
-        button.heightAnchor.constraint(equalToConstant: 32.0).isActive = true
      }
     
     static func categoryButtonSelected(backgroundColor: UIColor ,textColor: UIColor ,button: UIButton) {
         button.backgroundColor = backgroundColor
-        button.layer.cornerRadius = 16.0
+        button.layer.cornerRadius = 20.0
         button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 15, bottom: 0, right: 15)
-        button.heightAnchor.constraint(equalToConstant: 32.0).isActive = true
         button.titleLabel?.textColor = textColor
      }
     
@@ -77,6 +77,35 @@ class CustomStyle {
         return label
     }
     
+    static func styleSignupHeadingLeftAlign(view: UIView, title: String) -> UILabel {
+        let label = UILabel()
+        let font = UIFont.systemFont(ofSize: 26, weight: .bold)
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: font,
+            .foregroundColor: self.white,
+        ]
+        label.frame = CGRect(x: 16, y: 100, width: view.frame.width - 32, height: 70)
+        label.textAlignment = .left
+        label.numberOfLines = 0
+        label.attributedText = NSAttributedString(string: title, attributes: attributes)
+        
+        return label
+    }
+    
+    static func styleSignupSubHeadingLeftAlign(view: UIView, title: String) -> UILabel {
+        let label = UILabel()
+        let font = UIFont.systemFont(ofSize: 24, weight: .bold)
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: font,
+            .foregroundColor: self.white,
+        ]
+        label.frame = CGRect(x: 16, y: 0, width: view.frame.width - 32, height: 35)
+        label.textAlignment = .left
+        label.attributedText = NSAttributedString(string: title, attributes: attributes)
+        
+        return label
+    }
+    
     static func styleSignupSubheading(view: UIView, title: String) -> UILabel {
         let label = UILabel()
         
@@ -91,6 +120,21 @@ class CustomStyle {
         label.numberOfLines = 0
         label.attributedText = NSAttributedString(string: title, attributes: attributes)
         
+        return label
+    }
+    
+    static func styleProgramName() -> UILabel {
+        let label = UILabel()
+        
+        let font = UIFont.systemFont(ofSize: 24, weight: .regular)
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: font,
+            .foregroundColor: self.fourthShade,
+        ]
+        label.textAlignment = .left
+        label.numberOfLines = 1
+        label.attributedText = NSAttributedString(string: "", attributes: attributes)
+
         return label
     }
     

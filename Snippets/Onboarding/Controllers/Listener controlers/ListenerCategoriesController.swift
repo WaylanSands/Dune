@@ -12,28 +12,33 @@ class ListenerCategoriesController: UIViewController {
     
     @IBOutlet var categoryButtons: [UIButton]!
     @IBOutlet weak var continueButton: UIButton!
+    @IBOutlet weak var categoryStack: UIStackView!
+    @IBOutlet weak var subTitleLabel: UILabel!
     
-    let categories = Categories()
+    var categories: [String] = []
     var categorySelection: [String] = []
     let selectionMax = 3
     
     override func viewDidLoad() {
         super.viewDidLoad()
-       setupCategoryButtons()
+        setupCategoryButtons()
         CustomStyle.styleRoundedSignUpButton(color: CustomStyle.primaryRed, image: nil, button: continueButton)
-
+        categoryStack.translatesAutoresizingMaskIntoConstraints = false
     }
     
     func setupCategoryButtons() {
+        for eachCase in Categories.allCases {
+            categories.append(eachCase.rawValue)
+        }
+        
         for eachButton in categoryButtons {
             CustomStyle.styleCategoryButtons(color: #colorLiteral(red: 0.1176470588, green: 0.1294117647, blue: 0.1568627451, alpha: 1), button: eachButton)
-            eachButton.setTitle(categories.availableCategories[categoryButtons.firstIndex(of: eachButton)!], for: .normal)
+            eachButton.setTitle(categories[categoryButtons.firstIndex(of: eachButton)!], for: .normal)
         }
     }
     
-    
     @IBAction func backButtonSelected() {
-    navigationController?.popViewController(animated: true)
+        navigationController?.popViewController(animated: true)
     }
     
     @IBAction func categorySelected(_ sender: UIButton) {
@@ -53,6 +58,9 @@ class ListenerCategoriesController: UIViewController {
     }
     
     @IBAction func continueSelected() {
+        let programSelector = ListenerProgramSelectionController()
+        navigationController?.pushViewController(programSelector, animated: true)
+        
     }
     
 }

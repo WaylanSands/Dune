@@ -358,6 +358,9 @@
                                         <state key="normal" title="Publisher">
                                             <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                         </state>
+                                        <connections>
+                                            <segue destination="rEz-Vh-JJ5" kind="show" id="llb-99-bQ8"/>
+                                        </connections>
                                     </button>
                                 </subviews>
                             </stackView>
@@ -394,6 +397,16 @@ listener or publisher account. </string>
             </objects>
             <point key="canvasLocation" x="4468.115942028986" y="25.446428571428569"/>
         </scene>
+        <!--OnboardingPublisher-->
+        <scene sceneID="ojJ-YU-o6L">
+            <objects>
+                <viewControllerPlaceholder storyboardName="OnboardingPublisher" id="rEz-Vh-JJ5" sceneMemberID="viewController">
+                    <navigationItem key="navigationItem" id="rV4-B4-3PK"/>
+                </viewControllerPlaceholder>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="nqx-gU-LHy" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="5140" y="83"/>
+        </scene>
         <!--OnboardingListener-->
         <scene sceneID="7PB-U0-ao5">
             <objects>
@@ -402,7 +415,7 @@ listener or publisher account. </string>
                 </viewControllerPlaceholder>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="vQz-gW-zR0" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="5199" y="25"/>
+            <point key="canvasLocation" x="5141" y="-52"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="f1u-e2-r1q">

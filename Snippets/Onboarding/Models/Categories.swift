@@ -8,28 +8,24 @@
 
 import Foundation
 
-class Categories {
+enum Categories: String, CaseIterable {
    
-    let availableCategories = [
-           "News",
-           "Comedy",
-           "Sports",
-           "History",
-           "Crime",
-           "Society & Culture",
-           "Arts",
-           "Business",
-           "Education",
-           "Fiction",
-           "Government",
-           "Health & Fitness",
-           "Kids & Family",
-           "Leisure",
-           "Music",
-           "Religion & Spirituality",
-           "Science",
-           "Tech",
-           "Film & TV",
-       ]
+    case news = "News"
+    case sports = "Sports"
+    case comedy = "Comedy"
+    case trueCrime = "True Crime"
+    case history = "History"
+    case business = "Business"
+    case societyAndCulture = "Society & Culture"
+    case filmAndTV = "Film & TV"
+    case music = "Music"
+    case tech = "Tech"
+    case gamesAndHobbies = "Games & Hobbies"
+    case education = "Education"
+    case arts = "Arts"
+    case science = "Science"
+    case religionAndSpirituality = "Religion & Spirituality"
+    case kidsAndFamily = "Kids & Family"
+    case healthAndFitness = "Health & Fitness"
     
 }
