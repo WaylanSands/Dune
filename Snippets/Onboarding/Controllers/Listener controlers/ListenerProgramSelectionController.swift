@@ -15,6 +15,8 @@ struct CustomCellData {
 }
 
 class ListenerProgramSelectionController: UIViewController {
+    
+    var categoriesSelected: [String] = []
         
     let data = [
         CustomCellData(programImage: #imageLiteral(resourceName: "keetIt"), programName: "Keep it", userId: "@keepIt"),
@@ -49,6 +51,7 @@ class ListenerProgramSelectionController: UIViewController {
         let backButton = UIButton()
         backButton.frame = CGRect(x: 16.0, y: 45.0, width: 30.0, height: 30.0)
         backButton.setImage(#imageLiteral(resourceName: "back-button-white"), for: .normal)
+        backButton.addTarget(self, action: #selector(backButtonPress), for: .touchUpInside)
         return backButton
     }()
     
@@ -57,7 +60,6 @@ class ListenerProgramSelectionController: UIViewController {
         confirmButton.titleLabel!.font = UIFont.systemFont(ofSize: 18, weight: .bold)
         confirmButton.setTitle("Confirm", for: .normal)
         confirmButton.titleLabel?.textAlignment = .right
-//        confirmButton.titleLabel?.textColor = .white
         confirmButton.tintColor = .white
         confirmButton.titleEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: -20.0)
         return confirmButton
@@ -132,7 +134,7 @@ class ListenerProgramSelectionController: UIViewController {
         headingLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
         headingLabel.heightAnchor.constraint(equalToConstant: 70.0).isActive = true
         
-        let firstCategoryLabel = CustomStyle.styleSignupSubHeadingLeftAlign(view: self.view, title: "News")
+        let firstCategoryLabel = CustomStyle.styleSignupSubHeadingLeftAlign(view: self.view, title: categoriesSelected[0])
         containerView.addSubview(firstCategoryLabel)
         firstCategoryLabel.translatesAutoresizingMaskIntoConstraints = false
         firstCategoryLabel.topAnchor.constraint(equalTo: headingLabel.bottomAnchor, constant: 30).isActive = true
@@ -150,7 +152,7 @@ class ListenerProgramSelectionController: UIViewController {
         firstCollectionView.delegate = self
         firstCollectionView.dataSource = self
         
-        let secondCategoryLabel = CustomStyle.styleSignupSubHeadingLeftAlign(view: self.view, title: "History")
+        let secondCategoryLabel = CustomStyle.styleSignupSubHeadingLeftAlign(view: self.view, title: categoriesSelected[1])
         containerView.addSubview(secondCategoryLabel)
         secondCategoryLabel.translatesAutoresizingMaskIntoConstraints = false
         secondCategoryLabel.topAnchor.constraint(equalTo: firstCollectionView.bottomAnchor, constant: 10).isActive = true
@@ -168,7 +170,7 @@ class ListenerProgramSelectionController: UIViewController {
         secondCollectionView.delegate = self
         secondCollectionView.dataSource = self
         
-        let thirdCategoryLabel = CustomStyle.styleSignupSubHeadingLeftAlign(view: self.view, title: "Education")
+        let thirdCategoryLabel = CustomStyle.styleSignupSubHeadingLeftAlign(view: self.view, title: categoriesSelected[2])
         containerView.addSubview(thirdCategoryLabel)
         thirdCategoryLabel.translatesAutoresizingMaskIntoConstraints = false
         thirdCategoryLabel.topAnchor.constraint(equalTo: secondCollectionView.bottomAnchor, constant: 10).isActive = true
@@ -186,6 +188,11 @@ class ListenerProgramSelectionController: UIViewController {
         thirdCollectionView.delegate = self
         thirdCollectionView.dataSource = self
     }
+
+    @objc func backButtonPress() {
+        navigationController?.popViewController(animated: true)
+    }
+    
     
     @objc func addTapped() {
         

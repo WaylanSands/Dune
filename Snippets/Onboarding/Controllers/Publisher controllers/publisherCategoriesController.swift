@@ -11,16 +11,52 @@ import UIKit
 class publisherCategoriesController: UIViewController {
     
     @IBOutlet weak var continueButton: UIButton!
+    @IBOutlet weak var backButton: UIButton!
     @IBOutlet var categoryButtons: [UIButton]!
+    @IBOutlet weak var titleLabelStack: UIStackView!
+    @IBOutlet weak var headlingTitleLabel: UILabel!
+    @IBOutlet weak var subtitleLabel: UILabel!
+    @IBOutlet weak var categoryStack: UIStackView!
     var categories: [String] = []
     var selectedCategory: String?
     
+    let deviceType = UIDevice.current.deviceType
+
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         setupCategoryButtons()
+        styleCategoryButtons()
+        styleTitleLabel()
         CustomStyle.styleRoundedSignUpButton(color: CustomStyle.primaryRed, image: nil, button: continueButton)
     }
+    
+    func styleTitleLabel() {
+        switch deviceType {
+        case .iPhone4S:
+            break
+        case .iPhoneSE:
+            break
+        case .iPhone8:
+            backButton.topAnchor.constraint(equalTo: view.topAnchor, constant: 40.0).isActive = true
+            titleLabelStack.topAnchor.constraint(equalTo: view.topAnchor, constant: 90.0).isActive = true
+            subtitleLabel.topAnchor.constraint(equalTo: headlingTitleLabel.bottomAnchor, constant: 10.0).isActive = true
+            styleCategoryButtons()
+        case .iPhone8Plus:
+            break
+        case .iPhone11:
+            break
+        case .iPhone11ProMax:
+            break
+        case .unknown:
+            break
+        default:
+            return
+        }
+    }
+        func styleCategoryButtons() {
+    categoryStack.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: 40.0).isActive = true
+        }
     
     func setupCategoryButtons() {
         for eachCase in Categories.allCases {
@@ -51,6 +87,11 @@ class publisherCategoriesController: UIViewController {
     }
     
     @IBAction func continueButtonPress() {
+        if selectedCategory != nil {
+            if let summaryController = UIStoryboard(name: "OnboardingPublisher", bundle: nil).instantiateViewController(withIdentifier: "summaryController") as? PublisherSummaryController {
+                navigationController?.pushViewController(summaryController, animated: true)
+            }
+        }
     }
     
     

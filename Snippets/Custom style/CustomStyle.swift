@@ -25,7 +25,7 @@ class CustomStyle {
     static let snapColor = UIColor(#colorLiteral(red: 1, green: 0.9882352941, blue: 0, alpha: 1))
     
     
-    // MARK: Onboarding
+    // Onboarding
     
     static func styleRoundedSignUpButton(color: UIColor, image: UIImage? ,button: UIButton) {
         button.backgroundColor = color
@@ -155,6 +155,16 @@ class CustomStyle {
         return textField
     }
     
+    // App Flow
+    
+    static func styleFloatingButton(button: UIButton) {
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
+        button.layer.cornerRadius = 7.0
+        button.layer.borderWidth = 1.0
+        button.layer.backgroundColor = .none
+        button.layer.borderColor = #colorLiteral(red: 1, green: 1, blue: 1, alpha: 1)
+    }
+    
 }
 
 extension UITextField {
@@ -168,4 +178,5 @@ extension UITextField {
         self.rightView = paddingView
         self.rightViewMode = .always
     }
+    
 }

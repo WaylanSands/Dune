@@ -9,13 +9,17 @@
 /* Begin PBXBuildFile section */
 		4801619823C7BE500038318B /* CustomStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4801619723C7BE500038318B /* CustomStyle.swift */; };
 		480161A123C84EC60038318B /* UsernameDataModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 480161A023C84EC60038318B /* UsernameDataModel.swift */; };
+		4801959123D7C9680027FA91 /* DeviceSizes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4801959023D7C9680027FA91 /* DeviceSizes.swift */; };
+		4801959323D80BE60027FA91 /* TagController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4801959223D80BE60027FA91 /* TagController.swift */; };
 		480526C323CC54B500D62224 /* AccountTypeController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 480526C223CC54B500D62224 /* AccountTypeController.swift */; };
 		4836FCCB23D2EE4400C80D89 /* publisherExplanationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4836FCCA23D2EE4400C80D89 /* publisherExplanationController.swift */; };
 		4844916623CFCD9F000E13FA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4844916523CFCD9F000E13FA /* Assets.xcassets */; };
 		485605B123CEE938006CEBC9 /* ListenerCategoriesController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 485605B023CEE938006CEBC9 /* ListenerCategoriesController.swift */; };
 		485605B323CEF5BE006CEBC9 /* Categories.swift in Sources */ = {isa = PBXBuildFile; fileRef = 485605B223CEF5BE006CEBC9 /* Categories.swift */; };
+		487AA91123D64C8300B53F26 /* PublisherSummaryController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 487AA91023D64C8300B53F26 /* PublisherSummaryController.swift */; };
 		487DFC8423D5245E00137C36 /* publisherImageController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 487DFC8323D5245E00137C36 /* publisherImageController.swift */; };
 		488CB63F23D5379D00E9EBA4 /* publisherCategoriesController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 488CB63E23D5379D00E9EBA4 /* publisherCategoriesController.swift */; };
+		488CB64123D5571700E9EBA4 /* ListenerNameController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 488CB64023D5571700E9EBA4 /* ListenerNameController.swift */; };
 		48A4E0E823CAFE4300A58F61 /* SignInController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48A4E0E723CAFE4300A58F61 /* SignInController.swift */; };
 		48B8687C23C7131A00EFEB88 /* CreateUserController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48B8687B23C7131A00EFEB88 /* CreateUserController.swift */; };
 		48B8688023C744B800EFEB88 /* CreateUsername.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48B8687F23C744B800EFEB88 /* CreateUsername.swift */; };
@@ -37,13 +41,17 @@
 /* Begin PBXFileReference section */
 		4801619723C7BE500038318B /* CustomStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomStyle.swift; sourceTree = "<group>"; };
 		480161A023C84EC60038318B /* UsernameDataModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsernameDataModel.swift; sourceTree = "<group>"; };
+		4801959023D7C9680027FA91 /* DeviceSizes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceSizes.swift; sourceTree = "<group>"; };
+		4801959223D80BE60027FA91 /* TagController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagController.swift; sourceTree = "<group>"; };
 		480526C223CC54B500D62224 /* AccountTypeController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountTypeController.swift; sourceTree = "<group>"; };
 		4836FCCA23D2EE4400C80D89 /* publisherExplanationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = publisherExplanationController.swift; path = "Snippets/Onboarding/Controllers/Publisher controllers/publisherExplanationController.swift"; sourceTree = SOURCE_ROOT; };
 		4844916523CFCD9F000E13FA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = Snippets/Assets.xcassets; sourceTree = "<group>"; };
 		485605B023CEE938006CEBC9 /* ListenerCategoriesController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListenerCategoriesController.swift; sourceTree = "<group>"; };
 		485605B223CEF5BE006CEBC9 /* Categories.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Categories.swift; sourceTree = "<group>"; };
+		487AA91023D64C8300B53F26 /* PublisherSummaryController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublisherSummaryController.swift; sourceTree = "<group>"; };
 		487DFC8323D5245E00137C36 /* publisherImageController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = publisherImageController.swift; sourceTree = "<group>"; };
 		488CB63E23D5379D00E9EBA4 /* publisherCategoriesController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = publisherCategoriesController.swift; sourceTree = "<group>"; };
+		488CB64023D5571700E9EBA4 /* ListenerNameController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListenerNameController.swift; sourceTree = "<group>"; };
 		48A4E0E723CAFE4300A58F61 /* SignInController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignInController.swift; sourceTree = "<group>"; };
 		48B8687B23C7131A00EFEB88 /* CreateUserController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateUserController.swift; sourceTree = "<group>"; };
 		48B8687F23C744B800EFEB88 /* CreateUsername.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateUsername.swift; sourceTree = "<group>"; };
@@ -129,6 +137,7 @@
 		480485E023CBB5AF00F8CA89 /* Extensions */ = {
 			isa = PBXGroup;
 			children = (
+				4801959023D7C9680027FA91 /* DeviceSizes.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -140,6 +149,8 @@
 				48C1E87523D4302700AACD71 /* publisherNameController.swift */,
 				487DFC8323D5245E00137C36 /* publisherImageController.swift */,
 				488CB63E23D5379D00E9EBA4 /* publisherCategoriesController.swift */,
+				487AA91023D64C8300B53F26 /* PublisherSummaryController.swift */,
+				4801959223D80BE60027FA91 /* TagController.swift */,
 			);
 			path = "Publisher controllers";
 			sourceTree = "<group>";
@@ -148,6 +159,7 @@
 			isa = PBXGroup;
 			children = (
 				48F655C323CFAF20004B44E0 /* ListenerProfileImageController.swift */,
+				488CB64023D5571700E9EBA4 /* ListenerNameController.swift */,
 				485605B023CEE938006CEBC9 /* ListenerCategoriesController.swift */,
 				48DEC40523CFDD83005A1E83 /* ListenerProgramSelectionController.swift */,
 			);
@@ -283,6 +295,7 @@
 				4801619823C7BE500038318B /* CustomStyle.swift in Sources */,
 				48B8688023C744B800EFEB88 /* CreateUsername.swift in Sources */,
 				4836FCCB23D2EE4400C80D89 /* publisherExplanationController.swift in Sources */,
+				487AA91123D64C8300B53F26 /* PublisherSummaryController.swift in Sources */,
 				48A4E0E823CAFE4300A58F61 /* SignInController.swift in Sources */,
 				48DEC40623CFDD83005A1E83 /* ListenerProgramSelectionController.swift in Sources */,
 				48C084E123CA7166009F417F /* AddBirthDate.swift in Sources */,
@@ -292,10 +305,13 @@
 				48B8688423C7586A00EFEB88 /* AddEmail.swift in Sources */,
 				480526C323CC54B500D62224 /* AccountTypeController.swift in Sources */,
 				485605B123CEE938006CEBC9 /* ListenerCategoriesController.swift in Sources */,
+				488CB64123D5571700E9EBA4 /* ListenerNameController.swift in Sources */,
 				480161A123C84EC60038318B /* UsernameDataModel.swift in Sources */,
 				48F655C423CFAF20004B44E0 /* ListenerProfileImageController.swift in Sources */,
+				4801959123D7C9680027FA91 /* DeviceSizes.swift in Sources */,
 				48DC720F23C6E998002AB21F /* AppDelegate.swift in Sources */,
 				485605B323CEF5BE006CEBC9 /* Categories.swift in Sources */,
+				4801959323D80BE60027FA91 /* TagController.swift in Sources */,
 				48C1E87623D4302700AACD71 /* publisherNameController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
