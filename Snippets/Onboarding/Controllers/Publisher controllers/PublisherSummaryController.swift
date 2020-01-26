@@ -25,7 +25,7 @@ class PublisherSummaryController: UIViewController, UITextViewDelegate {
     @IBOutlet weak var placeholderLine: UIView!
     @IBOutlet weak var placeholderBottomLine: UIView!
         
-    let maxCharacters = 87
+    let maxCharacters = 97
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -39,6 +39,10 @@ class PublisherSummaryController: UIViewController, UITextViewDelegate {
         characterCountLabel.text = String(maxCharacters)
     }
     
+    override func viewWillLayoutSubviews() {
+        mainAccountSummary.sizeToFit()
+    }
+    
     deinit {
         NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
     }
@@ -49,7 +53,6 @@ class PublisherSummaryController: UIViewController, UITextViewDelegate {
         let beginFrame = beginFrameValue.cgRectValue
         let endFrameValue = (userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)!
         let endFrame = endFrameValue.cgRectValue
-        
         floatingDetailsView.translatesAutoresizingMaskIntoConstraints = false
         floatingDetailsView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -endFrame.height).isActive = true
         
@@ -72,6 +75,14 @@ class PublisherSummaryController: UIViewController, UITextViewDelegate {
     func textViewDidChange(_ textView: UITextView) {
         mainAccountSummary.text = textSummaryView.text
         characterCountLabel.text =  String(maxCharacters - mainAccountSummary.text!.count)
+        
+        if Int(characterCountLabel.text!)! < 0 {
+            characterCountLabel.font = UIFont.systemFont(ofSize: 12, weight: .bold)
+            characterCountLabel.textColor = CustomStyle.primaryRed
+        } else {
+            characterCountLabel.font = UIFont.systemFont(ofSize: 12, weight: .regular)
+            characterCountLabel.textColor = CustomStyle.fourthShade
+        }
     }
 
     func textViewDidEndEditing(_ textView: UITextView) {
@@ -88,7 +99,9 @@ class PublisherSummaryController: UIViewController, UITextViewDelegate {
         let programNameFont = UIFont.systemFont(ofSize: 18, weight: .bold)
         let programNameAttributedString = NSMutableAttributedString(string: programName)
         let programNameAttributes: [NSAttributedString.Key: Any] = [
-            .font: programNameFont,
+             .font: programNameFont,
+             .foregroundColor: CustomStyle.sixthShade
+    
         ]
         programNameAttributedString.addAttributes(programNameAttributes, range: NSRange(location: 0, length: programName.count))
 
@@ -97,6 +110,7 @@ class PublisherSummaryController: UIViewController, UITextViewDelegate {
         let userIdAttributedString = NSMutableAttributedString(string: userId)
         let userIdeAttributes: [NSAttributedString.Key: Any] = [
             .font: userIdFont,
+            .foregroundColor: CustomStyle.fourthShade
         ]
         userIdAttributedString.addAttributes(userIdeAttributes, range: NSRange(location: 0, length: userId.count))
 

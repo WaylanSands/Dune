@@ -59,6 +59,15 @@ class CustomStyle {
         button.titleLabel?.textColor = textColor
      }
     
+    static func styleRoundedTagLabel(label: UILabel) -> UILabel {
+        let label = UILabel()
+        label.text = ""
+        label.backgroundColor = CustomStyle.secondShade
+        label.layer.cornerRadius = 10.5
+        label.heightAnchor.constraint(equalToConstant: 21.0).isActive = true
+        return label
+    }
+    
     // Onboarding text style
     
     static func styleSignupHeading(view: UIView, title: String) -> UILabel {
