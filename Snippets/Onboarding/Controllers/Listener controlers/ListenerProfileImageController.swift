@@ -16,16 +16,22 @@ class ListenerProfileImageController: UIViewController {
     @IBOutlet weak var mainTitleLabel: UILabel!
     @IBOutlet weak var subtitleLabel: UILabel!
     @IBOutlet weak var backButton: UIButton!
+    @IBOutlet weak var backButtonTopAnchor: NSLayoutConstraint!
+    @IBOutlet weak var titleStackTopAnchor: NSLayoutConstraint!
     @IBOutlet weak var profileImagesStack: UIStackView!
+    @IBOutlet weak var profileImagesYAnchor: NSLayoutConstraint!
     @IBOutlet var profileImages: [UIImageView]!
     
     let deviceType = UIDevice.current.deviceType
-
+    
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        return .lightContent
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         styleButtons()
-      styleTitleLabel()
+      styleForScreens()
     }
     
     func styleButtons() {
@@ -33,34 +39,35 @@ class ListenerProfileImageController: UIViewController {
         CustomStyle.styleRoundedSignUpButton(color: CustomStyle.primaryRed, image: nil, button: addPhotoButton)
     }
     
-func styleTitleLabel() {
-    switch deviceType {
-    case .iPhone4S:
-        break
-    case .iPhoneSE:
-        break
-    case .iPhone8:
-        backButton.topAnchor.constraint(equalTo: view.topAnchor, constant: 40.0).isActive = true
-        titleLabelStack.topAnchor.constraint(equalTo: view.topAnchor, constant: 80.0).isActive = true
-        subtitleLabel.topAnchor.constraint(equalTo: mainTitleLabel.bottomAnchor, constant: -5.0).isActive = true
-        styleProfileImages()
-    case .iPhone8Plus:
-        break
-    case .iPhone11:
-        break
-    case .iPhone11ProMax:
-        break
-    case .unknown:
-        break
-    default:
-        return
+    func styleForScreens() {
+        switch deviceType {
+        case .iPhone4S:
+            break
+        case .iPhoneSE:
+             backButtonTopAnchor.constant = 10.0
+             titleStackTopAnchor.constant = 60.0
+             mainTitleLabel.font = UIFont.systemFont(ofSize: 26, weight: .bold)
+              styleProfileImages(size: 60.0)
+             profileImagesYAnchor.constant = -20.0
+        case .iPhone8:
+            styleProfileImages(size: 70.0)
+        case .iPhone8Plus:
+            styleProfileImages(size: 80.0)
+        case .iPhone11:
+            styleProfileImages(size: 85.0)
+        case .iPhone11Pro:
+             styleProfileImages(size: 75.0)
+        case .iPhone11ProMax:
+            styleProfileImages(size: 85.0)
+        case .unknown:
+            break
+        }
     }
-}
-    func styleProfileImages() {
-        profileImagesStack.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -10.0).isActive = true
+    
+    func styleProfileImages(size: CGFloat ) {
         for eachImage in profileImages {
-            eachImage.widthAnchor.constraint(equalToConstant: 70.0).isActive = true
-             eachImage.heightAnchor.constraint(equalToConstant: 70.0).isActive = true
+            eachImage.widthAnchor.constraint(equalToConstant: size).isActive = true
+            eachImage.heightAnchor.constraint(equalToConstant: size).isActive = true
         }
     }
     

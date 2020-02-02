@@ -10,8 +10,11 @@ import UIKit
 
 class AddBirthDate: UIView {
     
-    var authSuccess = false
     var nextButtonDelegate: NextButtonDelegate!
+    
+    lazy var headingLabel = CustomStyle.styleSignupHeading(view: self, title: "Add your date of birth")
+    lazy var subHeadingLabel = CustomStyle.styleSignupSubheading(view: self, title: "This won’t be part of your public profile.")
+    lazy var dateTextField = CustomStyle.styleSignUpTextField(color: CustomStyle.secondShade, view: self, placeholder: "")
     
     //initWithFrame to init view from code
     override init(frame: CGRect) {
@@ -26,44 +29,33 @@ class AddBirthDate: UIView {
     }
     //common func to init our view
     func setupView() {
-        let headingLabel = CustomStyle.styleSignupHeading(view: self, title: "Add your date of birth")
-        let subHeadingLabel = CustomStyle.styleSignupSubheading(view: self, title: "This won’t be part of your public profile.")
-        let userTextField = CustomStyle.styleSignUpTextField(color: CustomStyle.secondShade, view: self, placeholder: "")
-        userTextField.delegate = self
-        
-        addSubview(userTextField)
+        addSubview(dateTextField)
         addSubview(headingLabel)
         addSubview(subHeadingLabel)
         
         headingLabel.translatesAutoresizingMaskIntoConstraints = false
         subHeadingLabel.translatesAutoresizingMaskIntoConstraints = false
-        userTextField.translatesAutoresizingMaskIntoConstraints = false
+        dateTextField.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
             headingLabel.centerXAnchor.constraint(equalTo: self.centerXAnchor),
             headingLabel.centerYAnchor.constraint(equalTo: self.topAnchor, constant:30.0),
             subHeadingLabel.topAnchor.constraint(equalTo: headingLabel.bottomAnchor, constant: 10.0),
             subHeadingLabel.centerXAnchor.constraint(equalTo: self.centerXAnchor),
-            userTextField.bottomAnchor.constraint(equalTo:self.bottomAnchor, constant: -15.0),
-            userTextField.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 16.0),
-            userTextField.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -16.0),
-            userTextField.heightAnchor.constraint(equalToConstant: 40),
+            dateTextField.bottomAnchor.constraint(equalTo:self.bottomAnchor, constant: -10.0),
+            dateTextField.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 16.0),
+            dateTextField.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -16.0),
+            dateTextField.heightAnchor.constraint(equalToConstant: 40),
             ])
+        
+        dateTextField.delegate = self
     }
 }
 
 extension AddBirthDate: UITextFieldDelegate {
-    func textFieldDidEndEditing(_ textField: UITextField) {
-    }
-    
-    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
-        
-        if textField.text! == "Code" {
-            authSuccess = true
-        }
-        
-        print("\(textField.text!)")
-        return true
-    }
-    
+//    func textFieldShouldEndEditing(_ textField: UITextField) -> Bool {
+//      return false
+//    }
+//    func textFieldDidEndEditing(_ textField: UITextField) {
+//    }
 }

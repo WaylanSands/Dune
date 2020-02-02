@@ -31,8 +31,10 @@ extension UIDevice {
             return .iPhone8
         case 1920, 2208:
             return .iPhone8Plus
-        case 2436:
+        case 1792:
             return .iPhone11
+        case 2436:
+            return .iPhone11Pro
         case 2688:
             return .iPhone11ProMax
         default:

@@ -88,7 +88,7 @@ class CustomStyle {
     
     static func styleSignupHeadingLeftAlign(view: UIView, title: String) -> UILabel {
         let label = UILabel()
-        let font = UIFont.systemFont(ofSize: 26, weight: .bold)
+        let font = UIFont.systemFont(ofSize: 26.0, weight: .bold)
         let attributes: [NSAttributedString.Key: Any] = [
             .font: font,
             .foregroundColor: self.white,
@@ -101,9 +101,9 @@ class CustomStyle {
         return label
     }
     
-    static func styleSignupSubHeadingLeftAlign(view: UIView, title: String) -> UILabel {
+    static func styleSignupSubHeadingLeftAlign(size: CGFloat, view: UIView, title: String) -> UILabel {
         let label = UILabel()
-        let font = UIFont.systemFont(ofSize: 24, weight: .bold)
+        let font = UIFont.systemFont(ofSize: size, weight: .bold)
         let attributes: [NSAttributedString.Key: Any] = [
             .font: font,
             .foregroundColor: self.white,

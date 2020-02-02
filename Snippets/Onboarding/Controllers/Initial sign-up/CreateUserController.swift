@@ -13,52 +13,71 @@ protocol NextButtonDelegate {
 }
 
 class CreateUserController: UIViewController {
-
+    
     @IBOutlet weak var nextButton: UIButton!
     @IBOutlet weak var backButton: UIButton!
     @IBOutlet weak var progressBar: UIImageView!
+    @IBOutlet weak var progressBarSE: UIImageView!
+    @IBOutlet weak var progressBarTopAnchor: NSLayoutConstraint!
+    @IBOutlet weak var backButtonTopAnchor: NSLayoutConstraint!
+    @IBOutlet weak var progressBarWidthAnchor: NSLayoutConstraint!
+    @IBOutlet weak var progressBarHeightAnchor: NSLayoutConstraint!
+    @IBOutlet weak var nextButtonYAnchor: NSLayoutConstraint!
     
-    lazy var screenWidth = self.view.frame.size.width
-    let subviewHeight = 200
+    
+    lazy var screenWidth = view.frame.width
+    var subviewHeight: CGFloat = 200
     lazy var nextButtonY = self.view.frame.size.height / 2 - 200
     
-    lazy var createUsername = CreateUsername(frame: CGRect(x: 0, y: 0, width: 0, height: 0))
-    lazy var addEmail = AddEmail(frame: CGRect(x: 0, y: 0, width: 0, height: 0))
-    lazy var createPassword = CreatePassword(frame: CGRect(x: 0, y: 0, width: 0, height: 0))
-    lazy var addBirthDate = AddBirthDate(frame: CGRect(x: 0, y: 0, width: 0, height: 0))
+    lazy var helperView = UIView()
+    lazy var addEmail = AddEmail(frame: .zero)
+    lazy var createPassword = CreatePassword(frame: .zero)
+    lazy var addBirthDate = AddBirthDate(frame: .zero)
+    lazy var createUsername = CreateUsername(frame: .zero)
     
     lazy var currentView: UIView = createUsername
     
+    let deviceType = UIDevice.current.deviceType
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        styleForScreens()
         
-        self.view.addSubview(createUsername)
+        self.view.addSubview(helperView)
+        helperView.translatesAutoresizingMaskIntoConstraints = false
+        helperView.heightAnchor.constraint(equalToConstant: subviewHeight).isActive = true
+        helperView.widthAnchor.constraint(equalToConstant: screenWidth).isActive = true
+        helperView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        helperView.bottomAnchor.constraint(equalTo: nextButton.topAnchor).isActive = true
+        
+        helperView.addSubview(createUsername)
         createUsername.nextButtonDelegate = self
         createUsername.translatesAutoresizingMaskIntoConstraints = false
-        createUsername.heightAnchor.constraint(equalToConstant: 200).isActive = true
+        createUsername.heightAnchor.constraint(equalToConstant: subviewHeight).isActive = true
         createUsername.widthAnchor.constraint(equalToConstant: screenWidth).isActive = true
+        createUsername.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         createUsername.bottomAnchor.constraint(equalTo: nextButton.topAnchor).isActive = true
         
-        self.view.addSubview(addEmail)
+        helperView.addSubview(addEmail)
         addEmail.nextButtonDelegate = self
         addEmail.translatesAutoresizingMaskIntoConstraints = false
-        addEmail.heightAnchor.constraint(equalToConstant: 200).isActive = true
+        addEmail.heightAnchor.constraint(equalToConstant: subviewHeight).isActive = true
         addEmail.widthAnchor.constraint(equalToConstant: screenWidth).isActive = true
         addEmail.leadingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         addEmail.bottomAnchor.constraint(equalTo: nextButton.topAnchor).isActive = true
         
-        self.view.addSubview(createPassword)
+        helperView.addSubview(createPassword)
         createPassword.nextButtonDelegate = self
         createPassword.translatesAutoresizingMaskIntoConstraints = false
-        createPassword.heightAnchor.constraint(equalToConstant: 200).isActive = true
+        createPassword.heightAnchor.constraint(equalToConstant: subviewHeight).isActive = true
         createPassword.widthAnchor.constraint(equalToConstant: screenWidth).isActive = true
         createPassword.leadingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         createPassword.bottomAnchor.constraint(equalTo: nextButton.topAnchor).isActive = true
         
-        self.view.addSubview(addBirthDate)
-        createUsername.nextButtonDelegate = self
+        helperView.addSubview(addBirthDate)
+        addBirthDate.nextButtonDelegate = self
         addBirthDate.translatesAutoresizingMaskIntoConstraints = false
-        addBirthDate.heightAnchor.constraint(equalToConstant: 200).isActive = true
+        addBirthDate.heightAnchor.constraint(equalToConstant: subviewHeight).isActive = true
         addBirthDate.widthAnchor.constraint(equalToConstant: screenWidth).isActive = true
         addBirthDate.leadingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         addBirthDate.bottomAnchor.constraint(equalTo: nextButton.topAnchor).isActive = true
@@ -68,13 +87,46 @@ class CreateUserController: UIViewController {
         nextButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 10)
     }
     
+    func styleForScreens() {
+        switch deviceType {
+        case .iPhone4S:
+            break
+        case .iPhoneSE:
+            progressBarSE.isHidden = false
+            progressBar.isHidden = true
+            backButtonTopAnchor.constant = 10.0
+            progressBarTopAnchor.constant = 25.0
+            progressBarWidthAnchor.constant = 30
+            progressBarHeightAnchor.constant = 30
+            nextButtonYAnchor.constant = -5.0
+            subviewHeight = 190.0
+        case .iPhone8:
+            progressBarTopAnchor.constant = 70.0
+            progressBarWidthAnchor.constant = 45.0
+            progressBarHeightAnchor.constant = 45.0
+        case .iPhone8Plus:
+             progressBarWidthAnchor.constant = 45.0
+                       progressBarHeightAnchor.constant = 45.0
+        case .iPhone11:
+             progressBarWidthAnchor.constant = 45.0
+                       progressBarHeightAnchor.constant = 45.0
+        case .iPhone11Pro:
+             progressBarWidthAnchor.constant = 45.0
+                       progressBarHeightAnchor.constant = 45.0
+        case .iPhone11ProMax:
+             progressBarWidthAnchor.constant = 45.0
+                       progressBarHeightAnchor.constant = 45.0
+        case .unknown:
+            break
+        }
+    }
     
     // Transition functions
     
     lazy var centerXposition = self.view.frame.origin.x
-
+    
     func toCenter(view: UIView) {
-         view.frame.origin.x = self.centerXposition
+        view.frame.origin.x = self.centerXposition
     }
     
     func backOffScreen(view: UIView) {
@@ -88,6 +140,7 @@ class CreateUserController: UIViewController {
     
     func transitionToCenter(view: UIView) {
         UIView.transition(with: view, duration: 0.5, options: [], animations: {self.toCenter(view: view)}, completion: {(value: Bool) in
+            self.currentView = view
         })
     }
     
@@ -101,24 +154,32 @@ class CreateUserController: UIViewController {
         })
     }
     
-     // SubViews Controls
-
+    // SubViews Controls
+    
     @IBAction func nextButtonPress() {
+        
         switch currentView {
         case createUsername:
-            transitionBackwards(view: currentView); transitionToCenter(view: addEmail); progressBar.image = #imageLiteral(resourceName: "progressBar-two"); currentView = addEmail
+            transitionBackwards(view: createUsername); transitionToCenter(view: addEmail)
+            updateProgressImage(2)
+            createUsername.userTextField.resignFirstResponder()
+            addEmail.emailTextField.becomeFirstResponder()
         case addEmail:
-            transitionBackwards(view: currentView); transitionToCenter(view: createPassword); progressBar.image = #imageLiteral(resourceName: "progressBar-three"); currentView = createPassword
-        case createPassword:
-            transitionBackwards(view: currentView); transitionToCenter(view: addBirthDate); progressBar.image = #imageLiteral(resourceName: "progressBar-four"); currentView = addBirthDate;
-            case addBirthDate:
-            navigateToAccountType()
+            transitionBackwards(view: addEmail); transitionToCenter(view: createPassword)
+            updateProgressImage(3)
+            addEmail.emailTextField.resignFirstResponder()
+            createPassword.passwordTextField.becomeFirstResponder()
+        case createPassword: transitionBackwards(view: createPassword); transitionToCenter(view: addBirthDate); updateProgressImage(4)
+        createPassword.passwordTextField.resignFirstResponder(); addBirthDate.dateTextField.becomeFirstResponder();
+        case addBirthDate: addBirthDate.dateTextField.resignFirstResponder()
+        navigateToAccountType()
         default: return
         }
+        
     }
     
     func navigateToAccountType() {
-           if let accountTypeController = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "accountTypeController") as? AccountTypeController {
+        if let accountTypeController = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "accountTypeController") as? AccountTypeController {
             navigationController?.pushViewController(accountTypeController, animated: true)
         }
     }
@@ -126,20 +187,51 @@ class CreateUserController: UIViewController {
     @IBAction func backButtonPress() {
         switch currentView {
         case createUsername:
-            createUsername.userTextField.resignFirstResponder() ; navigationController?.popViewController(animated: true)
+            createUsername.userTextField.resignFirstResponder();
+            navigationController?.popViewController(animated: true)
         case addEmail:
-            transitionForward(view: currentView); transitionToCenter(view: createUsername); progressBar.image = #imageLiteral(resourceName: "progressBar-one"); currentView = createUsername
+            transitionForward(view: addEmail); transitionToCenter(view: createUsername); updateProgressImage(1); currentView = createUsername
         case createPassword:
-            transitionForward(view: currentView); transitionToCenter(view: addEmail); progressBar.image = #imageLiteral(resourceName: "progressBar-two"); currentView = addEmail
+            transitionForward(view: createPassword); transitionToCenter(view: addEmail); updateProgressImage(2); currentView = addEmail
         case addBirthDate:
-            transitionForward(view: currentView); transitionToCenter(view: createPassword); progressBar.image = #imageLiteral(resourceName: "progressBar-three");currentView = createPassword
+            transitionForward(view: addBirthDate); transitionToCenter(view: createPassword); updateProgressImage(3) ;currentView = createPassword
         default: return
+        }
+    }
+    
+    func updateProgressImage(_ imageNumber: Int) {
+        if deviceType == .iPhoneSE {
+            switch imageNumber {
+            case 1:
+                progressBarSE.image = #imageLiteral(resourceName: "progressBar-small-one")
+            case 2:
+                progressBarSE.image = #imageLiteral(resourceName: "progressBar-small-two")
+            case 3:
+                progressBarSE.image = #imageLiteral(resourceName: "progressBar-small-three")
+            case 4:
+                 progressBarSE.image = #imageLiteral(resourceName: "progressBar-small-four")
+            default:
+                progressBarSE.isHidden = true
+            }
+        } else {
+            switch imageNumber {
+            case 1:
+                progressBar.image = #imageLiteral(resourceName: "progressBar-one")
+            case 2:
+                progressBar.image = #imageLiteral(resourceName: "progressBar-two")
+            case 3:
+                progressBar.image = #imageLiteral(resourceName: "progressBar-three")
+            case 4:
+                progressBar.image = #imageLiteral(resourceName: "progressBar-four")
+            default:
+                progressBar.isHidden = true
+            }
         }
     }
 }
 
 extension CreateUserController: NextButtonDelegate {
     func activeNextButton(_: Bool) {
-       nextButton.backgroundColor = CustomStyle.primaryBlue.withAlphaComponent(1)
+        nextButton.backgroundColor = CustomStyle.primaryBlue.withAlphaComponent(1)
     }
 }

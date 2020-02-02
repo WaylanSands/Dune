@@ -17,46 +17,57 @@ class publisherCategoriesController: UIViewController {
     @IBOutlet weak var headlingTitleLabel: UILabel!
     @IBOutlet weak var subtitleLabel: UILabel!
     @IBOutlet weak var categoryStack: UIStackView!
+    @IBOutlet weak var backButtonTopAnchor: NSLayoutConstraint!
+    @IBOutlet weak var headingTopAnchor: NSLayoutConstraint!
+    @IBOutlet weak var continueButtonBottomAnchor: NSLayoutConstraint!
+    
     var categories: [String] = []
     var selectedCategory: String?
     
     let deviceType = UIDevice.current.deviceType
-
     
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        return .lightContent
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
+        styleForScreens()
         setupCategoryButtons()
-        styleCategoryButtons()
-        styleTitleLabel()
         CustomStyle.styleRoundedSignUpButton(color: CustomStyle.primaryRed, image: nil, button: continueButton)
     }
     
-    func styleTitleLabel() {
+    func styleForScreens() {
         switch deviceType {
         case .iPhone4S:
             break
         case .iPhoneSE:
-            break
+            backButtonTopAnchor.constant = 10.0
+            headlingTitleLabel.font = UIFont.systemFont(ofSize: 26, weight: .bold)
+            headingTopAnchor.constant = 40.0
+            continueButtonBottomAnchor.constant = 25.0
+            shrinkButtons()
         case .iPhone8:
-            backButton.topAnchor.constraint(equalTo: view.topAnchor, constant: 40.0).isActive = true
-            titleLabelStack.topAnchor.constraint(equalTo: view.topAnchor, constant: 90.0).isActive = true
-            subtitleLabel.topAnchor.constraint(equalTo: headlingTitleLabel.bottomAnchor, constant: 10.0).isActive = true
-            styleCategoryButtons()
+            headingTopAnchor.constant = 70.0
+            continueButtonBottomAnchor.constant = 50.0
         case .iPhone8Plus:
             break
         case .iPhone11:
+            break
+        case .iPhone11Pro:
             break
         case .iPhone11ProMax:
             break
         case .unknown:
             break
-        default:
-            return
         }
     }
-        func styleCategoryButtons() {
-    categoryStack.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: 40.0).isActive = true
+    
+    func shrinkButtons() {
+        for each in categoryButtons {
+            each.titleLabel?.font = UIFont.systemFont(ofSize: 12, weight: .medium)
         }
+    }
     
     func setupCategoryButtons() {
         for eachCase in Categories.allCases {

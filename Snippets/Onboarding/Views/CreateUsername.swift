@@ -13,61 +13,70 @@ class CreateUsername: UIView {
     var authSuccess = false
     var nextButtonDelegate: NextButtonDelegate!
     
-    lazy var userTextField = CustomStyle.styleSignUpTextField(color: CustomStyle.secondShade, view: self, placeholder: "Username")
+    var spaceOrSpecialCharacterEntered = "Oops, Usernames can only contain Latin letters, numbers and 1 - _ or . but no special characters"
+    var endedWithSpace = "Uh oh! Usernames must end in a letter or number"
+        
+    lazy var userTextField = CustomStyle.styleSignUpTextField(color: CustomStyle.secondShade, view: self, placeholder: "@Username")
+    lazy var headingLabel = CustomStyle.styleSignupHeading(view: self, title: "Create username")
+    lazy var subHeadingLabel = CustomStyle.styleSignupSubheading(view: self, title: "Create a unique usersname for your new account. You can always change it later.")
     
     override init(frame: CGRect) {
-            super.init(frame: frame)
-            setupView()
-        }
-        
+        super.init(frame: frame)
+        setupView()
+    }
+    
     required init?(coder aDecoder: NSCoder) {
-            super.init(coder: aDecoder)
-            setupView()
-        }
+        super.init(coder: aDecoder)
+        setupView()
+    }
     
     func setupView() {
-        let headingLabel = CustomStyle.styleSignupHeading(view: self, title: "Create username")
-        let subHeadingLabel = CustomStyle.styleSignupSubheading(view: self, title: """
-        Create a username for your new account.
-        You can always change it later
-        """)
-            
         addSubview(userTextField)
         addSubview(headingLabel)
         addSubview(subHeadingLabel)
-            
+        
         headingLabel.translatesAutoresizingMaskIntoConstraints = false
         subHeadingLabel.translatesAutoresizingMaskIntoConstraints = false
         userTextField.translatesAutoresizingMaskIntoConstraints = false
-
+        
         NSLayoutConstraint.activate([
             headingLabel.centerXAnchor.constraint(equalTo: self.centerXAnchor),
             headingLabel.centerYAnchor.constraint(equalTo: self.topAnchor, constant:30.0),
             subHeadingLabel.topAnchor.constraint(equalTo: headingLabel.bottomAnchor, constant: 10.0),
             subHeadingLabel.centerXAnchor.constraint(equalTo: self.centerXAnchor),
-            userTextField.bottomAnchor.constraint(equalTo:self.bottomAnchor, constant: -15.0),
+            subHeadingLabel.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 40.0),
+            subHeadingLabel.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -40.0),
+            userTextField.bottomAnchor.constraint(equalTo:self.bottomAnchor, constant: -10.0),
             userTextField.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 16.0),
             userTextField.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -16.0),
             userTextField.heightAnchor.constraint(equalToConstant: 40),
-            ])
-            
-            userTextField.delegate = self
-            userTextField.becomeFirstResponder()
-        }
+        ])
+        
+        userTextField.delegate = self
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
+            self.userTextField.becomeFirstResponder()
+        })
+    }
 }
 
 extension CreateUsername: UITextFieldDelegate {
-    func textFieldDidEndEditing(_ textField: UITextField) {
-    }
     
-    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
-        
-        if textField.text! == "Code" {
-            authSuccess = true
-            nextButtonDelegate.activeNextButton(true)
-        }
-        
-        print("\(textField.text!)")
-        return true
-    }
+//    func textFieldShouldEndEditing(_ textField: UITextField) -> Bool {
+//        return false
+//    }
+    
+//    func textFieldDidEndEditing(_ textField: UITextField) {
+//    }
+//    
+//    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
+//        
+//        if textField.text! == "Code" {
+//            authSuccess = true
+//            nextButtonDelegate.activeNextButton(true)
+//        }
+//        
+//        print("\(textField.text!)")
+//        return true
+//    }
 }
