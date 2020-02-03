@@ -24,8 +24,8 @@ class AccountTypeController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         styleForScreens()
-        CustomStyle.styleRoundedSignUpButton(color: #colorLiteral(red: 1, green: 0, blue: 0.6098213792, alpha: 1), image: #imageLiteral(resourceName: "headphones-icon") , button: listenerButton)
-        CustomStyle.styleRoundedPublishserpButton(borderColor: CustomStyle.whiteCg, backgroundColor: #colorLiteral(red: 0.1129432991, green: 0.1129470244, blue: 0.1129450426, alpha: 0), image: #imageLiteral(resourceName: "publisher-icon"), button: publisherButton)
+        CustomStyle.styleRoundedSignUpButton(color: CustomStyle.primaryRed, image: #imageLiteral(resourceName: "headphones-icon") , button: listenerButton)
+        CustomStyle.styleRoundedSignUpButton(color: CustomStyle.primaryBlue, image: #imageLiteral(resourceName: "publisher-icon") , button: publisherButton)
     }
     
     func styleForScreens() {

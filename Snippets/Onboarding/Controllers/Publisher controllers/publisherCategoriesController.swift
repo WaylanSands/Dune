@@ -92,7 +92,6 @@ class publisherCategoriesController: UIViewController {
         }
     }
     
-    
     @IBAction func backButtonPress() {
         navigationController?.popViewController(animated: true)
     }

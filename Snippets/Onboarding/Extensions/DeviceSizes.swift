@@ -43,40 +43,17 @@ extension UIDevice {
     }
 }
 
-//let deviceType = UIDevice.current.deviceType
-//
-//func styleSnap() {
-//    switch deviceType {
-//    case .iPhone4S:
-//        CustomStyle.styleRoundedSignUpButton(color: CustomStyle.white, image: #imageLiteral(resourceName: "snap-icon"), button: bitmojiButton)
-//    case .iPhoneSE:
-//        CustomStyle.styleRoundedSignUpButton(color: CustomStyle.secondShade, image: #imageLiteral(resourceName: "snap-icon"), button: bitmojiButton)
-//    case .iPhone8:
-//        CustomStyle.styleRoundedSignUpButton(color: CustomStyle.thirdShade, image: #imageLiteral(resourceName: "snap-icon"), button: bitmojiButton)
-//    case .iPhone8Plus:
-//        CustomStyle.styleRoundedSignUpButton(color: CustomStyle.fourthShade, image: #imageLiteral(resourceName: "snap-icon"), button: bitmojiButton)
-//    case .iPhone11:
-//        CustomStyle.styleRoundedSignUpButton(color: CustomStyle.primaryBlue, image: #imageLiteral(resourceName: "snap-icon"), button: bitmojiButton)
-//    case .iPhone11ProMax:
-//        CustomStyle.styleRoundedSignUpButton(color: CustomStyle.primaryRed, image: #imageLiteral(resourceName: "snap-icon"), button: bitmojiButton)
-//    case .unknown:
-//        CustomStyle.styleRoundedSignUpButton(color: CustomStyle.snapColor, image: #imageLiteral(resourceName: "snap-icon"), button: bitmojiButton)
-//    default:
-//        return
-//    }
-//}
+extension UIView {
+    func constraintWith(identifier: String) -> [NSLayoutConstraint] {
+        
+        var constraints = self.constraints.filter() {$0.identifier == identifier}
+        
+        for eachView in subviews {
+            constraints.append(contentsOf: eachView.constraints.filter() {$0.identifier == identifier})
+        }
+        
+        return constraints
+    }
+}
 
 
-//func styleSnap() {
-//    switch deviceType {
-//    case .iPhone4S:
-//    case .iPhoneSE:
-//    case .iPhone8:
-//    case .iPhone8Plus:
-//    case .iPhone11:
-//    case .iPhone11ProMax:
-//    case .unknown:
-//    default:
-//        return
-//    }
-//}

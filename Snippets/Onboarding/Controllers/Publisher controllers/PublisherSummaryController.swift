@@ -10,17 +10,36 @@ import UIKit
 
 class PublisherSummaryController: UIViewController, UITextViewDelegate {
     
+    @IBOutlet weak var navBatView: UIView!
     @IBOutlet weak var navTitleLabel: UILabel!
     @IBOutlet weak var mainImageView: UIImageView!
+    @IBOutlet weak var mainStackView: UIStackView!
     @IBOutlet weak var mainAccountTitle: UILabel!
     @IBOutlet weak var mainAccountSummary: UILabel!
     @IBOutlet weak var characterCountLabel: UILabel!
     @IBOutlet weak var textSummaryView: UITextView!
-    
     @IBOutlet weak var placeholderLine: UIView!
     @IBOutlet weak var placeholderBottomLine: UIView!
+    @IBOutlet weak var navBarHeight: NSLayoutConstraint!
+    @IBOutlet weak var summayBarTopAnchor: NSLayoutConstraint!
+    @IBOutlet weak var mainSummaryHeigh: NSLayoutConstraint!
     
+    @IBOutlet weak var backButtonTopAnchor: NSLayoutConstraint!
+    @IBOutlet weak var mainImageHeight: NSLayoutConstraint!
+    @IBOutlet weak var mainImageWidth: NSLayoutConstraint!
+    @IBOutlet weak var mainStackViewTopAnchor: NSLayoutConstraint!
+    @IBOutlet weak var textViewTopAnchor: NSLayoutConstraint!
+    
+    lazy var leadConstraints = view.constraintWith(identifier: "leadAnchor")
+    lazy var trailingConstraints = view.constraintWith(identifier: "trailingAnchor")
+    let maxCharacters = 150
     var confirmPress = false
+    
+    var mainNameSize: CGFloat = 18
+    var mainIdSize: CGFloat = 14
+    
+    
+    let deviceType = UIDevice.current.deviceType
     
     let bottomDarkView: UIView = {
         let view = UIView()
@@ -73,18 +92,68 @@ class PublisherSummaryController: UIViewController, UITextViewDelegate {
         button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 10.0, bottom: 0, right: 10.0)
         return button
     }()
-    
-    
-    let maxCharacters = 97
-    
+
     override var preferredStatusBarStyle: UIStatusBarStyle {
         return .lightContent
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        styleForScreens()
         setupMainTitle()
         
+        textSummaryView.textColor = CustomStyle.fourthShade
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillChange(notification:)), name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
+        })
+        textSummaryView.delegate = self
+        characterCountLabel.text = String(maxCharacters)
+    }
+    
+    func styleForScreens() {
+        switch deviceType {
+        case .iPhone4S:
+            break
+        case .iPhoneSE:
+            backButtonTopAnchor.constant = 10.0
+            mainStackViewTopAnchor.constant = 15.0
+            navBarHeight.constant = 90.0
+            mainImageHeight.constant = 60.0
+            mainImageWidth.constant = 60.0
+            mainAccountSummary.font = UIFont.systemFont(ofSize: 13.0, weight: .regular)
+            mainStackView.spacing = 10.0
+            mainNameSize = 16
+            mainIdSize = 12
+            textViewTopAnchor.constant = 5.0
+            updateEdgeConstraints()
+        case .iPhone8:
+            mainStackViewTopAnchor.constant = 20.0
+            textViewTopAnchor.constant = 10.0
+            addBottomSection()
+        case .iPhone8Plus:
+            addBottomSection()
+        case .iPhone11:
+            addBottomSection()
+        case .iPhone11Pro:
+            addBottomSection()
+        case .iPhone11ProMax:
+            addBottomSection()
+        case .unknown:
+            break
+        }
+    }
+    
+    func  updateEdgeConstraints() {
+        for each in leadConstraints {
+            each.constant = 12.0
+        }
+        
+        for each in trailingConstraints {
+            each.constant = 12.0
+        }
+    }
+    
+    func addBottomSection() {
         view.addSubview(containerView)
         
         view.addSubview(bottomDarkView)
@@ -126,19 +195,10 @@ class PublisherSummaryController: UIViewController, UITextViewDelegate {
         confirmButton.centerYAnchor.constraint(equalTo: floatingDetailsView.centerYAnchor).isActive = true
         confirmButton.trailingAnchor.constraint(equalTo: floatingDetailsView.trailingAnchor, constant: -16.0).isActive = true
         confirmButton.heightAnchor.constraint(equalToConstant: 32.0).isActive = true
-        
-        
-        textSummaryView.textColor = CustomStyle.fourthShade
-        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillChange(notification:)), name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
-        })
-        textSummaryView.delegate = self
-        characterCountLabel.text = String(maxCharacters)
     }
     
     override func viewWillLayoutSubviews() {
         mainAccountSummary.sizeToFit()
-        print("layed")
     }
     
     deinit {
@@ -176,6 +236,12 @@ class PublisherSummaryController: UIViewController, UITextViewDelegate {
             characterCountLabel.font = UIFont.systemFont(ofSize: 12, weight: .regular)
             characterCountLabel.textColor = CustomStyle.fourthShade
         }
+        // Move summary bar down with Text view
+        print(mainAccountSummary.frame.height)
+        if mainAccountSummary.frame.height >= 78.0 {
+            summayBarTopAnchor.constant = (mainAccountSummary.frame.height - 74) + 45.0
+        }
+       
     }
     
     func textViewDidEndEditing(_ textView: UITextView) {
@@ -189,7 +255,7 @@ class PublisherSummaryController: UIViewController, UITextViewDelegate {
     
     func setupMainTitle() {
         let programName = "The Daily "
-        let programNameFont = UIFont.systemFont(ofSize: 18, weight: .bold)
+        let programNameFont = UIFont.systemFont(ofSize: mainNameSize, weight: .bold)
         let programNameAttributedString = NSMutableAttributedString(string: programName)
         let programNameAttributes: [NSAttributedString.Key: Any] = [
             .font: programNameFont,
@@ -199,7 +265,7 @@ class PublisherSummaryController: UIViewController, UITextViewDelegate {
         programNameAttributedString.addAttributes(programNameAttributes, range: NSRange(location: 0, length: programName.count))
         
         let userId = "@TheDaily"
-        let userIdFont = UIFont.systemFont(ofSize: 14, weight: .medium)
+        let userIdFont = UIFont.systemFont(ofSize: mainIdSize, weight: .medium)
         let userIdAttributedString = NSMutableAttributedString(string: userId)
         let userIdeAttributes: [NSAttributedString.Key: Any] = [
             .font: userIdFont,
