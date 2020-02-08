@@ -616,7 +616,7 @@ expresses your uniqueness.</string>
                                     <action selector="backButtonPress" destination="qea-sQ-M51" eventType="touchUpInside" id="mh8-mB-FkG"/>
                                 </connections>
                             </button>
-                            <stackView opaque="NO" contentMode="scaleAspectFit" axis="vertical" alignment="center" spacing="9" translatesAutoresizingMaskIntoConstraints="NO" id="O3W-tO-FGI">
+                            <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" alignment="center" spacing="9" translatesAutoresizingMaskIntoConstraints="NO" id="O3W-tO-FGI">
                                 <rect key="frame" x="16" y="340.5" width="382" height="285"/>
                                 <subviews>
                                     <stackView opaque="NO" contentMode="scaleToFill" spacing="7" translatesAutoresizingMaskIntoConstraints="NO" id="bHl-a8-F25">
@@ -904,7 +904,6 @@ expresses your uniqueness.</string>
                             <constraint firstItem="uJE-FJ-fsJ" firstAttribute="trailing" secondItem="AYB-Uh-1HQ" secondAttribute="trailing" id="UHO-Qo-Zba"/>
                             <constraint firstItem="6N8-YY-JxX" firstAttribute="leading" secondItem="AYB-Uh-1HQ" secondAttribute="leading" constant="16" id="WJq-Qn-Acq"/>
                             <constraint firstItem="AYB-Uh-1HQ" firstAttribute="trailing" secondItem="6N8-YY-JxX" secondAttribute="trailing" constant="16" id="XoP-wO-StC"/>
-                            <constraint firstItem="9oS-mw-qQS" firstAttribute="top" secondItem="AYB-Uh-1HQ" secondAttribute="top" constant="100" id="cF8-H1-omx"/>
                             <constraint firstItem="uJE-FJ-fsJ" firstAttribute="top" secondItem="AYB-Uh-1HQ" secondAttribute="top" constant="100" id="gw5-UF-sT6"/>
                             <constraint firstItem="GEU-Dg-FDp" firstAttribute="leading" secondItem="AYB-Uh-1HQ" secondAttribute="leading" constant="16" id="qJT-iW-ZRg"/>
                         </constraints>
@@ -917,7 +916,7 @@ expresses your uniqueness.</string>
                         <outlet property="categoryStack" destination="O3W-tO-FGI" id="uhK-Qr-LFy"/>
                         <outlet property="continueButton" destination="6N8-YY-JxX" id="a5d-CF-QP7"/>
                         <outlet property="continueButtonBottomAnchor" destination="D64-Ph-CZg" id="N0t-g8-MVu"/>
-                        <outlet property="headingTopAnchor" destination="cF8-H1-omx" id="nBC-He-9U4"/>
+                        <outlet property="headingTopAnchor" destination="gw5-UF-sT6" id="9Y8-Ip-9ge"/>
                         <outlet property="headlingTitleLabel" destination="9oS-mw-qQS" id="x44-jF-QoC"/>
                         <outlet property="subtitleLabel" destination="RwA-mU-xCg" id="1Og-YL-REg"/>
                         <outlet property="titleLabelStack" destination="uJE-FJ-fsJ" id="hYd-SA-dUd"/>
@@ -1025,20 +1024,6 @@ expresses your uniqueness.</string>
                                             <view contentMode="scaleAspectFit" translatesAutoresizingMaskIntoConstraints="NO" id="Cyj-mF-jAR">
                                                 <rect key="frame" x="0.0" y="21" width="276" height="53"/>
                                                 <subviews>
-                                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Tnj-c4-xFG">
-                                                        <rect key="frame" x="0.0" y="15" width="276" height="1"/>
-                                                        <color key="backgroundColor" red="0.85882352939999995" green="0.88235294119999996" blue="0.92941176469999998" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                                        <constraints>
-                                                            <constraint firstAttribute="height" constant="1" id="KVH-0R-WQp"/>
-                                                        </constraints>
-                                                    </view>
-                                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="jCL-6P-iIS">
-                                                        <rect key="frame" x="0.0" y="36" width="276" height="1"/>
-                                                        <color key="backgroundColor" red="0.85882352939999995" green="0.88235294119999996" blue="0.92941176469999998" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                                        <constraints>
-                                                            <constraint firstAttribute="height" constant="1" id="Q0A-5D-QYl"/>
-                                                        </constraints>
-                                                    </view>
                                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="TopLeft" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="" lineBreakMode="tailTruncation" numberOfLines="5" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Mpi-Ew-MgJ">
                                                         <rect key="frame" x="0.0" y="0.0" width="276" height="0.0"/>
                                                         <constraints>
@@ -1051,13 +1036,7 @@ expresses your uniqueness.</string>
                                                 </subviews>
                                                 <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                                                 <constraints>
-                                                    <constraint firstItem="Tnj-c4-xFG" firstAttribute="leading" secondItem="Cyj-mF-jAR" secondAttribute="leading" id="0Q9-WG-FuE"/>
-                                                    <constraint firstItem="Tnj-c4-xFG" firstAttribute="top" secondItem="Cyj-mF-jAR" secondAttribute="top" constant="15" id="55i-pw-6Uc"/>
-                                                    <constraint firstItem="jCL-6P-iIS" firstAttribute="leading" secondItem="Cyj-mF-jAR" secondAttribute="leading" id="N1F-Wq-vKH"/>
                                                     <constraint firstItem="Mpi-Ew-MgJ" firstAttribute="leading" secondItem="Cyj-mF-jAR" secondAttribute="leading" id="NPC-zr-L9E"/>
-                                                    <constraint firstAttribute="trailing" secondItem="jCL-6P-iIS" secondAttribute="trailing" id="Nx3-AQ-Gsm"/>
-                                                    <constraint firstAttribute="trailing" secondItem="Tnj-c4-xFG" secondAttribute="trailing" id="Qgj-7A-wXS"/>
-                                                    <constraint firstItem="jCL-6P-iIS" firstAttribute="top" secondItem="Tnj-c4-xFG" secondAttribute="bottom" constant="20" id="iGg-HE-ZyU"/>
                                                     <constraint firstAttribute="trailing" secondItem="Mpi-Ew-MgJ" secondAttribute="trailing" id="oQG-0Z-t8T"/>
                                                 </constraints>
                                             </view>
@@ -1101,10 +1080,10 @@ expresses your uniqueness.</string>
                                 </constraints>
                             </view>
                             <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" text="Why should people susbscribe? Write a short summary highlighting what your program is about." textAlignment="natural" translatesAutoresizingMaskIntoConstraints="NO" id="7Va-8N-vYs">
-                                <rect key="frame" x="16" y="296" width="382" height="90"/>
+                                <rect key="frame" x="16" y="296" width="382" height="120"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                                 <constraints>
-                                    <constraint firstAttribute="height" constant="90" id="pic-X8-46p"/>
+                                    <constraint firstAttribute="height" constant="120" id="pic-X8-46p"/>
                                 </constraints>
                                 <color key="textColor" red="0.64705882349999999" green="0.68235294120000001" blue="0.79215686269999996" alpha="1" colorSpace="calibratedRGB"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="16"/>
@@ -1143,10 +1122,9 @@ expresses your uniqueness.</string>
                         <outlet property="navBarHeight" destination="r1b-1M-Ax4" id="LKR-jK-eBv"/>
                         <outlet property="navBatView" destination="jG8-fA-RF5" id="2JF-g3-gQo"/>
                         <outlet property="navTitleLabel" destination="Kye-CW-AhM" id="nL9-Nh-8Aj"/>
-                        <outlet property="placeholderBottomLine" destination="jCL-6P-iIS" id="THn-fY-36O"/>
-                        <outlet property="placeholderLine" destination="Tnj-c4-xFG" id="NWk-1U-Yoz"/>
                         <outlet property="summayBarTopAnchor" destination="tp3-FN-xlC" id="BCj-WO-cHX"/>
                         <outlet property="textSummaryView" destination="7Va-8N-vYs" id="4DJ-nf-K36"/>
+                        <outlet property="textViewHeight" destination="pic-X8-46p" id="8EW-PT-sM6"/>
                         <outlet property="textViewTopAnchor" destination="dZH-fp-6CI" id="hhA-1l-kmv"/>
                     </connections>
                 </viewController>

@@ -18,17 +18,18 @@ class PublisherSummaryController: UIViewController, UITextViewDelegate {
     @IBOutlet weak var mainAccountSummary: UILabel!
     @IBOutlet weak var characterCountLabel: UILabel!
     @IBOutlet weak var textSummaryView: UITextView!
-    @IBOutlet weak var placeholderLine: UIView!
-    @IBOutlet weak var placeholderBottomLine: UIView!
     @IBOutlet weak var navBarHeight: NSLayoutConstraint!
     @IBOutlet weak var summayBarTopAnchor: NSLayoutConstraint!
     @IBOutlet weak var mainSummaryHeigh: NSLayoutConstraint!
+    @IBOutlet weak var placeholderTopLine: UIView!
+    @IBOutlet weak var placeholderBottomLine: UIView!
     
     @IBOutlet weak var backButtonTopAnchor: NSLayoutConstraint!
     @IBOutlet weak var mainImageHeight: NSLayoutConstraint!
     @IBOutlet weak var mainImageWidth: NSLayoutConstraint!
     @IBOutlet weak var mainStackViewTopAnchor: NSLayoutConstraint!
     @IBOutlet weak var textViewTopAnchor: NSLayoutConstraint!
+    @IBOutlet weak var textViewHeight: NSLayoutConstraint!
     
     lazy var leadConstraints = view.constraintWith(identifier: "leadAnchor")
     lazy var trailingConstraints = view.constraintWith(identifier: "trailingAnchor")
@@ -101,7 +102,7 @@ class PublisherSummaryController: UIViewController, UITextViewDelegate {
         super.viewDidLoad()
         styleForScreens()
         setupMainTitle()
-        
+//        textSummaryView.backgroundColor = .blue
         textSummaryView.textColor = CustomStyle.fourthShade
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillChange(notification:)), name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
@@ -116,7 +117,7 @@ class PublisherSummaryController: UIViewController, UITextViewDelegate {
             break
         case .iPhoneSE:
             backButtonTopAnchor.constant = 10.0
-            mainStackViewTopAnchor.constant = 15.0
+            mainStackViewTopAnchor.constant = 10.0
             navBarHeight.constant = 90.0
             mainImageHeight.constant = 60.0
             mainImageWidth.constant = 60.0
@@ -125,10 +126,12 @@ class PublisherSummaryController: UIViewController, UITextViewDelegate {
             mainNameSize = 16
             mainIdSize = 12
             textViewTopAnchor.constant = 5.0
+            textViewHeight.constant = 90.0
             updateEdgeConstraints()
         case .iPhone8:
-            mainStackViewTopAnchor.constant = 20.0
-            textViewTopAnchor.constant = 10.0
+            mainStackViewTopAnchor.constant = 15.0
+            textViewTopAnchor.constant = 5.0
+            textViewHeight.constant = 85.0
             addBottomSection()
         case .iPhone8Plus:
             addBottomSection()
@@ -220,8 +223,17 @@ class PublisherSummaryController: UIViewController, UITextViewDelegate {
         if textSummaryView.textColor == CustomStyle.fourthShade {
             textSummaryView.text = nil
             textSummaryView.textColor = CustomStyle.primaryblack
-            placeholderLine.isHidden = true
+            placeholderTopLine.isHidden = true
             placeholderBottomLine.isHidden = true
+        }
+    }
+    
+    func textViewDidEndEditing(_ textView: UITextView) {
+        if textSummaryView.text.isEmpty {
+            textSummaryView.text = "Write a short summary highlighting what your program iss about."
+            textSummaryView.textColor = CustomStyle.fourthShade
+            placeholderTopLine.isHidden = false
+            placeholderBottomLine.isHidden = false
         }
     }
     
@@ -235,21 +247,6 @@ class PublisherSummaryController: UIViewController, UITextViewDelegate {
         } else {
             characterCountLabel.font = UIFont.systemFont(ofSize: 12, weight: .regular)
             characterCountLabel.textColor = CustomStyle.fourthShade
-        }
-        // Move summary bar down with Text view
-        print(mainAccountSummary.frame.height)
-        if mainAccountSummary.frame.height >= 78.0 {
-            summayBarTopAnchor.constant = (mainAccountSummary.frame.height - 74) + 45.0
-        }
-       
-    }
-    
-    func textViewDidEndEditing(_ textView: UITextView) {
-        if textSummaryView.text.isEmpty {
-            textSummaryView.text = "Write a short summary highlighting what your program iss about."
-            textSummaryView.textColor = CustomStyle.fourthShade
-            placeholderLine.isHidden = false
-            placeholderBottomLine.isHidden = false
         }
     }
     

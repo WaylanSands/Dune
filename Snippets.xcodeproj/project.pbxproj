@@ -12,10 +12,13 @@
 		4801959123D7C9680027FA91 /* DeviceSizes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4801959023D7C9680027FA91 /* DeviceSizes.swift */; };
 		4801959323D80BE60027FA91 /* TagController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4801959223D80BE60027FA91 /* TagController.swift */; };
 		480526C323CC54B500D62224 /* AccountTypeController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 480526C223CC54B500D62224 /* AccountTypeController.swift */; };
+		480DDA2623E8BB190078FEAC /* PublisherAddSummaryController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 480DDA2523E8BB190078FEAC /* PublisherAddSummaryController.swift */; };
+		4832A92823EA661400BDAA4E /* PassThoughView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4832A92723EA661400BDAA4E /* PassThoughView.swift */; };
 		4836FCCB23D2EE4400C80D89 /* publisherExplanationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4836FCCA23D2EE4400C80D89 /* publisherExplanationController.swift */; };
 		4844916623CFCD9F000E13FA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4844916523CFCD9F000E13FA /* Assets.xcassets */; };
 		485605B123CEE938006CEBC9 /* ListenerCategoriesController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 485605B023CEE938006CEBC9 /* ListenerCategoriesController.swift */; };
 		485605B323CEF5BE006CEBC9 /* Categories.swift in Sources */ = {isa = PBXBuildFile; fileRef = 485605B223CEF5BE006CEBC9 /* Categories.swift */; };
+		4861619923ECD8F900A99CF0 /* holdon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4861619823ECD8F900A99CF0 /* holdon.swift */; };
 		4868045323E6D96800F8B244 /* LaunchScreenController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4868045223E6D96800F8B244 /* LaunchScreenController.swift */; };
 		487AA91123D64C8300B53F26 /* PublisherSummaryController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 487AA91023D64C8300B53F26 /* PublisherSummaryController.swift */; };
 		487DFC8423D5245E00137C36 /* publisherImageController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 487DFC8323D5245E00137C36 /* publisherImageController.swift */; };
@@ -28,6 +31,7 @@
 		48C084DF23CA7148009F417F /* CreatePassword.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48C084DE23CA7148009F417F /* CreatePassword.swift */; };
 		48C084E123CA7166009F417F /* AddBirthDate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48C084E023CA7166009F417F /* AddBirthDate.swift */; };
 		48C1E87623D4302700AACD71 /* publisherNameController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48C1E87523D4302700AACD71 /* publisherNameController.swift */; };
+		48CFC1F923EB643D004434CC /* CustomNavBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48CFC1F823EB643D004434CC /* CustomNavBar.swift */; };
 		48DC720F23C6E998002AB21F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48DC720E23C6E998002AB21F /* AppDelegate.swift */; };
 		48DC721123C6E998002AB21F /* InitialSignupController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48DC721023C6E998002AB21F /* InitialSignupController.swift */; };
 		48DC721423C6E998002AB21F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 48DC721223C6E998002AB21F /* Main.storyboard */; };
@@ -45,10 +49,13 @@
 		4801959023D7C9680027FA91 /* DeviceSizes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceSizes.swift; sourceTree = "<group>"; };
 		4801959223D80BE60027FA91 /* TagController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagController.swift; sourceTree = "<group>"; };
 		480526C223CC54B500D62224 /* AccountTypeController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountTypeController.swift; sourceTree = "<group>"; };
+		480DDA2523E8BB190078FEAC /* PublisherAddSummaryController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublisherAddSummaryController.swift; sourceTree = "<group>"; };
+		4832A92723EA661400BDAA4E /* PassThoughView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassThoughView.swift; sourceTree = "<group>"; };
 		4836FCCA23D2EE4400C80D89 /* publisherExplanationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = publisherExplanationController.swift; path = "Snippets/Onboarding/Controllers/Publisher controllers/publisherExplanationController.swift"; sourceTree = SOURCE_ROOT; };
 		4844916523CFCD9F000E13FA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = Snippets/Assets.xcassets; sourceTree = "<group>"; };
 		485605B023CEE938006CEBC9 /* ListenerCategoriesController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListenerCategoriesController.swift; sourceTree = "<group>"; };
 		485605B223CEF5BE006CEBC9 /* Categories.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Categories.swift; sourceTree = "<group>"; };
+		4861619823ECD8F900A99CF0 /* holdon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = holdon.swift; path = "Snippets/Onboarding/Controllers/Publisher controllers/holdon.swift"; sourceTree = "<group>"; };
 		4868045223E6D96800F8B244 /* LaunchScreenController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchScreenController.swift; sourceTree = "<group>"; };
 		487AA91023D64C8300B53F26 /* PublisherSummaryController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublisherSummaryController.swift; sourceTree = "<group>"; };
 		487DFC8323D5245E00137C36 /* publisherImageController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = publisherImageController.swift; sourceTree = "<group>"; };
@@ -61,6 +68,7 @@
 		48C084DE23CA7148009F417F /* CreatePassword.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreatePassword.swift; sourceTree = "<group>"; };
 		48C084E023CA7166009F417F /* AddBirthDate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddBirthDate.swift; sourceTree = "<group>"; };
 		48C1E87523D4302700AACD71 /* publisherNameController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = publisherNameController.swift; path = "Snippets/Onboarding/Controllers/Publisher controllers/publisherNameController.swift"; sourceTree = SOURCE_ROOT; };
+		48CFC1F823EB643D004434CC /* CustomNavBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomNavBar.swift; sourceTree = "<group>"; };
 		48DC720B23C6E998002AB21F /* Snippets.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Snippets.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		48DC720E23C6E998002AB21F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		48DC721023C6E998002AB21F /* InitialSignupController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InitialSignupController.swift; sourceTree = "<group>"; };
@@ -113,6 +121,8 @@
 				48C084DE23CA7148009F417F /* CreatePassword.swift */,
 				48C084E023CA7166009F417F /* AddBirthDate.swift */,
 				48DEC40723CFE999005A1E83 /* OnboardingProgramCell.swift */,
+				4832A92723EA661400BDAA4E /* PassThoughView.swift */,
+				48CFC1F823EB643D004434CC /* CustomNavBar.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -151,6 +161,7 @@
 				48C1E87523D4302700AACD71 /* publisherNameController.swift */,
 				487DFC8323D5245E00137C36 /* publisherImageController.swift */,
 				488CB63E23D5379D00E9EBA4 /* publisherCategoriesController.swift */,
+				480DDA2523E8BB190078FEAC /* PublisherAddSummaryController.swift */,
 				487AA91023D64C8300B53F26 /* PublisherSummaryController.swift */,
 				4801959223D80BE60027FA91 /* TagController.swift */,
 			);
@@ -185,6 +196,7 @@
 				4844916523CFCD9F000E13FA /* Assets.xcassets */,
 				48DC720D23C6E998002AB21F /* Snippets */,
 				48DC720C23C6E998002AB21F /* Products */,
+				4861619823ECD8F900A99CF0 /* holdon.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -298,13 +310,17 @@
 				4801619823C7BE500038318B /* CustomStyle.swift in Sources */,
 				48B8688023C744B800EFEB88 /* CreateUsername.swift in Sources */,
 				4836FCCB23D2EE4400C80D89 /* publisherExplanationController.swift in Sources */,
+				48CFC1F923EB643D004434CC /* CustomNavBar.swift in Sources */,
 				487AA91123D64C8300B53F26 /* PublisherSummaryController.swift in Sources */,
+				4832A92823EA661400BDAA4E /* PassThoughView.swift in Sources */,
 				48A4E0E823CAFE4300A58F61 /* SignInController.swift in Sources */,
 				48DEC40623CFDD83005A1E83 /* ListenerProgramSelectionController.swift in Sources */,
 				48C084E123CA7166009F417F /* AddBirthDate.swift in Sources */,
 				48C084DF23CA7148009F417F /* CreatePassword.swift in Sources */,
+				4861619923ECD8F900A99CF0 /* holdon.swift in Sources */,
 				488CB63F23D5379D00E9EBA4 /* publisherCategoriesController.swift in Sources */,
 				48DC721123C6E998002AB21F /* InitialSignupController.swift in Sources */,
+				480DDA2623E8BB190078FEAC /* PublisherAddSummaryController.swift in Sources */,
 				48B8688423C7586A00EFEB88 /* AddEmail.swift in Sources */,
 				480526C323CC54B500D62224 /* AccountTypeController.swift in Sources */,
 				485605B123CEE938006CEBC9 /* ListenerCategoriesController.swift in Sources */,

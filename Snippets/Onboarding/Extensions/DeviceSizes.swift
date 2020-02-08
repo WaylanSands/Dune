@@ -41,6 +41,45 @@ extension UIDevice {
             return .unknown
         }
     }
+    
+    func navBarHeight() -> CGFloat {
+        let deviceSize = UIDevice.current.deviceType
+        
+        switch deviceSize {
+        case .iPhone4S, .iPhoneSE, .iPhone8:
+            return 64.0
+        case .iPhone8Plus:
+            return 64.0
+        case .iPhone11:
+            return 88.0
+        case .iPhone11Pro:
+            return 88.0
+        case .iPhone11ProMax:
+            return 88.0
+        case .unknown:
+            return 64.0
+        }
+    }
+    
+    func navBarButtonTopAnchor() -> CGFloat {
+        let deviceSize = UIDevice.current.deviceType
+        
+        switch deviceSize {
+        case .iPhone4S, .iPhoneSE, .iPhone8:
+            return 25.0
+        case .iPhone8Plus:
+            return 25.0
+        case .iPhone11:
+            return 50.0
+        case .iPhone11Pro:
+            return 50.0
+        case .iPhone11ProMax:
+            return 50.0
+        case .unknown:
+            return 45.0
+        }
+    }
+    
 }
 
 extension UIView {

@@ -98,11 +98,11 @@ class publisherCategoriesController: UIViewController {
     
     @IBAction func continueButtonPress() {
         if selectedCategory != nil {
-            if let summaryController = UIStoryboard(name: "OnboardingPublisher", bundle: nil).instantiateViewController(withIdentifier: "summaryController") as? PublisherSummaryController {
-                navigationController?.pushViewController(summaryController, animated: true)
+//            if let summaryController = UIStoryboard(name: "OnboardingPublisher", bundle: nil).instantiateViewController(withIdentifier: "summaryController") as? PublisherSummaryController {
+//                navigationController?.pushViewController(summaryController, animated: true)
+            let summaryController = PublisherAddSummaryController()
+            navigationController?.pushViewController(summaryController, animated: true)
             }
         }
-    }
-    
     
 }
