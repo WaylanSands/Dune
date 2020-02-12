@@ -12,16 +12,18 @@ class ListenerCategoriesController: UIViewController {
     
     @IBOutlet var categoryButtons: [UIButton]!
     @IBOutlet weak var continueButton: UIButton!
-    @IBOutlet weak var continueButtonBottomAnchor: NSLayoutConstraint!
-    @IBOutlet weak var backButton: UIButton!
-    @IBOutlet weak var backButtonTopAnchor: NSLayoutConstraint!
     @IBOutlet weak var categoryStack: UIStackView!
     @IBOutlet weak var titleLabelStack: UIStackView!
     @IBOutlet weak var titleLabelTopAnchor: NSLayoutConstraint!
     @IBOutlet weak var subTitleLabel: UILabel!
     @IBOutlet weak var mainTitleLabel: UILabel!
+    @IBOutlet weak var continueButtonHeightAnchor: NSLayoutConstraint!
     
-    let deviceType = UIDevice.current.deviceType
+    let customNavBar = CustomNavBar()
+    let device = UIDevice()
+    lazy var deviceType = device.deviceType
+    lazy var dynamicNavbarHeight = device.navBarHeight()
+    lazy var dynamicNavbarButtonHeight = device.navBarButtonTopAnchor()
     
     var categories: [String] = []
     var categorySelection: [String] = []
@@ -35,7 +37,18 @@ class ListenerCategoriesController: UIViewController {
         super.viewDidLoad()
         setupCategoryButtons()
         styleForScreens()
-        CustomStyle.styleRoundedSignUpButton(color: CustomStyle.primaryRed, image: nil, button: continueButton)
+        continueButton.titleLabel!.alpha = 0.7
+        customNavBar.skipButton.isHidden = true
+        customNavBar.backButton.addTarget(self, action: #selector(backButtonPress), for: .touchUpInside)
+        
+        view.addSubview(customNavBar)
+        customNavBar.bringSubviewToFront(customNavBar)
+        customNavBar.translatesAutoresizingMaskIntoConstraints = false
+        customNavBar.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+        customNavBar.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        customNavBar.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        customNavBar.heightAnchor.constraint(equalToConstant: dynamicNavbarHeight).isActive = true
+        
         categoryStack.translatesAutoresizingMaskIntoConstraints = false
     }
     
@@ -44,16 +57,18 @@ class ListenerCategoriesController: UIViewController {
         case .iPhone4S:
             break
         case .iPhoneSE:
-            backButtonTopAnchor.constant = 10.0
             mainTitleLabel.font = UIFont.systemFont(ofSize: 26, weight: .bold)
             titleLabelTopAnchor.constant = 40.0
-            continueButtonBottomAnchor.constant = 25.0
             shrinkButtons()
+            continueButtonHeightAnchor.constant = 50.0
+            continueButton.titleEdgeInsets = .zero
         case .iPhone8:
             titleLabelTopAnchor.constant = 70.0
-            continueButtonBottomAnchor.constant = 50.0
+            continueButtonHeightAnchor.constant = 50.0
+            continueButton.titleEdgeInsets = .zero
         case .iPhone8Plus:
-            break
+            continueButton.titleEdgeInsets = .zero
+            continueButtonHeightAnchor.constant = 50.0
         case .iPhone11:
             break
         case .iPhone11Pro:
@@ -82,7 +97,7 @@ class ListenerCategoriesController: UIViewController {
         }
     }
 
-    @IBAction func backButtonPress() {
+    @objc func backButtonPress() {
         navigationController?.popViewController(animated: true)
     }
     
@@ -96,9 +111,9 @@ class ListenerCategoriesController: UIViewController {
         }
         
         if categorySelection.count == selectionMax {
-            continueButton.alpha = 1.0
+            continueButton.titleLabel!.alpha = 1.0
         } else {
-            continueButton.alpha = 0.7
+            continueButton.titleLabel!.alpha = 0.7
         }
     }
     

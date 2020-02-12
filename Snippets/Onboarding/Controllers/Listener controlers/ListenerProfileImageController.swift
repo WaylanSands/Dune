@@ -15,14 +15,16 @@ class ListenerProfileImageController: UIViewController {
     @IBOutlet weak var titleLabelStack: UIStackView!
     @IBOutlet weak var mainTitleLabel: UILabel!
     @IBOutlet weak var subtitleLabel: UILabel!
-    @IBOutlet weak var backButton: UIButton!
-    @IBOutlet weak var backButtonTopAnchor: NSLayoutConstraint!
     @IBOutlet weak var titleStackTopAnchor: NSLayoutConstraint!
     @IBOutlet weak var profileImagesStack: UIStackView!
     @IBOutlet weak var profileImagesYAnchor: NSLayoutConstraint!
     @IBOutlet var profileImages: [UIImageView]!
     
-    let deviceType = UIDevice.current.deviceType
+    let customNavBar = CustomNavBar()
+    let device = UIDevice()
+    lazy var deviceType = device.deviceType
+    lazy var dynamicNavbarHeight = device.navBarHeight()
+    lazy var dynamicNavbarButtonHeight = device.navBarButtonTopAnchor()
     
     override var preferredStatusBarStyle: UIStatusBarStyle {
         return .lightContent
@@ -31,12 +33,22 @@ class ListenerProfileImageController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         styleButtons()
-      styleForScreens()
+        styleForScreens()
+        customNavBar.skipButton.isHidden = true
+        customNavBar.backButton.addTarget(self, action: #selector(backButtonPress), for: .touchUpInside)
+        
+        view.addSubview(customNavBar)
+        customNavBar.bringSubviewToFront(customNavBar)
+        customNavBar.translatesAutoresizingMaskIntoConstraints = false
+        customNavBar.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+        customNavBar.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        customNavBar.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        customNavBar.heightAnchor.constraint(equalToConstant: dynamicNavbarHeight).isActive = true
     }
     
     func styleButtons() {
         CustomStyle.styleRoundedSignUpButton(color: CustomStyle.snapColor, image: #imageLiteral(resourceName: "snap-icon"), button: bitmojiButton)
-        CustomStyle.styleRoundedSignUpButton(color: CustomStyle.primaryRed, image: nil, button: addPhotoButton)
+        CustomStyle.styleRoundedSignUpButton(color: CustomStyle.primaryBlue, image: nil, button: addPhotoButton)
     }
     
     func styleForScreens() {
@@ -44,7 +56,6 @@ class ListenerProfileImageController: UIViewController {
         case .iPhone4S:
             break
         case .iPhoneSE:
-             backButtonTopAnchor.constant = 10.0
              titleStackTopAnchor.constant = 60.0
              mainTitleLabel.font = UIFont.systemFont(ofSize: 26, weight: .bold)
               styleProfileImages(size: 60.0)
@@ -71,7 +82,7 @@ class ListenerProfileImageController: UIViewController {
         }
     }
     
-    @IBAction func backButtonPress() {
+    @objc func backButtonPress() {
         navigationController?.popViewController(animated: true)
     }
     

@@ -236,7 +236,7 @@ class TagController: UIViewController, UITextViewDelegate {
         
         if Int(characterCountLabel.text!)! < 0 {
             characterCountLabel.font = UIFont.systemFont(ofSize: 12, weight: .bold)
-            characterCountLabel.textColor = CustomStyle.primaryRed
+            characterCountLabel.textColor = CustomStyle.primaryBlue
         } else {
             characterCountLabel.font = UIFont.systemFont(ofSize: 12, weight: .regular)
             characterCountLabel.textColor = CustomStyle.fourthShade

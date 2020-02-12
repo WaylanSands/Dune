@@ -10,7 +10,6 @@ import UIKit
 
 class SignInController: UIViewController, UITextFieldDelegate {
     
-    @IBOutlet weak var backButton: UIButton!
     @IBOutlet weak var emailLabel: UILabel!
     @IBOutlet weak var passwordLabel: UILabel!
     @IBOutlet weak var emailTextField: UITextField!
@@ -18,9 +17,16 @@ class SignInController: UIViewController, UITextFieldDelegate {
     @IBOutlet weak var forgotPasswordLabel: UILabel!
     @IBOutlet weak var clickHereLabel: UIButton!
     @IBOutlet weak var signInButton: UIButton!
-    @IBOutlet weak var backButtonTopAnchor: NSLayoutConstraint!
     @IBOutlet weak var textFieldsTopAnchor: NSLayoutConstraint!
     @IBOutlet weak var forgotPasswordTopAnchor: NSLayoutConstraint!
+    
+    let customNavBar = CustomNavBar()
+    let device = UIDevice()
+    lazy var deviceType = device.deviceType
+    lazy var dynamicNavbarHeight = device.navBarHeight()
+    lazy var dynamicNavbarButtonHeight = device.navBarButtonTopAnchor()
+    
+    var signinButtonPadding: CGFloat = 10.0
     
     lazy var containerView: UIView = {
         let view = UIView()
@@ -30,18 +36,12 @@ class SignInController: UIViewController, UITextFieldDelegate {
     
     let signinButton: UIButton = {
         let button = UIButton()
-        button.backgroundColor = CustomStyle.primaryRed
-        button.layer.cornerRadius = 20.0
+        button.backgroundColor = CustomStyle.primaryBlue
         button.setTitle("Sign in", for: .normal)
-        button.setImage(#imageLiteral(resourceName: "signIn-button-icon"), for: .normal)
-        button.imageView!.image!.withRenderingMode(.alwaysOriginal)
         button.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 20)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16.0, weight: .semibold)
         return button
     }()
-    
-    var signinButtonPadding: CGFloat = 10.0
-    let deviceType = UIDevice.current.deviceType
     
     override var preferredStatusBarStyle: UIStatusBarStyle {
         return .lightContent
@@ -49,16 +49,29 @@ class SignInController: UIViewController, UITextFieldDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        customNavBar.backgroundColor = .clear
+        customNavBar.navBarTitleLabel.text = "Sign in"
+        customNavBar.skipButton.isHidden = true
+        customNavBar.backButton.addTarget(self, action: #selector(backButtonPress), for: .touchUpInside)
+        
         styleForScreens()
         
         view.addSubview(containerView)
         view.sendSubviewToBack(containerView)
         containerView.addSubview(signinButton)
         signinButton.translatesAutoresizingMaskIntoConstraints = false
-        signinButton.topAnchor.constraint(equalTo: forgotPasswordLabel.bottomAnchor, constant: 20.0).isActive = true
-        signinButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16.0).isActive = true
-        signinButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16.0).isActive = true
-        signinButton.heightAnchor.constraint(equalToConstant: 40.0).isActive = true
+        signinButton.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+        signinButton.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        signinButton.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        signinButton.heightAnchor.constraint(equalToConstant: 50.0).isActive = true
+        
+        view.addSubview(customNavBar)
+        customNavBar.bringSubviewToFront(customNavBar)
+        customNavBar.translatesAutoresizingMaskIntoConstraints = false
+        customNavBar.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+        customNavBar.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        customNavBar.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        customNavBar.heightAnchor.constraint(equalToConstant: dynamicNavbarHeight).isActive = true
         
         styleTextFields(textField: emailTextField, placeholder: "Enter email")
         styleTextFields(textField: passwordTextField, placeholder: "Enter password")
@@ -79,12 +92,10 @@ class SignInController: UIViewController, UITextFieldDelegate {
         case .iPhone4S:
             break
         case .iPhoneSE:
-            backButtonTopAnchor.constant = 10.0
             textFieldsTopAnchor.constant = 50
             emailLabel.font = UIFont.systemFont(ofSize: 20.0, weight: .semibold)
             passwordLabel.font = UIFont.systemFont(ofSize: 20.0, weight: .semibold)
         case .iPhone8:
-            backButtonTopAnchor.constant = 10.0
             textFieldsTopAnchor.constant = 80
         case .iPhone8Plus:
             break
@@ -110,7 +121,7 @@ class SignInController: UIViewController, UITextFieldDelegate {
         NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
     }
     
-    @IBAction func backButtonPress() {
+    @objc func backButtonPress() {
         emailTextField.resignFirstResponder()
         passwordTextField.resignFirstResponder()
         navigationController?.popViewController(animated: true)

@@ -11,20 +11,22 @@ import UIKit
 class publisherCategoriesController: UIViewController {
     
     @IBOutlet weak var continueButton: UIButton!
-    @IBOutlet weak var backButton: UIButton!
     @IBOutlet var categoryButtons: [UIButton]!
     @IBOutlet weak var titleLabelStack: UIStackView!
     @IBOutlet weak var headlingTitleLabel: UILabel!
     @IBOutlet weak var subtitleLabel: UILabel!
     @IBOutlet weak var categoryStack: UIStackView!
-    @IBOutlet weak var backButtonTopAnchor: NSLayoutConstraint!
     @IBOutlet weak var headingTopAnchor: NSLayoutConstraint!
-    @IBOutlet weak var continueButtonBottomAnchor: NSLayoutConstraint!
+    @IBOutlet weak var continueButtonHeightAnchor: NSLayoutConstraint!
     
     var categories: [String] = []
     var selectedCategory: String?
     
-    let deviceType = UIDevice.current.deviceType
+    let customNavBar = CustomNavBar()
+    let device = UIDevice()
+    lazy var deviceType = device.deviceType
+    lazy var dynamicNavbarHeight = device.navBarHeight()
+    lazy var dynamicNavbarButtonHeight = device.navBarButtonTopAnchor()
     
     override var preferredStatusBarStyle: UIStatusBarStyle {
         return .lightContent
@@ -32,9 +34,21 @@ class publisherCategoriesController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        customNavBar.navBarTitleLabel.isHidden = true
+        customNavBar.skipButton.isHidden = true
+        customNavBar.backButton.addTarget(self, action: #selector(backButtonPress), for: .touchUpInside)
+        continueButton.titleLabel!.alpha = 0.7
+
         styleForScreens()
         setupCategoryButtons()
-        CustomStyle.styleRoundedSignUpButton(color: CustomStyle.primaryRed, image: nil, button: continueButton)
+        
+        view.addSubview(customNavBar)
+        customNavBar.bringSubviewToFront(customNavBar)
+        customNavBar.translatesAutoresizingMaskIntoConstraints = false
+        customNavBar.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+        customNavBar.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        customNavBar.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        customNavBar.heightAnchor.constraint(equalToConstant: dynamicNavbarHeight).isActive = true
     }
     
     func styleForScreens() {
@@ -42,16 +56,18 @@ class publisherCategoriesController: UIViewController {
         case .iPhone4S:
             break
         case .iPhoneSE:
-            backButtonTopAnchor.constant = 10.0
             headlingTitleLabel.font = UIFont.systemFont(ofSize: 26, weight: .bold)
             headingTopAnchor.constant = 40.0
-            continueButtonBottomAnchor.constant = 25.0
+            continueButtonHeightAnchor.constant = 45.0
             shrinkButtons()
+            continueButton.titleEdgeInsets = .zero
         case .iPhone8:
             headingTopAnchor.constant = 70.0
-            continueButtonBottomAnchor.constant = 50.0
+            continueButtonHeightAnchor.constant = 45.0
+            continueButton.titleEdgeInsets = .zero
         case .iPhone8Plus:
-            break
+            continueButtonHeightAnchor.constant = 45.0
+            continueButton.titleEdgeInsets = .zero
         case .iPhone11:
             break
         case .iPhone11Pro:
@@ -81,7 +97,7 @@ class publisherCategoriesController: UIViewController {
     }
     
     @IBAction func categorySelected(_ sender: UIButton) {
-        continueButton.alpha = 1.0
+        continueButton.titleLabel!.alpha = 1.0
 
         CustomStyle.categoryButtonSelected(backgroundColor: CustomStyle.white ,textColor: CustomStyle.primaryblack ,button: sender)
         selectedCategory = sender.titleLabel?.text
@@ -92,7 +108,7 @@ class publisherCategoriesController: UIViewController {
         }
     }
     
-    @IBAction func backButtonPress() {
+    @objc func backButtonPress() {
         navigationController?.popViewController(animated: true)
     }
     

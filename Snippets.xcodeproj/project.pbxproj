@@ -18,9 +18,7 @@
 		4844916623CFCD9F000E13FA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4844916523CFCD9F000E13FA /* Assets.xcassets */; };
 		485605B123CEE938006CEBC9 /* ListenerCategoriesController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 485605B023CEE938006CEBC9 /* ListenerCategoriesController.swift */; };
 		485605B323CEF5BE006CEBC9 /* Categories.swift in Sources */ = {isa = PBXBuildFile; fileRef = 485605B223CEF5BE006CEBC9 /* Categories.swift */; };
-		4861619923ECD8F900A99CF0 /* holdon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4861619823ECD8F900A99CF0 /* holdon.swift */; };
 		4868045323E6D96800F8B244 /* LaunchScreenController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4868045223E6D96800F8B244 /* LaunchScreenController.swift */; };
-		487AA91123D64C8300B53F26 /* PublisherSummaryController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 487AA91023D64C8300B53F26 /* PublisherSummaryController.swift */; };
 		487DFC8423D5245E00137C36 /* publisherImageController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 487DFC8323D5245E00137C36 /* publisherImageController.swift */; };
 		488CB63F23D5379D00E9EBA4 /* publisherCategoriesController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 488CB63E23D5379D00E9EBA4 /* publisherCategoriesController.swift */; };
 		488CB64123D5571700E9EBA4 /* ListenerNameController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 488CB64023D5571700E9EBA4 /* ListenerNameController.swift */; };
@@ -28,6 +26,8 @@
 		48B8687C23C7131A00EFEB88 /* CreateUserController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48B8687B23C7131A00EFEB88 /* CreateUserController.swift */; };
 		48B8688023C744B800EFEB88 /* CreateUsername.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48B8687F23C744B800EFEB88 /* CreateUsername.swift */; };
 		48B8688423C7586A00EFEB88 /* AddEmail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48B8688323C7586A00EFEB88 /* AddEmail.swift */; };
+		48B9E70E23F2887F004B53FA /* PublisherTagController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48B9E70D23F2887F004B53FA /* PublisherTagController.swift */; };
+		48B9E71023F2916C004B53FA /* UILabelTruncated.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48B9E70F23F2916C004B53FA /* UILabelTruncated.swift */; };
 		48C084DF23CA7148009F417F /* CreatePassword.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48C084DE23CA7148009F417F /* CreatePassword.swift */; };
 		48C084E123CA7166009F417F /* AddBirthDate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48C084E023CA7166009F417F /* AddBirthDate.swift */; };
 		48C1E87623D4302700AACD71 /* publisherNameController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48C1E87523D4302700AACD71 /* publisherNameController.swift */; };
@@ -55,9 +55,7 @@
 		4844916523CFCD9F000E13FA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = Snippets/Assets.xcassets; sourceTree = "<group>"; };
 		485605B023CEE938006CEBC9 /* ListenerCategoriesController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListenerCategoriesController.swift; sourceTree = "<group>"; };
 		485605B223CEF5BE006CEBC9 /* Categories.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Categories.swift; sourceTree = "<group>"; };
-		4861619823ECD8F900A99CF0 /* holdon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = holdon.swift; path = "Snippets/Onboarding/Controllers/Publisher controllers/holdon.swift"; sourceTree = "<group>"; };
 		4868045223E6D96800F8B244 /* LaunchScreenController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchScreenController.swift; sourceTree = "<group>"; };
-		487AA91023D64C8300B53F26 /* PublisherSummaryController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublisherSummaryController.swift; sourceTree = "<group>"; };
 		487DFC8323D5245E00137C36 /* publisherImageController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = publisherImageController.swift; sourceTree = "<group>"; };
 		488CB63E23D5379D00E9EBA4 /* publisherCategoriesController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = publisherCategoriesController.swift; sourceTree = "<group>"; };
 		488CB64023D5571700E9EBA4 /* ListenerNameController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListenerNameController.swift; sourceTree = "<group>"; };
@@ -65,6 +63,8 @@
 		48B8687B23C7131A00EFEB88 /* CreateUserController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateUserController.swift; sourceTree = "<group>"; };
 		48B8687F23C744B800EFEB88 /* CreateUsername.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateUsername.swift; sourceTree = "<group>"; };
 		48B8688323C7586A00EFEB88 /* AddEmail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddEmail.swift; sourceTree = "<group>"; };
+		48B9E70D23F2887F004B53FA /* PublisherTagController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublisherTagController.swift; sourceTree = "<group>"; };
+		48B9E70F23F2916C004B53FA /* UILabelTruncated.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UILabelTruncated.swift; sourceTree = "<group>"; };
 		48C084DE23CA7148009F417F /* CreatePassword.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreatePassword.swift; sourceTree = "<group>"; };
 		48C084E023CA7166009F417F /* AddBirthDate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddBirthDate.swift; sourceTree = "<group>"; };
 		48C1E87523D4302700AACD71 /* publisherNameController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = publisherNameController.swift; path = "Snippets/Onboarding/Controllers/Publisher controllers/publisherNameController.swift"; sourceTree = SOURCE_ROOT; };
@@ -150,6 +150,7 @@
 			isa = PBXGroup;
 			children = (
 				4801959023D7C9680027FA91 /* DeviceSizes.swift */,
+				48B9E70F23F2916C004B53FA /* UILabelTruncated.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -162,7 +163,7 @@
 				487DFC8323D5245E00137C36 /* publisherImageController.swift */,
 				488CB63E23D5379D00E9EBA4 /* publisherCategoriesController.swift */,
 				480DDA2523E8BB190078FEAC /* PublisherAddSummaryController.swift */,
-				487AA91023D64C8300B53F26 /* PublisherSummaryController.swift */,
+				48B9E70D23F2887F004B53FA /* PublisherTagController.swift */,
 				4801959223D80BE60027FA91 /* TagController.swift */,
 			);
 			path = "Publisher controllers";
@@ -196,7 +197,6 @@
 				4844916523CFCD9F000E13FA /* Assets.xcassets */,
 				48DC720D23C6E998002AB21F /* Snippets */,
 				48DC720C23C6E998002AB21F /* Products */,
-				4861619823ECD8F900A99CF0 /* holdon.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -305,19 +305,19 @@
 			buildActionMask = 2147483647;
 			files = (
 				48B8687C23C7131A00EFEB88 /* CreateUserController.swift in Sources */,
+				48B9E70E23F2887F004B53FA /* PublisherTagController.swift in Sources */,
 				487DFC8423D5245E00137C36 /* publisherImageController.swift in Sources */,
 				48DEC40823CFE999005A1E83 /* OnboardingProgramCell.swift in Sources */,
 				4801619823C7BE500038318B /* CustomStyle.swift in Sources */,
 				48B8688023C744B800EFEB88 /* CreateUsername.swift in Sources */,
 				4836FCCB23D2EE4400C80D89 /* publisherExplanationController.swift in Sources */,
 				48CFC1F923EB643D004434CC /* CustomNavBar.swift in Sources */,
-				487AA91123D64C8300B53F26 /* PublisherSummaryController.swift in Sources */,
 				4832A92823EA661400BDAA4E /* PassThoughView.swift in Sources */,
+				48B9E71023F2916C004B53FA /* UILabelTruncated.swift in Sources */,
 				48A4E0E823CAFE4300A58F61 /* SignInController.swift in Sources */,
 				48DEC40623CFDD83005A1E83 /* ListenerProgramSelectionController.swift in Sources */,
 				48C084E123CA7166009F417F /* AddBirthDate.swift in Sources */,
 				48C084DF23CA7148009F417F /* CreatePassword.swift in Sources */,
-				4861619923ECD8F900A99CF0 /* holdon.swift in Sources */,
 				488CB63F23D5379D00E9EBA4 /* publisherCategoriesController.swift in Sources */,
 				48DC721123C6E998002AB21F /* InitialSignupController.swift in Sources */,
 				480DDA2623E8BB190078FEAC /* PublisherAddSummaryController.swift in Sources */,
@@ -478,6 +478,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = PMDTSY5PZ6;
 				INFOPLIST_FILE = Snippets/Info.plist;
@@ -487,6 +488,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.waylansands.Snippets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -496,6 +498,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = PMDTSY5PZ6;
 				INFOPLIST_FILE = Snippets/Info.plist;
@@ -505,6 +508,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.waylansands.Snippets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};

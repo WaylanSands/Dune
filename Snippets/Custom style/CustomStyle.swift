@@ -10,8 +10,8 @@ import UIKit
 
 class CustomStyle {
     
-    static let primaryRed = UIColor(#colorLiteral(red: 1, green: 0, blue: 0.6098213792, alpha: 1))
-    static let primaryBlue = UIColor(#colorLiteral(red: 0.3184746802, green: 0.5403701067, blue: 1, alpha: 1))
+    static let primaryBlue = UIColor(#colorLiteral(red: 0.1098039216, green: 0, blue: 1, alpha: 1))
+    static let primaryYellow = UIColor(#colorLiteral(red: 0.9960784314, green: 1, blue: 0, alpha: 1))
     static let white = UIColor(#colorLiteral(red: 1, green: 1, blue: 1, alpha: 1))
     static let whiteCg = CGColor(#colorLiteral(red: 1, green: 1, blue: 1, alpha: 1))
     static let secondShade = UIColor(#colorLiteral(red: 0.9401001334, green: 0.9566956162, blue: 0.9783065915, alpha: 1))
@@ -23,7 +23,7 @@ class CustomStyle {
     static let primaryblack = UIColor(#colorLiteral(red: 0.1129432991, green: 0.1129470244, blue: 0.1129450426, alpha: 1))
     static let onboardingBlack = UIColor(#colorLiteral(red: 0.09019607843, green: 0.09803921569, blue: 0.1098039216, alpha: 1))
     static let snapColor = UIColor(#colorLiteral(red: 1, green: 0.9882352941, blue: 0, alpha: 1))
-    
+
     
     // Onboarding
     
@@ -37,13 +37,15 @@ class CustomStyle {
         }
     }
     
-    static func styleRoundedPublishserpButton(borderColor: CGColor, backgroundColor: UIColor, image: UIImage ,button: UIButton) {
+    static func styleRoundedPublishserpButton(borderColor: CGColor, backgroundColor: UIColor, image: UIImage? ,button: UIButton) {
         button.backgroundColor = backgroundColor
         button.layer.borderColor = borderColor
         button.layer.cornerRadius = 20.0
+        button.layer.borderWidth = 1
+        if image != nil {
         button.setImage(image, for: .normal)
         button.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 20)
-        button.layer.borderWidth = 1
+        }
     }
     
     static func styleCategoryButtons(color: UIColor ,button: UIButton) {

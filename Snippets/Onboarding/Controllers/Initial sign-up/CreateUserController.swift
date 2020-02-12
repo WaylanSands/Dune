@@ -82,7 +82,7 @@ class CreateUserController: UIViewController {
         addBirthDate.leadingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         addBirthDate.bottomAnchor.constraint(equalTo: nextButton.topAnchor).isActive = true
         
-        nextButton.backgroundColor = CustomStyle.primaryBlue.withAlphaComponent(0.7)
+        nextButton.backgroundColor = CustomStyle.primaryBlue.withAlphaComponent(1)
         nextButton.layer.cornerRadius = 6.0
         nextButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 10)
     }
@@ -102,20 +102,20 @@ class CreateUserController: UIViewController {
             subviewHeight = 190.0
         case .iPhone8:
             progressBarTopAnchor.constant = 70.0
-            progressBarWidthAnchor.constant = 45.0
-            progressBarHeightAnchor.constant = 45.0
+            progressBarWidthAnchor.constant = 32.0
+            progressBarHeightAnchor.constant = 32.0
         case .iPhone8Plus:
-             progressBarWidthAnchor.constant = 45.0
-                       progressBarHeightAnchor.constant = 45.0
+            progressBarWidthAnchor.constant = 32.0
+            progressBarHeightAnchor.constant = 32.0
         case .iPhone11:
-             progressBarWidthAnchor.constant = 45.0
-                       progressBarHeightAnchor.constant = 45.0
+            progressBarWidthAnchor.constant = 32.0
+            progressBarHeightAnchor.constant = 32.0
         case .iPhone11Pro:
-             progressBarWidthAnchor.constant = 45.0
-                       progressBarHeightAnchor.constant = 45.0
+            progressBarWidthAnchor.constant = 32.0
+            progressBarHeightAnchor.constant = 32.0
         case .iPhone11ProMax:
-             progressBarWidthAnchor.constant = 45.0
-                       progressBarHeightAnchor.constant = 45.0
+            progressBarWidthAnchor.constant = 32.0
+            progressBarHeightAnchor.constant = 32.0
         case .unknown:
             break
         }
@@ -203,26 +203,26 @@ class CreateUserController: UIViewController {
         if deviceType == .iPhoneSE {
             switch imageNumber {
             case 1:
-                progressBarSE.image = #imageLiteral(resourceName: "progressBar-small-one")
+                progressBarSE.image = #imageLiteral(resourceName: "signup-step-one")
             case 2:
-                progressBarSE.image = #imageLiteral(resourceName: "progressBar-small-two")
+                progressBarSE.image = #imageLiteral(resourceName: "signup-step-two")
             case 3:
-                progressBarSE.image = #imageLiteral(resourceName: "progressBar-small-three")
+                progressBarSE.image = #imageLiteral(resourceName: "signup-step-three")
             case 4:
-                 progressBarSE.image = #imageLiteral(resourceName: "progressBar-small-four")
+                 progressBarSE.image = #imageLiteral(resourceName: "signup-step-four")
             default:
                 progressBarSE.isHidden = true
             }
         } else {
             switch imageNumber {
             case 1:
-                progressBar.image = #imageLiteral(resourceName: "progressBar-one")
+                progressBar.image = #imageLiteral(resourceName: "signup-step-one")
             case 2:
-                progressBar.image = #imageLiteral(resourceName: "progressBar-two")
+                progressBar.image = #imageLiteral(resourceName: "signup-step-two")
             case 3:
-                progressBar.image = #imageLiteral(resourceName: "progressBar-three")
+                progressBar.image = #imageLiteral(resourceName: "signup-step-three")
             case 4:
-                progressBar.image = #imageLiteral(resourceName: "progressBar-four")
+                progressBar.image = #imageLiteral(resourceName: "signup-step-four")
             default:
                 progressBar.isHidden = true
             }
@@ -232,6 +232,6 @@ class CreateUserController: UIViewController {
 
 extension CreateUserController: NextButtonDelegate {
     func activeNextButton(_: Bool) {
-        nextButton.backgroundColor = CustomStyle.primaryBlue.withAlphaComponent(1)
+        nextButton.backgroundColor = CustomStyle.primaryYellow.withAlphaComponent(1)
     }
 }

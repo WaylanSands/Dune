@@ -80,6 +80,18 @@ extension UIDevice {
         }
     }
     
+    func buttonHeight() -> CGFloat {
+        let deviceSize = UIDevice.current.deviceType
+        
+        switch deviceSize {
+        case .iPhone4S, .iPhoneSE:
+            return 36.0
+        default:
+            return 40.0
+        }
+        
+    }
+    
 }
 
 extension UIView {

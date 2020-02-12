@@ -12,21 +12,43 @@ class publisherImageController: UIViewController {
     
     @IBOutlet weak var headingLabel: UILabel!
     @IBOutlet weak var uploadImageButton: UIButton!
-    @IBOutlet weak var backButtonTopAnchor: NSLayoutConstraint!
     @IBOutlet weak var headingLabelTopAnchor: NSLayoutConstraint!
     @IBOutlet weak var addLaterBottomAnchor: NSLayoutConstraint!
     @IBOutlet weak var continueButtonBottomAnchor: NSLayoutConstraint!
+    @IBOutlet var profileImages: [UIImageView]!
     
-    let deviceType = UIDevice.current.deviceType
+    let customNavBar = CustomNavBar()
+    let device = UIDevice()
+    lazy var deviceType = device.deviceType
+    lazy var dynamicNavbarHeight = device.navBarHeight()
+    lazy var dynamicNavbarButtonHeight = device.navBarButtonTopAnchor()
     
     override var preferredStatusBarStyle: UIStatusBarStyle {
         return .lightContent
     }
     override func viewDidLoad() {
         super.viewDidLoad()
+        customNavBar.navBarTitleLabel.isHidden = true
+        customNavBar.skipButton.isHidden = true
+        customNavBar.backButton.addTarget(self, action: #selector(backButtonPress), for: .touchUpInside)
          styleForScreens()
-        CustomStyle.styleRoundedSignUpButton(color: CustomStyle.primaryRed, image: nil, button: uploadImageButton)
+        addRoundedCorners()
+        CustomStyle.styleRoundedSignUpButton(color: CustomStyle.primaryBlue, image: nil, button: uploadImageButton)
         
+        view.addSubview(customNavBar)
+        customNavBar.bringSubviewToFront(customNavBar)
+        customNavBar.translatesAutoresizingMaskIntoConstraints = false
+        customNavBar.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+        customNavBar.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        customNavBar.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        customNavBar.heightAnchor.constraint(equalToConstant: dynamicNavbarHeight).isActive = true
+    }
+    
+    func addRoundedCorners() {
+        for eachImage in profileImages {
+            eachImage.layer.cornerRadius = 7
+            eachImage.clipsToBounds = true
+        }
     }
     
     func styleForScreens() {
@@ -34,7 +56,6 @@ class publisherImageController: UIViewController {
         case .iPhone4S:
             break
         case .iPhoneSE:
-            backButtonTopAnchor.constant = 10.0
             headingLabel.font = UIFont.systemFont(ofSize: 26, weight: .bold)
             headingLabelTopAnchor.constant = 40.0
             addLaterBottomAnchor.constant = 20.0
@@ -54,7 +75,7 @@ class publisherImageController: UIViewController {
         }
     }
     
-    @IBAction func backButtonPress() {
+    @objc func backButtonPress() {
         navigationController?.popViewController(animated: true)
     }
     @IBAction func uploadImageButtonPress() {

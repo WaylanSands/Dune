@@ -22,7 +22,12 @@ class ListenerProgramSelectionController: UIViewController {
     var subheadingSize: CGFloat = 22.0
     
     var categoriesSelected: [String] = []
-    let deviceType = UIDevice.current.deviceType
+    
+    let customNavBar = CustomNavBar()
+    let device = UIDevice()
+    lazy var deviceType = device.deviceType
+    lazy var dynamicNavbarHeight = device.navBarHeight()
+    lazy var dynamicNavbarButtonHeight = device.navBarButtonTopAnchor()
         
     let data = [
         CustomCellData(programImage: #imageLiteral(resourceName: "keetIt"), programName: "Keep it", userId: "@keepIt"),
@@ -110,6 +115,9 @@ class ListenerProgramSelectionController: UIViewController {
         super.viewDidLoad()
         navigationController?.setNavigationBarHidden(true, animated: true)
         view.backgroundColor = CustomStyle.onboardingBlack
+        
+        customNavBar.skipButton.setTitle("Continue", for: .normal)
+        customNavBar.backButton.addTarget(self, action: #selector(backButtonPress), for: .touchUpInside)
        
         styleForScreens()
         setupSubviews()
@@ -136,27 +144,14 @@ class ListenerProgramSelectionController: UIViewController {
     func setupSubviews() {
         view.addSubview(scrollView)
         scrollView.addSubview(containerView)
-       
-        scrollView.addSubview(topContainerView)
-        topContainerView.translatesAutoresizingMaskIntoConstraints = false
-        topContainerView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
-        topContainerView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-        topContainerView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        topContainerView.heightAnchor.constraint(equalToConstant: topContainerHeight).isActive = true
         
-        topContainerView.addSubview(backButton)
-        backButton.translatesAutoresizingMaskIntoConstraints = false
-        backButton.topAnchor.constraint(equalTo: topContainerView.topAnchor, constant: backButtonTopAnchor).isActive = true
-        backButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
-        backButton.widthAnchor.constraint(equalToConstant: 30).isActive = true
-        backButton.heightAnchor.constraint(equalToConstant: 30).isActive = true
-        
-        topContainerView.addSubview(confirmButton)
-        confirmButton.translatesAutoresizingMaskIntoConstraints = false
-        confirmButton.centerYAnchor.constraint(equalTo: backButton.centerYAnchor).isActive = true
-        confirmButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
-        confirmButton.widthAnchor.constraint(equalToConstant: 90.0).isActive = true
-        confirmButton.heightAnchor.constraint(equalToConstant: 30.0).isActive = true
+        view.addSubview(customNavBar)
+        customNavBar.bringSubviewToFront(customNavBar)
+        customNavBar.translatesAutoresizingMaskIntoConstraints = false
+        customNavBar.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+        customNavBar.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        customNavBar.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        customNavBar.heightAnchor.constraint(equalToConstant: dynamicNavbarHeight).isActive = true
                 
         let headingLabel = CustomStyle.styleSignupHeadingLeftAlign(view: self.view, title: "Select  two programs from each category")
         containerView.addSubview(headingLabel)

@@ -13,9 +13,10 @@ class PublisherAddSummaryController: UIViewController, UITextViewDelegate {
     var navbarHeight: CGFloat = 90.0
     lazy var screenHeight: CGFloat = view.frame.height
     var largeImageSize: CGFloat = 74.0
-    var confirmPress = false
     var fontNameSize: CGFloat = 16
     var fontIDSize: CGFloat = 14
+    var willTruncate = false
+    var lineCount = 1
     
     //  Resizng screen variables
     var maxCharacters = 200
@@ -26,6 +27,8 @@ class PublisherAddSummaryController: UIViewController, UITextViewDelegate {
     var lastLableHeight: CGFloat = 0.0
     var summaryBarPadding: CGFloat  = 45
     var textPlacement = true
+    
+    let customNavBar = CustomNavBar()
     
     // Styling device to device
     let device = UIDevice()
@@ -58,7 +61,9 @@ class PublisherAddSummaryController: UIViewController, UITextViewDelegate {
     
     let largeUserImage: UIImageView = {
         let imageView = UIImageView()
-        imageView.image = #imageLiteral(resourceName: "Bitmap")
+        imageView.image = #imageLiteral(resourceName: "missing-image-large")
+        imageView.layer.cornerRadius = 7
+        imageView.clipsToBounds = true
         imageView.contentMode = .scaleAspectFit
         return imageView
     }()
@@ -117,6 +122,7 @@ class PublisherAddSummaryController: UIViewController, UITextViewDelegate {
         textView.font = UIFont.systemFont(ofSize: 16, weight: .regular)
         textView.textColor = CustomStyle.fourthShade
         textView.isScrollEnabled = false
+        textView.keyboardType = .twitter
         return textView
     }()
     
@@ -127,9 +133,11 @@ class PublisherAddSummaryController: UIViewController, UITextViewDelegate {
     }()
     
     let secondaryImageView: UIImageView = {
-        let ImageView = UIImageView()
-        ImageView.image = #imageLiteral(resourceName: "Bitmap")
-        return ImageView
+        let imageView = UIImageView()
+        imageView.image = #imageLiteral(resourceName: "missing-imag-small")
+        imageView.layer.cornerRadius = 7
+        imageView.clipsToBounds = true
+        return imageView
     }()
     
     let secondaryNameLabel: UILabel = {
@@ -150,6 +158,7 @@ class PublisherAddSummaryController: UIViewController, UITextViewDelegate {
     
     let confirmButton: UIButton = {
         let button = UIButton()
+        button.alpha = 0.2
         button.layer.cornerRadius = 7.0
         button.layer.borderColor = CustomStyle.white.cgColor
         button.layer.borderWidth = 1
@@ -165,42 +174,7 @@ class PublisherAddSummaryController: UIViewController, UITextViewDelegate {
         view.backgroundColor = CustomStyle.primaryblack
         return view
     }()
-    
-    let navBar: UIView = {
-        let view = UIView()
-        view.backgroundColor = .black
-        view.alpha = 0.9
-        return view
-    }()
-    
-    lazy var backButton: UIButton = {
-        let button = UIButton()
-        button.frame = CGRect(x: 16.0, y: 45.0, width: 30.0, height: 30.0)
-        button.setImage(#imageLiteral(resourceName: "back-button-white"), for: .normal)
-        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: -15.0, bottom: 0, right: 0)
-        button.addTarget(self, action: #selector(backButtonPress), for: .touchUpInside)
-        return button
-    }()
-    
-    let navBarTitleLabel: UILabel = {
-        let label = UILabel()
-        label.text = "Summary"
-        label.font = UIFont.systemFont(ofSize: 16.0, weight: .semibold)
-        label.textColor = .white
-        return label
-    }()
-    
-    lazy var skipButton: UIButton = {
-        let button = UIButton()
-        button.titleLabel!.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
-        button.setTitle("Skip", for: .normal)
-        button.titleLabel?.textAlignment = .right
-        button.tintColor = .white
-        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 0)
-        button.addTarget(self, action: #selector(skipButtonPress), for: .touchUpInside)
-        return button
-    }()
-    
+
     override var preferredStatusBarStyle: UIStatusBarStyle {
         return .lightContent
     }
@@ -208,6 +182,9 @@ class PublisherAddSummaryController: UIViewController, UITextViewDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
+        customNavBar.navBarTitleLabel.text = "Summary"
+        customNavBar.skipButton.addTarget(self, action: #selector(skipButtonPress), for: .touchUpInside)
+        customNavBar.backButton.addTarget(self, action: #selector(backButtonPress), for: .touchUpInside)
         styleForScreens()
         setupViews()
         setupAccountLabel()
@@ -268,14 +245,7 @@ class PublisherAddSummaryController: UIViewController, UITextViewDelegate {
         guard let keyboardRect = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue else {
             return
         }
-        //        if confirmPress != true {
-        //            floatingDetailsView.frame.origin.y = view.frame.height - keyboardRect.height - 65
-        //        } else {
-        //            floatingDetailsView.frame.origin.y = view.frame.height - 120.0
-        //        }
-        
-        floatingDetailsView.frame.origin.y = view.frame.height - keyboardRect.height - 65
-        
+        floatingDetailsView.frame.origin.y = view.frame.height - keyboardRect.height -  floatingDetailsView.frame.height
     }
     
     func setupViews() {
@@ -350,31 +320,14 @@ class PublisherAddSummaryController: UIViewController, UITextViewDelegate {
         summaryTextView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor, constant: 16.0).isActive = true
         summaryTextView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor, constant: -16.0).isActive = true
         
-        view.addSubview(navBar)
-        view.bringSubviewToFront(navBar)
-        navBar.translatesAutoresizingMaskIntoConstraints = false
-        navBar.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
-        navBar.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-        navBar.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        navBar.heightAnchor.constraint(equalToConstant: dynamicNavbarHeight).isActive = true
-        
-        navBar.addSubview(backButton)
-        backButton.translatesAutoresizingMaskIntoConstraints = false
-        backButton.topAnchor.constraint(equalTo: navBar.topAnchor, constant: dynamicNavbarButtonHeight).isActive = true
-        backButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
-        backButton.widthAnchor.constraint(equalToConstant: 30).isActive = true
-        backButton.heightAnchor.constraint(equalToConstant: 30).isActive = true
-        
-        navBar.addSubview(navBarTitleLabel)
-        navBarTitleLabel.translatesAutoresizingMaskIntoConstraints = false
-        navBarTitleLabel.centerYAnchor.constraint(equalTo: backButton.centerYAnchor).isActive = true
-        navBarTitleLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
-        
-        navBar.addSubview(skipButton)
-        skipButton.translatesAutoresizingMaskIntoConstraints = false
-        skipButton.centerYAnchor.constraint(equalTo: backButton.centerYAnchor).isActive = true
-        skipButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
-        
+        view.addSubview(customNavBar)
+        customNavBar.bringSubviewToFront(customNavBar)
+        customNavBar.translatesAutoresizingMaskIntoConstraints = false
+        customNavBar.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+        customNavBar.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        customNavBar.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        customNavBar.heightAnchor.constraint(equalToConstant: dynamicNavbarHeight).isActive = true
+   
         if view.subviews.contains(passThoughView) {
             view.bringSubviewToFront(passThoughView)
         }
@@ -459,22 +412,28 @@ class PublisherAddSummaryController: UIViewController, UITextViewDelegate {
         
         if Int(summaryBarCounter.text!)! < 0 {
             summaryBarCounter.font = UIFont.systemFont(ofSize: 12, weight: .bold)
-            summaryBarCounter.textColor = CustomStyle.primaryRed
+            summaryBarCounter.textColor = #colorLiteral(red: 1, green: 0.1491314173, blue: 0, alpha: 1)
         } else {
             summaryBarCounter.font = UIFont.systemFont(ofSize: 12, weight: .regular)
             summaryBarCounter.textColor = CustomStyle.fourthShade
         }
         
         if summaryTextView.text.count > 3 && deviceType == .iPhoneSE {
-            skipButton.setTitle("Continue", for: .normal)
-            skipButton.removeTarget(self, action: #selector(skipButtonPress), for: .touchUpInside)
-            skipButton.addTarget(self, action: #selector(confirmButtonPress), for: .touchUpInside)
-            skipButton.sizeToFit()
+            customNavBar.skipButton.setTitle("Continue", for: .normal)
+            customNavBar.skipButton.removeTarget(self, action: #selector(skipButtonPress), for: .touchUpInside)
+            customNavBar.skipButton.addTarget(self, action: #selector(confirmButtonPress), for: .touchUpInside)
         } else {
-            skipButton.setTitle("Skip", for: .normal)
-            skipButton.removeTarget(self, action: #selector(confirmButtonPress), for: .touchUpInside)
-            skipButton.addTarget(self, action: #selector(skipButtonPress), for: .touchUpInside)
-            skipButton.sizeToFit()
+            customNavBar.skipButton.setTitle("Skip", for: .normal)
+            customNavBar.skipButton.removeTarget(self, action: #selector(confirmButtonPress), for: .touchUpInside)
+            customNavBar.skipButton.addTarget(self, action: #selector(skipButtonPress), for: .touchUpInside)
+        }
+        
+        if summaryTextView.text.count > 3 && deviceType != .iPhoneSE {
+            UIView.animate(withDuration: 1, animations: { self.confirmButton.alpha = 1} )
+            confirmButton.isEnabled = true
+        } else {
+            confirmButton.alpha = 0.2
+            confirmButton.isEnabled = false
         }
         
         if summaryTextView.text.isEmpty {
@@ -492,6 +451,28 @@ class PublisherAddSummaryController: UIViewController, UITextViewDelegate {
             let heightDifference =  summaryLabel.frame.height - summaryLabelThreshold
             updateSummaryBar(with: heightDifference)
         }
+        
+//        let summarySize: CGSize = summaryLabel.text!.size(withAttributes: [.font: UIFont.systemFont(ofSize: 14, weight: .regular)])
+//
+//        switch summarySize.width {
+//        case 0...summaryLabel.intrinsicContentSize.width:
+//            lineCount = 1
+//        case summaryLabel.intrinsicContentSize.width...summaryLabel.intrinsicContentSize.width * 2:
+//            lineCount = 2
+//        case summaryLabel.intrinsicContentSize.width * 2...summaryLabel.intrinsicContentSize.width * 3:
+//            lineCount = 3
+//        case summaryLabel.intrinsicContentSize.width * 3...summaryLabel.intrinsicContentSize.width * 4:
+//            lineCount = 4
+//        case summaryLabel.intrinsicContentSize.width * 4...summaryLabel.intrinsicContentSize.width * 5:
+//            lineCount = 5
+//        case summaryLabel.intrinsicContentSize.width * 5...summaryLabel.intrinsicContentSize.width * 6:
+//            lineCount = 6
+//        case summaryLabel.intrinsicContentSize.width * 6...summaryLabel.intrinsicContentSize.width * 7:
+//            lineCount = 7
+//        default:
+//            break
+//        }
+//        print(lineCount)
     }
     
     func updatePageHeight(with difference: CGFloat) {
@@ -530,7 +511,7 @@ class PublisherAddSummaryController: UIViewController, UITextViewDelegate {
             self.scrollContentView.layoutIfNeeded()
             self.summaryBar.layoutIfNeeded()
             
-            self.summaryTextView.text = "Write a short summary highlighting what your program iss about."
+            self.summaryTextView.text = "Add three tags to help people find this program."
             self.summaryTextView.textColor = CustomStyle.fourthShade
             
             let newPosition = self.summaryTextView.beginningOfDocument
@@ -539,13 +520,8 @@ class PublisherAddSummaryController: UIViewController, UITextViewDelegate {
         }
     }
     
-    func allowContinueButton() {
-        skipButton.titleLabel?.text = "Continue"
-        skipButton.removeTarget(self, action: #selector(skipButtonPress), for: .touchUpInside)
-        skipButton.addTarget(self, action: #selector(confirmButtonPress), for: .touchUpInside)
-    }
-    
     func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
+               
         if textPlacement == true {
             summaryTextView.text.removeAll()
             self.summaryTextView.textColor = CustomStyle.fithShade
@@ -555,19 +531,26 @@ class PublisherAddSummaryController: UIViewController, UITextViewDelegate {
         return true
     }
     
+    
     @objc func skipButtonPress() {
         print("Skip")
     }
     
-    @objc func backButtonPress() {
+   @objc func backButtonPress() {
         navigationController?.popViewController(animated: true)
     }
     
     @objc func confirmButtonPress() {
-        confirmPress = true
-        summaryTextView.resignFirstResponder()
         
-        let tagController = TagController()
+        summaryTextView.resignFirstResponder()
+        let tagController = PublisherTagController()
+        let summarySize: CGSize = summaryLabel.text!.size(withAttributes: [.font: UIFont.systemFont(ofSize: 14, weight: .regular)])
+        
+        if summarySize.width > summaryLabel.intrinsicContentSize.width * 3 {
+            tagController.isTruncated = true
+        }
+       
+        tagController.summaryLabel.text = summaryLabel.text
         navigationController?.pushViewController(tagController, animated: true)
         
     }

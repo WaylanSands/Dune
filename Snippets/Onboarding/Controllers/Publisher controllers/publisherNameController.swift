@@ -19,10 +19,15 @@ class publisherNameController: UIViewController, UITextFieldDelegate {
     @IBOutlet weak var nameTextField: UITextField!
     @IBOutlet weak var maxCharactersLabel: UILabel!
     @IBOutlet weak var headingLabelTopAnchor: NSLayoutConstraint!
-    @IBOutlet weak var backButtonTopAnchor: NSLayoutConstraint!
     
-    let deviceType = UIDevice.current.deviceType
+    let customNavBar = CustomNavBar()
+    let device = UIDevice()
+    lazy var deviceType = device.deviceType
+    lazy var dynamicNavbarHeight = device.navBarHeight()
+    lazy var dynamicNavbarButtonHeight = device.navBarButtonTopAnchor()
     
+    var homeIndicatorHeight:CGFloat = 34.0
+        
     lazy var containerView: UIView = {
         let view = UIView()
         view.frame = self.view.bounds
@@ -32,8 +37,7 @@ class publisherNameController: UIViewController, UITextFieldDelegate {
     let continueButton: UIButton = {
         let button = UIButton()
         button.isEnabled = true
-        button.backgroundColor = CustomStyle.primaryRed
-        button.layer.cornerRadius = 20.0
+        button.backgroundColor = CustomStyle.primaryBlue
         button.setTitle("Continue", for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16.0, weight: .semibold)
         button.addTarget(self, action: #selector(continueButtonPress), for: .touchUpInside)
@@ -48,6 +52,9 @@ class publisherNameController: UIViewController, UITextFieldDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        customNavBar.navBarTitleLabel.isHidden = true
+        customNavBar.skipButton.isHidden = true
+        customNavBar.backButton.addTarget(self, action: #selector(backButtonPress), for: .touchUpInside)
         styleForScreens()
         setupButtonContainer()
         styleTextField(textField: nameTextField, placeholder: "")
@@ -57,6 +64,14 @@ class publisherNameController: UIViewController, UITextFieldDelegate {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
             self.nameTextField.becomeFirstResponder()
         })
+        
+        view.addSubview(customNavBar)
+        customNavBar.bringSubviewToFront(customNavBar)
+        customNavBar.translatesAutoresizingMaskIntoConstraints = false
+        customNavBar.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+        customNavBar.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        customNavBar.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        customNavBar.heightAnchor.constraint(equalToConstant: dynamicNavbarHeight).isActive = true
     }
     
     func setupButtonContainer() {
@@ -64,10 +79,10 @@ class publisherNameController: UIViewController, UITextFieldDelegate {
         view.sendSubviewToBack(containerView)
         containerView.addSubview(continueButton)
         continueButton.translatesAutoresizingMaskIntoConstraints = false
-        continueButton.topAnchor.constraint(equalTo: maxCharactersLabel.bottomAnchor, constant: 20.0).isActive = true
-        continueButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16.0).isActive = true
-        continueButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16.0).isActive = true
-        continueButton.heightAnchor.constraint(equalToConstant: 40.0).isActive = true
+        continueButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -homeIndicatorHeight).isActive = true
+        continueButton.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        continueButton.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        continueButton.heightAnchor.constraint(equalToConstant: 45.0).isActive = true
     }
     
     func styleForScreens() {
@@ -75,13 +90,13 @@ class publisherNameController: UIViewController, UITextFieldDelegate {
         case .iPhone4S:
             break
         case .iPhoneSE:
-            backButtonTopAnchor.constant = 10.0
             headingLabel.font = UIFont.systemFont(ofSize: 26, weight: .bold)
             headingLabelTopAnchor.constant = 40.0
+            homeIndicatorHeight = 0.0
         case .iPhone8:
-            break
+            homeIndicatorHeight = 0.0
         case .iPhone8Plus:
-            break
+            homeIndicatorHeight = 0.0
         case .iPhone11:
             break
         case .iPhone11Pro:
@@ -97,7 +112,7 @@ class publisherNameController: UIViewController, UITextFieldDelegate {
         guard let keyboardRect = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue else {
             return
         }
-        continueButton.frame.origin.y = view.frame.height - keyboardRect.height - 50
+        continueButton.frame.origin.y = view.frame.height - keyboardRect.height - 45.0
     }
     
     deinit {
@@ -136,13 +151,16 @@ class publisherNameController: UIViewController, UITextFieldDelegate {
         }
     }
     
-    @IBAction func backButtonPress(_ sender: Any) {
+    @objc func backButtonPress(_ sender: Any) {
         nameTextField.resignFirstResponder()
         navigationController?.popViewController(animated: true)
     }
     
     @objc func continueButtonPress() {
         nameTextField.resignFirstResponder()
+        DispatchQueue.main.async {
+            self.continueButton.frame.origin.y =  self.view.frame.height - ( self.continueButton.frame.height +  self.homeIndicatorHeight)
+        }
         if let ImageController = UIStoryboard(name: "OnboardingPublisher", bundle: nil).instantiateViewController(withIdentifier: "ImageController") as? publisherImageController {
             navigationController?.pushViewController(ImageController, animated: true)
         }

@@ -16,14 +16,29 @@
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" alpha="0.45000000000000001" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="onborading-logo-white" translatesAutoresizingMaskIntoConstraints="NO" id="55d-z3-dWu">
-                                <rect key="frame" x="196.5" y="431.5" width="21" height="33"/>
-                            </imageView>
+                            <stackView opaque="NO" contentMode="scaleToFill" spacing="10" translatesAutoresizingMaskIntoConstraints="NO" id="X2n-Ak-8oJ">
+                                <rect key="frame" x="140.5" y="407" width="113.5" height="32"/>
+                                <subviews>
+                                    <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="splash-icon" translatesAutoresizingMaskIntoConstraints="NO" id="CJn-Xr-piq">
+                                        <rect key="frame" x="0.0" y="0.0" width="32" height="32"/>
+                                        <constraints>
+                                            <constraint firstAttribute="height" constant="32" id="8wO-p0-eRq"/>
+                                            <constraint firstAttribute="width" constant="32" id="enD-ww-yuV"/>
+                                        </constraints>
+                                    </imageView>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Dune" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="g3L-Hz-gqx">
+                                        <rect key="frame" x="42" y="0.0" width="71.5" height="32"/>
+                                        <fontDescription key="fontDescription" type="boldSystem" pointSize="29"/>
+                                        <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                </subviews>
+                            </stackView>
                         </subviews>
-                        <color key="backgroundColor" red="0.090196078430000007" green="0.098039215690000001" blue="0.10980392160000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <color key="backgroundColor" red="0.062745098039215685" green="0.070588235294117646" blue="0.078431372549019607" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
-                            <constraint firstItem="55d-z3-dWu" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="1Cq-5z-9bQ"/>
-                            <constraint firstItem="55d-z3-dWu" firstAttribute="centerY" secondItem="Ze5-6b-2t3" secondAttribute="centerY" id="cSt-ua-wND"/>
+                            <constraint firstItem="X2n-Ak-8oJ" firstAttribute="centerX" secondItem="6Tk-OE-BBY" secondAttribute="centerX" constant="-10" id="CbF-3R-quV"/>
+                            <constraint firstItem="X2n-Ak-8oJ" firstAttribute="centerY" secondItem="6Tk-OE-BBY" secondAttribute="centerY" constant="-30" id="uI0-Zf-vKW"/>
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                     </view>
@@ -34,6 +49,6 @@
         </scene>
     </scenes>
     <resources>
-        <image name="onborading-logo-white" width="21" height="33"/>
+        <image name="splash-icon" width="32" height="32"/>
     </resources>
 </document>
