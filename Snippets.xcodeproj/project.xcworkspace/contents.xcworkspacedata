@@ -2,6 +2,6 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "self:Snippets.xcodeproj">
+      location = "self:/Users/waylansands/Desktop/personal dev/iOS development/Snippets app/Snippets/Snippets.xcodeproj">
    </FileRef>
 </Workspace>

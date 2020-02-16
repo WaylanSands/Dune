@@ -60,7 +60,7 @@ class publisherExplanationController: UIViewController {
             containerViewHeight.constant = 1490.0
         case .iPhone11, .iPhone11Pro, .iPhone11ProMax:
             headingLabelTopAnchor.constant = 80.0
-            containerViewHeight.constant = 1490.0
+            containerViewHeight.constant = 1480.0
         case .unknown:
             break
         }

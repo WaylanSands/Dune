@@ -12,6 +12,7 @@ class PublisherAddSummaryController: UIViewController, UITextViewDelegate {
     
     var navbarHeight: CGFloat = 90.0
     lazy var screenHeight: CGFloat = view.frame.height
+    var homeIndicatorHeight:CGFloat = 34.0
     var largeImageSize: CGFloat = 74.0
     var fontNameSize: CGFloat = 16
     var fontIDSize: CGFloat = 14
@@ -204,6 +205,18 @@ class PublisherAddSummaryController: UIViewController, UITextViewDelegate {
         })
     }
     
+    override func viewWillLayoutSubviews() {
+        summaryLabel.sizeToFit()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        self.floatingDetailsView.frame.origin.y =  self.view.frame.height - ( self.floatingDetailsView.frame.height +  self.homeIndicatorHeight)
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
+    }
+    
     func styleForScreens() {
         switch deviceType {
         case .iPhone4S:
@@ -235,11 +248,6 @@ class PublisherAddSummaryController: UIViewController, UITextViewDelegate {
             addFloatingView()
         }
     }
-    
-    deinit {
-        NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
-    }
-    
     
     @objc func keyboardWillChange(notification : Notification) {
         guard let keyboardRect = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue else {
@@ -379,10 +387,6 @@ class PublisherAddSummaryController: UIViewController, UITextViewDelegate {
         bottomFill.heightAnchor.constraint(equalToConstant: 70.0).isActive = true
     }
     
-    override func viewWillLayoutSubviews() {
-        summaryLabel.sizeToFit()
-    }
-    
     func setupAccountLabel() {
         let programName = "The Daily "
         let programNameFont = UIFont.systemFont(ofSize: fontNameSize, weight: .bold)
@@ -390,7 +394,6 @@ class PublisherAddSummaryController: UIViewController, UITextViewDelegate {
         let programNameAttributes: [NSAttributedString.Key: Any] = [
             .font: programNameFont,
             .foregroundColor: CustomStyle.sixthShade
-            
         ]
         programNameAttributedString.addAttributes(programNameAttributes, range: NSRange(location: 0, length: programName.count))
         
@@ -451,28 +454,6 @@ class PublisherAddSummaryController: UIViewController, UITextViewDelegate {
             let heightDifference =  summaryLabel.frame.height - summaryLabelThreshold
             updateSummaryBar(with: heightDifference)
         }
-        
-//        let summarySize: CGSize = summaryLabel.text!.size(withAttributes: [.font: UIFont.systemFont(ofSize: 14, weight: .regular)])
-//
-//        switch summarySize.width {
-//        case 0...summaryLabel.intrinsicContentSize.width:
-//            lineCount = 1
-//        case summaryLabel.intrinsicContentSize.width...summaryLabel.intrinsicContentSize.width * 2:
-//            lineCount = 2
-//        case summaryLabel.intrinsicContentSize.width * 2...summaryLabel.intrinsicContentSize.width * 3:
-//            lineCount = 3
-//        case summaryLabel.intrinsicContentSize.width * 3...summaryLabel.intrinsicContentSize.width * 4:
-//            lineCount = 4
-//        case summaryLabel.intrinsicContentSize.width * 4...summaryLabel.intrinsicContentSize.width * 5:
-//            lineCount = 5
-//        case summaryLabel.intrinsicContentSize.width * 5...summaryLabel.intrinsicContentSize.width * 6:
-//            lineCount = 6
-//        case summaryLabel.intrinsicContentSize.width * 6...summaryLabel.intrinsicContentSize.width * 7:
-//            lineCount = 7
-//        default:
-//            break
-//        }
-//        print(lineCount)
     }
     
     func updatePageHeight(with difference: CGFloat) {
@@ -531,7 +512,6 @@ class PublisherAddSummaryController: UIViewController, UITextViewDelegate {
         return true
     }
     
-    
     @objc func skipButtonPress() {
         print("Skip")
     }
@@ -541,16 +521,18 @@ class PublisherAddSummaryController: UIViewController, UITextViewDelegate {
     }
     
     @objc func confirmButtonPress() {
-        
         summaryTextView.resignFirstResponder()
+        
+        DispatchQueue.main.async {
+            self.floatingDetailsView.frame.origin.y =  self.view.frame.height - ( self.floatingDetailsView.frame.height +  self.homeIndicatorHeight)
+        }
+        
         let tagController = PublisherTagController()
         let summarySize: CGSize = summaryLabel.text!.size(withAttributes: [.font: UIFont.systemFont(ofSize: 14, weight: .regular)])
-        
         if summarySize.width > summaryLabel.intrinsicContentSize.width * 3 {
             tagController.isTruncated = true
         }
-       
-        tagController.summaryLabel.text = summaryLabel.text
+        tagController.summaryTextView.text = summaryLabel.text
         navigationController?.pushViewController(tagController, animated: true)
         
     }

@@ -228,7 +228,6 @@ class TagController: UIViewController, UITextViewDelegate {
         default:
             return
         }
-        
     }
     
     func updateCharacterCount(textView: UITextView) {
