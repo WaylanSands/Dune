@@ -51,8 +51,8 @@
 		480526C223CC54B500D62224 /* AccountTypeController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountTypeController.swift; sourceTree = "<group>"; };
 		480DDA2523E8BB190078FEAC /* PublisherAddSummaryController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublisherAddSummaryController.swift; sourceTree = "<group>"; };
 		4832A92723EA661400BDAA4E /* PassThoughView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassThoughView.swift; sourceTree = "<group>"; };
-		4836FCCA23D2EE4400C80D89 /* publisherExplanationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = publisherExplanationController.swift; path = "Snippets/Onboarding/Controllers/Publisher controllers/publisherExplanationController.swift"; sourceTree = SOURCE_ROOT; };
-		4844916523CFCD9F000E13FA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = Snippets/Assets.xcassets; sourceTree = "<group>"; };
+		4836FCCA23D2EE4400C80D89 /* publisherExplanationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = publisherExplanationController.swift; path = "Dune/Onboarding/Controllers/Publisher controllers/publisherExplanationController.swift"; sourceTree = SOURCE_ROOT; };
+		4844916523CFCD9F000E13FA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = Dune/Assets.xcassets; sourceTree = "<group>"; };
 		485605B023CEE938006CEBC9 /* ListenerCategoriesController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListenerCategoriesController.swift; sourceTree = "<group>"; };
 		485605B223CEF5BE006CEBC9 /* Categories.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Categories.swift; sourceTree = "<group>"; };
 		4868045223E6D96800F8B244 /* LaunchScreenController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchScreenController.swift; sourceTree = "<group>"; };
@@ -67,9 +67,9 @@
 		48B9E70F23F2916C004B53FA /* UILabelTruncated.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UILabelTruncated.swift; sourceTree = "<group>"; };
 		48C084DE23CA7148009F417F /* CreatePassword.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreatePassword.swift; sourceTree = "<group>"; };
 		48C084E023CA7166009F417F /* AddBirthDate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddBirthDate.swift; sourceTree = "<group>"; };
-		48C1E87523D4302700AACD71 /* publisherNameController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = publisherNameController.swift; path = "Snippets/Onboarding/Controllers/Publisher controllers/publisherNameController.swift"; sourceTree = SOURCE_ROOT; };
+		48C1E87523D4302700AACD71 /* publisherNameController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = publisherNameController.swift; path = "Dune/Onboarding/Controllers/Publisher controllers/publisherNameController.swift"; sourceTree = SOURCE_ROOT; };
 		48CFC1F823EB643D004434CC /* CustomNavBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomNavBar.swift; sourceTree = "<group>"; };
-		48DC720B23C6E998002AB21F /* Snippets.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Snippets.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		48DC720B23C6E998002AB21F /* Dune.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Dune.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		48DC720E23C6E998002AB21F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		48DC721023C6E998002AB21F /* InitialSignupController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InitialSignupController.swift; sourceTree = "<group>"; };
 		48DC721323C6E998002AB21F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
@@ -195,7 +195,7 @@
 			isa = PBXGroup;
 			children = (
 				4844916523CFCD9F000E13FA /* Assets.xcassets */,
-				48DC720D23C6E998002AB21F /* Snippets */,
+				48DC720D23C6E998002AB21F /* Dune */,
 				48DC720C23C6E998002AB21F /* Products */,
 			);
 			sourceTree = "<group>";
@@ -203,12 +203,12 @@
 		48DC720C23C6E998002AB21F /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				48DC720B23C6E998002AB21F /* Snippets.app */,
+				48DC720B23C6E998002AB21F /* Dune.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		48DC720D23C6E998002AB21F /* Snippets */ = {
+		48DC720D23C6E998002AB21F /* Dune */ = {
 			isa = PBXGroup;
 			children = (
 				48DC720E23C6E998002AB21F /* AppDelegate.swift */,
@@ -218,7 +218,7 @@
 				48DC721723C6E999002AB21F /* LaunchScreen.storyboard */,
 				48DC721A23C6E999002AB21F /* Info.plist */,
 			);
-			path = Snippets;
+			path = Dune;
 			sourceTree = "<group>";
 		};
 		48F25C9923CECF8500B91AE2 /* Storyboards */ = {
@@ -234,9 +234,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		48DC720A23C6E998002AB21F /* Snippets */ = {
+		48DC720A23C6E998002AB21F /* Dune */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 48DC721D23C6E999002AB21F /* Build configuration list for PBXNativeTarget "Snippets" */;
+			buildConfigurationList = 48DC721D23C6E999002AB21F /* Build configuration list for PBXNativeTarget "Dune" */;
 			buildPhases = (
 				48DC720723C6E998002AB21F /* Sources */,
 				48DC720823C6E998002AB21F /* Frameworks */,
@@ -246,9 +246,9 @@
 			);
 			dependencies = (
 			);
-			name = Snippets;
+			name = Dune;
 			productName = Snippets;
-			productReference = 48DC720B23C6E998002AB21F /* Snippets.app */;
+			productReference = 48DC720B23C6E998002AB21F /* Dune.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -266,7 +266,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 48DC720623C6E998002AB21F /* Build configuration list for PBXProject "Snippets" */;
+			buildConfigurationList = 48DC720623C6E998002AB21F /* Build configuration list for PBXProject "Dune" */;
 			compatibilityVersion = "Xcode 9.3";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -279,7 +279,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				48DC720A23C6E998002AB21F /* Snippets */,
+				48DC720A23C6E998002AB21F /* Dune */,
 			);
 		};
 /* End PBXProject section */
@@ -481,12 +481,12 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = PMDTSY5PZ6;
-				INFOPLIST_FILE = Snippets/Info.plist;
+				INFOPLIST_FILE = Dune/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.waylansands.Snippets;
+				PRODUCT_BUNDLE_IDENTIFIER = com.waylansands.Dune;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;
@@ -501,12 +501,12 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = PMDTSY5PZ6;
-				INFOPLIST_FILE = Snippets/Info.plist;
+				INFOPLIST_FILE = Dune/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.waylansands.Snippets;
+				PRODUCT_BUNDLE_IDENTIFIER = com.waylansands.Dune;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;
@@ -517,7 +517,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		48DC720623C6E998002AB21F /* Build configuration list for PBXProject "Snippets" */ = {
+		48DC720623C6E998002AB21F /* Build configuration list for PBXProject "Dune" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				48DC721B23C6E999002AB21F /* Debug */,
@@ -526,7 +526,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		48DC721D23C6E999002AB21F /* Build configuration list for PBXNativeTarget "Snippets" */ = {
+		48DC721D23C6E999002AB21F /* Build configuration list for PBXNativeTarget "Dune" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				48DC721E23C6E999002AB21F /* Debug */,
