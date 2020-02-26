@@ -19,7 +19,7 @@ class MainTabController: UITabBarController {
         let mainFeedController = UINavigationController(rootViewController: MainFeedVC())
         let searchController = UINavigationController(rootViewController: SearchVC())
         let studioController = UINavigationController(rootViewController: StudioVC())
-        let playlistController = UINavigationController(rootViewController: PlaylistVC())
+        let playlistController = UINavigationController(rootViewController: TrendingVC())
         let accountController = UINavigationController(rootViewController: AccountVC())
         
         mainFeedController.tabBarItem.image = UIImage(imageLiteralResourceName: "feed-icon")

@@ -22,8 +22,8 @@ class AccountVC: UIViewController {
     var userDetailsYPosition: CGFloat = 125
     var statsYPosition: CGFloat = -80.0
     lazy var deviceType = UIDevice.current.deviceType
-    lazy var headerBarButtons: [UIButton] = [historyButton, subscriptionsButton, likesButton]
-    
+    lazy var headerBarButtons: [UIButton] = [savedButton, subscriptionsButton, mentionsButton]
+        
     let topSection: UIView = {
         let view = UIView()
         view.backgroundColor = CustomStyle.primaryblack
@@ -33,7 +33,7 @@ class AccountVC: UIViewController {
     let settingsButton: UIButton = {
         let button = UIButton()
         button.setImage(#imageLiteral(resourceName: "white-settings-icon"), for: .normal)
-//        button.addTarget(self, action: #selector(headerTabPress(sender:)), for: .touchUpInside)
+        button.addTarget(self, action: #selector(settingsButtonPress), for: .touchUpInside)
         return button
     }()
     
@@ -117,7 +117,7 @@ class AccountVC: UIViewController {
         return view
     }()
     
-    let subscriptionsStat: UILabel = {
+    let savedStat: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
         label.textColor = .white
@@ -125,15 +125,15 @@ class AccountVC: UIViewController {
         return label
     }()
     
-    let subscriptionsDescription: UILabel = {
+    let savedLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 12, weight: .regular)
         label.textColor = CustomStyle.fourthShade
-        label.text = "Subscriptions"
+        label.text = "Saved"
         return label
     }()
     
-    let likedStat: UILabel = {
+    let subscriptionsStat: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
         label.textColor = .white
@@ -141,11 +141,11 @@ class AccountVC: UIViewController {
         return label
     }()
     
-    let likedDescription: UILabel = {
+    let subscriptionsLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 12, weight: .regular)
         label.textColor = CustomStyle.fourthShade
-        label.text = "Liked"
+        label.text = "Subscriptions"
         return label
     }()
     
@@ -157,7 +157,7 @@ class AccountVC: UIViewController {
         return label
     }()
     
-    let mentionsDescription: UILabel = {
+    let mentionsLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 12, weight: .regular)
         label.textColor = CustomStyle.fourthShade
@@ -165,10 +165,10 @@ class AccountVC: UIViewController {
         return label
     }()
     
-    let historyButton: UIButton = {
+    let savedButton: UIButton = {
         let button = UIButton()
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
-        button.setTitle("Subscriptions", for: .normal)
+        button.setTitle("Saved", for: .normal)
         button.titleLabel?.textColor = .white
         button.addTarget(self, action: #selector(headerTabPress(sender:)), for: .touchUpInside)
         return button
@@ -177,13 +177,13 @@ class AccountVC: UIViewController {
     let subscriptionsButton: UIButton = {
         let button = UIButton()
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
-        button.setTitle("Liked", for: .normal)
+        button.setTitle("Subscriptions", for: .normal)
         button.setTitleColor(CustomStyle.fithShade, for: .normal)
         button.addTarget(self, action: #selector(headerTabPress(sender:)), for: .touchUpInside)
         return button
     }()
     
-    let likesButton: UIButton = {
+    let mentionsButton: UIButton = {
         let button = UIButton()
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
         button.setTitle("Mentions", for: .normal)
@@ -204,13 +204,14 @@ class AccountVC: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        view.backgroundColor = CustomStyle.onboardingBlack
         programs = fetchData()
         setTableViewDelegates()
         styleForScreens()
         setupTopBar()
         configureViews()
         tableView.register(RegularFeedCell.self, forCellReuseIdentifier: Cells.regularCell)
-        tableView.backgroundColor = CustomStyle.primaryblack
+        tableView.backgroundColor = .clear
     }
     
     func styleForScreens() {
@@ -220,8 +221,8 @@ class AccountVC: UIViewController {
         case .iPhoneSE:
             break
         case .iPhone8:
-            statsYPosition = -70
-            userDetailsYPosition = 80
+            statsYPosition = -85
+            userDetailsYPosition = 60
             topSectionHeight = 280
         case .iPhone8Plus:
             break
@@ -289,16 +290,16 @@ class AccountVC: UIViewController {
         statsStackedView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20).isActive = true
         
         statsStackedView.addArrangedSubview(subscriptionStackedView)
-        subscriptionStackedView.addArrangedSubview(subscriptionsStat)
-        subscriptionStackedView.addArrangedSubview(subscriptionsDescription)
+        subscriptionStackedView.addArrangedSubview(savedStat)
+        subscriptionStackedView.addArrangedSubview(savedLabel)
         
         statsStackedView.addArrangedSubview(likedStackedView)
-        likedStackedView.addArrangedSubview(likedStat)
-        likedStackedView.addArrangedSubview(likedDescription)
+        likedStackedView.addArrangedSubview(subscriptionsStat)
+        likedStackedView.addArrangedSubview(subscriptionsLabel)
         
         statsStackedView.addArrangedSubview(mentionedStackedView)
         mentionedStackedView.addArrangedSubview(mentionsStat)
-        mentionedStackedView.addArrangedSubview(mentionsDescription)
+        mentionedStackedView.addArrangedSubview(mentionsLabel)
         
         tableHeader.addSubview(headerTopStroke)
         headerTopStroke.translatesAutoresizingMaskIntoConstraints = false
@@ -314,6 +315,14 @@ class AccountVC: UIViewController {
         tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
         
+        view.addSubview(whiteBottom)
+        whiteBottom.translatesAutoresizingMaskIntoConstraints = false
+        whiteBottom.topAnchor.constraint(equalTo: tableView.bottomAnchor,constant: -200).isActive = true
+        whiteBottom.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+        whiteBottom.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        whiteBottom.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        view.sendSubviewToBack(whiteBottom)
+        
         tableHeader.addSubview(headerStackedView)
         headerStackedView.translatesAutoresizingMaskIntoConstraints = false
         headerStackedView.topAnchor.constraint(equalTo: tableHeader.topAnchor).isActive = true
@@ -322,9 +331,14 @@ class AccountVC: UIViewController {
         headerStackedView.bottomAnchor.constraint(equalTo: tableHeader.bottomAnchor).isActive = true
         headerStackedView.backgroundColor = .purple
         
-        headerStackedView.addArrangedSubview(historyButton)
+        headerStackedView.addArrangedSubview(savedButton)
         headerStackedView.addArrangedSubview(subscriptionsButton)
-        headerStackedView.addArrangedSubview(likesButton)
+        headerStackedView.addArrangedSubview(mentionsButton)
+    }
+    
+    @objc func settingsButtonPress() {
+        let settingsVC = AccountSettingsVC()
+        navigationController?.pushViewController(settingsVC, animated: true)
     }
 }
 
@@ -385,4 +399,6 @@ extension AccountVC: UpdateRowsDelegate {
             self.tableView.endUpdates()
         }
     }
+    
 }
+
