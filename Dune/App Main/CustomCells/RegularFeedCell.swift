@@ -39,12 +39,12 @@ class RegularFeedCell: UITableViewCell {
         return view
     }()
 
-    let programImage: UIImageView = {
-        let imageView = UIImageView()
-        imageView.layer.cornerRadius = 7
-        imageView.clipsToBounds = true
-        imageView.contentMode = .scaleAspectFit
-        return imageView
+    let programImage: UIButton = {
+        let button = UIButton()
+        button.layer.cornerRadius = 7
+        button.clipsToBounds = true
+        button.contentMode = .scaleAspectFit
+        return button
     }()
 
     let topRightStackView: UIStackView = {
@@ -69,7 +69,6 @@ class RegularFeedCell: UITableViewCell {
         let button = UIButton()
         button.setImage(#imageLiteral(resourceName: "episode-settings") , for: .normal)
         button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: -5)
-//        button.backgroundColor = .blue
         return button
     }()
 
@@ -92,7 +91,6 @@ class RegularFeedCell: UITableViewCell {
         button.setTitle("more", for: .normal)
         button.titleLabel!.font = UIFont.systemFont(ofSize: 14, weight: .regular)
         button.setTitleColor(CustomStyle.fourthShade, for: .normal)
-//      button.backgroundColor = .green
         return button
     }()
 
