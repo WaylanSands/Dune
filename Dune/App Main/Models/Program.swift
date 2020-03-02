@@ -15,4 +15,5 @@ struct Program {
     var image: UIImage?
     var summary: String?
     var tags: [String]?
+    var episodes: [Episode]?
 }

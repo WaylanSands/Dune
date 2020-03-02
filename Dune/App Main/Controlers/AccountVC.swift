@@ -15,26 +15,27 @@ class AccountVC: UIViewController {
         static let socialCell = "socialCell"
     }
     
+    var topSectionHeightConstraint: NSLayoutConstraint!
+    var tableHeadeTrailingAnchor: NSLayoutConstraint!
+    var topSectionHeightMin: CGFloat = UIApplication.shared.statusBarFrame.height
+    var topSectionHeightMax: CGFloat = 270
     let tableView = UITableView()
     var programs: [Program] = []
     var tappedPrograms: [String] = []
-    var topSectionHeight: CGFloat = 350
     var userDetailsYPosition: CGFloat = 125
     var statsYPosition: CGFloat = -80.0
-    lazy var deviceType = UIDevice.current.deviceType
     lazy var headerBarButtons: [UIButton] = [savedButton, subscriptionsButton, mentionsButton]
-        
+    
     let topSection: UIView = {
         let view = UIView()
-        view.backgroundColor = CustomStyle.primaryblack
+        view.backgroundColor = CustomStyle.darkestBlack
         return view
     }()
     
-    let settingsButton: UIButton = {
-        let button = UIButton()
-        button.setImage(#imageLiteral(resourceName: "white-settings-icon"), for: .normal)
-        button.addTarget(self, action: #selector(settingsButtonPress), for: .touchUpInside)
-        return button
+    let topSectionFade: UIView = {
+        let view = UIView()
+        view.backgroundColor = CustomStyle.darkestBlack
+        return view
     }()
     
     let userStackedView: UIStackView = {
@@ -80,7 +81,7 @@ class AccountVC: UIViewController {
     
     let tableHeader: UIView = {
         let view = UIView()
-        view.backgroundColor = CustomStyle.primaryblack
+        view.backgroundColor = CustomStyle.darkestBlack
         return view
     }()
     
@@ -198,13 +199,24 @@ class AccountVC: UIViewController {
         return view
     }()
     
+    // Custom NavBar
+    
+    let customNavBar: CustomNavBar = {
+        let nav = CustomNavBar()
+        nav.leftButton.setImage(#imageLiteral(resourceName: "switch-account-icon"), for: .normal)
+        nav.backgroundColor = .clear
+        nav.rightButton.setImage(#imageLiteral(resourceName: "white-settings-icon"), for: .normal)
+        nav.rightButton.addTarget(self, action: #selector(settingsButtonPress), for: .touchUpInside)
+        return nav
+    }()
+    
     override var preferredStatusBarStyle: UIStatusBarStyle {
         return .lightContent
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = CustomStyle.onboardingBlack
+        view.backgroundColor = CustomStyle.darkestBlack
         programs = fetchData()
         setTableViewDelegates()
         styleForScreens()
@@ -212,27 +224,84 @@ class AccountVC: UIViewController {
         configureViews()
         tableView.register(RegularFeedCell.self, forCellReuseIdentifier: Cells.regularCell)
         tableView.backgroundColor = .clear
+        
+        let imgBackArrow = #imageLiteral(resourceName: "back-button-white")
+        navigationController?.navigationBar.backIndicatorImage = imgBackArrow
+        navigationController?.navigationBar.backIndicatorTransitionMaskImage = imgBackArrow
+        navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
+    }
+    
+    
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        let y: CGFloat = scrollView.contentOffset.y
+        let newHeaderViewHeight: CGFloat = topSectionHeightConstraint.constant - y
+        var percentage: CGFloat = 100
+        let headerHeight : CGFloat = topSectionHeightMax / 200
+        let currentHeight : CGFloat = newHeaderViewHeight / 200
+        
+        if newHeaderViewHeight > topSectionHeightMax {
+            percentage = (currentHeight - y) / headerHeight
+            userStackedView.alpha = percentage
+            statsStackedView.alpha = percentage
+            topSectionFade.alpha = 1.2 - percentage
+            headerTopStroke.alpha = percentage
+            topSectionHeightConstraint.constant = topSectionHeightMax
+        } else if newHeaderViewHeight <= topSectionHeightMin {
+            topSectionHeightConstraint.constant = topSectionHeightMin
+            tableHeadeTrailingAnchor.constant = -40
+            percentage = (currentHeight - y) / headerHeight
+            userStackedView.alpha = percentage
+            statsStackedView.alpha = percentage
+            topSectionFade.alpha = 1.2 - percentage
+            headerTopStroke.alpha = percentage
+            headerTopStroke.isHidden = true
+            customNavBar.leftButton.alpha = 0
+        } else {
+            percentage = (currentHeight - y) / headerHeight
+            topSectionHeightConstraint.constant = newHeaderViewHeight
+            tableHeadeTrailingAnchor.constant = 0
+            userStackedView.alpha = percentage
+            statsStackedView.alpha = percentage
+            topSectionFade.alpha = 1.2 - percentage
+            headerTopStroke.alpha = percentage
+            headerTopStroke.isHidden = false
+            customNavBar.leftButton.alpha = percentage
+            scrollView.contentOffset.y = 0 // block scroll view
+        }
+        
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        navigationController?.isNavigationBarHidden = true
     }
     
     func styleForScreens() {
-        switch deviceType {
-        case .iPhone4S:
-            break
+        switch UIDevice.current.deviceType {
         case .iPhoneSE:
-            break
-        case .iPhone8:
-            statsYPosition = -85
             userDetailsYPosition = 60
-            topSectionHeight = 280
+            statsYPosition = -60
+            topSectionHeightMax = 240
+        case .iPhone8:
+            userDetailsYPosition = 60
+            statsYPosition = -70
+            topSectionHeightMax = 260
         case .iPhone8Plus:
-            break
+            userDetailsYPosition = 60
+            statsYPosition = -70
+            topSectionHeightMax = 260
         case .iPhone11:
-            break
+            userDetailsYPosition = 100
+            statsYPosition = -80
+            topSectionHeightMax = 320
         case .iPhone11Pro:
-            break
+            userDetailsYPosition = 100
+            statsYPosition = -80
+            topSectionHeightMax = 320
         case .iPhone11ProMax:
-            break
-        case .unknown:
+            userDetailsYPosition = 100
+            statsYPosition = -80
+            topSectionHeightMax = 320
+        default:
             break
         }
     }
@@ -248,19 +317,26 @@ class AccountVC: UIViewController {
     
     
     func configureViews() {
+        view.addSubview(customNavBar)
+        customNavBar.pinNavBarTo(view)
+        
         view.addSubview(topSection)
         topSection.translatesAutoresizingMaskIntoConstraints = false
         topSection.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
         topSection.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         topSection.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        topSection.heightAnchor.constraint(equalToConstant: topSectionHeight).isActive = true
+        topSectionHeightConstraint = topSection.heightAnchor.constraint(equalToConstant: topSectionHeightMax)
+        topSectionHeightConstraint.isActive = true
         
-        view.addSubview(settingsButton)
-        settingsButton.translatesAutoresizingMaskIntoConstraints = false
-        settingsButton.topAnchor.constraint(equalTo: view.topAnchor, constant: 25).isActive = true
-        settingsButton.trailingAnchor.constraint(equalTo: view.trailingAnchor,constant: -16).isActive = true
-        settingsButton.heightAnchor.constraint(equalToConstant: 40.0) .isActive = true
-        settingsButton.widthAnchor.constraint(equalToConstant: 40.0) .isActive = true
+        view.addSubview(topSectionFade)
+        topSectionFade.translatesAutoresizingMaskIntoConstraints = false
+        topSectionFade.topAnchor.constraint(equalTo: topSection.topAnchor).isActive = true
+        topSectionFade.leadingAnchor.constraint(equalTo: topSection.leadingAnchor).isActive = true
+        topSectionFade.trailingAnchor.constraint(equalTo: topSection.trailingAnchor).isActive = true
+        topSectionFade.bottomAnchor.constraint(equalTo: topSection.bottomAnchor).isActive = true
+        topSectionFade.alpha = 0
+        
+        // User details
         
         view.addSubview(userStackedView)
         userStackedView.translatesAutoresizingMaskIntoConstraints = false
@@ -276,16 +352,11 @@ class AccountVC: UIViewController {
         userStackedView.addArrangedSubview(userNameLabel)
         userStackedView.addArrangedSubview(userHandelLabel)
         
-        view.addSubview(tableHeader)
-        tableHeader.translatesAutoresizingMaskIntoConstraints = false
-        tableHeader.topAnchor.constraint(equalTo: topSection.bottomAnchor).isActive = true
-        tableHeader.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-        tableHeader.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        tableHeader.heightAnchor.constraint(equalToConstant: 45).isActive = true
+        // Stats View
         
         topSection.addSubview(statsStackedView)
         statsStackedView.translatesAutoresizingMaskIntoConstraints = false
-        statsStackedView.bottomAnchor.constraint(equalTo: tableHeader.bottomAnchor, constant: statsYPosition ).isActive = true
+        statsStackedView.topAnchor.constraint(equalTo: userStackedView.bottomAnchor, constant: 30 ).isActive = true
         statsStackedView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20).isActive = true
         statsStackedView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20).isActive = true
         
@@ -301,6 +372,14 @@ class AccountVC: UIViewController {
         mentionedStackedView.addArrangedSubview(mentionsStat)
         mentionedStackedView.addArrangedSubview(mentionsLabel)
         
+        view.addSubview(tableHeader)
+        tableHeader.translatesAutoresizingMaskIntoConstraints = false
+        tableHeader.topAnchor.constraint(equalTo: topSection.bottomAnchor).isActive = true
+        tableHeader.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        tableHeadeTrailingAnchor = tableHeader.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: 0)
+        tableHeadeTrailingAnchor.isActive = true
+        tableHeader.heightAnchor.constraint(equalToConstant: 45).isActive = true
+        
         tableHeader.addSubview(headerTopStroke)
         headerTopStroke.translatesAutoresizingMaskIntoConstraints = false
         headerTopStroke.topAnchor.constraint(equalTo: tableHeader.topAnchor).isActive = true
@@ -314,6 +393,7 @@ class AccountVC: UIViewController {
         tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+        tableView.contentInset = UIEdgeInsets(top: 1, left: 0, bottom: 0, right: 0)
         
         view.addSubview(whiteBottom)
         whiteBottom.translatesAutoresizingMaskIntoConstraints = false
@@ -331,9 +411,12 @@ class AccountVC: UIViewController {
         headerStackedView.bottomAnchor.constraint(equalTo: tableHeader.bottomAnchor).isActive = true
         headerStackedView.backgroundColor = .purple
         
+        view.bringSubviewToFront(topSectionFade)
         headerStackedView.addArrangedSubview(savedButton)
         headerStackedView.addArrangedSubview(subscriptionsButton)
         headerStackedView.addArrangedSubview(mentionsButton)
+        
+        view.bringSubviewToFront(customNavBar)
     }
     
     @objc func settingsButtonPress() {

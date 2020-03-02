@@ -10,7 +10,7 @@ import UIKit
 
 class AccountSettingsVC: UIViewController {
     
-    lazy var contentViewSize = CGSize(width: view.frame.width, height: 1010.0)
+    lazy var contentViewSize = CGSize(width: view.frame.width, height: 1000.0)
     lazy var versionNumber = VersionControl.lastetVersion
     
     lazy var scrollView: UIView = {
@@ -52,7 +52,13 @@ class AccountSettingsVC: UIViewController {
         return view
     }()
     
-    let accountDetailsStackedView: UIStackView = {
+    let editProfileStackedView: UIStackView = {
+        let view = UIStackView()
+        view.distribution = .equalSpacing
+        return view
+    }()
+    
+    let passwordStackedView: UIStackView = {
         let view = UIStackView()
         view.distribution = .equalSpacing
         return view
@@ -60,9 +66,10 @@ class AccountSettingsVC: UIViewController {
     
     let inviteButton: UIButton = {
         let button = UIButton()
-        button.setTitle("Invite People", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
+        button.setTitle("Invite Friends", for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         button.setTitleColor(CustomStyle.primaryblack, for: .normal)
+        button.addTarget(self, action: #selector(invitePeople), for: .touchUpInside)
         return button
     }()
     
@@ -75,7 +82,7 @@ class AccountSettingsVC: UIViewController {
     let helpCentreButton: UIButton = {
         let button = UIButton()
         button.setTitle("Help Centre", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         button.setTitleColor(CustomStyle.primaryblack, for: .normal)
         return button
     }()
@@ -89,7 +96,7 @@ class AccountSettingsVC: UIViewController {
     let feedbackButton: UIButton = {
         let button = UIButton()
         button.setTitle("Send App Feedback", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         button.setTitleColor(CustomStyle.primaryblack, for: .normal)
         return button
     }()
@@ -100,23 +107,33 @@ class AccountSettingsVC: UIViewController {
         return button
     }()
     
-    let AccountButton: UIButton = {
+    let editProfileButton: UIButton = {
         let button = UIButton()
-        button.setTitle("Account Details", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
+        button.setTitle("Edit Profile", for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         button.setTitleColor(CustomStyle.primaryblack, for: .normal)
         return button
     }()
     
-    let AccountButonArrow: UIButton = {
+    let editProfileArrow: UIButton = {
         let button = UIButton()
         button.setImage(UIImage(named: "selection-arrow"), for: .normal)
         return button
     }()
     
-    override var preferredStatusBarStyle: UIStatusBarStyle {
-        return .lightContent
-    }
+    let passowordButton: UIButton = {
+        let button = UIButton()
+        button.setTitle("Password", for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        button.setTitleColor(CustomStyle.primaryblack, for: .normal)
+        return button
+    }()
+    
+    let passowrdArrow: UIButton = {
+        let button = UIButton()
+        button.setImage(UIImage(named: "selection-arrow"), for: .normal)
+        return button
+    }()
     
     // LineBreak
     
@@ -427,7 +444,7 @@ class AccountSettingsVC: UIViewController {
     let logOutButton: UIButton = {
         let button = UIButton()
         button.setTitle("Log out", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         button.setTitleColor(CustomStyle.primaryblack, for: .normal)
         return button
     }()
@@ -435,7 +452,7 @@ class AccountSettingsVC: UIViewController {
     let deleteAccountButton: UIButton = {
         let button = UIButton()
         button.setTitle("Delete Account", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         button.setTitleColor(CustomStyle.primaryblack, for: .normal)
         return button
     }()
@@ -443,7 +460,7 @@ class AccountSettingsVC: UIViewController {
     lazy var versionLabel: UILabel = {
         let label = UILabel()
         label.text = "Version \(versionNumber)"
-        label.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+        label.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         label.textColor = CustomStyle.fourthShade
         return label
     }()
@@ -451,36 +468,57 @@ class AccountSettingsVC: UIViewController {
     
     // Custom NavBar
     
-    let navBar: CustomNavBar = {
+    let customNavBar: CustomNavBar = {
         let nav = CustomNavBar()
-        nav.leftButton.setImage(#imageLiteral(resourceName: "back-button-white"), for: .normal)
-        nav.titleLabel.text = "Settings"
-        nav.leftButton.addTarget(self, action: #selector(backButtonPress), for: .touchUpInside)
+        nav.leftButton.isHidden = true
         return nav
     }()
+    
+    // Change StatusBarColor
+    
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        return .lightContent
+    }
     
      // View Did Load
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .white
+        setupNavBar()
         configureViews()
     }
     
+    func setupNavBar() {
+        self.title = "Settings"
+        navigationController?.isNavigationBarHidden = false
+        
+        let navBar = navigationController?.navigationBar
+        navBar?.barStyle = .black
+        navBar?.setBackgroundImage(UIImage(), for: .default)
+        navBar?.shadowImage = UIImage()
+        navBar?.titleTextAttributes = [.foregroundColor: UIColor.white]
+        navBar?.tintColor = .white
+        
+        let imgBackArrow = #imageLiteral(resourceName: "back-button-white")
+        navBar?.backIndicatorImage = imgBackArrow
+        navBar?.backIndicatorTransitionMaskImage = imgBackArrow
+        navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
+    }
+    
     func configureViews() {
-        view.addSubview(navBar)
-        navBar.pinNavBarTo(view)
+        view.backgroundColor = .white
+        view.addSubview(customNavBar)
+        customNavBar.pinNavBarTo(view)
         
         view.addSubview(scrollView)
         scrollView.pinEdges(to: view)
         
         scrollView.addSubview(containerView)
-        scrollView.pinEdges(to: scrollView)
         containerView.backgroundColor = .white
         
         containerView.addSubview(topStackedView)
         topStackedView.translatesAutoresizingMaskIntoConstraints = false
-        topStackedView.topAnchor.constraint(equalTo: containerView.topAnchor,constant: 90).isActive = true
+        topStackedView.topAnchor.constraint(equalTo: containerView.topAnchor,constant: 35).isActive = true
         topStackedView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 16.0).isActive = true
         topStackedView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -16.0).isActive = true
         
@@ -496,9 +534,13 @@ class AccountSettingsVC: UIViewController {
         feedbackStackedView.addArrangedSubview(feedbackButton)
         feedbackStackedView.addArrangedSubview(feedbackButonArrow)
         
-        topStackedView.addArrangedSubview(accountDetailsStackedView)
-        accountDetailsStackedView.addArrangedSubview(AccountButton)
-        accountDetailsStackedView.addArrangedSubview(AccountButonArrow)
+        topStackedView.addArrangedSubview(editProfileStackedView)
+        editProfileStackedView.addArrangedSubview(editProfileButton)
+        editProfileStackedView.addArrangedSubview(editProfileArrow)
+        
+        topStackedView.addArrangedSubview(passwordStackedView)
+        passwordStackedView.addArrangedSubview(passowordButton)
+        passwordStackedView.addArrangedSubview(passowrdArrow)
         
         containerView.addSubview(lineBreakView)
         lineBreakView.translatesAutoresizingMaskIntoConstraints = false
@@ -599,7 +641,7 @@ class AccountSettingsVC: UIViewController {
         // Email Notifications
         
         containerView.addSubview(emailNotificationsLabel)
-        emailNotificationsLabel.addTopAndSideAnchors(to: emailLineBreakView, top: 20, leading: 0, trailing: 0)
+        emailNotificationsLabel.addTopAndSideAnchors(to: emailLineBreakView, top: 30, leading: 0, trailing: 0)
 
         containerView.addSubview(emailMarketingStackedView)
         emailMarketingStackedView.addTopAndSideAnchors(to: emailNotificationsLabel, top: 20, leading: 0, trailing: 0)
@@ -630,7 +672,12 @@ class AccountSettingsVC: UIViewController {
         bottomStackedView.addArrangedSubview(versionLabel)
         
 
-        view.bringSubviewToFront(navBar)
+        view.bringSubviewToFront(customNavBar)
+    }
+    
+    @objc func invitePeople() {
+        let inviteVC = InvitePeopleVC()
+        navigationController?.pushViewController(inviteVC, animated: true)
     }
     
     @objc func backButtonPress() {

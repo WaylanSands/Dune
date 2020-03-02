@@ -3,18 +3,22 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 51;
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0FD107C9A74D61DE3EEBB529 /* Pods_Dune.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 53708AC5C9CACFEB5AA66C80 /* Pods_Dune.framework */; };
 		4801619823C7BE500038318B /* CustomStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4801619723C7BE500038318B /* CustomStyle.swift */; };
 		480161A123C84EC60038318B /* UsernameDataModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 480161A023C84EC60038318B /* UsernameDataModel.swift */; };
 		4801959123D7C9680027FA91 /* DeviceSizes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4801959023D7C9680027FA91 /* DeviceSizes.swift */; };
 		480526C323CC54B500D62224 /* AccountTypeController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 480526C223CC54B500D62224 /* AccountTypeController.swift */; };
+		480825E9240C65FC007C4352 /* StubbedPrograms.swift in Sources */ = {isa = PBXBuildFile; fileRef = 480825E8240C65FC007C4352 /* StubbedPrograms.swift */; };
+		480825EB240C6611007C4352 /* StubbedEpisodes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 480825EA240C6611007C4352 /* StubbedEpisodes.swift */; };
 		480DDA2623E8BB190078FEAC /* PublisherAddSummaryController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 480DDA2523E8BB190078FEAC /* PublisherAddSummaryController.swift */; };
 		48205C64240710570049C131 /* InvitePeopleVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48205C63240710570049C131 /* InvitePeopleVC.swift */; };
 		4832A92823EA661400BDAA4E /* PassThoughView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4832A92723EA661400BDAA4E /* PassThoughView.swift */; };
 		4836FCCB23D2EE4400C80D89 /* publisherExplanationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4836FCCA23D2EE4400C80D89 /* publisherExplanationController.swift */; };
+		484286EF240CD71E00146C8D /* Validation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 484286EE240CD71E00146C8D /* Validation.swift */; };
 		4844916623CFCD9F000E13FA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4844916523CFCD9F000E13FA /* Assets.xcassets */; };
 		485605B123CEE938006CEBC9 /* ListenerCategoriesController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 485605B023CEE938006CEBC9 /* ListenerCategoriesController.swift */; };
 		485605B323CEF5BE006CEBC9 /* Categories.swift in Sources */ = {isa = PBXBuildFile; fileRef = 485605B223CEF5BE006CEBC9 /* Categories.swift */; };
@@ -42,12 +46,15 @@
 		48C1E87623D4302700AACD71 /* publisherNameController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48C1E87523D4302700AACD71 /* publisherNameController.swift */; };
 		48CFC1F923EB643D004434CC /* CustomNavBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48CFC1F823EB643D004434CC /* CustomNavBar.swift */; };
 		48D533A42403A2DF008EFADF /* AccountSettingsVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48D533A32403A2DF008EFADF /* AccountSettingsVC.swift */; };
+		48D8ADEA240CBCA800F09731 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 48D8ADE9240CBCA800F09731 /* GoogleService-Info.plist */; };
 		48DC720F23C6E998002AB21F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48DC720E23C6E998002AB21F /* AppDelegate.swift */; };
 		48DC721123C6E998002AB21F /* InitialSignupController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48DC721023C6E998002AB21F /* InitialSignupController.swift */; };
 		48DC721423C6E998002AB21F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 48DC721223C6E998002AB21F /* Main.storyboard */; };
 		48DC721923C6E999002AB21F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 48DC721723C6E999002AB21F /* LaunchScreen.storyboard */; };
 		48DEC40623CFDD83005A1E83 /* ListenerProgramSelectionController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48DEC40523CFDD83005A1E83 /* ListenerProgramSelectionController.swift */; };
 		48DEC40823CFE999005A1E83 /* OnboardingProgramCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48DEC40723CFE999005A1E83 /* OnboardingProgramCell.swift */; };
+		48EF84F4240C560B00A150B6 /* PlayBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48EF84F3240C560B00A150B6 /* PlayBar.swift */; };
+		48EF84F6240C569400A150B6 /* Episode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48EF84F5240C569400A150B6 /* Episode.swift */; };
 		48F25C9823CEC8EA00B91AE2 /* OnboardingListener.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 48F25C9723CEC8EA00B91AE2 /* OnboardingListener.storyboard */; };
 		48F655C423CFAF20004B44E0 /* ListenerProfileImageController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48F655C323CFAF20004B44E0 /* ListenerProfileImageController.swift */; };
 		48F977F824065096005FE445 /* VersionControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48F977F724065096005FE445 /* VersionControl.swift */; };
@@ -56,14 +63,18 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		3BB9E8F2478A62F8C645B14D /* Pods-Dune.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Dune.release.xcconfig"; path = "Target Support Files/Pods-Dune/Pods-Dune.release.xcconfig"; sourceTree = "<group>"; };
 		4801619723C7BE500038318B /* CustomStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomStyle.swift; sourceTree = "<group>"; };
 		480161A023C84EC60038318B /* UsernameDataModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsernameDataModel.swift; sourceTree = "<group>"; };
 		4801959023D7C9680027FA91 /* DeviceSizes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceSizes.swift; sourceTree = "<group>"; };
 		480526C223CC54B500D62224 /* AccountTypeController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountTypeController.swift; sourceTree = "<group>"; };
+		480825E8240C65FC007C4352 /* StubbedPrograms.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StubbedPrograms.swift; sourceTree = "<group>"; };
+		480825EA240C6611007C4352 /* StubbedEpisodes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StubbedEpisodes.swift; sourceTree = "<group>"; };
 		480DDA2523E8BB190078FEAC /* PublisherAddSummaryController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublisherAddSummaryController.swift; sourceTree = "<group>"; };
 		48205C63240710570049C131 /* InvitePeopleVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InvitePeopleVC.swift; sourceTree = "<group>"; };
 		4832A92723EA661400BDAA4E /* PassThoughView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassThoughView.swift; sourceTree = "<group>"; };
 		4836FCCA23D2EE4400C80D89 /* publisherExplanationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = publisherExplanationController.swift; path = "Dune/Onboarding/Controllers/Publisher controllers/publisherExplanationController.swift"; sourceTree = SOURCE_ROOT; };
+		484286EE240CD71E00146C8D /* Validation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Validation.swift; sourceTree = "<group>"; };
 		4844916523CFCD9F000E13FA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = Dune/Assets.xcassets; sourceTree = "<group>"; };
 		485605B023CEE938006CEBC9 /* ListenerCategoriesController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListenerCategoriesController.swift; sourceTree = "<group>"; };
 		485605B223CEF5BE006CEBC9 /* Categories.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Categories.swift; sourceTree = "<group>"; };
@@ -91,6 +102,7 @@
 		48C1E87523D4302700AACD71 /* publisherNameController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = publisherNameController.swift; path = "Dune/Onboarding/Controllers/Publisher controllers/publisherNameController.swift"; sourceTree = SOURCE_ROOT; };
 		48CFC1F823EB643D004434CC /* CustomNavBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomNavBar.swift; sourceTree = "<group>"; };
 		48D533A32403A2DF008EFADF /* AccountSettingsVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountSettingsVC.swift; sourceTree = "<group>"; };
+		48D8ADE9240CBCA800F09731 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		48DC720B23C6E998002AB21F /* Dune.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Dune.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		48DC720E23C6E998002AB21F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		48DC721023C6E998002AB21F /* InitialSignupController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InitialSignupController.swift; sourceTree = "<group>"; };
@@ -99,11 +111,15 @@
 		48DC721A23C6E999002AB21F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		48DEC40523CFDD83005A1E83 /* ListenerProgramSelectionController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListenerProgramSelectionController.swift; sourceTree = "<group>"; };
 		48DEC40723CFE999005A1E83 /* OnboardingProgramCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingProgramCell.swift; sourceTree = "<group>"; };
+		48EF84F3240C560B00A150B6 /* PlayBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayBar.swift; sourceTree = "<group>"; };
+		48EF84F5240C569400A150B6 /* Episode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Episode.swift; sourceTree = "<group>"; };
 		48F25C9723CEC8EA00B91AE2 /* OnboardingListener.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = OnboardingListener.storyboard; sourceTree = "<group>"; };
 		48F655C323CFAF20004B44E0 /* ListenerProfileImageController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListenerProfileImageController.swift; sourceTree = "<group>"; };
 		48F977F724065096005FE445 /* VersionControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VersionControl.swift; sourceTree = "<group>"; };
 		48FC1B3B23D10CA800318113 /* OnboardingPublisher.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = OnboardingPublisher.storyboard; sourceTree = "<group>"; };
 		48FFF88223FE3AA90071A89A /* ExtendedButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtendedButton.swift; sourceTree = "<group>"; };
+		49EECD92C1BA88B2E717BA1F /* Pods-Dune.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Dune.debug.xcconfig"; path = "Target Support Files/Pods-Dune/Pods-Dune.debug.xcconfig"; sourceTree = "<group>"; };
+		53708AC5C9CACFEB5AA66C80 /* Pods_Dune.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Dune.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -111,12 +127,21 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0FD107C9A74D61DE3EEBB529 /* Pods_Dune.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		189009685BF5F90691E9345A /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				53708AC5C9CACFEB5AA66C80 /* Pods_Dune.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		4801619923C7F5FC0038318B /* Onboarding */ = {
 			isa = PBXGroup;
 			children = (
@@ -165,6 +190,7 @@
 			children = (
 				485605B223CEF5BE006CEBC9 /* Categories.swift */,
 				480161A023C84EC60038318B /* UsernameDataModel.swift */,
+				484286EE240CD71E00146C8D /* Validation.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -201,6 +227,9 @@
 			isa = PBXGroup;
 			children = (
 				4857BF7B23FB431000ED6B01 /* Program.swift */,
+				48EF84F5240C569400A150B6 /* Episode.swift */,
+				480825E8240C65FC007C4352 /* StubbedPrograms.swift */,
+				480825EA240C6611007C4352 /* StubbedEpisodes.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -208,7 +237,9 @@
 		48616F0623FA4E8200E91530 /* App Main */ = {
 			isa = PBXGroup;
 			children = (
+				48EF84F2240C55E700A150B6 /* Views */,
 				4857BF7A23FB42D700ED6B01 /* Models */,
+				4857BF7723FB368100ED6B01 /* CustomCells */,
 				48616F1123FA5B3800E91530 /* Controlers */,
 			);
 			path = "App Main";
@@ -224,7 +255,6 @@
 				48616F0D23FA5A4900E91530 /* TrendingVC.swift */,
 				48616F0F23FA5A6500E91530 /* AccountVC.swift */,
 				48205C622407100C0049C131 /* Account settings */,
-				4857BF7723FB368100ED6B01 /* CustomCells */,
 			);
 			path = Controlers;
 			sourceTree = "<group>";
@@ -270,6 +300,8 @@
 				4844916523CFCD9F000E13FA /* Assets.xcassets */,
 				48DC720D23C6E998002AB21F /* Dune */,
 				48DC720C23C6E998002AB21F /* Products */,
+				693C5F3B0B0AA5A9EB8389EB /* Pods */,
+				189009685BF5F90691E9345A /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -284,17 +316,26 @@
 		48DC720D23C6E998002AB21F /* Dune */ = {
 			isa = PBXGroup;
 			children = (
-				48F977F62406507B005FE445 /* Version control */,
 				48DC720E23C6E998002AB21F /* AppDelegate.swift */,
+				48F977F62406507B005FE445 /* Version control */,
 				4801619A23C7F6170038318B /* Custom style */,
 				480485E023CBB5AF00F8CA89 /* Extensions */,
 				48616F0623FA4E8200E91530 /* App Main */,
 				4801619923C7F5FC0038318B /* Onboarding */,
 				4868045223E6D96800F8B244 /* LaunchScreenController.swift */,
 				48DC721723C6E999002AB21F /* LaunchScreen.storyboard */,
+				48D8ADE9240CBCA800F09731 /* GoogleService-Info.plist */,
 				48DC721A23C6E999002AB21F /* Info.plist */,
 			);
 			path = Dune;
+			sourceTree = "<group>";
+		};
+		48EF84F2240C55E700A150B6 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				48EF84F3240C560B00A150B6 /* PlayBar.swift */,
+			);
+			path = Views;
 			sourceTree = "<group>";
 		};
 		48F25C9923CECF8500B91AE2 /* Storyboards */ = {
@@ -315,6 +356,15 @@
 			path = "Version control";
 			sourceTree = "<group>";
 		};
+		693C5F3B0B0AA5A9EB8389EB /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				49EECD92C1BA88B2E717BA1F /* Pods-Dune.debug.xcconfig */,
+				3BB9E8F2478A62F8C645B14D /* Pods-Dune.release.xcconfig */,
+			);
+			path = Pods;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -322,9 +372,11 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 48DC721D23C6E999002AB21F /* Build configuration list for PBXNativeTarget "Dune" */;
 			buildPhases = (
+				C2B682F2A1606A5E202CB005 /* [CP] Check Pods Manifest.lock */,
 				48DC720723C6E998002AB21F /* Sources */,
 				48DC720823C6E998002AB21F /* Frameworks */,
 				48DC720923C6E998002AB21F /* Resources */,
+				D44B28E5EF5B2A4556B75125 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -378,10 +430,53 @@
 				4844916623CFCD9F000E13FA /* Assets.xcassets in Resources */,
 				48DC721423C6E998002AB21F /* Main.storyboard in Resources */,
 				48FC1B3C23D10CA800318113 /* OnboardingPublisher.storyboard in Resources */,
+				48D8ADEA240CBCA800F09731 /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		C2B682F2A1606A5E202CB005 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-Dune-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		D44B28E5EF5B2A4556B75125 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-Dune/Pods-Dune-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-Dune/Pods-Dune-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Dune/Pods-Dune-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		48DC720723C6E998002AB21F /* Sources */ = {
@@ -399,10 +494,13 @@
 				4836FCCB23D2EE4400C80D89 /* publisherExplanationController.swift in Sources */,
 				48CFC1F923EB643D004434CC /* CustomNavBar.swift in Sources */,
 				4832A92823EA661400BDAA4E /* PassThoughView.swift in Sources */,
+				48EF84F4240C560B00A150B6 /* PlayBar.swift in Sources */,
+				484286EF240CD71E00146C8D /* Validation.swift in Sources */,
 				48A4E0E823CAFE4300A58F61 /* SignInController.swift in Sources */,
 				48DEC40623CFDD83005A1E83 /* ListenerProgramSelectionController.swift in Sources */,
 				48C084E123CA7166009F417F /* AddBirthDate.swift in Sources */,
 				48C084DF23CA7148009F417F /* CreatePassword.swift in Sources */,
+				480825E9240C65FC007C4352 /* StubbedPrograms.swift in Sources */,
 				488CB63F23D5379D00E9EBA4 /* publisherCategoriesController.swift in Sources */,
 				48DC721123C6E998002AB21F /* InitialSignupController.swift in Sources */,
 				48616F0A23FA5A0F00E91530 /* SearchVC.swift in Sources */,
@@ -410,11 +508,13 @@
 				480DDA2623E8BB190078FEAC /* PublisherAddSummaryController.swift in Sources */,
 				48B8688423C7586A00EFEB88 /* AddEmail.swift in Sources */,
 				480526C323CC54B500D62224 /* AccountTypeController.swift in Sources */,
+				48EF84F6240C569400A150B6 /* Episode.swift in Sources */,
 				4857BF7C23FB431000ED6B01 /* Program.swift in Sources */,
 				48616F0323FA208100E91530 /* UITextView+Ext.swift in Sources */,
 				485605B123CEE938006CEBC9 /* ListenerCategoriesController.swift in Sources */,
 				488CB64123D5571700E9EBA4 /* ListenerNameController.swift in Sources */,
 				4868045323E6D96800F8B244 /* LaunchScreenController.swift in Sources */,
+				480825EB240C6611007C4352 /* StubbedEpisodes.swift in Sources */,
 				48616F0823FA4F1700E91530 /* MainFeedVC.swift in Sources */,
 				480161A123C84EC60038318B /* UsernameDataModel.swift in Sources */,
 				48616F0C23FA5A3300E91530 /* StudioVC.swift in Sources */,
@@ -572,6 +672,7 @@
 		};
 		48DC721E23C6E999002AB21F /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 49EECD92C1BA88B2E717BA1F /* Pods-Dune.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "Apple Development";
@@ -592,6 +693,7 @@
 		};
 		48DC721F23C6E999002AB21F /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 3BB9E8F2478A62F8C645B14D /* Pods-Dune.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "Apple Development";

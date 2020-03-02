@@ -92,9 +92,6 @@ class SearchVC: UIViewController {
     }
     
     
-    
-    
-    
     func configureViews() {
         tableView.rowHeight = 100
         

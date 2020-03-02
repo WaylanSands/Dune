@@ -39,7 +39,7 @@ class RegularFeedCell: UITableViewCell {
         return view
     }()
 
-    let programImage: UIButton = {
+    let programImageButton: UIButton = {
         let button = UIButton()
         button.layer.cornerRadius = 7
         button.clipsToBounds = true
@@ -169,7 +169,7 @@ class RegularFeedCell: UITableViewCell {
     func normalSetUp(program: Program) {
         name = program.name
         handel = program.handel
-        programImage.image = program.image
+        programImageButton.setImage(program.image, for: .normal)
         summaryTextView.text = program.summary
         setupAccountLabel()
         tagsUsed = program.tags!
@@ -228,10 +228,10 @@ class RegularFeedCell: UITableViewCell {
         topStackView.leadingAnchor.constraint(equalTo: self.leadingAnchor,  constant: 16).isActive = true
         topStackView.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -16).isActive = true
 
-        topStackView.addArrangedSubview(programImage)
-        programImage.translatesAutoresizingMaskIntoConstraints = false
-        programImage.widthAnchor.constraint(equalToConstant: largeImageSize).isActive = true
-        programImage.heightAnchor.constraint(equalToConstant: largeImageSize).isActive = true
+        topStackView.addArrangedSubview(programImageButton)
+        programImageButton.translatesAutoresizingMaskIntoConstraints = false
+        programImageButton.widthAnchor.constraint(equalToConstant: largeImageSize).isActive = true
+        programImageButton.heightAnchor.constraint(equalToConstant: largeImageSize).isActive = true
 
         topStackView.addArrangedSubview(topRightStackView)
         topRightStackView.addArrangedSubview(topRightTopStackView)
