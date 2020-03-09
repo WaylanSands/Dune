@@ -445,6 +445,7 @@ class AccountSettingsVC: UIViewController {
         let button = UIButton()
         button.setTitle("Log out", for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        button.addTarget(self, action: #selector(logoutButtonPress), for: .touchUpInside)
         button.setTitleColor(CustomStyle.primaryblack, for: .normal)
         return button
     }()
@@ -682,6 +683,13 @@ class AccountSettingsVC: UIViewController {
     
     @objc func backButtonPress() {
         navigationController?.popViewController(animated: true)
+    }
+    
+    @objc func logoutButtonPress() {
+
+        if let signupScreen = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "InitialSignUp") as? InitialSignupController {
+            navigationController?.pushViewController(signupScreen, animated: false)
+        }
     }
 }
 

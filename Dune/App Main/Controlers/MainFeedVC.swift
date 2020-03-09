@@ -20,7 +20,6 @@ class MainFeedVC: UIViewController {
     var programs: [Program] = []
     let tableView = UITableView()
     
-
     let currentDateLabel: UILabel = {
         let label = UILabel()
         label.text = "23 Feb"
@@ -81,6 +80,11 @@ extension MainFeedVC: UITableViewDelegate, UITableViewDataSource {
             return regularCell
         }
     }
+    
+//    func configurePlayBar() {
+//        let playbar = PlayBar(episode: )
+//
+//    }
 
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
         let view = UIView()

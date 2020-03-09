@@ -16,7 +16,9 @@
 		480825EB240C6611007C4352 /* StubbedEpisodes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 480825EA240C6611007C4352 /* StubbedEpisodes.swift */; };
 		480DDA2623E8BB190078FEAC /* PublisherAddSummaryController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 480DDA2523E8BB190078FEAC /* PublisherAddSummaryController.swift */; };
 		48205C64240710570049C131 /* InvitePeopleVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48205C63240710570049C131 /* InvitePeopleVC.swift */; };
+		482D49D3240EF80B00C22B88 /* ProgramAccountVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 482D49D2240EF80B00C22B88 /* ProgramAccountVC.swift */; };
 		4832A92823EA661400BDAA4E /* PassThoughView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4832A92723EA661400BDAA4E /* PassThoughView.swift */; };
+		4836C68A240E5BD8005E2A9C /* UITextField+Ext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4836C689240E5BD8005E2A9C /* UITextField+Ext.swift */; };
 		4836FCCB23D2EE4400C80D89 /* publisherExplanationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4836FCCA23D2EE4400C80D89 /* publisherExplanationController.swift */; };
 		484286EF240CD71E00146C8D /* Validation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 484286EE240CD71E00146C8D /* Validation.swift */; };
 		4844916623CFCD9F000E13FA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4844916523CFCD9F000E13FA /* Assets.xcassets */; };
@@ -37,6 +39,8 @@
 		488CB63F23D5379D00E9EBA4 /* publisherCategoriesController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 488CB63E23D5379D00E9EBA4 /* publisherCategoriesController.swift */; };
 		488CB64123D5571700E9EBA4 /* ListenerNameController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 488CB64023D5571700E9EBA4 /* ListenerNameController.swift */; };
 		48A4E0E823CAFE4300A58F61 /* SignInController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48A4E0E723CAFE4300A58F61 /* SignInController.swift */; };
+		48AC107B24109209009064EB /* String+Ext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48AC107A24109209009064EB /* String+Ext.swift */; };
+		48AC107D2410CF6B009064EB /* UIDatePicker+Ext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48AC107C2410CF6B009064EB /* UIDatePicker+Ext.swift */; };
 		48B8687C23C7131A00EFEB88 /* CreateUserController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48B8687B23C7131A00EFEB88 /* CreateUserController.swift */; };
 		48B8688023C744B800EFEB88 /* CreateUsername.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48B8687F23C744B800EFEB88 /* CreateUsername.swift */; };
 		48B8688423C7586A00EFEB88 /* AddEmail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48B8688323C7586A00EFEB88 /* AddEmail.swift */; };
@@ -47,6 +51,9 @@
 		48CFC1F923EB643D004434CC /* CustomNavBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48CFC1F823EB643D004434CC /* CustomNavBar.swift */; };
 		48D533A42403A2DF008EFADF /* AccountSettingsVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48D533A32403A2DF008EFADF /* AccountSettingsVC.swift */; };
 		48D8ADEA240CBCA800F09731 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 48D8ADE9240CBCA800F09731 /* GoogleService-Info.plist */; };
+		48DC0F84240CE5E4003D489B /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48DC0F83240CE5E4003D489B /* User.swift */; };
+		48DC0F86240CE7A5003D489B /* AccountType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48DC0F85240CE7A5003D489B /* AccountType.swift */; };
+		48DC0F88240CEC88003D489B /* EpisodeStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48DC0F87240CEC88003D489B /* EpisodeStatus.swift */; };
 		48DC720F23C6E998002AB21F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48DC720E23C6E998002AB21F /* AppDelegate.swift */; };
 		48DC721123C6E998002AB21F /* InitialSignupController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48DC721023C6E998002AB21F /* InitialSignupController.swift */; };
 		48DC721423C6E998002AB21F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 48DC721223C6E998002AB21F /* Main.storyboard */; };
@@ -72,7 +79,9 @@
 		480825EA240C6611007C4352 /* StubbedEpisodes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StubbedEpisodes.swift; sourceTree = "<group>"; };
 		480DDA2523E8BB190078FEAC /* PublisherAddSummaryController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublisherAddSummaryController.swift; sourceTree = "<group>"; };
 		48205C63240710570049C131 /* InvitePeopleVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InvitePeopleVC.swift; sourceTree = "<group>"; };
+		482D49D2240EF80B00C22B88 /* ProgramAccountVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramAccountVC.swift; sourceTree = "<group>"; };
 		4832A92723EA661400BDAA4E /* PassThoughView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassThoughView.swift; sourceTree = "<group>"; };
+		4836C689240E5BD8005E2A9C /* UITextField+Ext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UITextField+Ext.swift"; sourceTree = "<group>"; };
 		4836FCCA23D2EE4400C80D89 /* publisherExplanationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = publisherExplanationController.swift; path = "Dune/Onboarding/Controllers/Publisher controllers/publisherExplanationController.swift"; sourceTree = SOURCE_ROOT; };
 		484286EE240CD71E00146C8D /* Validation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Validation.swift; sourceTree = "<group>"; };
 		4844916523CFCD9F000E13FA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = Dune/Assets.xcassets; sourceTree = "<group>"; };
@@ -93,6 +102,8 @@
 		488CB63E23D5379D00E9EBA4 /* publisherCategoriesController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = publisherCategoriesController.swift; sourceTree = "<group>"; };
 		488CB64023D5571700E9EBA4 /* ListenerNameController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListenerNameController.swift; sourceTree = "<group>"; };
 		48A4E0E723CAFE4300A58F61 /* SignInController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignInController.swift; sourceTree = "<group>"; };
+		48AC107A24109209009064EB /* String+Ext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+Ext.swift"; sourceTree = "<group>"; };
+		48AC107C2410CF6B009064EB /* UIDatePicker+Ext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIDatePicker+Ext.swift"; sourceTree = "<group>"; };
 		48B8687B23C7131A00EFEB88 /* CreateUserController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateUserController.swift; sourceTree = "<group>"; };
 		48B8687F23C744B800EFEB88 /* CreateUsername.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateUsername.swift; sourceTree = "<group>"; };
 		48B8688323C7586A00EFEB88 /* AddEmail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddEmail.swift; sourceTree = "<group>"; };
@@ -103,6 +114,9 @@
 		48CFC1F823EB643D004434CC /* CustomNavBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomNavBar.swift; sourceTree = "<group>"; };
 		48D533A32403A2DF008EFADF /* AccountSettingsVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountSettingsVC.swift; sourceTree = "<group>"; };
 		48D8ADE9240CBCA800F09731 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		48DC0F83240CE5E4003D489B /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
+		48DC0F85240CE7A5003D489B /* AccountType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountType.swift; sourceTree = "<group>"; };
+		48DC0F87240CEC88003D489B /* EpisodeStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EpisodeStatus.swift; sourceTree = "<group>"; };
 		48DC720B23C6E998002AB21F /* Dune.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Dune.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		48DC720E23C6E998002AB21F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		48DC721023C6E998002AB21F /* InitialSignupController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InitialSignupController.swift; sourceTree = "<group>"; };
@@ -201,7 +215,10 @@
 				4801959023D7C9680027FA91 /* DeviceSizes.swift */,
 				48616F0423FA220800E91530 /* UIView+Ext.swift */,
 				48616F0223FA208100E91530 /* UITextView+Ext.swift */,
+				4836C689240E5BD8005E2A9C /* UITextField+Ext.swift */,
 				48FFF88223FE3AA90071A89A /* ExtendedButton.swift */,
+				48AC107A24109209009064EB /* String+Ext.swift */,
+				48AC107C2410CF6B009064EB /* UIDatePicker+Ext.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -226,10 +243,13 @@
 		4857BF7A23FB42D700ED6B01 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				48DC0F83240CE5E4003D489B /* User.swift */,
 				4857BF7B23FB431000ED6B01 /* Program.swift */,
 				48EF84F5240C569400A150B6 /* Episode.swift */,
 				480825E8240C65FC007C4352 /* StubbedPrograms.swift */,
 				480825EA240C6611007C4352 /* StubbedEpisodes.swift */,
+				48DC0F87240CEC88003D489B /* EpisodeStatus.swift */,
+				48DC0F85240CE7A5003D489B /* AccountType.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -254,6 +274,7 @@
 				48616F0B23FA5A3300E91530 /* StudioVC.swift */,
 				48616F0D23FA5A4900E91530 /* TrendingVC.swift */,
 				48616F0F23FA5A6500E91530 /* AccountVC.swift */,
+				482D49D2240EF80B00C22B88 /* ProgramAccountVC.swift */,
 				48205C622407100C0049C131 /* Account settings */,
 			);
 			path = Controlers;
@@ -485,6 +506,7 @@
 			files = (
 				48B8687C23C7131A00EFEB88 /* CreateUserController.swift in Sources */,
 				48B9E70E23F2887F004B53FA /* PublisherTagController.swift in Sources */,
+				48DC0F84240CE5E4003D489B /* User.swift in Sources */,
 				48616F1323FA5BAC00E91530 /* MainTabController.swift in Sources */,
 				487DFC8423D5245E00137C36 /* publisherImageController.swift in Sources */,
 				48DEC40823CFE999005A1E83 /* OnboardingProgramCell.swift in Sources */,
@@ -498,6 +520,7 @@
 				484286EF240CD71E00146C8D /* Validation.swift in Sources */,
 				48A4E0E823CAFE4300A58F61 /* SignInController.swift in Sources */,
 				48DEC40623CFDD83005A1E83 /* ListenerProgramSelectionController.swift in Sources */,
+				48DC0F88240CEC88003D489B /* EpisodeStatus.swift in Sources */,
 				48C084E123CA7166009F417F /* AddBirthDate.swift in Sources */,
 				48C084DF23CA7148009F417F /* CreatePassword.swift in Sources */,
 				480825E9240C65FC007C4352 /* StubbedPrograms.swift in Sources */,
@@ -508,10 +531,12 @@
 				480DDA2623E8BB190078FEAC /* PublisherAddSummaryController.swift in Sources */,
 				48B8688423C7586A00EFEB88 /* AddEmail.swift in Sources */,
 				480526C323CC54B500D62224 /* AccountTypeController.swift in Sources */,
+				48AC107D2410CF6B009064EB /* UIDatePicker+Ext.swift in Sources */,
 				48EF84F6240C569400A150B6 /* Episode.swift in Sources */,
 				4857BF7C23FB431000ED6B01 /* Program.swift in Sources */,
 				48616F0323FA208100E91530 /* UITextView+Ext.swift in Sources */,
 				485605B123CEE938006CEBC9 /* ListenerCategoriesController.swift in Sources */,
+				4836C68A240E5BD8005E2A9C /* UITextField+Ext.swift in Sources */,
 				488CB64123D5571700E9EBA4 /* ListenerNameController.swift in Sources */,
 				4868045323E6D96800F8B244 /* LaunchScreenController.swift in Sources */,
 				480825EB240C6611007C4352 /* StubbedEpisodes.swift in Sources */,
@@ -522,10 +547,13 @@
 				48F655C423CFAF20004B44E0 /* ListenerProfileImageController.swift in Sources */,
 				4801959123D7C9680027FA91 /* DeviceSizes.swift in Sources */,
 				48DC720F23C6E998002AB21F /* AppDelegate.swift in Sources */,
+				48AC107B24109209009064EB /* String+Ext.swift in Sources */,
 				48FFF88323FE3AA90071A89A /* ExtendedButton.swift in Sources */,
 				485605B323CEF5BE006CEBC9 /* Categories.swift in Sources */,
 				48205C64240710570049C131 /* InvitePeopleVC.swift in Sources */,
+				48DC0F86240CE7A5003D489B /* AccountType.swift in Sources */,
 				48C1E87623D4302700AACD71 /* publisherNameController.swift in Sources */,
+				482D49D3240EF80B00C22B88 /* ProgramAccountVC.swift in Sources */,
 				48616F1023FA5A6500E91530 /* AccountVC.swift in Sources */,
 				4857BF7923FB36FF00ED6B01 /* RegularFeedCell.swift in Sources */,
 				48616F0E23FA5A4900E91530 /* TrendingVC.swift in Sources */,

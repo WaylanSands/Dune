@@ -15,11 +15,11 @@ class PlayBar: UIView {
     var programName: String
     var handel: String
     var likesOverTen: Bool
-    var likes: Int
+    var likeCount: Int
     var listens: Int
     var commentCount: Int
     var saveCount: Int
-    var shareLink: String
+    var shareLink: URL
     
     lazy var smallProfileImage: UIImageView = {
        let imageView = UIImageView()
@@ -58,12 +58,12 @@ class PlayBar: UIView {
     
     
     init(episode: Episode) {
-        self.episodeImage = episode.smallProgramImage
+        self.episodeImage = episode.Image
         self.programName = episode.programName
-        self.handel = episode.accountHandel
+        self.handel = episode.userHandel
         self.likesOverTen = episode.likesOverTen
-        self.likes = episode.likes
-        self.listens = episode.listens + 1
+        self.likeCount = episode.likeCount
+        self.listens = episode.listenCount + 1
         self.commentCount = episode.commentCount
         self.saveCount = episode.saveCount
         self.shareLink = episode.shareLink

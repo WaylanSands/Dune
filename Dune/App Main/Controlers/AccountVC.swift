@@ -204,6 +204,7 @@ class AccountVC: UIViewController {
     let customNavBar: CustomNavBar = {
         let nav = CustomNavBar()
         nav.leftButton.setImage(#imageLiteral(resourceName: "switch-account-icon"), for: .normal)
+        nav.leftButton.addTarget(self, action: #selector(switchAccountPress), for: .touchUpInside)
         nav.backgroundColor = .clear
         nav.rightButton.setImage(#imageLiteral(resourceName: "white-settings-icon"), for: .normal)
         nav.rightButton.addTarget(self, action: #selector(settingsButtonPress), for: .touchUpInside)
@@ -422,6 +423,11 @@ class AccountVC: UIViewController {
     @objc func settingsButtonPress() {
         let settingsVC = AccountSettingsVC()
         navigationController?.pushViewController(settingsVC, animated: true)
+    }
+    
+    @objc func switchAccountPress() {
+        let programAccount = ProgramAccountVC()
+        navigationController?.pushViewController(programAccount, animated: false)
     }
 }
 

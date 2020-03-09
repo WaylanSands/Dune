@@ -17,14 +17,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
 //         Override point for customization after application launch.
         
-        let mainFeed = MainTabController()
-        let navigation = UINavigationController(rootViewController: mainFeed)
-
-        let frame = UIScreen.main.bounds
-        window = UIWindow(frame: frame)
-
-        window!.rootViewController = navigation
-        window!.makeKeyAndVisible()
+//        let mainFeed = MainTabController()
+//        let navigation = UINavigationController(rootViewController: mainFeed)
+//
+//        let frame = UIScreen.main.bounds
+//        window = UIWindow(frame: frame)
+//
+//        window!.rootViewController = navigation
+//        window!.makeKeyAndVisible()
+        
         FirebaseApp.configure()
         return true
     }
