@@ -30,107 +30,71 @@ class AccountSettingsVC: UIViewController {
     let topStackedView: UIStackView = {
         let view = UIStackView()
         view.axis = .vertical
-        view.spacing = 15
+        view.spacing = 20
         return view
     }()
     
-    let inviteStackedView: UIStackView = {
-        let view = UIStackView()
-        view.distribution = .equalSpacing
-        return view
-    }()
-    
-    let helpStackedView: UIStackView = {
-        let view = UIStackView()
-        view.distribution = .equalSpacing
-        return view
-    }()
-    
-    let feedbackStackedView: UIStackView = {
-        let view = UIStackView()
-        view.distribution = .equalSpacing
-        return view
-    }()
-    
-    let editProfileStackedView: UIStackView = {
-        let view = UIStackView()
-        view.distribution = .equalSpacing
-        return view
-    }()
-    
-    let passwordStackedView: UIStackView = {
-        let view = UIStackView()
-        view.distribution = .equalSpacing
-        return view
-    }()
-    
-    let inviteButton: UIButton = {
+    lazy var inviteButton: UIButton = {
         let button = UIButton()
         button.setTitle("Invite Friends", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        button.contentHorizontalAlignment = .left
         button.setTitleColor(CustomStyle.primaryblack, for: .normal)
-        button.addTarget(self, action: #selector(invitePeople), for: .touchUpInside)
-        return button
-    }()
-    
-    let inviteButonArrow: UIButton = {
-        let button = UIButton()
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        button.addTarget(self, action: #selector(presentInvitePeopleVC), for: .touchUpInside)
+        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: view.frame.width - 40, bottom: 0, right: 0)
+        button.titleEdgeInsets = UIEdgeInsets(top: 0, left: -6, bottom: 0, right: 0)
         button.setImage(UIImage(named: "selection-arrow"), for: .normal)
         return button
     }()
     
-    let helpCentreButton: UIButton = {
+    lazy var helpCentreButton: UIButton = {
         let button = UIButton()
         button.setTitle("Help Centre", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        button.contentHorizontalAlignment = .left
         button.setTitleColor(CustomStyle.primaryblack, for: .normal)
-        return button
-    }()
-    
-    let helpCentreButtonArrow: UIButton = {
-        let button = UIButton()
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        button.addTarget(self, action: #selector(presentInvitePeopleVC), for: .touchUpInside)
+        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: view.frame.width - 40, bottom: 0, right: 0)
+        button.titleEdgeInsets = UIEdgeInsets(top: 0, left: -6, bottom: 0, right: 0)
         button.setImage(UIImage(named: "selection-arrow"), for: .normal)
         return button
     }()
     
-    let feedbackButton: UIButton = {
+    lazy var feedbackButton: UIButton = {
         let button = UIButton()
         button.setTitle("Send App Feedback", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        button.contentHorizontalAlignment = .left
         button.setTitleColor(CustomStyle.primaryblack, for: .normal)
-        return button
-    }()
-    
-    let feedbackButonArrow: UIButton = {
-        let button = UIButton()
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        button.addTarget(self, action: #selector(presentInvitePeopleVC), for: .touchUpInside)
+        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: view.frame.width - 40, bottom: 0, right: 0)
+        button.titleEdgeInsets = UIEdgeInsets(top: 0, left: -6, bottom: 0, right: 0)
         button.setImage(UIImage(named: "selection-arrow"), for: .normal)
         return button
     }()
     
-    let editProfileButton: UIButton = {
+    lazy var editProfileButton: UIButton = {
         let button = UIButton()
         button.setTitle("Edit Profile", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        button.contentHorizontalAlignment = .left
         button.setTitleColor(CustomStyle.primaryblack, for: .normal)
-        return button
-    }()
-    
-    let editProfileArrow: UIButton = {
-        let button = UIButton()
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        button.addTarget(self, action: #selector(presentEditListenerVC), for: .touchUpInside)
+        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: view.frame.width - 40, bottom: 0, right: 0)
+        button.titleEdgeInsets = UIEdgeInsets(top: 0, left: -6, bottom: 0, right: 0)
         button.setImage(UIImage(named: "selection-arrow"), for: .normal)
         return button
     }()
     
-    let passowordButton: UIButton = {
+    lazy var passwordButton: UIButton = {
         let button = UIButton()
         button.setTitle("Password", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        button.contentHorizontalAlignment = .left
         button.setTitleColor(CustomStyle.primaryblack, for: .normal)
-        return button
-    }()
-    
-    let passowrdArrow: UIButton = {
-        let button = UIButton()
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        button.addTarget(self, action: #selector(presentInvitePeopleVC), for: .touchUpInside)
+        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: view.frame.width - 40, bottom: 0, right: 0)
+        button.titleEdgeInsets = UIEdgeInsets(top: 0, left: -6, bottom: 0, right: 0)
         button.setImage(UIImage(named: "selection-arrow"), for: .normal)
         return button
     }()
@@ -348,16 +312,15 @@ class AccountSettingsVC: UIViewController {
         return view
     }()
     
-    let publisherNotificationLabel: UILabel = {
-        let label = UILabel()
-        label.text = "Publisher Notifications"
-        label.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
-        label.textColor = CustomStyle.primaryblack
-        return label
-    }()
-    
-    let publisherNotificationButon: UIButton = {
+    lazy var publisherNotificationButon: UIButton = {
         let button = UIButton()
+        button.setTitle("Publisher Notifications", for: .normal)
+        button.contentHorizontalAlignment = .left
+        button.setTitleColor(CustomStyle.primaryblack, for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        button.addTarget(self, action: #selector(presentPublisherNotificationsVC), for: .touchUpInside)
+        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: view.frame.width - 40, bottom: 0, right: 0)
+        button.titleEdgeInsets = UIEdgeInsets(top: 0, left: -6, bottom: 0, right: 0)
         button.setImage(UIImage(named: "selection-arrow"), for: .normal)
         return button
     }()
@@ -507,6 +470,7 @@ class AccountSettingsVC: UIViewController {
     }
     
     func configureViews() {
+                
         view.backgroundColor = .white
         view.addSubview(customNavBar)
         customNavBar.pinNavBarTo(view)
@@ -523,25 +487,11 @@ class AccountSettingsVC: UIViewController {
         topStackedView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 16.0).isActive = true
         topStackedView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -16.0).isActive = true
         
-        topStackedView.addArrangedSubview(inviteStackedView)
-        inviteStackedView.addArrangedSubview(inviteButton)
-        inviteStackedView.addArrangedSubview(inviteButonArrow)
-        
-        topStackedView.addArrangedSubview(helpStackedView)
-        helpStackedView.addArrangedSubview(helpCentreButton)
-        helpStackedView.addArrangedSubview(helpCentreButtonArrow)
-        
-        topStackedView.addArrangedSubview(feedbackStackedView)
-        feedbackStackedView.addArrangedSubview(feedbackButton)
-        feedbackStackedView.addArrangedSubview(feedbackButonArrow)
-        
-        topStackedView.addArrangedSubview(editProfileStackedView)
-        editProfileStackedView.addArrangedSubview(editProfileButton)
-        editProfileStackedView.addArrangedSubview(editProfileArrow)
-        
-        topStackedView.addArrangedSubview(passwordStackedView)
-        passwordStackedView.addArrangedSubview(passowordButton)
-        passwordStackedView.addArrangedSubview(passowrdArrow)
+        topStackedView.addArrangedSubview(inviteButton)
+        topStackedView.addArrangedSubview(helpCentreButton)
+        topStackedView.addArrangedSubview(feedbackButton)
+        topStackedView.addArrangedSubview(editProfileButton)
+        topStackedView.addArrangedSubview(passwordButton)
         
         containerView.addSubview(lineBreakView)
         lineBreakView.translatesAutoresizingMaskIntoConstraints = false
@@ -627,7 +577,6 @@ class AccountSettingsVC: UIViewController {
         // Publisher Notifications
         
         notificationsStackedView.addArrangedSubview(publisherNotificationsStackedView)
-        publisherNotificationsStackedView.addArrangedSubview(publisherNotificationLabel)
         publisherNotificationsStackedView.addArrangedSubview(publisherNotificationButon)
         
         // Line break
@@ -676,10 +625,21 @@ class AccountSettingsVC: UIViewController {
         view.bringSubviewToFront(customNavBar)
     }
     
-    @objc func invitePeople() {
+    @objc func presentInvitePeopleVC() {
         let inviteVC = InvitePeopleVC()
         navigationController?.pushViewController(inviteVC, animated: true)
     }
+    
+    @objc func presentPublisherNotificationsVC() {
+        let notificationsVC = PublisherNotificationsVC()
+        navigationController?.pushViewController(notificationsVC, animated: true)
+    }
+    
+    @objc func presentEditListenerVC() {
+        let profileEditVC = EditListenerProfileVC()
+        navigationController?.pushViewController(profileEditVC, animated: true)
+    }
+    
     
     @objc func backButtonPress() {
         navigationController?.popViewController(animated: true)

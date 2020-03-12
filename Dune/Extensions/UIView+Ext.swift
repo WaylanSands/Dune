@@ -27,5 +27,38 @@ extension UIView {
         self.trailingAnchor.constraint(equalTo: superView.trailingAnchor, constant: trailing).isActive = true
     }
     
+    // Transition functions
+    
+//    lazy var screenWidth = self.frame.width
+//    lazy var centerXposition = self.frame.origin.x
+    
+    func toCenter(view: UIView) {
+        view.frame.origin.x = self.self.frame.origin.x
+    }
+    
+    func backOffScreen(view: UIView) {
+        view.frame.origin.x -= self.frame.width
+    }
+    
+    func forwardOffScreen(view: UIView) {
+        view.frame.origin.x += self.frame.width
+    }
+    
+    func transitionToCenter(view: UIView) {
+        UIView.transition(with: view, duration: 0.5, options: .curveEaseInOut, animations: {self.toCenter(view: view)}, completion: {(value: Bool) in
+//            self.currentView = view
+        })
+    }
+    
+    func transitionBackwards(view: UIView) {
+        UIView.transition(with: view, duration: 0.5, options: .curveEaseInOut, animations:  {self.backOffScreen(view: view)}, completion: {(value: Bool) in
+        })
+    }
+    
+    func transitionForward(view: UIView) {
+        UIView.transition(with: view, duration: 0.5, options: .curveEaseInOut, animations: {self.forwardOffScreen(view: view)}, completion: {(value: Bool) in
+        })
+    }
+    
     
 }

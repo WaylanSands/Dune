@@ -27,28 +27,5 @@ struct Episode {
     var shareLink: URL
     var uploadDate: Date?
     var tags: [String]
-
-//    init(episode: episodeDoc) {
-//    self.episodeNumber = episodeNumber
-//    self.smallProgramImage = program.image!
-//    self.programName = program.name
-//    self.accountHandel = program.handel
-//    self.episodeTitle = program.episodes![episodeNumber].episodeTitle
-//    self.likes = program.episodes![episodeNumber].likes
-//    self.likesOverTen = program.episodes![episodeNumber].likesOverTen
-//    self.listens = program.episodes![episodeNumber].listens
-//    self.commentCount = program.episodes![episodeNumber].commentCount
-//    self.saveCount = program.episodes![episodeNumber].saveCount
-//    self.shareLink = program.episodes![episodeNumber].shareLink
-//    }
-//
-//    func checkLikeCount() -> Bool {
-//        if likes >= 10 {
-//            return true
-//        } else {
-//            return false
-//        }
-//    }
-    
 }
 

@@ -27,3 +27,4 @@ enum Categories: String, CaseIterable {
     case mindfulness = "Mindfulness"
     case healthAndFitness = "Health & Fitness"
 }
+

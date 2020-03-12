@@ -32,8 +32,8 @@ class AccountVC: UIViewController {
         return view
     }()
     
-    let topSectionFade: UIView = {
-        let view = UIView()
+    let topSectionFade: PassThoughView = {
+        let view = PassThoughView()
         view.backgroundColor = CustomStyle.darkestBlack
         return view
     }()
@@ -46,8 +46,12 @@ class AccountVC: UIViewController {
         return view
     }()
     
-    let userImage: UIImageView = {
+    let gestureRec = UITapGestureRecognizer(target: self, action: #selector(presentEditProfile))
+    
+    lazy var userImage: UIImageView = {
         let view = UIImageView()
+        view.isUserInteractionEnabled = true
+        view.addGestureRecognizer(gestureRec)
         view.layer.cornerRadius = 7
         view.clipsToBounds = true
         view.contentMode = .scaleAspectFill
@@ -429,6 +433,13 @@ class AccountVC: UIViewController {
         let programAccount = ProgramAccountVC()
         navigationController?.pushViewController(programAccount, animated: false)
     }
+    
+    @objc func presentEditProfile() {
+        let editProfileVC = EditListenerProfileVC()
+        navigationController?.pushViewController(editProfileVC, animated: true)
+    }
+    
+    
 }
 
 extension AccountVC: UITableViewDelegate, UITableViewDataSource {

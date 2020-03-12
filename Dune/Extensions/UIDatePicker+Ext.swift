@@ -10,6 +10,7 @@ import Foundation
 import UIKit
 
 extension UIDatePicker {
+    
 func setYearValidation() {
     let currentDate: Date = Date()
     var calendar: Calendar = Calendar(identifier: Calendar.Identifier.gregorian)
@@ -22,4 +23,16 @@ func setYearValidation() {
     let minDate: Date = calendar.date(byAdding: components, to: currentDate)!
     self.minimumDate = minDate
     self.maximumDate = maxDate
-} }
+}
+    
+    
+    func dateToStringMMMddYYY() -> String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "MMM dd, yyyy"
+        return dateFormatter.string(from: self.date)
+    }
+    
+    
+    
+}
+

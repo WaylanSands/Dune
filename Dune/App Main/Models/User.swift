@@ -10,26 +10,23 @@ import Foundation
 import UIKit
 
 struct User {
-    var userID: String
-    var name: String
-    var handel: String
-    var image: UIImage
-    var email: String
-    var age: Int
-    var accountType: AccountType
-    var hasChannel: Bool
-    var hasProgram: Bool
-    var hasUnpublishedContent: Bool
-    var channelID: String
-    var programID: String
-    var subscriptions: [String] // Program IDs
-    var likedContent: [String]? // Episode IDs
-    var savedContent: [String]? // Episode IDs
-    var draftEpisodes: [String]? // Episode IDs
-    var interests: [Categories] // Categories
-    //    var country: enum
-    
-//    init(user: userDocument) {
-//        self.age = user.age
-//    }
+    static var userID: String?
+    static var username: String?
+    static var displayName: String?
+    static var profileImage: String?
+    static var email: String?
+    static var password: String?
+    static var birthDate: String?
+    static var accountType: String?
+    static var hasChannel: Bool?
+    static var hasProgram: Bool?
+    static var hasUnpublishedContent: Bool?
+    static var channelID: String?
+    static var programID: String?
+    static var programs: [String]?         // Episode IDs
+    static var subscriptions: [String]?    // Program IDs
+    static var likedContent: [String]?     // Episode IDs
+    static var savedContent: [String]?     // Episode IDs
+    static var draftEpisodes: [String]?    // Episode IDs
+    static var interests: [String]?    // Categories
 }

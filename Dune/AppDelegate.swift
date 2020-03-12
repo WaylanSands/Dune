@@ -15,10 +15,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-//         Override point for customization after application launch.
+
+//        Override point for customization after application launch.
         
-//        let mainFeed = MainTabController()
-//        let navigation = UINavigationController(rootViewController: mainFeed)
+//        let startingController = MainTabController()
+//        let navigation = UINavigationController(rootViewController: startingController)
 //
 //        let frame = UIScreen.main.bounds
 //        window = UIWindow(frame: frame)
