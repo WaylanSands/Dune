@@ -13,16 +13,14 @@ struct User {
     static var userID: String?
     static var username: String?
     static var displayName: String?
-    static var profileImage: String?
+    static var profileImagePath: String?
     static var email: String?
     static var password: String?
     static var birthDate: String?
     static var accountType: String?
-    static var hasChannel: Bool?
-    static var hasProgram: Bool?
-    static var hasUnpublishedContent: Bool?
     static var channelID: String?
-    static var programID: String?
+    static var hasMultiplePrograms: Bool?
+    static var hasUnpublishedContent: Bool?
     static var programs: [String]?         // Episode IDs
     static var subscriptions: [String]?    // Program IDs
     static var likedContent: [String]?     // Episode IDs
@@ -30,3 +28,4 @@ struct User {
     static var draftEpisodes: [String]?    // Episode IDs
     static var interests: [String]?    // Categories
 }
+

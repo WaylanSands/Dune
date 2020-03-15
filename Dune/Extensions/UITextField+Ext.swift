@@ -24,9 +24,9 @@ extension UITextField {
     }
     
     func checkUsername(db: Firestore, field: String, completion: @escaping (Bool) -> Void) {
-        
+  
         let usersRef =  db.collection("users")
-        
+      
         usersRef.whereField("username", isEqualTo: field).getDocuments { (snapshot, err) in
             if let err = err {
                 print("Error getting document: \(err)")

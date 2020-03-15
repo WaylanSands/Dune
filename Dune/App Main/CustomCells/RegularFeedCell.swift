@@ -110,7 +110,6 @@ class RegularFeedCell: UITableViewCell {
 
     let gradientOverlayView: UIView = {
         let view = UIView()
-        view.backgroundColor = .black
         return view
     }()
 
