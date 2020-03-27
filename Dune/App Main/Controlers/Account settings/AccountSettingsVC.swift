@@ -472,9 +472,6 @@ class AccountSettingsVC: UIViewController {
     func configureViews() {
                 
         view.backgroundColor = .white
-        view.addSubview(customNavBar)
-        customNavBar.pinNavBarTo(view)
-        
         view.addSubview(scrollView)
         scrollView.pinEdges(to: view)
         
@@ -620,9 +617,9 @@ class AccountSettingsVC: UIViewController {
         bottomStackedView.addArrangedSubview(logOutButton)
         bottomStackedView.addArrangedSubview(deleteAccountButton)
         bottomStackedView.addArrangedSubview(versionLabel)
-        
-
-        view.bringSubviewToFront(customNavBar)
+    
+        view.addSubview(customNavBar)
+        customNavBar.pinNavBarTo(view)
     }
     
     @objc func presentInvitePeopleVC() {

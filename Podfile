@@ -15,6 +15,7 @@ pod 'Firebase/Firestore'
 pod 'Firebase/Functions'
 pod 'Firebase/Storage'
 pod 'FirebaseFirestoreSwift'
+pod 'MultiSlider'
 
 # https://firebase.google.com/docs/ios/setup#available-pods
 

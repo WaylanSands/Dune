@@ -23,4 +23,9 @@ extension FileManager {
         }
     }
     
+   static func getDocumentsDirectory() -> URL {
+        let paths = FileManager.self.default.urls(for: .documentDirectory, in: .userDomainMask)
+        return paths[0]
+    }
+    
 }

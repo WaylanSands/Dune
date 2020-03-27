@@ -119,7 +119,6 @@ class ProgramAccountVC: UIViewController {
         return view
     }()
     
-    
     let subscribersLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
@@ -224,6 +223,40 @@ class ProgramAccountVC: UIViewController {
         styleForScreens()
         configureViews()
         addMoreButton()
+        setupTopBar()
+        scrollView.delegate = self
+    }
+    
+    func setupTopBar() {
+        let navBar = navigationController!.navigationBar
+        navigationController?.isNavigationBarHidden = false
+        navBar.shadowImage = UIImage()
+        navBar.tintColor = .black
+        
+        let userIdFont = UIFont.systemFont(ofSize: 16.0, weight: .medium)
+        let userIdeAttributes: [NSAttributedString.Key: Any] = [
+            .font: userIdFont,
+            .foregroundColor: CustomStyle.primaryblack
+        ]
+        
+        navBar.titleTextAttributes = userIdeAttributes
+    }
+    
+    func setupNavBar() {
+        self.title = "Settings"
+        navigationController?.isNavigationBarHidden = false
+        
+        let navBar = navigationController?.navigationBar
+        navBar?.barStyle = .black
+        navBar?.setBackgroundImage(UIImage(), for: .default)
+        navBar?.shadowImage = UIImage()
+        navBar?.titleTextAttributes = [.foregroundColor: UIColor.white]
+        navBar?.tintColor = .white
+        
+        let imgBackArrow = #imageLiteral(resourceName: "back-button-white")
+        navBar?.backIndicatorImage = imgBackArrow
+        navBar?.backIndicatorTransitionMaskImage = imgBackArrow
+        navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -282,7 +315,7 @@ class ProgramAccountVC: UIViewController {
         
         scrollContentView.addSubview(topView)
         topView.translatesAutoresizingMaskIntoConstraints = false
-        topView.topAnchor.constraint(equalTo: scrollContentView.topAnchor, constant: UIDevice.current.navBarHeight()).isActive = true
+        topView.topAnchor.constraint(equalTo: scrollContentView.topAnchor, constant:20).isActive = true
         topView.leadingAnchor.constraint(equalTo: scrollContentView.leadingAnchor, constant: 16).isActive = true
         topView.trailingAnchor.constraint(equalTo: scrollContentView.trailingAnchor, constant: -16).isActive = true
         topView.heightAnchor.constraint(equalToConstant: 74).isActive = true
@@ -384,8 +417,8 @@ class ProgramAccountVC: UIViewController {
 
         print(programsStackView.arrangedSubviews.count)
         
-        view.addSubview(customNavBar)
-        customNavBar.pinNavBarTo(view)
+//        view.addSubview(customNavBar)
+//        customNavBar.pinNavBarTo(view)
     }
 
     func createProgramViews() {
@@ -442,16 +475,6 @@ class ProgramAccountVC: UIViewController {
         //        summaryBar.layoutIfNeeded()
     }
     
-    //    func addGradient() {
-    //        let gradient = CAGradientLayer()
-    //        gradient.frame = gradientOverlayView.bounds
-    //        print(gradientOverlayView.bounds)
-    //        let color = CustomStyle.darkestBlack
-    //        gradient.colors = [color.withAlphaComponent(0.0).cgColor, color.withAlphaComponent(1.0).cgColor, color.withAlphaComponent(1.0).cgColor]
-    //        gradientOverlayView.layer.insertSublayer(gradient, at: 0)
-    //        gradientOverlayView.transform = CGAffineTransform(rotationAngle: (-90.0 * .pi) / 180.0)
-    //        gradientOverlayView.backgroundColor = .clear
-    //    }
     
     //    func setupAccountLabel() {
     //        let programName = "The Daily "
@@ -476,5 +499,24 @@ class ProgramAccountVC: UIViewController {
     //        nameLabel.attributedText = programNameAttributedString
     //    }
     
+}
+
+extension ProgramAccountVC: UIScrollViewDelegate {
+    
+    public func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        
+        let fadeTextAnimation = CATransition()
+        fadeTextAnimation.duration = 0.5
+        fadeTextAnimation.type = CATransitionType.fade
+
+        
+        if scrollView.contentOffset.y >= -45.5 {
+             navigationController?.navigationBar.layer.add(fadeTextAnimation, forKey: "fadeText")
+            self.title = "@PlanetHollywood"
+        } else {
+            self.title = ""
+        }
+        
+    }
     
 }

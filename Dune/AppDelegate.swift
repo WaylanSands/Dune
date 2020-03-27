@@ -27,6 +27,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         window!.rootViewController = navigation
         window!.makeKeyAndVisible()
         
+        UINavigationBar.appearance().titleTextAttributes = CustomStyle.barButtonAttributes
+        
         FirebaseApp.configure()
         return true
     }

@@ -19,6 +19,7 @@ class StudioVC: UIViewController {
         nav.leftButton.setImage(UIImage(named: "upload-icon-white"), for: .normal)
         nav.rightButton.setImage(UIImage(named: "record-icon"), for: .normal)
         nav.rightButton.addTarget(self, action: #selector(recordButtonPress), for: .touchUpInside)
+        nav.titleLabel.font = UIFont.systemFont(ofSize: 18, weight: .bold)
         nav.titleLabel.text = "Studio"
         return nav
     }()
@@ -41,10 +42,26 @@ class StudioVC: UIViewController {
         configireViews()
         view.addSubview(customNav)
         customNav.pinNavBarTo(view)
-        view.backgroundColor = .black
+        
+        setupNavigationBar()
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        Episode.trackOption = nil
+    }
+    
+    
+    
+    func setupNavigationBar() {
+        let imgBackArrow = #imageLiteral(resourceName: "back-button-white")
+        navigationController?.navigationBar.backIndicatorImage = imgBackArrow
+        navigationController?.navigationBar.backIndicatorTransitionMaskImage = imgBackArrow
+        navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
     }
     
     func configireViews() {
+        view.backgroundColor = CustomStyle.onboardingBlack
+
         view.addSubview(contentLabel)
         contentLabel.translatesAutoresizingMaskIntoConstraints = false
         contentLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: 0).isActive = true
@@ -53,7 +70,9 @@ class StudioVC: UIViewController {
     }
     
     override func viewWillAppear(_ animated: Bool) {
-        tabBar?.barStyle = .black
+        navigationController?.isNavigationBarHidden = true
+        tabBar?.isHidden = false
+        tabBar!.backgroundImage =  UIImage()
         tabBar!.items?[0].image = UIImage(named: "feed-icon-selected")
         tabBar!.items?[1].image =  UIImage(named: "search-icon-selected")
         tabBar!.items?[3].image =  UIImage(named: "trending-icon-selected")
@@ -62,6 +81,7 @@ class StudioVC: UIViewController {
     
     override func viewWillDisappear(_ animated: Bool) {
         tabBar?.barStyle = .default
+        tabBar!.backgroundImage = .none
         tabBar!.items?[0].image = UIImage(named: "feed-icon")
         tabBar!.items?[1].image =  UIImage(named: "search-icon")
         tabBar!.items?[2].image =  UIImage(named: "studio-icon")
@@ -71,7 +91,7 @@ class StudioVC: UIViewController {
     
     @objc func recordButtonPress() {
         let recordVC = RecordBoothVC()
-        navigationController?.pushViewController(signupScreen, animated: false)
+        navigationController?.pushViewController(recordVC, animated: false)
     }
     
     

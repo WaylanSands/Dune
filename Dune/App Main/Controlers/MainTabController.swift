@@ -29,7 +29,7 @@ class MainTabController: UITabBarController {
         searchController.tabBarItem.selectedImage = UIImage(imageLiteralResourceName: "search-icon-selected")
         
         studioController.tabBarItem.image = UIImage(imageLiteralResourceName: "studio-icon")
-        studioController.tabBarItem.selectedImage = UIImage(imageLiteralResourceName: "studio-icon-selected")
+        studioController.tabBarItem.selectedImage = UIImage(imageLiteralResourceName: "studio-icon")
         
         playlistController.tabBarItem.image = UIImage(imageLiteralResourceName: "trending-icon")
         playlistController.tabBarItem.selectedImage = UIImage(imageLiteralResourceName: "trending-icon-selected")
@@ -39,5 +39,4 @@ class MainTabController: UITabBarController {
         
         viewControllers = [mainFeedController, searchController, studioController, playlistController, accountController]
     }
-
 }

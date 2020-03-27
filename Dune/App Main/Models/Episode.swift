@@ -10,6 +10,7 @@ import Foundation
 import UIKit
 
 struct Episode {
+    static var trackOption: MusicOption?
     var episodeID: String
     var programID: String
     var primaryGenre: Categories
