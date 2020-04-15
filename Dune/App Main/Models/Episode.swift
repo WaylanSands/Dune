@@ -9,24 +9,29 @@
 import Foundation
 import UIKit
 
-struct Episode {
-    static var trackOption: MusicOption?
-    var episodeID: String
-    var programID: String
-    var primaryGenre: Categories
-    var status: EpisodeStatus
-    var Image: UIImage
+class Episode {
+    
+    var ID: String
+    var image: UIImage
     var programName: String
-    var userHandel: String
-    var episodeTitle: String
-    var likeCount: Int
-    var likesOverTen: Bool
-    var listenCount: Int
-    var commentCount: Int
-    var comments: [String] // Comment IDs
-    var saveCount: Int
-    var shareLink: URL
-    var uploadDate: Date?
-    var tags: [String]
+    var username: String
+    var caption: String
+    var tags: [String]?
+    var programID: String
+    var ownerID: String
+
+    init(id: String, image: UIImage, programName: String, username: String, caption: String, tags: [String]?, programID: String, ownerID: String) {
+        self.ID = id
+        self.image = image
+        self.programName = programName
+        self.username = username
+        self.caption = caption
+        self.tags = tags
+        self.programID = programID
+        self.ownerID = ownerID
+    }
+    
+    
+  
 }
 

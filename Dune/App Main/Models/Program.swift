@@ -1,19 +1,28 @@
 //
-//  Program.swift
+//  Channel.swift
 //  Dune
 //
-//  Created by Waylan Sands on 18/2/20.
+//  Created by Waylan Sands on 13/3/20.
 //  Copyright © 2020 Waylan Sands. All rights reserved.
 //
 
-import Foundation
 import UIKit
 
 struct Program {
-    var name: String
-    var handel: String
-    var image: UIImage?
-    var summary: String?
-    var tags: [String]?
-    var episodes: [Episode]?
+    static var ID: String?
+    static var name: String?
+    static var ownerID: String?
+    static var hasIntro: Bool?
+    static var image: UIImage?
+    static var storedImageID: String?
+    static var imagePath: String?
+    static var storedIntroID: String?
+    static var introPath: String?
+    static var summary: String?
+    static var isPrimaryProgram: Bool?
+    static var primaryCategory: String?
+    static var hasMultiplePrograms: Bool?
+    static var tags: [String?]?
+    static var episodeIDs: [String]?
+    static var subscriberIDs: [String]?
 }

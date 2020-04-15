@@ -7,27 +7,31 @@
 //
 import Foundation
 import UIKit
+import FirebaseFirestore
 
 class PublisherAddSummaryVC: UIViewController {
     
-    let maxCharacters = 200
-    let maxSummaryLines = 7
-    var homeIndicatorHeight:CGFloat = 34.0
-    var largeImageSize: CGFloat = 74.0
-    var fontNameSize: CGFloat = 16
-    var fontIDSize: CGFloat = 14
-    var summaryTextViewThreshold: CGFloat = 80.0
-    var summaryLabelThreshold: CGFloat = 68.0
-    var lastTextViewHeight: CGFloat = 0.0
-    var lastLableHeight: CGFloat = 0.0
-    var summaryBarPadding: CGFloat  = 45
-    var textPlacement = true
-    var scrollHeight: NSLayoutConstraint!
-    var summaryBarYAnchor: NSLayoutConstraint!
+    let imageViewSize:CGFloat = 65.0
+    let maxCaptionCharacters = 240
+    let maxTagCharacters = 45
     
-    lazy var deviceType = UIDevice.current.deviceType
-    lazy var screenHeight: CGFloat = view.frame.height
-    lazy var passThoughView = PassThoughView(frame: CGRect(x: 0, y: 0, width: view.frame.width, height: view.frame.height))
+    let summaryPlaceholder = "Why should people subscribe to this program. What insights do you offer?"
+    let tagPlaceholder = "Add three tags, each seperated by a space"
+    
+    var scrollContentHeightConstraint: NSLayoutConstraint!
+    var tagContentWidthConstraint: NSLayoutConstraint!
+    
+    var homeIndicatorHeight:CGFloat = 34.0
+    var captionPlaceholderText = true
+    var captionLabelPlaceholderText = true
+    var tagPlaceholderText = true
+    var tagsUsed: [String] = []
+    
+    lazy var screenHeight = view.frame.height
+    lazy var tagButtons: [UIButton] = [firstTagButton, secondTagButton, thirdTagButton]
+    lazy var tagscrollViewWidth = tagScrollView.frame.width
+    
+    let skipAddingSummaryAlert = CustomAlertView(alertType: .skipAddingProgramSummary)
     
     let customNavBar: CustomNavBar = {
         let navBar = CustomNavBar()
@@ -49,13 +53,7 @@ class PublisherAddSummaryVC: UIViewController {
         return view
     }()
     
-    let topStackView: UIStackView = {
-        let view = UIStackView()
-        view.spacing = 10.0
-        return view
-    }()
-    
-    let largeUserImage: UIImageView = {
+    let mainImage: UIImageView = {
         let imageView = UIImageView()
         imageView.image = #imageLiteral(resourceName: "missing-image-large")
         imageView.layer.cornerRadius = 7
@@ -64,23 +62,15 @@ class PublisherAddSummaryVC: UIViewController {
         return imageView
     }()
     
-    let topRightStackView: UIStackView = {
-        let view = UIStackView()
-        view.axis = .vertical
-        view.spacing = 10.0
-        view.distribution = .fill
-        return view
-    }()
-    
-    let channelNameStackedView: UIStackView = {
+    let programeNameStackedView: UIStackView = {
         let view = UIStackView()
         view.spacing = 5
         return view
     }()
     
-    let channelNameLabel: UILabel = {
+    let programNameLabel: UILabel = {
         let label = UILabel()
-        label.text = Channel.name
+        label.text = Program.name
         label.font = UIFont.systemFont(ofSize: 16, weight: .bold)
         return label
     }()
@@ -95,14 +85,50 @@ class PublisherAddSummaryVC: UIViewController {
     
     let summaryLabel: UILabel = {
         let label = UILabel()
+        label.text = "placeholder"
         label.numberOfLines = 7
         label.font = UIFont.systemFont(ofSize: 14, weight: .regular)
+        label.textColor = CustomStyle.white
         return label
     }()
     
-    let summaryView: UIView = {
+    let tagScrollView: UIScrollView = {
+        let view = UIScrollView()
+        view.isScrollEnabled = true
+        view.showsHorizontalScrollIndicator = false
+        view.contentInsetAdjustmentBehavior = .never
+        return view
+    }()
+    
+    let gradientOverlayView: UIView = {
         let view = UIView()
         return view
+    }()
+    
+    let tagContentView: UIView = {
+        let view = UIView()
+        return view
+    }()
+    
+    let firstTagButton: UIButton = {
+        let button = UIButton()
+        button.setTitle("one", for: .normal)
+        button.titleLabel?.textColor = CustomStyle.fourthShade
+        return button
+    }()
+    
+    let secondTagButton: UIButton = {
+        let button = UIButton()
+        button.setTitle("two", for: .normal)
+        button.titleLabel?.textColor = CustomStyle.fourthShade
+        return button
+    }()
+    
+    let thirdTagButton: UIButton = {
+        let button = UIButton()
+        button.setTitle("three", for: .normal)
+        button.titleLabel?.textColor = CustomStyle.fourthShade
+        return button
     }()
     
     let summaryBar: UIView = {
@@ -119,23 +145,61 @@ class PublisherAddSummaryVC: UIViewController {
         return label
     }()
     
-    lazy var summaryBarCounter: UILabel = {
+    lazy var summaryCounterLabel: UILabel = {
         let label = UILabel()
-        label.text = String(maxCharacters)
+        label.text = String(maxCaptionCharacters)
         label.font = UIFont.systemFont(ofSize: 12, weight: .medium)
         label.textColor = CustomStyle.fourthShade
         return label
     }()
     
-    let summaryTextView: UITextView = {
+    lazy var summaryTextView: UITextView = {
         let textView = UITextView()
-        textView.text = "Write a short summary highlighting what your program iss about."
+        textView.text = summaryPlaceholder
         textView.font = UIFont.systemFont(ofSize: 16, weight: .regular)
+        textView.textContainer.maximumNumberOfLines = 12
         textView.isScrollEnabled = false
         textView.textColor = CustomStyle.fourthShade
         textView.keyboardType = .twitter
+        textView.textAlignment = .left
         return textView
     }()
+
+    let tagBar: UIView = {
+        let view = UIView()
+        view.backgroundColor = CustomStyle.secondShade
+        return view
+    }()
+    
+    let tagBarLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Program tags"
+        label.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+        label.textColor = CustomStyle.fithShade
+        return label
+    }()
+    
+    lazy var tagCounterLabel: UILabel = {
+        let label = UILabel()
+        label.text = String(maxTagCharacters)
+        label.font = UIFont.systemFont(ofSize: 12, weight: .medium)
+        label.textColor = CustomStyle.fourthShade
+        return label
+    }()
+    
+    lazy var tagTextView: UITextView = {
+        let textView = UITextView()
+        textView.text = tagPlaceholder
+        textView.font = UIFont.systemFont(ofSize: 16, weight: .regular)
+        textView.textContainer.maximumNumberOfLines = 2
+        textView.isScrollEnabled = false
+        textView.textColor = CustomStyle.fourthShade
+        textView.keyboardType = .twitter
+        textView.autocapitalizationType = .none
+        return textView
+    }()
+    
+    lazy var passThoughView = PassThoughView(frame: CGRect(x: 0, y: 0, width: view.frame.width, height: view.frame.height))
     
     let floatingDetailsView: UIView = {
         let view = UIView()
@@ -143,7 +207,7 @@ class PublisherAddSummaryVC: UIViewController {
         return view
     }()
     
-    let secondaryImageView: UIImageView = {
+    let bottomBarImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.image = #imageLiteral(resourceName: "missing-imag-small")
         imageView.layer.cornerRadius = 7
@@ -151,15 +215,15 @@ class PublisherAddSummaryVC: UIViewController {
         return imageView
     }()
     
-    let secondaryNameLabel: UILabel = {
+    let bottomBarProgramNameLabel: UILabel = {
         let label = UILabel()
-        label.text = Channel.name
+        label.text = Program.name
         label.font = UIFont.systemFont(ofSize: 16.0, weight: .bold)
         label.textColor = .white
         return label
     }()
     
-    let secondaryUserNameLabel: UILabel = {
+    let bottomBarHandelLabel: UILabel = {
         let label = UILabel()
         label.text = "@\(User.username!)"
         label.font = UIFont.systemFont(ofSize: 14.0, weight: .regular)
@@ -193,26 +257,43 @@ class PublisherAddSummaryVC: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        largeUserImage.setImage(from: Channel.downloadURL!)
-        secondaryImageView.setImage(from: Channel.downloadURL!)
-        styleForScreens()
+        callBottomFill()
+        setProgramImage()
         setupViews()
-//        setupAccountLabel()
+        addFloatingView()
+        styleTags()
+        tagTextView.delegate = self
         summaryTextView.delegate = self
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
-            self.summaryTextView.becomeFirstResponder()
-        })
+        skipAddingSummaryAlert.alertDelegate = self
         
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillChange(notification:)), name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
     }
     
-    override func viewWillLayoutSubviews() {
-        summaryLabel.sizeToFit()
+    func setProgramImage() {
+        if Program.image != nil {
+            mainImage.image = Program.image
+            bottomBarImageView.image = Program.image
+        } else {
+            mainImage.image = #imageLiteral(resourceName: "missing-image-large")
+            bottomBarImageView.image = #imageLiteral(resourceName: "missing-image-large")
+        }
     }
     
     override func viewWillAppear(_ animated: Bool) {
+        let startPosition: UITextPosition = self.summaryTextView.beginningOfDocument
+        self.summaryTextView.selectedTextRange = self.summaryTextView.textRange(from: startPosition, to: startPosition)
         self.floatingDetailsView.frame.origin.y =  self.view.frame.height - ( self.floatingDetailsView.frame.height +  self.homeIndicatorHeight)
+        
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        summaryTextView.becomeFirstResponder()
+        addGradient()
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        summaryTextView.resignFirstResponder()
+        tagTextView.resignFirstResponder()
     }
     
     deinit {
@@ -226,160 +307,23 @@ class PublisherAddSummaryVC: UIViewController {
         floatingDetailsView.frame.origin.y = view.frame.height - keyboardRect.height -  floatingDetailsView.frame.height
     }
     
-    func styleForScreens() {
-        switch deviceType {
-        case .iPhone4S:
-            break
-        case .iPhoneSE:
-            summaryTextViewThreshold = 57.0
-            largeImageSize = 60
-            fontNameSize = 14
-            fontIDSize = 12
-        case .iPhone8:
-            addFloatingView()
-            summaryTextViewThreshold = 57.0
-        case .iPhone8Plus:
-            addFloatingView()
-            summaryTextViewThreshold = 95.0
-        case .iPhone11:
-            addFloatingView()
-            summaryTextViewThreshold = 133.0
-            callBottomFill()
-        case .iPhone11Pro:
-            summaryTextViewThreshold = 95.0
-            addFloatingView()
-            callBottomFill()
-        case .iPhone11ProMax:
-            summaryTextViewThreshold = 133.0
-            addFloatingView()
-            callBottomFill()
-        case .unknown:
-            addFloatingView()
-        }
-    }
-    
-    func setupViews() {
-        view.backgroundColor = .white
-        view.addSubview(scrollView)
-        scrollView.pinEdges(to: view)
+    func configureNavBar() {
+        self.title = "New Episode"
+        navigationController?.isNavigationBarHidden = false
         
-        scrollView.addSubview(scrollContentView)
-        scrollContentView.translatesAutoresizingMaskIntoConstraints = false
-        scrollContentView.topAnchor.constraint(equalTo: scrollView.topAnchor).isActive = true
-        scrollContentView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor).isActive = true
-        scrollContentView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor).isActive = true
-        scrollContentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor).isActive = true
-        scrollContentView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor).isActive = true
-        scrollHeight = scrollContentView.heightAnchor.constraint(equalToConstant: screenHeight)
-        scrollHeight.isActive = true
+        let navBar = navigationController?.navigationBar
+        navBar?.barStyle = .black
+        navBar?.setBackgroundImage(UIImage(), for: .default)
+        navBar?.shadowImage = UIImage()
+        navBar?.titleTextAttributes = [.foregroundColor: UIColor.white]
+        navBar?.tintColor = .white
         
-        scrollView.addSubview(topStackView)
-        topStackView.translatesAutoresizingMaskIntoConstraints = false
-        topStackView.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: UIDevice.current.navBarHeight() + 15.0 ).isActive = true
-        topStackView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor, constant: 16).isActive = true
-        topStackView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor, constant: -16).isActive = true
-        
-        topStackView.addArrangedSubview(largeUserImage)
-        largeUserImage.translatesAutoresizingMaskIntoConstraints = false
-        largeUserImage.widthAnchor.constraint(equalToConstant: largeImageSize).isActive = true
-        largeUserImage.heightAnchor.constraint(equalToConstant: largeImageSize).isActive = true
-        
-        topStackView.addArrangedSubview(topRightStackView)
-        
-        topRightStackView.addArrangedSubview(channelNameStackedView)
-        channelNameStackedView.translatesAutoresizingMaskIntoConstraints = false
-        channelNameStackedView.leadingAnchor.constraint(lessThanOrEqualTo: topRightStackView.leadingAnchor, constant: 5).isActive = true
-        channelNameStackedView.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: 20).isActive = true
-        channelNameStackedView.heightAnchor.constraint(equalToConstant: 20).isActive = true
-        
-        channelNameStackedView.addArrangedSubview(channelNameLabel)
-        channelNameLabel.translatesAutoresizingMaskIntoConstraints = false
-        channelNameLabel.widthAnchor.constraint(equalToConstant: channelNameLabel.intrinsicContentSize.width).isActive = true
-
-        channelNameStackedView.addArrangedSubview(usernameLabel)
-        usernameLabel.translatesAutoresizingMaskIntoConstraints = false
-        usernameLabel.widthAnchor.constraint(equalToConstant: channelNameLabel.intrinsicContentSize.width).isActive = true
-
-        topRightStackView.addArrangedSubview(summaryView)
-        summaryView.translatesAutoresizingMaskIntoConstraints = false
-        
-        summaryView.addSubview(summaryLabel)
-        summaryLabel.translatesAutoresizingMaskIntoConstraints = false
-        summaryLabel.topAnchor.constraint(equalTo: channelNameLabel.bottomAnchor).isActive = true
-        summaryLabel.leadingAnchor.constraint(equalTo: topRightStackView.leadingAnchor).isActive = true
-        summaryLabel.trailingAnchor.constraint(equalTo: topRightStackView.trailingAnchor, constant: -4.0).isActive = true
-        summaryLabel.heightAnchor.constraint(lessThanOrEqualToConstant: 185.0) .isActive = true
-        
-        scrollView.addSubview(summaryBar)
-        summaryBar.translatesAutoresizingMaskIntoConstraints = false
-        summaryBarYAnchor = summaryBar.topAnchor.constraint(equalTo: summaryView.bottomAnchor, constant: 45.0)
-        summaryBarYAnchor.isActive = true
-        summaryBar.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor).isActive = true
-        summaryBar.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor).isActive = true
-        summaryBar.heightAnchor.constraint(equalToConstant: 40.0).isActive = true
-        
-        summaryBar.addSubview(summaryBarLabel)
-        summaryBarLabel.translatesAutoresizingMaskIntoConstraints = false
-        summaryBarLabel.centerYAnchor.constraint(equalTo: summaryBar.centerYAnchor).isActive = true
-        summaryBarLabel.leadingAnchor.constraint(equalTo: summaryBar.leadingAnchor, constant: 16).isActive = true
-        
-        summaryBar.addSubview(summaryBarCounter)
-        summaryBarCounter.translatesAutoresizingMaskIntoConstraints = false
-        summaryBarCounter.centerYAnchor.constraint(equalTo: summaryBar.centerYAnchor).isActive = true
-        summaryBarCounter.trailingAnchor.constraint(equalTo: summaryBar.trailingAnchor, constant: -16).isActive = true
-        summaryBarCounter.text = String(maxCharacters)
-        
-        scrollContentView.addSubview(summaryTextView)
-        summaryTextView.translatesAutoresizingMaskIntoConstraints = false
-        summaryTextView.topAnchor.constraint(equalTo: summaryBarCounter.bottomAnchor, constant: 15.0).isActive = true
-        summaryTextView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor, constant: 16.0).isActive = true
-        summaryTextView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor, constant: -16.0).isActive = true
-        let newPosition = self.summaryTextView.beginningOfDocument
-        self.summaryTextView.selectedTextRange = self.summaryTextView.textRange(from: newPosition, to: newPosition)
-        
-        view.addSubview(customNavBar)
-        customNavBar.bringSubviewToFront(customNavBar)
-        customNavBar.pinNavBarTo(view)
-        
-        if view.subviews.contains(passThoughView) {
-            view.bringSubviewToFront(passThoughView)
-        }
-    }
-    
-    func addFloatingView() {
-        view.addSubview(passThoughView)
-        
-        passThoughView.addSubview(floatingDetailsView)
-        floatingDetailsView.translatesAutoresizingMaskIntoConstraints = false
-        floatingDetailsView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor).isActive = true
-        floatingDetailsView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-        floatingDetailsView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        floatingDetailsView.heightAnchor.constraint(equalToConstant: 65.0).isActive = true
-        
-        floatingDetailsView.addSubview(secondaryImageView)
-        secondaryImageView.translatesAutoresizingMaskIntoConstraints = false
-        secondaryImageView.centerYAnchor.constraint(equalTo: floatingDetailsView.centerYAnchor).isActive = true
-        secondaryImageView.leadingAnchor.constraint(equalTo: floatingDetailsView.leadingAnchor, constant: 16.0).isActive = true
-        secondaryImageView.heightAnchor.constraint(equalToConstant: 45.0).isActive = true
-        secondaryImageView.widthAnchor.constraint(equalToConstant: 45.0).isActive = true
-        
-        floatingDetailsView.addSubview(secondaryNameLabel)
-        secondaryNameLabel.translatesAutoresizingMaskIntoConstraints = false
-        secondaryNameLabel.topAnchor.constraint(equalTo: floatingDetailsView.topAnchor, constant: 12.0).isActive = true
-        secondaryNameLabel.leadingAnchor.constraint(equalTo: secondaryImageView.trailingAnchor, constant: 10.0).isActive = true
-        secondaryNameLabel.heightAnchor.constraint(equalToConstant: 20.0).isActive = true
-        
-        floatingDetailsView.addSubview(secondaryUserNameLabel)
-        secondaryUserNameLabel.translatesAutoresizingMaskIntoConstraints = false
-        secondaryUserNameLabel.topAnchor.constraint(equalTo: secondaryNameLabel.bottomAnchor).isActive = true
-        secondaryUserNameLabel.leadingAnchor.constraint(equalTo: secondaryNameLabel.leadingAnchor).isActive = true
-        secondaryUserNameLabel.heightAnchor.constraint(equalToConstant: 20.0).isActive = true
-        
-        floatingDetailsView.addSubview(confirmButton)
-        confirmButton.translatesAutoresizingMaskIntoConstraints = false
-        confirmButton.centerYAnchor.constraint(equalTo: floatingDetailsView.centerYAnchor).isActive = true
-        confirmButton.trailingAnchor.constraint(equalTo: floatingDetailsView.trailingAnchor, constant: -16.0).isActive = true
-        confirmButton.heightAnchor.constraint(equalToConstant: 32.0).isActive = true
+        let imgBackArrow = #imageLiteral(resourceName: "back-button-white")
+        navBar?.backIndicatorImage = imgBackArrow
+        navBar?.backIndicatorTransitionMaskImage = imgBackArrow
+        navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
+        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Save", style: .plain, target: self, action: nil)
+        navigationItem.rightBarButtonItem!.setTitleTextAttributes(CustomStyle.barButtonAttributes, for: .normal)
     }
     
     func callBottomFill() {
@@ -392,76 +336,270 @@ class PublisherAddSummaryVC: UIViewController {
         bottomFill.heightAnchor.constraint(equalToConstant: 70.0).isActive = true
     }
     
-//    func setupAccountLabel() {
-//        guard let channelName = Channel.name else { return }
-//        let channelNameFont = UIFont.systemFont(ofSize: fontNameSize, weight: .bold)
-//        let channelNameAttributedString = NSMutableAttributedString(string: channelName)
-//        let channelNameAttributes: [NSAttributedString.Key: Any] = [
-//            .font: channelNameFont,
-//            .foregroundColor: CustomStyle.sixthShade
-//        ]
-//        channelNameAttributedString.addAttributes(channelNameAttributes, range: NSRange(location: 0, length: channelName.count))
-//
-//        guard let id = Channel.channelID else { return }
-//        let channelID = "@\(id)"
-//        let channelIDFont = UIFont.systemFont(ofSize: 14.0, weight: .medium)
-//        let channelIDAttributedString = NSMutableAttributedString(string: channelID)
-//        let channelIDAttributes: [NSAttributedString.Key: Any] = [
-//            .font: channelIDFont,
-//            .foregroundColor: CustomStyle.fourthShade
-//        ]
-//        channelIDAttributedString.addAttributes(channelIDAttributes, range: NSRange(location: 0, length: channelID.count))
-//        channelNameAttributedString.append(channelIDAttributedString)
-//        accountLabel.attributedText = channelNameAttributedString
-//    }
+    func setupViews() {
+        view.backgroundColor = .white
+        
+        view.addSubview(scrollView)
+        scrollView.pinEdges(to: view)
+        
+        scrollView.addSubview(scrollContentView)
+        scrollContentView.translatesAutoresizingMaskIntoConstraints = false
+        scrollContentView.topAnchor.constraint(equalTo: scrollView.topAnchor).isActive = true
+        scrollContentView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor).isActive = true
+        scrollContentView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor).isActive = true
+        scrollContentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor).isActive = true
+        scrollContentView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor).isActive = true
+        scrollContentHeightConstraint = scrollContentView.heightAnchor.constraint(equalToConstant: screenHeight)
+        scrollContentHeightConstraint.isActive = true
+        
+        scrollContentView.addSubview(mainImage)
+        mainImage.translatesAutoresizingMaskIntoConstraints = false
+        mainImage.topAnchor.constraint(equalTo: scrollContentView.topAnchor, constant: 110).isActive = true
+        mainImage.leadingAnchor.constraint(equalTo: scrollContentView.leadingAnchor, constant: 16).isActive = true
+        mainImage.heightAnchor.constraint(equalToConstant: imageViewSize).isActive = true
+        mainImage.widthAnchor.constraint(equalToConstant: imageViewSize).isActive = true
+        
+        scrollContentView.addSubview(programeNameStackedView)
+        programeNameStackedView.translatesAutoresizingMaskIntoConstraints = false
+        programeNameStackedView.topAnchor.constraint(equalTo: mainImage.topAnchor).isActive = true
+        programeNameStackedView.leadingAnchor.constraint(equalTo: mainImage.trailingAnchor, constant: 10).isActive = true
+        programeNameStackedView.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: 20).isActive = true
+        
+        programeNameStackedView.addArrangedSubview(programNameLabel)
+        programNameLabel.translatesAutoresizingMaskIntoConstraints = false
+        programNameLabel.leadingAnchor.constraint(equalTo: programeNameStackedView.leadingAnchor).isActive = true
+        programNameLabel.widthAnchor.constraint(equalToConstant: programNameLabel.intrinsicContentSize.width).isActive = true
+        
+        programeNameStackedView.addArrangedSubview(usernameLabel)
+        usernameLabel.translatesAutoresizingMaskIntoConstraints = false
+        usernameLabel.widthAnchor.constraint(equalToConstant: usernameLabel.intrinsicContentSize.width).isActive = true
+        
+        scrollContentView.addSubview(summaryLabel)
+        summaryLabel.translatesAutoresizingMaskIntoConstraints = false
+        summaryLabel.topAnchor.constraint(equalTo: programeNameStackedView.bottomAnchor, constant: 2).isActive = true
+        summaryLabel.leadingAnchor.constraint(equalTo: programeNameStackedView.leadingAnchor).isActive = true
+        summaryLabel.trailingAnchor.constraint(equalTo: scrollContentView.trailingAnchor, constant: -16.0).isActive = true
+        
+        scrollContentView.addSubview(tagScrollView)
+        tagScrollView.translatesAutoresizingMaskIntoConstraints = false
+        tagScrollView.topAnchor.constraint(equalTo: summaryLabel.bottomAnchor, constant: 10).isActive = true
+        tagScrollView.leadingAnchor.constraint(equalTo: summaryLabel.leadingAnchor).isActive = true
+        tagScrollView.heightAnchor.constraint(equalToConstant: 22).isActive = true
+        tagScrollView.trailingAnchor.constraint(equalTo: summaryLabel.trailingAnchor,constant: 10).isActive = true
+        
+        tagScrollView.addSubview(tagContentView)
+        tagContentView.translatesAutoresizingMaskIntoConstraints = false
+        tagContentView.topAnchor.constraint(equalTo: tagScrollView.topAnchor).isActive = true
+        tagContentView.leadingAnchor.constraint(equalTo: tagScrollView.leadingAnchor).isActive = true
+        tagContentView.heightAnchor.constraint(equalTo: tagScrollView.heightAnchor).isActive = true
+        tagContentView.trailingAnchor.constraint(equalTo: tagScrollView.trailingAnchor).isActive = true
+        tagContentWidthConstraint = tagContentView.widthAnchor.constraint(equalToConstant: tagscrollViewWidth)
+        tagContentWidthConstraint.isActive = true
+        
+        scrollContentView.addSubview(gradientOverlayView)
+        gradientOverlayView.translatesAutoresizingMaskIntoConstraints = false
+        gradientOverlayView.centerYAnchor.constraint(equalTo: tagContentView.centerYAnchor).isActive = true
+        gradientOverlayView.heightAnchor.constraint(equalToConstant: 36.0).isActive = true
+        gradientOverlayView.trailingAnchor.constraint(equalTo: tagScrollView.trailingAnchor).isActive = true
+        gradientOverlayView.widthAnchor.constraint(equalToConstant: 22.0).isActive = true
+        
+        tagContentView.addSubview(firstTagButton)
+        firstTagButton.translatesAutoresizingMaskIntoConstraints = false
+        firstTagButton.centerYAnchor.constraint(equalTo: tagContentView.centerYAnchor).isActive = true
+        firstTagButton.leadingAnchor.constraint(equalTo: tagContentView.leadingAnchor).isActive = true
+        firstTagButton.heightAnchor.constraint(equalToConstant: 22).isActive = true
+        
+        tagContentView.addSubview(secondTagButton)
+        secondTagButton.translatesAutoresizingMaskIntoConstraints = false
+        secondTagButton.centerYAnchor.constraint(equalTo: tagContentView.centerYAnchor).isActive = true
+        secondTagButton.leadingAnchor.constraint(equalTo: firstTagButton.trailingAnchor,constant: 6).isActive = true
+        secondTagButton.heightAnchor.constraint(equalToConstant: 22).isActive = true
+        
+        tagContentView.addSubview(thirdTagButton)
+        thirdTagButton.translatesAutoresizingMaskIntoConstraints = false
+        thirdTagButton.centerYAnchor.constraint(equalTo: tagContentView.centerYAnchor).isActive = true
+        thirdTagButton.leadingAnchor.constraint(equalTo: secondTagButton.trailingAnchor,constant: 6).isActive = true
+        thirdTagButton.heightAnchor.constraint(equalToConstant: 22).isActive = true
+        
+        scrollContentView.addSubview(summaryBar)
+        summaryBar.translatesAutoresizingMaskIntoConstraints = false
+        summaryBar.topAnchor.constraint(equalTo: tagScrollView.bottomAnchor, constant: 20).isActive = true
+        summaryBar.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        summaryBar.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        summaryBar.heightAnchor.constraint(equalToConstant: 37.0).isActive = true
+        
+        summaryBar.addSubview(summaryBarLabel)
+        summaryBarLabel.translatesAutoresizingMaskIntoConstraints = false
+        summaryBarLabel.centerYAnchor.constraint(equalTo: summaryBar.centerYAnchor).isActive = true
+        summaryBarLabel.leadingAnchor.constraint(equalTo: summaryBar.leadingAnchor, constant: 16).isActive = true
+        
+        summaryBar.addSubview(summaryCounterLabel)
+        summaryCounterLabel.translatesAutoresizingMaskIntoConstraints = false
+        summaryCounterLabel.centerYAnchor.constraint(equalTo: summaryBar.centerYAnchor).isActive = true
+        summaryCounterLabel.trailingAnchor.constraint(equalTo: summaryBar.trailingAnchor, constant: -16).isActive = true
+        
+        scrollContentView.addSubview(summaryTextView)
+        summaryTextView.translatesAutoresizingMaskIntoConstraints = false
+        summaryTextView.topAnchor.constraint(equalTo: summaryBar.bottomAnchor, constant: 10).isActive = true
+        summaryTextView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 13).isActive = true
+        summaryTextView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -13).isActive = true
+        summaryTextView.heightAnchor.constraint(greaterThanOrEqualToConstant: 60).isActive = true
+        
+        // Tag Bar
+        scrollContentView.addSubview(tagBar)
+        tagBar.translatesAutoresizingMaskIntoConstraints = false
+        tagBar.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        tagBar.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        tagBar.heightAnchor.constraint(equalToConstant: 37.0).isActive = true
+        tagBar.topAnchor.constraint(equalTo: summaryTextView.bottomAnchor, constant: 35).isActive = true
+        
+        tagBar.addSubview(tagBarLabel)
+        tagBarLabel.translatesAutoresizingMaskIntoConstraints = false
+        tagBarLabel.centerYAnchor.constraint(equalTo: tagBar.centerYAnchor).isActive = true
+        tagBarLabel.leadingAnchor.constraint(equalTo: tagBar.leadingAnchor, constant: 16).isActive = true
+        
+        tagBar.addSubview(tagCounterLabel)
+        tagCounterLabel.translatesAutoresizingMaskIntoConstraints = false
+        tagCounterLabel.centerYAnchor.constraint(equalTo: tagBar.centerYAnchor).isActive = true
+        tagCounterLabel.trailingAnchor.constraint(equalTo: tagBar.trailingAnchor, constant: -16).isActive = true
+        
+        scrollContentView.addSubview(tagTextView)
+        tagTextView.translatesAutoresizingMaskIntoConstraints = false
+        tagTextView.topAnchor.constraint(equalTo: tagBar.bottomAnchor, constant: 10).isActive = true
+        tagTextView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 13).isActive = true
+        tagTextView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -13).isActive = true
+        
+        view.addSubview(customNavBar)
+        customNavBar.pinNavBarTo(view)
+    }
     
-    func updatePageHeight(with difference: CGFloat) {
-        if summaryTextView.frame.height != lastTextViewHeight {
-            lastTextViewHeight = summaryTextView.frame.height
-            
-            scrollHeight.constant = screenHeight + (difference + 17)
-            
-            let point = CGPoint(x: 0, y: self.summaryTextView.frame.origin.y)
-            scrollView.contentOffset = point
-            
-            scrollContentView.layoutIfNeeded()
+    func addFloatingView() {
+        view.addSubview(passThoughView)
+        
+        passThoughView.addSubview(floatingDetailsView)
+        floatingDetailsView.translatesAutoresizingMaskIntoConstraints = false
+        floatingDetailsView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor).isActive = true
+        floatingDetailsView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        floatingDetailsView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        floatingDetailsView.heightAnchor.constraint(equalToConstant: 65.0).isActive = true
+        
+        floatingDetailsView.addSubview(bottomBarImageView)
+        bottomBarImageView.translatesAutoresizingMaskIntoConstraints = false
+        bottomBarImageView.centerYAnchor.constraint(equalTo: floatingDetailsView.centerYAnchor).isActive = true
+        bottomBarImageView.leadingAnchor.constraint(equalTo: floatingDetailsView.leadingAnchor, constant: 16.0).isActive = true
+        bottomBarImageView.heightAnchor.constraint(equalToConstant: 45.0).isActive = true
+        bottomBarImageView.widthAnchor.constraint(equalToConstant: 45.0).isActive = true
+        
+        floatingDetailsView.addSubview(bottomBarProgramNameLabel)
+        bottomBarProgramNameLabel.translatesAutoresizingMaskIntoConstraints = false
+        bottomBarProgramNameLabel.topAnchor.constraint(equalTo: floatingDetailsView.topAnchor, constant: 12.0).isActive = true
+        bottomBarProgramNameLabel.leadingAnchor.constraint(equalTo: bottomBarImageView.trailingAnchor, constant: 10.0).isActive = true
+        bottomBarProgramNameLabel.heightAnchor.constraint(equalToConstant: 20.0).isActive = true
+        
+        floatingDetailsView.addSubview(bottomBarHandelLabel)
+        bottomBarHandelLabel.translatesAutoresizingMaskIntoConstraints = false
+        bottomBarHandelLabel.topAnchor.constraint(equalTo: bottomBarProgramNameLabel.bottomAnchor).isActive = true
+        bottomBarHandelLabel.leadingAnchor.constraint(equalTo: bottomBarProgramNameLabel.leadingAnchor).isActive = true
+        bottomBarHandelLabel.heightAnchor.constraint(equalToConstant: 20.0).isActive = true
+        
+        floatingDetailsView.addSubview(confirmButton)
+        confirmButton.translatesAutoresizingMaskIntoConstraints = false
+        confirmButton.centerYAnchor.constraint(equalTo: floatingDetailsView.centerYAnchor).isActive = true
+        confirmButton.trailingAnchor.constraint(equalTo: floatingDetailsView.trailingAnchor, constant: -16.0).isActive = true
+        confirmButton.heightAnchor.constraint(equalToConstant: 32.0).isActive = true
+    }
+    
+    func addGradient() {
+        let gradient = CAGradientLayer()
+        gradient.frame = gradientOverlayView.bounds
+        let whiteColor = UIColor.white
+        gradient.colors = [whiteColor.withAlphaComponent(0.0).cgColor, whiteColor.withAlphaComponent(1.0).cgColor, whiteColor.withAlphaComponent(1.0).cgColor]
+        gradientOverlayView.layer.insertSublayer(gradient, at: 0)
+        gradientOverlayView.transform = CGAffineTransform(rotationAngle: (-90.0 * .pi) / 180.0)
+        gradientOverlayView.backgroundColor = .clear
+    }
+    
+    func styleTags() {
+        for eachTag in tagButtons {
+            eachTag.setTitle("", for: .normal)
+            eachTag.backgroundColor = CustomStyle.secondShade
+            eachTag.layer.cornerRadius = 11
+            eachTag.titleLabel?.font = UIFont.systemFont(ofSize: 12, weight: .regular)
+            eachTag.setTitleColor(CustomStyle.fourthShade, for: .normal)
+            eachTag.isHidden = true
+            eachTag.contentEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 2, right: 10)
+            eachTag.isUserInteractionEnabled = false
         }
     }
     
-    func updateSummaryBar(with difference: CGFloat) {
-        if summaryLabel.frame.height != lastLableHeight {
-            lastLableHeight = summaryLabel.frame.height
-            
-            summaryBarYAnchor.constant = difference + summaryBarPadding
-            summaryBar.layoutIfNeeded()
-            
-        } else if summaryLabel.frame.height == lastLableHeight {
-            summaryBarYAnchor.constant = difference + summaryBarPadding
-            summaryBar.layoutIfNeeded()
+    func updateCharacterCount(textView: UITextView) {
+        
+        summaryCounterLabel.text =  String(maxCaptionCharacters - summaryTextView.text!.count)
+        tagCounterLabel.text =  String(maxTagCharacters - tagTextView.text!.count)
+        
+        if Int(summaryCounterLabel.text!)! < 0 {
+            summaryCounterLabel.font = UIFont.systemFont(ofSize: 12, weight: .bold)
+            summaryCounterLabel.textColor = CustomStyle.warningRed
+        } else {
+            summaryCounterLabel.font = UIFont.systemFont(ofSize: 12, weight: .regular)
+            summaryCounterLabel.textColor = CustomStyle.fourthShade
+        }
+        
+        if Int(tagCounterLabel.text!)! < 0 {
+            tagCounterLabel.font = UIFont.systemFont(ofSize: 12, weight: .bold)
+            tagCounterLabel.textColor = CustomStyle.warningRed
+        } else {
+            tagCounterLabel.font = UIFont.systemFont(ofSize: 12, weight: .regular)
+            tagCounterLabel.textColor = CustomStyle.fourthShade
         }
     }
     
-    func returnScreenToSize() {
+    func updateTagContentWidth() {
+        var totalWidth: CGFloat
+        let scrollPadding: CGFloat = 18.0
+        
+        totalWidth = firstTagButton.frame.width + secondTagButton.frame.width + thirdTagButton.frame.width + scrollPadding
+        
+        if totalWidth > tagScrollView.frame.width {
+            tagContentWidthConstraint.constant = totalWidth
+        } else {
+            tagContentWidthConstraint.constant = tagScrollView.frame.width
+        }
+    }
+    
+    func addCaptionPlaceholderText() {
         DispatchQueue.main.async {
-            self.lastLableHeight = self.summaryLabel.frame.height
-            self.lastTextViewHeight = self.summaryTextView.frame.height
-            
-            self.scrollHeight.constant = self.screenHeight
-            self.summaryBarYAnchor.constant = self.summaryBarPadding
-            self.scrollContentView.layoutIfNeeded()
-            self.summaryBar.layoutIfNeeded()
-            
-            self.summaryTextView.text = "Write a short summary highlighting what your program iss about."
+            self.summaryTextView.text = self.summaryPlaceholder
+            let startPosition: UITextPosition = self.summaryTextView.beginningOfDocument
+            self.summaryTextView.selectedTextRange = self.summaryTextView.textRange(from: startPosition, to: startPosition)
             self.summaryTextView.textColor = CustomStyle.fourthShade
+            self.captionPlaceholderText = true
             
-            let newPosition = self.summaryTextView.beginningOfDocument
-            self.summaryTextView.selectedTextRange = self.summaryTextView.textRange(from: newPosition, to: newPosition)
-            self.textPlacement = true
+            self.summaryLabel.text = "placeholder"
+            self.summaryLabel.textColor = .white
+            self.disablePubishButton()
         }
     }
     
-    @objc func skipButtonPress() {
-        print("Skip")
+    func addTagPlaceholderText() {
+        DispatchQueue.main.async {
+            self.tagTextView.text = self.tagPlaceholder
+            let startPosition: UITextPosition = self.tagTextView.beginningOfDocument
+            self.tagTextView.selectedTextRange = self.tagTextView.textRange(from: startPosition, to: startPosition)
+            self.tagTextView.textColor = CustomStyle.fourthShade
+            self.tagPlaceholderText = true
+            self.disablePubishButton()
+        }
+    }
+    
+    func enablePubishButton() {
+        confirmButton.isEnabled = true
+        confirmButton.alpha = 1
+    }
+    
+    func disablePubishButton() {
+        confirmButton.isEnabled = false
+        confirmButton.alpha = 0.2
     }
     
     @objc func backButtonPress() {
@@ -469,77 +607,164 @@ class PublisherAddSummaryVC: UIViewController {
     }
     
     @objc func confirmButtonPress() {
-        Channel.summary = summaryTextView.text
-        summaryTextView.resignFirstResponder()
+        Program.summary = summaryLabel.text
+        Program.tags = tagsUsed
         
-        DispatchQueue.main.async {
-            self.floatingDetailsView.frame.origin.y =  self.view.frame.height - ( self.floatingDetailsView.frame.height +  self.homeIndicatorHeight)
+        UserDefaults.standard.set(true, forKey: "hasAddSummary")
+        UserDefaults.standard.set(true, forKey: "completedOnboarding")
+        
+        let db = Firestore.firestore()
+        let programRef = db.collection("programs").document(Program.ID!)
+        
+        programRef.updateData([
+            "summary" :  Program.summary!,
+            "tags" :  Program.tags!
+        ]) { (error) in
+            if let error = error {
+                print("Error adding program Tags: \(error.localizedDescription)")
+            } else {
+                print("Successfully added program tags and summary ")
+                self.presentProfileView()
+            }
+        }
+    }
+    // PUSH ACCOUNT VIEW
+    func presentProfileView() {
+        let tabBar = MainTabController()
+        
+        tabBar.selectedIndex = 4
+        let appDelegate = UIApplication.shared.delegate as! AppDelegate
+        appDelegate.window?.rootViewController = tabBar
+    }
+    
+    @objc func skipButtonPress() {
+        view.addSubview(skipAddingSummaryAlert)
+    }
+    
+    // Determin if ok to confirm
+    func checkIfableToPublish() {
+        if captionPlaceholderText == false && summaryTextView.text.count < maxCaptionCharacters && tagTextView.text.count < maxTagCharacters && tagPlaceholderText == false {
+            enablePubishButton()
+        } else {
+            disablePubishButton()
+        }
+    }
+    
+}
+
+extension PublisherAddSummaryVC: UITextViewDelegate, CustomAlertDelegate {
+    
+    func textViewDidBeginEditing(_ textView: UITextView) {
+        
+        if textView == summaryTextView {
+            if captionPlaceholderText == true {
+                addCaptionPlaceholderText()
+            }
         }
         
+        if textView == tagTextView {
+            if tagPlaceholderText == true {
+                addTagPlaceholderText()
+            }
+        }
+    }
+    
+    func textViewDidChange(_ textView: UITextView) {
+        updateCharacterCount(textView: textView)
+        
+        if textView == summaryTextView {
+            if summaryTextView.text.isEmpty {
+                addCaptionPlaceholderText()
+                scrollContentHeightConstraint.constant = scrollView.frame.height
+            } else {
+                scrollContentHeightConstraint.constant = scrollView.frame.height + summaryTextView.frame.height
+                summaryLabel.textColor = CustomStyle.sixthShade
+                summaryLabel.text = summaryTextView.text
+                tagBar.layoutIfNeeded()
+            }
+        }
+        
+        if textView == tagTextView {
+            tagsUsed = tagTextView.text.split(separator: " ").map { String($0).lowercased() }
+            if tagTextView.text.isEmpty {
+                addTagPlaceholderText()
+            }
+            switch tagsUsed.count {
+            case 0:
+                firstTagButton.isHidden = true
+                secondTagButton.isHidden = true
+                thirdTagButton.isHidden = true
+            case 1:
+                firstTagButton.setTitle(tagsUsed[0], for: .normal)
+                firstTagButton.isHidden = false
+                secondTagButton.isHidden = true
+                thirdTagButton.isHidden = true
+                updateTagContentWidth()
+            case 2:
+                firstTagButton.setTitle(tagsUsed[0], for: .normal)
+                secondTagButton.setTitle(tagsUsed[1], for: .normal)
+                secondTagButton.isHidden = false
+                thirdTagButton.isHidden = true
+                updateTagContentWidth()
+            case 3:
+                firstTagButton.setTitle(tagsUsed[0], for: .normal)
+                secondTagButton.setTitle(tagsUsed[1], for: .normal)
+                thirdTagButton.setTitle(tagsUsed[2], for: .normal)
+                thirdTagButton.isHidden = false
+                updateTagContentWidth()
+            default:
+                return
+            }
+        }
+        
+        checkIfableToPublish()
+    }
+    
+    func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
+        let tagCount = tagTextView.text.filter() {$0 == " "}.count
+        let  char = text.cString(using: String.Encoding.utf8)!
+        let isBackSpace = strcmp(char, "\\b")
+        
+        if (isBackSpace == -92) {
+            updateTagContentWidth()
+            return true
+        }
+        
+        // Should change captionTextView
+        if textView == summaryTextView {
+            if captionPlaceholderText == true {
+                summaryTextView.text.removeAll()
+                self.summaryTextView.textColor = CustomStyle.fithShade
+                captionPlaceholderText = false
+            } else {
+                summaryLabel.textColor = CustomStyle.sixthShade
+            }
+        }
+        
+        // Should change tagTextView
+        if textView == tagTextView {
+            if tagPlaceholderText == true {
+                tagTextView.text.removeAll()
+                self.tagTextView.textColor = CustomStyle.fithShade
+                tagPlaceholderText = false
+            } else {
+                return tagsUsed.count <= 3 && tagCount <= 2
+            }
+        }
+        
+        return true
+    }
+    
+    func primaryButtonPress() {
+        Program.summary = "You need to add a summary..."
         let tagController = PublisherTagVC()
-        tagController.summaryTextView.text = summaryLabel.text
+        tagController.summaryTextView.text = Program.summary
         navigationController?.pushViewController(tagController, animated: true)
+        UserDefaults.standard.set(false, forKey: "hasAddSummary")
+    }
+    
+    func cancelButtonPress() {
         
     }
 }
 
-extension PublisherAddSummaryVC: UITextViewDelegate {
-    
-    func textViewDidChange(_ textView: UITextView) {
-        summaryLabel.text = summaryTextView.text
-        summaryBarCounter.text =  String(maxCharacters - summaryLabel.text!.count)
-        
-        if Int(summaryBarCounter.text!)! < 0 {
-            summaryBarCounter.font = UIFont.systemFont(ofSize: 12, weight: .bold)
-            summaryBarCounter.textColor = CustomStyle.warningRed
-        } else {
-            summaryBarCounter.font = UIFont.systemFont(ofSize: 12, weight: .regular)
-            summaryBarCounter.textColor = CustomStyle.fourthShade
-        }
-        
-        if summaryTextView.text.count > 3 && deviceType == .iPhoneSE {
-            customNavBar.rightButton.setTitle("Continue", for: .normal)
-            customNavBar.rightButton.removeTarget(self, action: #selector(skipButtonPress), for: .touchUpInside)
-            customNavBar.rightButton.addTarget(self, action: #selector(confirmButtonPress), for: .touchUpInside)
-        } else {
-            customNavBar.rightButton.setTitle("Skip", for: .normal)
-            customNavBar.rightButton.removeTarget(self, action: #selector(confirmButtonPress), for: .touchUpInside)
-            customNavBar.rightButton.addTarget(self, action: #selector(skipButtonPress), for: .touchUpInside)
-        }
-        
-        if summaryTextView.text.count > 3 && deviceType != .iPhoneSE {
-            UIView.animate(withDuration: 1, animations: { self.confirmButton.alpha = 1} )
-            confirmButton.isEnabled = true
-        } else {
-            confirmButton.alpha = 0.2
-            confirmButton.isEnabled = false
-        }
-        
-        if summaryTextView.text.isEmpty {
-            returnScreenToSize()
-        }
-        
-        DispatchQueue.main.async {
-            if self.summaryTextView.frame.height >= self.summaryTextViewThreshold {
-                let heightDifference =  self.summaryTextView.frame.height - self.summaryTextViewThreshold
-                self.updatePageHeight(with: heightDifference)
-            }
-        }
-        
-        if summaryLabel.frame.height >= summaryLabelThreshold {
-            let heightDifference =  summaryLabel.frame.height - summaryLabelThreshold
-            updateSummaryBar(with: heightDifference)
-        }
-    }
-    
-    func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
-        
-        if textPlacement == true {
-            summaryTextView.text.removeAll()
-            self.summaryTextView.textColor = CustomStyle.fithShade
-            textPlacement = false
-            return true
-        }
-        return true
-    }
-}

@@ -56,20 +56,20 @@ class PlayBarView: UIView {
         return button
     }()
     
-    
-    init(episode: Episode) {
-        self.episodeImage = episode.Image
-        self.programName = episode.programName
-        self.handel = episode.userHandel
-        self.likesOverTen = episode.likesOverTen
-        self.likeCount = episode.likeCount
-        self.listens = episode.listenCount + 1
-        self.commentCount = episode.commentCount
-        self.saveCount = episode.saveCount
-        self.shareLink = episode.shareLink
-        super.init(frame: CGRect.zero)
-        configureViews()
-    }
+//    
+//    init(episode: Episode) {
+//        self.episodeImage = episode.Image
+//        self.programName = episode.programName
+//        self.handel = episode.userHandel
+//        self.likesOverTen = episode.likesOverTen
+//        self.likeCount = episode.likeCount
+//        self.listens = episode.listenCount + 1
+//        self.commentCount = episode.commentCount
+//        self.saveCount = episode.saveCount
+//        self.shareLink = episode.shareLink
+//        super.init(frame: CGRect.zero)
+//        configureViews()
+//    }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")

@@ -111,13 +111,13 @@ class publisherCategoriesVC: UIViewController {
     
     @IBAction func continueButtonPress() {
         
-        Channel.primaryCategory = selectedCategory
+        Program.primaryCategory = selectedCategory
         
         let db = Firestore.firestore()
-        let channelRef = db.collection("channels").document(Channel.channelID!)
+        let programRef = db.collection("programs").document(Program.ID!)
         
-        channelRef.updateData([
-            "primaryCategory" : Channel.primaryCategory!
+        programRef.updateData([
+            "primaryCategory" : Program.primaryCategory!
         ]) { (error) in
             if let error = error {
                 print("Error adding primaryCategory: \(error.localizedDescription)")

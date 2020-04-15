@@ -21,6 +21,8 @@ class publisherImageVC: UIViewController {
     @IBOutlet var profileImages: [UIImageView]!
     
     var accountType: String?
+    let db = Firestore.firestore()
+    let skipAddingImageAlert = CustomAlertView(alertType: .skipAddingImage)
     
     let customNavBar: CustomNavBar = {
         let navBar = CustomNavBar()
@@ -46,6 +48,7 @@ class publisherImageVC: UIViewController {
         CustomStyle.styleRoundedSignUpButton(color: CustomStyle.primaryBlue, image: nil, button: uploadImageButton)
         view.addSubview(customNavBar)
         customNavBar.pinNavBarTo(view)
+        skipAddingImageAlert.alertDelegate = self
     }
     
     func addRoundedCorners() {
@@ -79,6 +82,10 @@ class publisherImageVC: UIViewController {
         }
     }
     
+    @IBAction func addLaterButtonPress(_ sender: UIButton) {
+        view.addSubview(self.skipAddingImageAlert)
+    }
+    
     @objc func backButtonPress() {
         navigationController?.popViewController(animated: true)
     }
@@ -86,24 +93,6 @@ class publisherImageVC: UIViewController {
     func presentNextVC() {
         if let categoriesController = UIStoryboard(name: "OnboardingPublisher", bundle: nil).instantiateViewController(withIdentifier: "categoriesController") as? publisherCategoriesVC {
             navigationController?.pushViewController(categoriesController, animated: true)
-        }
-    }
-    
-    func addImageLinksToChannel(path: String, url: String) {
-        
-        let db = Firestore.firestore()
-        let channelRef = db.collection(publisherType.channel.rawValue).document(Channel.channelID!)
-        
-        channelRef.setData([
-            "imagePath" : Channel.imagePath!,
-            "downloadURL" : url
-        ]) { (error) in
-            if let error = error {
-                print("There has been an error adding the imagePath to channel: \(error.localizedDescription)")
-            } else {
-                print("Successfully added imagPath to channel")
-                self.presentNextVC()
-            }
         }
     }
 }
@@ -119,9 +108,6 @@ extension publisherImageVC: UIImagePickerControllerDelegate, UINavigationControl
     
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
         
-        let imagePath = NSUUID().uuidString
-        Channel.imagePath = imagePath
-        
         var selectedImageFromPicker: UIImage?
         
         if let editedImage = info[.editedImage] as? UIImage {
@@ -130,45 +116,23 @@ extension publisherImageVC: UIImagePickerControllerDelegate, UINavigationControl
             selectedImageFromPicker = originalImage
         }
         
+        // Add selected image to singleton and Firebase Storage
         if let selectedImage = selectedImageFromPicker {
-            
-            let storageRef = Storage.storage().reference().child(Channel.imagePath!)
-            
-            if let uploadData = selectedImage.jpegData(compressionQuality: 0.5) {
-                
-                let uploadTask = storageRef.putData(uploadData, metadata: nil, completion: { (metadata, error) in
-            
-                    if let errorMessage = error {
-                        print("There has was an error adding the image \(errorMessage)")
-                        return
-                    }
-                    
-                    if let imagePath = metadata?.path {
-                        print("complete")
-                        self.uploadImageButton.setTitle("Complete", for: .normal)
-                        storageRef.downloadURL { (url, error) in
-                          
-                            if error != nil {
-                                print("Error getting image url")
-                            }
-                            
-                            if let url = url {
-                                Channel.downloadURL = url.absoluteString
-                                ImageCache.storeImage(urlString: url.absoluteString, Image: selectedImage)
-                                self.addImageLinksToChannel(path: imagePath, url: Channel.downloadURL!)
-                            }
-                            
-                            
-                        }
-                    }
-                })
-                
-                uploadTask.observe(.progress) { snapshot in
-                    self.uploadImageButton.setTitle("Uploading...", for: .normal)
-                    self.uploadImageButton.isEnabled = false
-                }
-            }
+            Program.image = selectedImage
+            FireStorageManager.storeProgramImage(selectedImage: selectedImage)
             dismiss(animated: true, completion: nil)
+            self.presentNextVC()
         }
+    }
+}
+
+extension publisherImageVC: CustomAlertDelegate {
+    func primaryButtonPress() {
+        UserDefaults.standard.set(false, forKey: "hasCustomImage")
+        presentNextVC()
+    }
+    
+    func cancelButtonPress() {
+        
     }
 }

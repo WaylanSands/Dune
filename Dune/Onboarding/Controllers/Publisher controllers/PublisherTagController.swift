@@ -7,6 +7,8 @@
 //
 
 import UIKit
+import FirebaseFirestore
+
 
 class PublisherTagVC: UIViewController  {
     
@@ -82,7 +84,7 @@ class PublisherTagVC: UIViewController  {
     
     let channelNameLabel: UILabel = {
         let label = UILabel()
-        label.text = Channel.name
+        label.text = Program.name
         label.font = UIFont.systemFont(ofSize: 16, weight: .bold)
         return label
     }()
@@ -98,7 +100,7 @@ class PublisherTagVC: UIViewController  {
     let summaryTextView: UITextView = {
         let view = UITextView()
         view.isScrollEnabled = false
-        view.text = Channel.summary
+        view.text = Program.summary
         view.font = UIFont.systemFont(ofSize: 14, weight: .regular)
         view.textContainer.lineBreakMode = .byTruncatingTail
         view.textContainer.maximumNumberOfLines = 3
@@ -212,7 +214,7 @@ class PublisherTagVC: UIViewController  {
     
     let bottomBarProgramNameLabel: UILabel = {
         let label = UILabel()
-        label.text = Channel.name
+        label.text = Program.name
         label.font = UIFont.systemFont(ofSize: 16.0, weight: .bold)
         label.textColor = .white
         return label
@@ -251,23 +253,21 @@ class PublisherTagVC: UIViewController  {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        largeUserImage.setImage(from: Channel.downloadURL!)
-        bottomBarImageView.setImage(from: Channel.downloadURL!)
+        setProgramImage()
         styleForScreens()
         setupViews()
-//        setupAccountLabel()
         styleTags()
         tagTextView.delegate = self
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
-            self.tagTextView.becomeFirstResponder()
-        })
+//        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
+//            self.tagTextView.becomeFirstResponder()
+//        })
         
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillChange(notification:)), name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
-        
     }
     
     override func viewDidAppear(_ animated: Bool) {
+        self.tagTextView.becomeFirstResponder()
         addGradient()
         if summaryTextView.lineCount() > 3 {
             addMoreButton()
@@ -277,7 +277,18 @@ class PublisherTagVC: UIViewController  {
     deinit {
         NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
     }
+
     
+    func setProgramImage() {
+        if Program.imagePath != nil {
+            largeUserImage.setImage(from: Program.imagePath!)
+            bottomBarImageView.setImage(from: Program.imagePath!)
+        } else {
+            largeUserImage.image = #imageLiteral(resourceName: "missing-image-large")
+            bottomBarImageView.image = #imageLiteral(resourceName: "missing-image-large")
+        }
+    }
+
     @objc func keyboardWillChange(notification : Notification) {
         guard let keyboardRect = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue else {
             return
@@ -366,10 +377,10 @@ class PublisherTagVC: UIViewController  {
         
         scrollContentView.addSubview(tagScrollView)
         tagScrollView.translatesAutoresizingMaskIntoConstraints = false
-        tagScrollView.topAnchor.constraint(equalTo: summaryTextView.bottomAnchor, constant: 5).isActive = true
-        tagScrollView.leadingAnchor.constraint(equalTo: summaryTextView.leadingAnchor).isActive = true
+        tagScrollView.topAnchor.constraint(equalTo: summaryView.bottomAnchor, constant: 5).isActive = true
+        tagScrollView.leadingAnchor.constraint(equalTo: summaryView.leadingAnchor).isActive = true
         tagScrollView.heightAnchor.constraint(equalToConstant: 22).isActive = true
-        tagScrollView.trailingAnchor.constraint(equalTo: summaryTextView.trailingAnchor,constant: 10).isActive = true
+        tagScrollView.trailingAnchor.constraint(equalTo: summaryView.trailingAnchor,constant: 10).isActive = true
         
         tagScrollView.addSubview(tagContentView)
         tagContentView.translatesAutoresizingMaskIntoConstraints = false
@@ -549,29 +560,6 @@ class PublisherTagVC: UIViewController  {
         }
     }
     
-//    func setupAccountLabel() {
-//        let programName = "The Daily "
-//        let programNameFont = UIFont.systemFont(ofSize: fontNameSize, weight: .bold)
-//        let programNameAttributedString = NSMutableAttributedString(string: programName)
-//        let programNameAttributes: [NSAttributedString.Key: Any] = [
-//            .font: programNameFont,
-//            .foregroundColor: CustomStyle.sixthShade
-//
-//        ]
-//        programNameAttributedString.addAttributes(programNameAttributes, range: NSRange(location: 0, length: programName.count))
-//
-//        let userId = " @TheDaily"
-//        let userIdFont = UIFont.systemFont(ofSize: 14.0, weight: .medium)
-//        let userIdAttributedString = NSMutableAttributedString(string: userId)
-//        let userIdeAttributes: [NSAttributedString.Key: Any] = [
-//            .font: userIdFont,
-//            .foregroundColor: CustomStyle.fourthShade
-//        ]
-//        userIdAttributedString.addAttributes(userIdeAttributes, range: NSRange(location: 0, length: userId.count))
-//        programNameAttributedString.append(userIdAttributedString)
-//        accountLabel.attributedText = programNameAttributedString
-//    }
-    
     func returnScreenToSize() {
         self.tagTextView.text = "Add tags to help people find this program."
         self.tagTextView.textColor = CustomStyle.fourthShade
@@ -610,7 +598,28 @@ class PublisherTagVC: UIViewController  {
     }
     
     @objc func confirmButtonPress() {
-        tagTextView.resignFirstResponder()
+        Program.tags = tagsUsed
+        
+        let db = Firestore.firestore()
+        let programRef = db.collection("programs").document(Program.ID!)
+        UserDefaults.standard.set(true, forKey: "completedOnboarding")
+        
+        programRef.updateData([
+            "programSummary" :  Program.summary!,
+            "programTags" :  Program.tags!
+        ]) { (error) in
+            if let error = error {
+                print("Error adding program Tags: \(error.localizedDescription)")
+            } else {
+                print("Successfully added program tags and summary ")
+                self.presentProfileView()
+            }
+        }
+    }
+    
+    func presentProfileView() {
+        let programProfileVC = ProgramAccountVC()
+        navigationController?.pushViewController(programProfileVC, animated: true)
     }
 }
 
@@ -620,7 +629,6 @@ extension PublisherTagVC: UITextViewDelegate {
         updateCharacterCount(textView: textView)
         
         tagsUsed = textView.text.split(separator: " ").map { String($0) }
-        print(tagsUsed)
         
         switch tagsUsed.count {
         case 0:
@@ -648,6 +656,10 @@ extension PublisherTagVC: UITextViewDelegate {
         
         if tagTextView.text.isEmpty {
             returnScreenToSize()
+        }
+        
+        if tagsUsed.count == 3 {
+            confirmButton.alpha = 1
         }
     }
     

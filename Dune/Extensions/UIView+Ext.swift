@@ -27,6 +27,9 @@ extension UIView {
         self.trailingAnchor.constraint(equalTo: superView.trailingAnchor, constant: trailing).isActive = true
     }
     
+    func navBarHeight(controller: UIViewController) -> CGFloat {
+        return controller.navigationController!.navigationBar.frame.height
+    }
     // Transition functions
     
 //    lazy var screenWidth = self.frame.width

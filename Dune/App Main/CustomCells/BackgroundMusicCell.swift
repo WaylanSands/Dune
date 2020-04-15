@@ -72,8 +72,8 @@ class BackgroundMusicCell: UITableViewCell {
         trackTime.text = track.time
         self.track = track
         
-        if Episode.trackOption != nil {
-            if track == Episode.trackOption {
+        if Track.trackOption != nil {
+            if track == Track.trackOption {
                 cellSelected()
                 isSelectedCell = true
             }
