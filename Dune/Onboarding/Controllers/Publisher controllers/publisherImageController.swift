@@ -118,16 +118,46 @@ extension publisherImageVC: UIImagePickerControllerDelegate, UINavigationControl
         
         // Add selected image to singleton and Firebase Storage
         if let selectedImage = selectedImageFromPicker {
+           
             Program.image = selectedImage
-            FireStorageManager.storeProgramImage(selectedImage: selectedImage)
+            Program.imageID = NSUUID().uuidString
+            User.imageID = FireStoreManager.defaultImageID
+            User.imagePath = FireStoreManager.defaultImagePath
+          
+            storeSelected(image: selectedImage)
+           
             dismiss(animated: true, completion: nil)
             self.presentNextVC()
+        }
+    }
+    
+    func storeSelected(image: UIImage) {
+        DispatchQueue.global().async {
+            print("Saving image")
+            FileManager.removeFilesIn(folder: .programImage) {
+                FileManager.storeSelectedProgram(image: image) {
+                    FireStorageManager.storeProgram(image: image)
+                }
+            }
         }
     }
 }
 
 extension publisherImageVC: CustomAlertDelegate {
+    
+    // Skip add image
     func primaryButtonPress() {
+        
+        DispatchQueue.global().async {
+             FileManager.removeFilesIn(folder: .programImage) {
+                 Program.imagePath = FireStoreManager.defaultImagePath
+                 Program.imageID = FireStoreManager.defaultImageID
+                 User.imageID = FireStoreManager.defaultImageID
+                 User.imagePath = FireStoreManager.defaultImagePath
+                 FireStoreManager.addImagePathToProgram()
+             }
+         }
+        
         UserDefaults.standard.set(false, forKey: "hasCustomImage")
         presentNextVC()
     }

@@ -200,14 +200,14 @@ class ProgramAccountVC: UIViewController {
         return label
     }()
     
-//    let customNavBar: CustomNavBar = {
-//        let nav = CustomNavBar()
-//        nav.leftButton.setImage(#imageLiteral(resourceName: "back-button-blk"), for: .normal)
-//        nav.backgroundColor = .clear
-//        nav.rightButton.setImage(#imageLiteral(resourceName: "white-settings-icon"), for: .normal)
-//        //        nav.rightButton.addTarget(self, action: #selector(settingsButtonPress), for: .touchUpInside)
-//        return nav
-//    }()
+    //    let customNavBar: CustomNavBar = {
+    //        let nav = CustomNavBar()
+    //        nav.leftButton.setImage(#imageLiteral(resourceName: "back-button-blk"), for: .normal)
+    //        nav.backgroundColor = .clear
+    //        nav.rightButton.setImage(#imageLiteral(resourceName: "white-settings-icon"), for: .normal)
+    //        //        nav.rightButton.addTarget(self, action: #selector(settingsButtonPress), for: .touchUpInside)
+    //        return nav
+    //    }()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -216,6 +216,31 @@ class ProgramAccountVC: UIViewController {
         configureViews()
         addIntroButton()
         scrollView.delegate = self
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        programsScrollView.setScrollBarToTopLeft()
+        scrollView.setScrollBarToTopLeft()
+        setProgramImage()
+        setupTopBar()
+        
+        nameLabel.text = Program.name
+        usernameLabel.text = "@\(User.username!)"
+        categoryLabel.text = Program.primaryCategory
+        summaryTextView.text = Program.summary
+        
+        if  unwrapped {
+            summaryTextView.textContainer.maximumNumberOfLines = 3
+            unwrapped = false
+        }
+        print("viewWillAppear")
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        print("viewDidAppear")
+        if summaryTextView.lineCount() > 3 {
+            addMoreButton()
+        }
     }
     
 //    @objc func introPress() {
@@ -240,39 +265,6 @@ class ProgramAccountVC: UIViewController {
         navBar?.backIndicatorImage = imgBackArrow
         navBar?.backIndicatorTransitionMaskImage = imgBackArrow
         navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
-    }
-    
-    override func viewWillAppear(_ animated: Bool) {
-        programsScrollView.setScrollBarToTopLeft()
-        scrollView.setScrollBarToTopLeft()
-        setProgramImage()
-        setupTopBar()
-        
-        nameLabel.text = Program.name
-        usernameLabel.text = "@\(User.username!)"
-        categoryLabel.text = Program.primaryCategory
-        summaryTextView.text = Program.summary
-        
-        if  unwrapped {
-            summaryTextView.textContainer.maximumNumberOfLines = 3
-//            summaryViewHeight = summaryTextView.heightAnchor.constraint(lessThanOrEqualToConstant: (summaryTextView.font!.lineHeight * 3) + 1)
-//            summaryViewHeight.isActive = true
-            unwrapped = false
-        }
-         print("viewWillAppear")
-    }
-    
-    override func viewDidAppear(_ animated: Bool) {
-        print("viewDidAppear")
-        if summaryTextView.lineCount() > 3 {
-            addMoreButton()
-//            summaryViewHeight = summaryTextView.heightAnchor.constraint(equalToConstant: (summaryTextView.font!.lineHeight * 3) + 1)
-        }
-//            summaryViewHeight.isActive = true
-//        } else {
-//            summaryViewHeight = summaryTextView.heightAnchor.constraint(lessThanOrEqualToConstant: (summaryTextView.font!.lineHeight * 3) + 1)
-//            summaryViewHeight.isActive = true
-//        }
     }
     
     func styleForScreens() {
@@ -302,7 +294,7 @@ class ProgramAccountVC: UIViewController {
         if Program.image != nil {
             mainImage.image = Program.image
         } else {
-            mainImage.image = #imageLiteral(resourceName: "missing-image-large")
+            mainImage.image = #imageLiteral(resourceName: "profile-image-sevn")
         }
     }
     

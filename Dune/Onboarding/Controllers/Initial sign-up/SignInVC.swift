@@ -24,22 +24,22 @@ class SignInVC: UIViewController, UITextFieldDelegate {
     let customNavBar = CustomNavBar()
     let device = UIDevice()
     lazy var deviceType = device.deviceType
-    lazy var dynamicNavbarHeight = device.navBarHeight()
-    lazy var dynamicNavbarButtonHeight = device.navBarButtonTopAnchor()
+    lazy var dynamicNavBarHeight = device.navBarHeight()
+    lazy var dynamicNavBarButtonHeight = device.navBarButtonTopAnchor()
     
     let networkIssueAlert = CustomAlertView(alertType: .networkIssue)
     let wrongPasswordAlert = CustomAlertView(alertType: .wrongPassword)
     let noUserAlert = CustomAlertView(alertType: .noUserFound)
     let invalidEmailAlert = CustomAlertView(alertType: .invalidEmail)
 
-    var signinButtonPadding: CGFloat = 10.0
+    var signInButtonPadding: CGFloat = 10.0
     
     lazy var containerView: PassThoughView = {
         let view = PassThoughView()
         return view
     }()
     
-    let signinButton: UIButton = {
+    let signInButton: UIButton = {
         let button = UIButton()
         button.backgroundColor = CustomStyle.primaryBlue
         button.setTitleColor(.white, for: .normal)
@@ -88,7 +88,7 @@ class SignInVC: UIViewController, UITextFieldDelegate {
         guard let keyboardRect = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue else {
             return
         }
-        signinButton.frame.origin.y = view.frame.height - keyboardRect.height - 50
+        signInButton.frame.origin.y = view.frame.height - keyboardRect.height - 50
     }
     
     func configureDelegates() {
@@ -109,12 +109,12 @@ class SignInVC: UIViewController, UITextFieldDelegate {
          containerView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
          containerView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
         
-         containerView.addSubview(signinButton)
-         signinButton.translatesAutoresizingMaskIntoConstraints = false
-         signinButton.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
-         signinButton.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-         signinButton.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-         signinButton.heightAnchor.constraint(equalToConstant: 50.0).isActive = true
+         containerView.addSubview(signInButton)
+         signInButton.translatesAutoresizingMaskIntoConstraints = false
+         signInButton.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+         signInButton.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+         signInButton.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+         signInButton.heightAnchor.constraint(equalToConstant: 50.0).isActive = true
          
          view.addSubview(customNavBar)
          customNavBar.bringSubviewToFront(customNavBar)
@@ -122,7 +122,7 @@ class SignInVC: UIViewController, UITextFieldDelegate {
          customNavBar.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
          customNavBar.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
          customNavBar.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-         customNavBar.heightAnchor.constraint(equalToConstant: dynamicNavbarHeight).isActive = true
+         customNavBar.heightAnchor.constraint(equalToConstant: dynamicNavBarHeight).isActive = true
         
         view.addSubview(textFieldToggle)
         textFieldToggle.translatesAutoresizingMaskIntoConstraints = false
@@ -168,7 +168,7 @@ class SignInVC: UIViewController, UITextFieldDelegate {
     
     func styleTextFields(textField: UITextField, placeholder: String) {
         textField.backgroundColor = CustomStyle.sixthShade
-        textField.attributedPlaceholder = NSAttributedString(string: "\(placeholder)", attributes: [NSAttributedString.Key.foregroundColor: CustomStyle.fithShade])
+        textField.attributedPlaceholder = NSAttributedString(string: "\(placeholder)", attributes: [NSAttributedString.Key.foregroundColor: CustomStyle.fifthShade])
         textField.font = UIFont.systemFont(ofSize: 16)
         textField.borderStyle = UITextField.BorderStyle.none
         textField.autocorrectionType = UITextAutocorrectionType.no

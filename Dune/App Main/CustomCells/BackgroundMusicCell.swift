@@ -50,7 +50,7 @@ class BackgroundMusicCell: UITableViewCell {
     let trackTime: UILabel = {
        let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 12, weight: .regular)
-        label.textColor = CustomStyle.fithShade
+        label.textColor = CustomStyle.fifthShade
         return label
     }()
     
@@ -81,7 +81,6 @@ class BackgroundMusicCell: UITableViewCell {
         
     }
     func configureViews() {
-        
         self.addSubview(cellContentButton)
         cellContentButton.translatesAutoresizingMaskIntoConstraints = false
         cellContentButton.topAnchor.constraint(equalTo: self.topAnchor, constant: 5).isActive = true
@@ -123,7 +122,7 @@ class BackgroundMusicCell: UITableViewCell {
     func deactivateCell() {
         playPauseButton.setImage(UIImage(named: "play-music-icon"), for: .normal)
         cellContentButton.backgroundColor = hexStringToUIColor(hex: "#272B33")
-        trackTime.textColor = CustomStyle.fithShade
+        trackTime.textColor = CustomStyle.fifthShade
         trackArtistLabel.textColor = .white
         trackTitleLabel.textColor = .white
     }
@@ -131,7 +130,7 @@ class BackgroundMusicCell: UITableViewCell {
     func isDeselected() {
         playPauseButton.setImage(UIImage(named: "play-music-icon"), for: .normal)
         cellContentButton.backgroundColor = hexStringToUIColor(hex: "#272B33")
-        trackTime.textColor = CustomStyle.fithShade
+        trackTime.textColor = CustomStyle.fifthShade
         trackArtistLabel.textColor = .white
         trackTitleLabel.textColor = .white
     }

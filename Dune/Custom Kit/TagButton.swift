@@ -25,3 +25,21 @@ class TagButton: UIButton {
     }
 
 }
+
+class DraftTagButton: UIButton {
+
+    required init(title: String) {
+         super.init(frame: .zero)
+            self.setTitle(title, for: .normal)
+            self.titleLabel!.font = UIFont.systemFont(ofSize: 12, weight: .regular)
+            self.contentEdgeInsets = UIEdgeInsets(top: 0, left: 15, bottom: 0, right: 15)
+            self.setTitleColor(CustomStyle.seventhShade, for: .normal)
+            self.backgroundColor = CustomStyle.fifthShade
+            self.layer.cornerRadius = 12
+        }
+
+    required init?(coder aDecoder: NSCoder) {
+        super.init(coder: aDecoder)
+    }
+
+}

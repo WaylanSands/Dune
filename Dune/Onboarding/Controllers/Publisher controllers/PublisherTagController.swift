@@ -176,7 +176,7 @@ class PublisherTagVC: UIViewController  {
         let label = UILabel()
         label.text = "Add three tags seperated by a space"
         label.font = UIFont.systemFont(ofSize: 14, weight: .medium)
-        label.textColor = CustomStyle.fithShade
+        label.textColor = CustomStyle.fifthShade
         return label
     }()
     
@@ -281,8 +281,8 @@ class PublisherTagVC: UIViewController  {
     
     func setProgramImage() {
         if Program.imagePath != nil {
-            largeUserImage.setImage(from: Program.imagePath!)
-            bottomBarImageView.setImage(from: Program.imagePath!)
+            largeUserImage.setImageAndCache(from: Program.imagePath!)
+            bottomBarImageView.setImageAndCache(from: Program.imagePath!)
         } else {
             largeUserImage.image = #imageLiteral(resourceName: "missing-image-large")
             bottomBarImageView.image = #imageLiteral(resourceName: "missing-image-large")
@@ -676,7 +676,7 @@ extension PublisherTagVC: UITextViewDelegate {
         
         if textPlacement == true {
             tagTextView.text.removeAll()
-            self.tagTextView.textColor = CustomStyle.fithShade
+            self.tagTextView.textColor = CustomStyle.fifthShade
             textPlacement = false
             return true
         }

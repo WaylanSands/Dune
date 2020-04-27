@@ -22,6 +22,8 @@ enum settingsType {
     case categories
     case countries
     case sharing
+    case subscriptionEpisode
+    case ownEpisode
 }
 
 class SettingOptions {
@@ -50,6 +52,25 @@ class SettingOptions {
     static let sharing: [Setting] = [
         Setting(name: "Share via SMS", imageName: "message-friend-icon"),
         Setting(name: "Share via email", imageName: "email-friend-icon"),
+        Setting(name: "Share via...", imageName: "native-share-icon"),
+        Setting(name: "Share on Facebook", imageName: "facebook-friend-icon"),
+        Setting(name: "Share on Twitter", imageName: "twitter-friend-icon"),
+        Setting(name: "Cancel", imageName: "cancel-icon"),
+    ]
+    
+    static let subscriptionEpisode: [Setting] = [
+        Setting(name: "Report", imageName: nil),
+        Setting(name: "Unsubscribe", imageName: nil),
+        Setting(name: "Share via...", imageName: "native-share-icon"),
+        Setting(name: "Share on Facebook", imageName: "facebook-friend-icon"),
+        Setting(name: "Share on Twitter", imageName: "twitter-friend-icon"),
+        Setting(name: "Turn on post notifications", imageName: nil),
+        Setting(name: "Cancel", imageName: "cancel-icon"),
+    ]
+    
+    static let ownEpisode: [Setting] = [
+        Setting(name: "Delete", imageName: "trash-icon"),
+        Setting(name: "Edit", imageName: "edit-icon"),
         Setting(name: "Share via...", imageName: "native-share-icon"),
         Setting(name: "Share on Facebook", imageName: "facebook-friend-icon"),
         Setting(name: "Share on Twitter", imageName: "twitter-friend-icon"),

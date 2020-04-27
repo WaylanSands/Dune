@@ -96,6 +96,7 @@ class publisherCategoriesVC: UIViewController {
         
         continueButton.isEnabled = true
         selectedCategory = sender.titleLabel?.text
+        CacheControl.createSubscriptionImageDict()
         
         CustomStyle.categoryButtonSelected(backgroundColor: CustomStyle.white ,textColor: CustomStyle.primaryblack ,button: sender)
         

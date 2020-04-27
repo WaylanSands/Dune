@@ -12,18 +12,19 @@ import UIKit
 class StaticWaveCreator: UIView {
     
     var playbackCoverLeading: NSLayoutConstraint!
+    var trailingPlayAnchor: NSLayoutConstraint!
     
     lazy var presetWaves = [primaryPlayBackBars, trimPlayBackBars]
     
     let primaryPlayBackBars: StaticAudioWave = {
         let view = StaticAudioWave(color: CustomStyle.primaryBlue, height: 400)
-        view.backgroundColor = CustomStyle.onboardingBlack
+        view.backgroundColor = CustomStyle.onBoardingBlack
         return view
     }()
     
     let trimPlayBackBars: StaticAudioWave = {
         let view = StaticAudioWave(color: CustomStyle.primaryBlue, height: 100)
-        view.backgroundColor = CustomStyle.onboardingBlack
+        view.backgroundColor = CustomStyle.onBoardingBlack
         return view
     }()
     
@@ -66,13 +67,13 @@ class StaticWaveCreator: UIView {
     
     let playbackCover: UIView = {
         let view = UIView()
-        view.backgroundColor = CustomStyle.onboardingBlack.withAlphaComponent(0.45)
+        view.backgroundColor = CustomStyle.onBoardingBlack.withAlphaComponent(0.45)
         return view
     }()
     
     override init(frame: CGRect) {
         super.init(frame: frame)
-        self.backgroundColor = CustomStyle.onboardingBlack
+        self.backgroundColor = CustomStyle.onBoardingBlack
         configureViews()
     }
     
@@ -140,15 +141,21 @@ class StaticWaveCreator: UIView {
         self.addSubview(playbackCover)
         playbackCover.translatesAutoresizingMaskIntoConstraints = false
         playbackCover.centerYAnchor.constraint(equalTo: self.centerYAnchor).isActive = true
+       
         playbackCoverLeading = playbackCover.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 0)
-        let trailingPlayAnchor = playbackCover.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: 0)
-        trailingPlayAnchor.isActive = true
-        trailingPlayAnchor.priority = UILayoutPriority(rawValue: 750)
-        playbackCover.heightAnchor.constraint(equalToConstant: 200).isActive = true
         playbackCoverLeading.isActive = true
+        
+        trailingPlayAnchor = playbackCover.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: 0)
+        trailingPlayAnchor.priority = UILayoutPriority(rawValue: 750)
+        trailingPlayAnchor.isActive = true
+        
+        playbackCover.heightAnchor.constraint(equalToConstant: 200).isActive = true
+
     }
     
     func setupPlaybackBars(url: URL, snapshot: Double) {
+        
+        print("Setting up playback bars with \(url)")
         primaryPlayBackBars.timeInSeconds = snapshot
         trimPlayBackBars.timeInSeconds = snapshot
 //        playBackBarsOne.timeInSeconds = snapshot

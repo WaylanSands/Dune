@@ -34,7 +34,7 @@ class TrendingVC: UIViewController {
         setTableViewDelegates()
         configureViews()
         setupTopBar()
-        tableView.register(EpisodeFeedCell.self, forCellReuseIdentifier: Cells.regularCell)
+        tableView.register(EpisodeCell.self, forCellReuseIdentifier: Cells.regularCell)
     }
     
     func setupTopBar() {
@@ -65,11 +65,11 @@ extension TrendingVC: UITableViewDelegate, UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let regularCell = tableView.dequeueReusableCell(withIdentifier: Cells.regularCell) as! EpisodeFeedCell
-        let program = programs[indexPath.row]
+        let episodeCell = tableView.dequeueReusableCell(withIdentifier: Cells.regularCell) as! EpisodeCell
+//        let program = programs[indexPath.row]
 //        regularCell.normalSetUp(episode: Episode)
-        regularCell.moreButton.addTarget(regularCell, action: #selector(EpisodeFeedCell.moreUnwrap), for: .touchUpInside)
-        regularCell.updateRowsDelegate = self
+        episodeCell.moreButton.addTarget(episodeCell, action: #selector(EpisodeCell.moreUnwrap), for: .touchUpInside)
+        episodeCell.cellDelegate = self
         
 //        if tappedPrograms.contains(programs[indexPath.row].name) {
 //            regularCell.refreshSetupMoreTapTrue()
@@ -78,7 +78,7 @@ extension TrendingVC: UITableViewDelegate, UITableViewDataSource {
 //            regularCell.refreshSetupMoreTapFalse()
 //            return regularCell
 //        }
-        return regularCell
+        return episodeCell
     }
     
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
@@ -90,9 +90,20 @@ extension TrendingVC: UITableViewDelegate, UITableViewDataSource {
     }
 }
 
-extension TrendingVC: UpdateRowsDelegate {
+extension TrendingVC: EpisodeCellDelegate {
     
-    func addtappedProgram(programName: String) {
+    func playEpisode(cell: EpisodeCell) {
+        let index = tableView.indexPath(for: cell)
+        print(index!)
+    }
+    
+    func showSettings(cell: EpisodeCell) {
+        let index = tableView.indexPath(for: cell)
+        print(index!)
+    }
+    
+    
+    func addTappedProgram(programName: String) {
         tappedPrograms.append(programName)
     }
     

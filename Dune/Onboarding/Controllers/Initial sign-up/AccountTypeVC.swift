@@ -120,6 +120,7 @@ class AccountTypeVC: UIViewController {
                     User.ID = uid
                     
                     self.db.collection("users").document(uid).setData([
+                        "ID" : User.ID!,
                         "username": User.username!,
                         "email": User.email!,
                         "birthDate": User.birthDate!,

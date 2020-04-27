@@ -296,13 +296,13 @@ extension ChangeUsernameVC: UITextFieldDelegate {
     func showInvalidMessage() {
         usernameTextField.shake()
         subHeadingLabel.text = spaceOrSpecialCharacterEntered
-        subHeadingLabel.textColor = CustomStyle.fithShade
+        subHeadingLabel.textColor = CustomStyle.fifthShade
         subHeadingLabel.font = UIFont.systemFont(ofSize: 14, weight: .medium)
     }
     
     func showMaxCharacterMessage() {
         subHeadingLabel.text = maxCharacterMessage
-        subHeadingLabel.textColor = CustomStyle.fithShade
+        subHeadingLabel.textColor = CustomStyle.fifthShade
         subHeadingLabel.font = UIFont.systemFont(ofSize: 14, weight: .medium)
     }
     

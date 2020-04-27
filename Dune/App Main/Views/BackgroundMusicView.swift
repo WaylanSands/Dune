@@ -46,7 +46,7 @@ class BackgroundMusicView: UIView {
         let trackTime: UILabel = {
            let label = UILabel()
             label.font = UIFont.systemFont(ofSize: 12, weight: .regular)
-            label.textColor = CustomStyle.fithShade
+            label.textColor = CustomStyle.fifthShade
             return label
         }()
     

@@ -22,6 +22,7 @@ enum alertType {
     case changingEmail
     case signOutAttempt
     case deleteAccount
+    case shortAudioLength
 }
 
 protocol CustomAlertDelegate {
@@ -54,7 +55,7 @@ class CustomAlertView: UIView {
     let bodyTextLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 14, weight: .regular)
-        label.textColor = CustomStyle.fithShade
+        label.textColor = CustomStyle.fifthShade
         label.textAlignment = .center
         label.numberOfLines = 0
         return label
@@ -188,14 +189,19 @@ class CustomAlertView: UIView {
             primaryButton.setTitle("Try again", for: .normal)
             primaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
             secondaryButton.setTitle("Reset password", for: .normal)
-//          secondaryButton.addTarget(self, action: #selector(cancelPress), for: .touchUpInside)
+        //          secondaryButton.addTarget(self, action: #selector(cancelPress), for: .touchUpInside)
+        case .shortAudioLength:
+            headingLabel.text = "Insufficient length"
+            bodyTextLabel.text = "Episodes must at least be 10 seconds in length"
+            primaryButton.setTitle("Dismiss", for: .normal)
+            primaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
         }
     }
     
     func configureViews() {
         let blurredView = UIView()
         blurredView.backgroundColor = .black
-        blurredView.alpha = 0.8
+        blurredView.alpha = 0.7
        
         self.addSubview(blurredView)
         blurredView.pinEdges(to: self)

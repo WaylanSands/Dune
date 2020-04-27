@@ -1,5 +1,5 @@
 //
-//  LoadingCircleView.swift
+//  PlaybackCircleButton.swift
 //  Dune
 //
 //  Created by Waylan Sands on 11/3/20.
@@ -10,23 +10,21 @@ import UIKit
 import Foundation
 
 
-class LoadingCircleView: PassThoughView {
+class PlaybackCircleButton: UIView {
     
     let shapeLayer = CAShapeLayer()
     let tracklayer = CAShapeLayer()
     let basicAnimation = CABasicAnimation(keyPath: "strokeEnd")
 
-    lazy var viewCenter = CGPoint(x:40, y: 40)
-    
+    lazy var viewCenter = CGPoint(x:30, y: 30)
     
     func setupLoadingAnimation() {
-        let circularPath = UIBezierPath(arcCenter: viewCenter, radius: 40, startAngle: -CGFloat.pi / 2 , endAngle: CGFloat.pi * 2, clockwise: true)
-        let underPath = UIBezierPath(arcCenter: viewCenter, radius: 43, startAngle: -CGFloat.pi / 2 , endAngle: CGFloat.pi * 2, clockwise: true)
+        let circularPath = UIBezierPath(arcCenter: viewCenter, radius: 30, startAngle: -CGFloat.pi / 2 , endAngle: CGFloat.pi * 2, clockwise: true)
+        let underPath = UIBezierPath(arcCenter: viewCenter, radius: 30, startAngle: -CGFloat.pi / 2 , endAngle: CGFloat.pi * 2, clockwise: true)
         self.isHidden = true
         
         tracklayer.path = underPath.cgPath
-        tracklayer.lineWidth = 6
-//        tracklayer.strokeEnd = 0
+        tracklayer.lineWidth = 4
         tracklayer.lineCap = .round
         tracklayer.fillColor = UIColor.white.withAlphaComponent(0.1).cgColor
         
@@ -42,20 +40,10 @@ class LoadingCircleView: PassThoughView {
         self.layer.addSublayer(shapeLayer)
     }
     
-    func animate() {
+    func updateCircleProgressWith(value: CGFloat) {
         self.isHidden = false
-        basicAnimation.toValue = 1
-        basicAnimation.duration = 60
-        
-        basicAnimation.fillMode = .forwards
-        basicAnimation.isRemovedOnCompletion = false
-        shapeLayer.add(basicAnimation, forKey: "basic")
+        shapeLayer.strokeEnd = value
     }
-    
-      func terminate() {
-        self.layer.removeAllAnimations()
-        self.isHidden = true
-    }
-    
     
 }
+

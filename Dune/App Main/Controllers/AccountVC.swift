@@ -183,7 +183,7 @@ class AccountVC: UIViewController {
         let button = UIButton()
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
         button.setTitle("Subscriptions", for: .normal)
-        button.setTitleColor(CustomStyle.fithShade, for: .normal)
+        button.setTitleColor(CustomStyle.fifthShade, for: .normal)
         button.addTarget(self, action: #selector(headerTabPress(sender:)), for: .touchUpInside)
         return button
     }()
@@ -192,7 +192,7 @@ class AccountVC: UIViewController {
         let button = UIButton()
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
         button.setTitle("Mentions", for: .normal)
-        button.setTitleColor(CustomStyle.fithShade, for: .normal)
+        button.setTitleColor(CustomStyle.fifthShade, for: .normal)
         button.addTarget(self, action: #selector(headerTabPress(sender:)), for: .touchUpInside)
         return button
     }()
@@ -227,7 +227,7 @@ class AccountVC: UIViewController {
         styleForScreens()
         setupTopBar()
         configureViews()
-        tableView.register(EpisodeFeedCell.self, forCellReuseIdentifier: Cells.regularCell)
+        tableView.register(EpisodeCell.self, forCellReuseIdentifier: Cells.regularCell)
         tableView.backgroundColor = .clear
         
         let imgBackArrow = #imageLiteral(resourceName: "back-button-white")
@@ -448,11 +448,11 @@ extension AccountVC: UITableViewDelegate, UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let regularCell = tableView.dequeueReusableCell(withIdentifier: Cells.regularCell) as! EpisodeFeedCell
+        let regularCell = tableView.dequeueReusableCell(withIdentifier: Cells.regularCell) as! EpisodeCell
 //        let program = programs[indexPath.row]
 //        regularCell.normalSetUp(program: program)
-        regularCell.moreButton.addTarget(regularCell, action: #selector(EpisodeFeedCell.moreUnwrap), for: .touchUpInside)
-        regularCell.updateRowsDelegate = self
+        regularCell.moreButton.addTarget(regularCell, action: #selector(EpisodeCell.moreUnwrap), for: .touchUpInside)
+        regularCell.cellDelegate = self
         
 //        if tappedPrograms.contains(programs[indexPath.row].name) {
 //            regularCell.refreshSetupMoreTapTrue()
@@ -484,13 +484,24 @@ extension AccountVC: UITableViewDelegate, UITableViewDataSource {
         sender.setTitleColor(.white, for: .normal)
         let deselecteButtons = headerBarButtons.filter() { $0 != sender }
         for each in deselecteButtons {
-            each.setTitleColor(CustomStyle.fithShade, for: .normal)
+            each.setTitleColor(CustomStyle.fifthShade, for: .normal)
         }
     }
 }
 
-extension AccountVC: UpdateRowsDelegate {
-    func addtappedProgram(programName: String) {
+extension AccountVC: EpisodeCellDelegate {
+    
+    func playEpisode(cell: EpisodeCell) {
+        let index = tableView.indexPath(for: cell)
+        print(index!)
+    }
+    
+    func showSettings(cell: EpisodeCell) {
+        let index = tableView.indexPath(for: cell)
+        print(index!)
+    }
+    
+    func addTappedProgram(programName: String) {
         tappedPrograms.append(programName)
     }
     

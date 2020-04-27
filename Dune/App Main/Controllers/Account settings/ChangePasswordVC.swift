@@ -62,7 +62,7 @@ class ChangePasswordVC: UIViewController {
         let label = UILabel()
         label.text = "Strong"
         label.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
-        label.textColor = CustomStyle.fithShade
+        label.textColor = CustomStyle.fifthShade
         return label
     }()
     

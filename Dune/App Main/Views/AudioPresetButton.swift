@@ -17,7 +17,7 @@ class AudioPresetButton: UIButton {
         super.init(frame: .zero)
         self.backgroundColor = CustomStyle.sixthShade
         self.setTitle(title, for: .normal)
-        self.setTitleColor(CustomStyle.fithShade, for: .normal)
+        self.setTitleColor(CustomStyle.fifthShade, for: .normal)
         self.titleLabel?.font = UIFont.systemFont(ofSize: 12, weight: .medium)
         self.layer.cornerRadius = 7
         self.clipsToBounds = true
@@ -34,7 +34,7 @@ class AudioPresetButton: UIButton {
     
     func buttonIsInactive() {
         self.backgroundColor = CustomStyle.sixthShade
-        self.setTitleColor(CustomStyle.fithShade, for: .normal)
+        self.setTitleColor(CustomStyle.fifthShade, for: .normal)
     }    
 
 }

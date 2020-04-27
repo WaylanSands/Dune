@@ -23,12 +23,12 @@ class StaticAudioWave: UIView {
     var topColor: UIColor
     var bottomColor: UIColor
     
-    var amplitideHeight: CGFloat = 400
+    var amplitudeHeight: CGFloat = 400
     
     required init(color: UIColor, height: CGFloat) {
         self.topColor = color
         self.bottomColor = color
-        self.amplitideHeight = height
+        self.amplitudeHeight = height
         super.init(frame: .zero)
         self.contentMode = .redraw
       }
@@ -57,7 +57,7 @@ class StaticAudioWave: UIView {
                 aPath.move(to: CGPoint(x:aPath.currentPoint.x + x , y:aPath.currentPoint.y ))
                 
                 //Y is the amplitude
-                aPath.addLine(to: CGPoint(x:aPath.currentPoint.x  , y:aPath.currentPoint.y - (readFile.points[f] * amplitideHeight) - 1.0))
+                aPath.addLine(to: CGPoint(x:aPath.currentPoint.x  , y:aPath.currentPoint.y - (readFile.points[f] * amplitudeHeight) - 1.0))
                 
                 aPath.close()
                 
@@ -78,12 +78,12 @@ class StaticAudioWave: UIView {
         aPath2.move(to: CGPoint(x:0.0 , y:rect.height/2 ))
         
         //Reflection of waveform
-        for _ in readFile.points{
+        for _ in readFile.points {
             var x:CGFloat = 10
             aPath2.move(to: CGPoint(x:aPath2.currentPoint.x + x , y:aPath2.currentPoint.y ))
             
             //Y is the amplitude
-            aPath2.addLine(to: CGPoint(x:aPath2.currentPoint.x  , y:aPath2.currentPoint.y - ((-1.0 * readFile.points[f]) * amplitideHeight)))
+            aPath2.addLine(to: CGPoint(x:aPath2.currentPoint.x  , y:aPath2.currentPoint.y - ((-1.0 * readFile.points[f]) * amplitudeHeight)))
             
             // aPath.close()
             aPath2.close()
@@ -101,7 +101,7 @@ class StaticAudioWave: UIView {
         aPath2.fill()
     }
     
-    func readArray( array:[Float]){
+    func readArray( array:[Float]) {
         readFile.arrayFloatValues = array
     }
     
@@ -118,7 +118,7 @@ class StaticAudioWave: UIView {
         }
         
         if timeInSeconds > 0 {
-        let units = 342 * timeInSeconds
+        let units = 340 * timeInSeconds
                 
         let samplesPerPixel = Int(units * multiplier)
         let filter = [Float](repeating: 1.0 / Float(samplesPerPixel),
@@ -141,7 +141,7 @@ class StaticAudioWave: UIView {
     func reDrawBars(url : URL, color: UIColor, height: CGFloat) {
         self.topColor = color
         self.bottomColor = color
-        self.amplitideHeight = height
+        self.amplitudeHeight = height
         
              let file = try! AVAudioFile(forReading: url)
                    guard let format = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: file.fileFormat.sampleRate, channels: file.fileFormat.channelCount, interleaved: false) else { return }
@@ -150,10 +150,7 @@ class StaticAudioWave: UIView {
                    
                    readFile.arrayFloatValues = Array(UnsafeBufferPointer(start: buf?.floatChannelData?[0], count:Int(buf!.frameLength)))
     }
-    
-
 }
-
 
 struct readFile {
     static var arrayFloatValues:[Float] = []

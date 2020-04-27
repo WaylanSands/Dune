@@ -39,7 +39,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 //
 //        window!.rootViewController = startingController
 //        window!.makeKeyAndVisible()
-//        
+//
         FirebaseApp.configure()
         LaunchControllerSwitch.updateRootVC()
         return true

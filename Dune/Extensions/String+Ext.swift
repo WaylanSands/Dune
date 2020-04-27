@@ -25,5 +25,26 @@ extension String {
         let passwordTest = NSPredicate(format: "SELF MATCHES %@", "(?=.*[A-Z])(?=.*[0-9])(?=.*[a-z]).{8,}")
         return passwordTest.evaluate(with: self)
     }
+    
+    static func timeString(time:TimeInterval) -> String {
+        let minutes = Int(time) / 60 % 60
+        let seconds = Int(time) % 60
+        return String(format:"%2i:%02i", minutes, seconds)
+    }
+    
+    func convertToTimeInterval() -> TimeInterval {
+        guard self != "" else {
+            return 0
+        }
+
+        var interval:Double = 0
+
+        let parts = self.components(separatedBy: ":")
+        for (index, part) in parts.reversed().enumerated() {
+            interval += (Double(part) ?? 0) * pow(Double(60), Double(index))
+        }
+
+        return interval
+    }
 
 }

@@ -479,13 +479,13 @@ class EditProgramVC: UIViewController {
     func createTagButtons() {
         tagContainingStackView.removeAllArrangedSubviewsCompletely()
         for eachTag in Program.tags! {
-            let button = tagButtton(with: eachTag!)
+            let button = tagButton(with: eachTag!)
             button.addTarget(self, action: #selector(updateProgramDetails), for: .touchUpInside)
             tagContainingStackView.addArrangedSubview(button)
         }
     }
     
-    func tagButtton(with title: String) -> TagButton {
+    func tagButton(with title: String) -> TagButton {
         let button = TagButton(title: title)
         return button
     }
@@ -520,8 +520,13 @@ extension EditProgramVC: UIScrollViewDelegate {
 
 // Manage primary category selection
 extension EditProgramVC: SettingsLauncherDelegate {
+ 
+    func selectionOf(setting: String) {
+        // do things
+    }
     
-    func selectionPress() {
+    
+    func selectionOf() {
         programNameTextView.resignFirstResponder()
         primaryGenreButton.setTitle(Program.primaryCategory, for: .normal)
         FireStoreManager.updatePrimaryCategory()
@@ -542,7 +547,14 @@ extension EditProgramVC: UIImagePickerControllerDelegate, UINavigationController
         
         if let selectedImage = selectedImageFromPicker {
             Program.image = selectedImage
-            FireStorageManager.storeProgramImage(selectedImage: selectedImage)
+            profileImageView.image = selectedImage
+            
+            FireStorageManager.deleteProgramImageFileFromStorage(imageID: Program.imageID!) {                    FileManager.removeFilesIn(folder: .programImage) {
+                FileManager.storeSelectedProgram(image: selectedImage) {
+                    FireStorageManager.storeProgram(image: selectedImage)
+                }
+                }
+            }
             dismiss(animated: true, completion: nil)
         }
     }

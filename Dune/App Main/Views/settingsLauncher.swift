@@ -131,16 +131,20 @@ extension SettingsLauncher: UICollectionViewDelegateFlowLayout, UICollectionView
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let setting = options[indexPath.item]
-      
+
         if setting.name != "Cancel" {
             switch type {
             case .categories:
                 Program.primaryCategory = setting.name
-                self.settingsDelegate!.selectionPress()
+                self.settingsDelegate!.selectionOf(setting: setting.name)
             case .countries:
                 break
             case .sharing:
                 break
+            case .subscriptionEpisode:
+                break
+            case .ownEpisode:
+                self.settingsDelegate!.selectionOf(setting: setting.name)
             }
         }
         handelDismiss()
@@ -148,7 +152,7 @@ extension SettingsLauncher: UICollectionViewDelegateFlowLayout, UICollectionView
 }
 
 protocol SettingsLauncherDelegate {
-    func selectionPress()
+    func selectionOf(setting: String)
 }
 
 

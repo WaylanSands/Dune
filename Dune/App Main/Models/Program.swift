@@ -14,9 +14,9 @@ struct Program {
     static var ownerID: String?
     static var hasIntro: Bool?
     static var image: UIImage?
-    static var storedImageID: String?
+    static var imageID: String?
     static var imagePath: String?
-    static var storedIntroID: String?
+    static var introID: String?
     static var introPath: String?
     static var summary: String?
     static var isPrimaryProgram: Bool?
@@ -25,4 +25,28 @@ struct Program {
     static var tags: [String?]?
     static var episodeIDs: [String]?
     static var subscriberIDs: [String]?
+    
+    static func modelProgram(data: [String: Any]) {
+        print("Modelling Program Singleton")
+        ID = data["ID"] as? String
+        name = data["name"] as? String
+        summary = data["summary"] as? String
+        ownerID = data["ownerID"] as? String
+        hasIntro = data["hasIntro"] as? Bool
+        imageID = data["imageID"] as? String
+        imagePath = data["imagePath"] as? String
+        introID = data["introID"] as? String
+        introPath = data["introPath"] as? String
+        hasMultiplePrograms = data["hasMultiplePrograms"] as? Bool
+        isPrimaryProgram = data["isPrimaryProgram"] as? Bool
+        tags = data["tags"] as? [String]
+        episodeIDs = data["episodeIDs"] as? [String]
+        subscriberIDs = data["subscriberIDs"] as? [String]
+        
+        FileManager.getProgramImage { image in
+            self.image = image
+        }
+    }
+    
+    
 }

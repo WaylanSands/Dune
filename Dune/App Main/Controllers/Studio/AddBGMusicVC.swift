@@ -24,7 +24,7 @@ class AddBGMusicVC: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = CustomStyle.onboardingBlack
+        view.backgroundColor = CustomStyle.onBoardingBlack
         setupNavigationBar()
         setTableViewDelegates()
         configureViews()
@@ -59,7 +59,9 @@ class AddBGMusicVC: UIViewController {
     func configureViews() {
         view.addSubview(tableView)
         tableView.pinEdges(to: view)
-        tableView.backgroundColor = CustomStyle.onboardingBlack
+        tableView.backgroundColor = CustomStyle.onBoardingBlack
+        tableView.separatorStyle = .none
+
     }
     
     @objc func selectButtonPress() {

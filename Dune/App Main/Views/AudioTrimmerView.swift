@@ -22,7 +22,7 @@ class AudioTrimmerView: UIView {
     var trimmerDelegate: TrimmerDelegate!
 
     
-    lazy var doubleslider: MultiSlider = {
+    lazy var doubleSlider: MultiSlider = {
         let slider = MultiSlider()
         let max = CGFloat(maxValue)
         slider.minimumValue = 0.0
@@ -63,13 +63,13 @@ class AudioTrimmerView: UIView {
     
     let leftWaveCoverView: UIView = {
         let view = UIView()
-        view.backgroundColor = CustomStyle.onboardingBlack.withAlphaComponent(0.9)
+        view.backgroundColor = CustomStyle.onBoardingBlack.withAlphaComponent(0.9)
         return view
     }()
     
     let rightWaveCoverView: UIView = {
         let view = UIView()
-        view.backgroundColor = CustomStyle.onboardingBlack.withAlphaComponent(0.9)
+        view.backgroundColor = CustomStyle.onBoardingBlack.withAlphaComponent(0.9)
         return view
     }()
     
@@ -109,50 +109,50 @@ class AudioTrimmerView: UIView {
         trimmerLeftConstraint.isActive = true
         trimmerRightConstraint.isActive = true
         
-        self.addSubview(doubleslider)
-        doubleslider.translatesAutoresizingMaskIntoConstraints = false
-        doubleslider.centerYAnchor.constraint(equalTo: self.centerYAnchor).isActive = true
-        doubleslider.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 16).isActive = true
-        doubleslider.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -16).isActive = true
+        self.addSubview(doubleSlider)
+        doubleSlider.translatesAutoresizingMaskIntoConstraints = false
+        doubleSlider.centerYAnchor.constraint(equalTo: self.centerYAnchor).isActive = true
+        doubleSlider.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 16).isActive = true
+        doubleSlider.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -16).isActive = true
         
         self.addSubview(leftHandleView)
         leftHandleView.translatesAutoresizingMaskIntoConstraints = false
-        leftHandleView.centerYAnchor.constraint(equalTo: doubleslider.centerYAnchor).isActive = true
+        leftHandleView.centerYAnchor.constraint(equalTo: doubleSlider.centerYAnchor).isActive = true
         leftHandleView.centerXAnchor.constraint(equalTo: trimmer.leadingAnchor, constant: 9).isActive = true
         
         self.addSubview(rightHandleView)
         rightHandleView.translatesAutoresizingMaskIntoConstraints = false
-        rightHandleView.centerYAnchor.constraint(equalTo: doubleslider.centerYAnchor).isActive = true
+        rightHandleView.centerYAnchor.constraint(equalTo: doubleSlider.centerYAnchor).isActive = true
         rightHandleView.centerXAnchor.constraint(equalTo: trimmer.trailingAnchor, constant: -9).isActive = true
         
         self.addSubview(leftWaveCoverView)
         leftWaveCoverView.translatesAutoresizingMaskIntoConstraints = false
-        leftWaveCoverView.centerYAnchor.constraint(equalTo: doubleslider.centerYAnchor).isActive = true
+        leftWaveCoverView.centerYAnchor.constraint(equalTo: doubleSlider.centerYAnchor).isActive = true
         leftWaveCoverView.heightAnchor.constraint(equalToConstant: 200).isActive = true
         leftWaveCoverView.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: -16).isActive = true
         leftWaveCoverView.trailingAnchor.constraint(equalTo: trimmer.leadingAnchor).isActive = true
         
         self.addSubview(rightWaveCoverView)
         rightWaveCoverView.translatesAutoresizingMaskIntoConstraints = false
-        rightWaveCoverView.centerYAnchor.constraint(equalTo: doubleslider.centerYAnchor).isActive = true
+        rightWaveCoverView.centerYAnchor.constraint(equalTo: doubleSlider.centerYAnchor).isActive = true
         rightWaveCoverView.heightAnchor.constraint(equalToConstant: 200).isActive = true
         rightWaveCoverView.leadingAnchor.constraint(equalTo: trimmer.trailingAnchor).isActive = true
         rightWaveCoverView.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: 16).isActive = true
         
         self.addSubview(leftHandLabel)
         leftHandLabel.translatesAutoresizingMaskIntoConstraints = false
-        leftHandLabel.centerYAnchor.constraint(equalTo: doubleslider.centerYAnchor, constant: -50).isActive = true
+        leftHandLabel.centerYAnchor.constraint(equalTo: doubleSlider.centerYAnchor, constant: -50).isActive = true
         leftHandLabel.centerXAnchor.constraint(equalTo: trimmer.leadingAnchor, constant: 9).isActive = true
         
         self.addSubview(rightHandLabel)
         rightHandLabel.translatesAutoresizingMaskIntoConstraints = false
-        rightHandLabel.centerYAnchor.constraint(equalTo: doubleslider.centerYAnchor, constant: -50).isActive = true
+        rightHandLabel.centerYAnchor.constraint(equalTo: doubleSlider.centerYAnchor, constant: -50).isActive = true
         rightHandLabel.centerXAnchor.constraint(equalTo: trimmer.trailingAnchor, constant: -9).isActive = true
     }
     
    @objc func trimmerChangedValue() {
-    trimmerLeftConstraint.constant =  doubleslider.value.first! + 16
-    trimmerRightConstraint.constant = doubleslider.value.last! - CGFloat(maxValue) - 16
+    trimmerLeftConstraint.constant =  doubleSlider.value.first! + 16
+    trimmerRightConstraint.constant = doubleSlider.value.last! - CGFloat(maxValue) - 16
     trimmerDelegate.trimmerChangedValue()
     }
     

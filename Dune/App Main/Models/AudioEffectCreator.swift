@@ -118,13 +118,13 @@ class AudioEffectCreator {
         
         let file = try AVAudioFile(forReading: url)
         let totalFrameCount = file.length
-        let audioFormat = file.processingFormat
-        let audioRate = Float(audioFormat.sampleRate)
-        let time = Float(startTime)
+//        let audioFormat = file.processingFormat
+//        let audioRate = Float(audioFormat.sampleRate)
+//        let time = Float(startTime)
         
-        let startFrame = floor(time * audioRate)
-        let frameCount = Float(totalFrameCount) - startFrame
-        var result: AVAudioEngineManualRenderingStatus
+//        let startFrame = floor(time * audioRate)
+//        let frameCount = Float(totalFrameCount) - startFrame
+//        var result: AVAudioEngineManualRenderingStatus
 
         
         // 3: connect the components to our playback engine

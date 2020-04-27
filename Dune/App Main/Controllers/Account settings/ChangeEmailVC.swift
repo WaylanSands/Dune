@@ -62,7 +62,7 @@ class ChangeEmailVC: UIViewController {
         let button = UIButton()
         button.backgroundColor = CustomStyle.secondShade
         button.setTitle("@gmail", for: .normal)
-        button.setTitleColor(CustomStyle.fithShade, for: .normal)
+        button.setTitleColor(CustomStyle.fifthShade, for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 14.0, weight: .regular)
         button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 15, bottom: 0, right: 15)
         button.addTarget(self, action: #selector(emailButtonPress), for: .touchUpInside)
@@ -74,7 +74,7 @@ class ChangeEmailVC: UIViewController {
         let button = UIButton()
         button.backgroundColor = CustomStyle.secondShade
         button.setTitle("@hotmail", for: .normal)
-        button.setTitleColor(CustomStyle.fithShade, for: .normal)
+        button.setTitleColor(CustomStyle.fifthShade, for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 14.0, weight: .regular)
         button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 15, bottom: 0, right: 15)
         button.layer.cornerRadius = 17.5
@@ -86,7 +86,7 @@ class ChangeEmailVC: UIViewController {
         let button = UIButton()
         button.backgroundColor = CustomStyle.secondShade
         button.setTitle("@outlook", for: .normal)
-        button.setTitleColor(CustomStyle.fithShade, for: .normal)
+        button.setTitleColor(CustomStyle.fifthShade, for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 14.0, weight: .regular)
         button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 15, bottom: 0, right: 15)
         button.addTarget(self, action: #selector(emailButtonPress), for: .touchUpInside)
@@ -98,7 +98,7 @@ class ChangeEmailVC: UIViewController {
         let button = UIButton()
         button.backgroundColor = CustomStyle.secondShade
         button.setTitle("@icloud", for: .normal)
-        button.setTitleColor(CustomStyle.fithShade, for: .normal)
+        button.setTitleColor(CustomStyle.fifthShade, for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 14.0, weight: .regular)
         button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 15, bottom: 0, right: 15)
         button.addTarget(self, action: #selector(emailButtonPress), for: .touchUpInside)
@@ -110,7 +110,7 @@ class ChangeEmailVC: UIViewController {
         let button = UIButton()
         button.backgroundColor = CustomStyle.secondShade
         button.setTitle("@yahoo", for: .normal)
-        button.setTitleColor(CustomStyle.fithShade, for: .normal)
+        button.setTitleColor(CustomStyle.fifthShade, for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 14.0, weight: .regular)
         button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 15, bottom: 0, right: 15)
         button.addTarget(self, action: #selector(emailButtonPress), for: .touchUpInside)
@@ -381,7 +381,7 @@ extension ChangeEmailVC: UITextFieldDelegate {
     func showInvalidMessage() {
         emailTextField.shake()
         subHeadingLabel.text = invalidMessage
-        subHeadingLabel.textColor = CustomStyle.fithShade
+        subHeadingLabel.textColor = CustomStyle.fifthShade
         subHeadingLabel.font = UIFont.systemFont(ofSize: 14, weight: .medium)
     }
     

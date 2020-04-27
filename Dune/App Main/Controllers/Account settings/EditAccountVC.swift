@@ -564,7 +564,7 @@ extension EditAccountVC: CustomDatePickerDelegate {
 }
 
 
-// Alert publishers about chaing name
+// Alert publishers about changing name
 extension EditAccountVC: UITextFieldDelegate {
     func textFieldDidBeginEditing(_ textField: UITextField) {
         if textField == displayNameTextField && User.isPublisher! {
@@ -605,7 +605,7 @@ extension EditAccountVC: UIImagePickerControllerDelegate, UINavigationController
             
             // Store selected image to user or Program
             if User.isPublisher! {
-                FireStorageManager.storeProgramImage(selectedImage: selectedImage)
+                FireStorageManager.storeProgram(image: selectedImage)
             } else {
                 FireStorageManager.storeUserImage(selectedImage: selectedImage)
             }

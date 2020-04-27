@@ -7,24 +7,23 @@
 //
 
 import UIKit
+import Firebase
 
 class LaunchControllerSwitch {
     
     static func updateRootVC() {
-        print("Determining root controller")
-        
         let appDelegate = UIApplication.shared.delegate as! AppDelegate
         var rootVC : UIViewController?
 
-//                UserDefaults.standard.set(false, forKey: "loggedIn")
-//                UserDefaults.standard.set(false, forKey: "hasCustomImage")
-//                UserDefaults.standard.set(false, forKey: "completedOnboarding")
+//        UserDefaults.standard.set(false, forKey: "loggedIn")
+//        UserDefaults.standard.set(false, forKey: "hasCustomImage")
+//        UserDefaults.standard.set(false, forKey: "completedOnboarding")
         
         let loggedIn = UserDefaults.standard.bool(forKey: "loggedIn")
         let completedOnboarding = UserDefaults.standard.bool(forKey: "completedOnboarding")
-        
+                
         print("Loggedin \(loggedIn)")
-           print("CompletedOnboarding \(completedOnboarding)")
+        print("CompletedOnboarding \(completedOnboarding)")
         
         if loggedIn && completedOnboarding {
             rootVC = MainTabController()

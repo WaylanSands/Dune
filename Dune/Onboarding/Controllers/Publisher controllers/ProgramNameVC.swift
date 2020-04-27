@@ -115,7 +115,7 @@ class ProgramNameVC: UIViewController {
     
     func styleTextField(textField: UITextField, placeholder: String) {
         textField.backgroundColor = CustomStyle.sixthShade
-        textField.attributedPlaceholder = NSAttributedString(string: "\(placeholder)", attributes: [NSAttributedString.Key.foregroundColor: CustomStyle.fithShade])
+        textField.attributedPlaceholder = NSAttributedString(string: "\(placeholder)", attributes: [NSAttributedString.Key.foregroundColor: CustomStyle.fifthShade])
         textField.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         textField.borderStyle = UITextField.BorderStyle.none
         textField.autocorrectionType = UITextAutocorrectionType.no
@@ -153,15 +153,22 @@ class ProgramNameVC: UIViewController {
             User.ID = uid
             User.programID = programID
             Program.ID = programID
+            User.subscriptionIDs = [programID]
             Program.isPrimaryProgram = true
+            
+            FileManager.createUserFolderForPublisher(programID: Program.ID!)
             
             let db = Firestore.firestore()
             let userRef = db.collection("users").document(User.ID!)
             let programRef = db.collection("programs").document(User.programID!)
             
+            
+            
             userRef.updateData([
-                "programID": User.programID!
-            ]) { (error) in
+                "programID": User.programID!,
+                "subscriptionIDs" : [User.programID!]
+                    ])
+             { (error) in
                 if let error = error {
                     print("There has been an error adding program ID: \(error.localizedDescription)")
                 } else {

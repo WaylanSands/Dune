@@ -23,6 +23,7 @@ class UpdateProgramDetails: UIViewController {
     var captionLabelPlaceholderText = false
     var tagPlaceholderText = false
     var tagsUsed: [String] = []
+    var tagCount: Int = 0
     
     lazy var screenHeight = view.frame.height
     lazy var tagButtons: [UIButton] = [firstTagButton, secondTagButton, thirdTagButton]
@@ -110,7 +111,6 @@ class UpdateProgramDetails: UIViewController {
         button.titleLabel?.font = UIFont.systemFont(ofSize: 12, weight: .regular)
         button.setTitleColor(CustomStyle.fourthShade, for: .normal)
         button.backgroundColor = CustomStyle.secondShade
-        button.setTitle("first", for: .normal)
         button.isUserInteractionEnabled = false
         return button
     }()
@@ -122,7 +122,6 @@ class UpdateProgramDetails: UIViewController {
         button.titleLabel?.font = UIFont.systemFont(ofSize: 12, weight: .regular)
         button.setTitleColor(CustomStyle.fourthShade, for: .normal)
         button.backgroundColor = CustomStyle.secondShade
-        button.setTitle("second", for: .normal)
         button.isUserInteractionEnabled = false
         return button
     }()
@@ -134,7 +133,6 @@ class UpdateProgramDetails: UIViewController {
         button.titleLabel?.font = UIFont.systemFont(ofSize: 12, weight: .regular)
         button.setTitleColor(CustomStyle.fourthShade, for: .normal)
         button.backgroundColor = CustomStyle.secondShade
-        button.setTitle("third", for: .normal)
         button.isUserInteractionEnabled = false
         return button
     }()
@@ -149,7 +147,7 @@ class UpdateProgramDetails: UIViewController {
         let label = UILabel()
         label.text = "Program Summary"
         label.font = UIFont.systemFont(ofSize: 14, weight: .medium)
-        label.textColor = CustomStyle.fithShade
+        label.textColor = CustomStyle.fifthShade
         return label
     }()
     
@@ -182,7 +180,7 @@ class UpdateProgramDetails: UIViewController {
         let label = UILabel()
         label.text = "Program tags"
         label.font = UIFont.systemFont(ofSize: 14, weight: .medium)
-        label.textColor = CustomStyle.fithShade
+        label.textColor = CustomStyle.fifthShade
         return label
     }()
     
@@ -243,8 +241,9 @@ class UpdateProgramDetails: UIViewController {
         for (index, item) in Program.tags!.enumerated() {
             if item != nil {
                 tagsUsed.append(item!)
+                tagCount += 1
                 
-                if index < 2 {
+                if index <= 1 {
                     tagTextView.text.append("\(item!) ")
                 } else {
                     tagTextView.text.append("\(item!)")
@@ -577,7 +576,7 @@ extension UpdateProgramDetails: UITextViewDelegate {
     
     func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
         
-        let tagCount = tagTextView.text.filter() {$0 == " "}.count
+        tagCount = tagTextView.text.filter() {$0 == " "}.count
         let  char = text.cString(using: String.Encoding.utf8)!
         let isBackSpace = strcmp(char, "\\b")
         
@@ -591,7 +590,7 @@ extension UpdateProgramDetails: UITextViewDelegate {
         if textView == summaryTextView {
             if summaryPlaceholderText == true {
                 summaryTextView.text.removeAll()
-                self.summaryTextView.textColor = CustomStyle.fithShade
+                self.summaryTextView.textColor = CustomStyle.fifthShade
                 summaryPlaceholderText = false
             } else {
                 summaryLabel.textColor = CustomStyle.primaryblack

@@ -1,5 +1,5 @@
 //
-//  recordBoothVC.swift
+//  EditingBoothVC.swift
 //  Dune
 //
 //  Created by Waylan Sands on 16/3/20.
@@ -9,7 +9,7 @@
 import UIKit
 import AVFoundation
 
-class RecordBoothVC: UIViewController {
+class EditingBoothVC: UIViewController {
     
     enum recordState {
         case ready
@@ -29,7 +29,8 @@ class RecordBoothVC: UIViewController {
     var engine: AVAudioEngine!
     
     var recordingURL: URL!
-    let fileName = NSUUID().uuidString
+    var fileName: String!
+    var duration: Double?
     
     var waveWidth: Double?
     var normalizedTime: CGFloat?
@@ -38,20 +39,22 @@ class RecordBoothVC: UIViewController {
     
     let tooShortAlert = CustomAlertView(alertType: .shortAudioLength)
     
-    var currentState = recordState.ready
+    var currentState = recordState.preview
     var maxRecordingTime: Double = 60
     var recordingSnapshot: Double = 0
     var scrubbedTime: Double = 0
     var scrubbed = false
     
-    var wasTrimmed = false
+    var wasTrimmed: Bool!
     var editedDuration: Double?
-    var startTime: Double = 0
-    var endTime: Double = 0
+    var startTime: Double!
+    var endTime: Double!
+    
+    var caption: String?
+    var tags: [String]?
         
     lazy var tabBar = navigationController?.tabBarController?.tabBar
-    lazy var drumUrl = Bundle.main.url(forResource: "drums", withExtension: "mp3")
-
+    
     let responsiveSoundWave: ResponsiveWaveformView = {
         let view = ResponsiveWaveformView()
         view.waveColor = CustomStyle.primaryBlue
@@ -77,10 +80,10 @@ class RecordBoothVC: UIViewController {
     let recordButton: UIButton = {
         let button = UIButton()
         button.backgroundColor = CustomStyle.primaryYellow
-        button.layer.cornerRadius = 32.5
+        button.layer.cornerRadius = 30
         button.clipsToBounds = true
         button.addTarget(self, action: #selector(setupRecordingSession), for: .touchUpInside)
-        button.setImage(UIImage(named: "record-audio-icon"), for: .normal)
+        button.setImage(UIImage(named: "play-audio-icon"), for: .normal)
         return button
     }()
     
@@ -182,24 +185,47 @@ class RecordBoothVC: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         navigationController?.interactivePopGestureRecognizer?.isEnabled = false
         setupNavigationBar()
-        resetEditingModes()
+//        resetEditingModes()
         
         if Track.trackOption != nil {
             addMusic(track: Track.trackOption!)
         } else {
             musicView.isHidden = true
         }
-    }
-    
-    override func viewDidAppear(_ animated: Bool) {
-        if currentState != .preview {
-            playBackBars.isHidden = true
+        
+        if currentState == .preview {
             addEditingButtons()
+            recordingSnapshot = duration(for: recordingURL.path)
+            playBackBars.setupPlaybackBars(url: recordingURL, snapshot: recordingSnapshot)
+            playBackBars.resetPrimaryWave()
+            print("The duration is \(recordingSnapshot)")
         }
     }
     
+    func duration(for resource: String) -> Double {
+        let asset = AVURLAsset(url: URL(fileURLWithPath: resource))
+        return Double(CMTimeGetSeconds(asset.duration))
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        print("The current state is \(currentState)")
+
+        if currentState == .preview {
+            playBackBars.isHidden = false
+            playBackSlider.isHidden = false
+            navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Next", style: .plain, target: self, action: #selector(continueButtonPress))
+            navigationItem.rightBarButtonItem!.setTitleTextAttributes(CustomStyle.barButtonAttributes, for: .normal)
+        }
+        
+//        if currentState == .preview {
+//            addEditingButtonsToStartPosition()
+//            transitionEditingButtons()
+//        }
+        
+    }
+    
     override func viewWillDisappear(_ animated: Bool) {
-         navigationController?.interactivePopGestureRecognizer?.isEnabled = true
+        navigationController?.interactivePopGestureRecognizer?.isEnabled = true
     }
     
    @objc func resetViews() {
@@ -212,7 +238,6 @@ class RecordBoothVC: UIViewController {
     }
     
     func setupNavigationBar() {
-//        self.title = "Record"
         navigationController?.isNavigationBarHidden = false
         navigationController?.navigationBar.prefersLargeTitles = false
         
@@ -227,9 +252,6 @@ class RecordBoothVC: UIViewController {
         navBar?.shadowImage = UIImage()
         navBar?.tintColor = .white
         tabBar?.isHidden = true
-        tabBar!.barTintColor = .none
-        tabBar?.isTranslucent = true
-
     }
     
     func configureViews() {
@@ -257,8 +279,8 @@ class RecordBoothVC: UIViewController {
         recordButton.translatesAutoresizingMaskIntoConstraints = false
         recordButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -100).isActive = true
         recordButton.centerXAnchor.constraint(equalTo:view.centerXAnchor).isActive = true
-        recordButton.heightAnchor.constraint(equalToConstant: 65).isActive = true
-        recordButton.widthAnchor.constraint(equalToConstant: 65).isActive = true
+        recordButton.heightAnchor.constraint(equalToConstant: 60).isActive = true
+        recordButton.widthAnchor.constraint(equalToConstant: 60).isActive = true
         
         view.addSubview(circleTimerView)
         circleTimerView.translatesAutoresizingMaskIntoConstraints = false
@@ -291,7 +313,7 @@ class RecordBoothVC: UIViewController {
         musicView.bottomAnchor.constraint(equalTo: recordButton.topAnchor, constant: -150).isActive = true
     }
     
-    func addEditingButtons() {
+    func addEditingButtonsToStartPosition() {
         view.addSubview(editingButtonsContainer)
         editingButtonsContainer.pinEdges(to: view)
         
@@ -330,6 +352,46 @@ class RecordBoothVC: UIViewController {
         playBackSlider.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -40).isActive = true
     }
     
+    func addEditingButtons() {
+        view.addSubview(editingButtonsContainer)
+        editingButtonsContainer.pinEdges(to: view)
+        
+        editingButtonsContainer.addSubview(addFilterButton)
+        addFilterButton.translatesAutoresizingMaskIntoConstraints = false
+        addFilterButton.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        addFilterButton.widthAnchor.constraint(equalToConstant: 50).isActive = true
+        addFilterButton.trailingAnchor.constraint(equalTo: recordButton.leadingAnchor, constant: -15).isActive = true
+        addFilterButton.centerYAnchor.constraint(equalTo: recordButton.centerYAnchor).isActive = true
+        
+        editingButtonsContainer.addSubview(trimButton)
+        trimButton.translatesAutoresizingMaskIntoConstraints = false
+        trimButton.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        trimButton.widthAnchor.constraint(equalToConstant: 50).isActive = true
+        trimButton.trailingAnchor.constraint(equalTo: addFilterButton.leadingAnchor, constant: -15).isActive = true
+        trimButton.centerYAnchor.constraint(equalTo: recordButton.centerYAnchor).isActive = true
+        
+        editingButtonsContainer.addSubview(redoButton)
+        redoButton.translatesAutoresizingMaskIntoConstraints = false
+        redoButton.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        redoButton.widthAnchor.constraint(equalToConstant: 50).isActive = true
+        redoButton.leadingAnchor.constraint(equalTo: recordButton.trailingAnchor, constant: 15).isActive = true
+        redoButton.centerYAnchor.constraint(equalTo: recordButton.centerYAnchor).isActive = true
+        
+        editingButtonsContainer.addSubview(addMusicButton)
+        addMusicButton.translatesAutoresizingMaskIntoConstraints = false
+        addMusicButton.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        addMusicButton.widthAnchor.constraint(equalToConstant: 50).isActive = true
+        addMusicButton.leadingAnchor.constraint(equalTo: redoButton.trailingAnchor, constant: 15).isActive = true
+        addMusicButton.centerYAnchor.constraint(equalTo: recordButton.centerYAnchor).isActive = true
+        
+        view.addSubview(playBackSlider)
+        playBackSlider.translatesAutoresizingMaskIntoConstraints = false
+        playBackSlider.bottomAnchor.constraint(equalTo: recordButton.topAnchor, constant: -40).isActive = true
+        playBackSlider.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 40).isActive = true
+        playBackSlider.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -40).isActive = true
+    }
+    
+    
     @objc func continueButtonPress() {
         if recordingSnapshot > 10 {
             let addEpisodeDetails = AddEpisodeDetails()
@@ -339,7 +401,12 @@ class RecordBoothVC: UIViewController {
             addEpisodeDetails.startTime = startTime
             addEpisodeDetails.endTime = endTime
             addEpisodeDetails.duration = (recordingSnapshot - endTime)
-            print("Recording Duration: \((recordingSnapshot - endTime))")
+            addEpisodeDetails.caption = caption
+            
+            if tags != nil {
+                 addEpisodeDetails.tagsUsed = tags!
+            }
+           
             navigationController?.pushViewController(addEpisodeDetails, animated: true)
         } else {
             print("Too short bro")
@@ -357,6 +424,7 @@ class RecordBoothVC: UIViewController {
         case .ready:
             circleTimerView.animate()
             currentState = .recording
+            responsiveSoundWave.isHidden = false
             stopButtonView.isHidden = false
             recordButton.backgroundColor = .clear
             recordButton.setImage(nil, for: .normal)
@@ -375,7 +443,7 @@ class RecordBoothVC: UIViewController {
             playBackSlider.isHidden = false
             stopButtonView.isHidden = true
             transitionEditingButtons()
-            navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Next", style: .plain, target: self, action: #selector(continueButtonPress))
+            navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Continue", style: .plain, target: self, action: #selector(continueButtonPress))
             navigationItem.rightBarButtonItem!.setTitleTextAttributes(CustomStyle.barButtonAttributes, for: .normal)
         case .preview:
             currentState = .playing
@@ -415,7 +483,7 @@ class RecordBoothVC: UIViewController {
         addMusicButton.removeFromSuperview()
         trimButton.removeFromSuperview()
         redoButton.removeFromSuperview()
-        addEditingButtons()
+        addEditingButtonsToStartPosition()
     }
     
     func transitionEditingButtons() {
@@ -455,9 +523,14 @@ class RecordBoothVC: UIViewController {
     @objc func trackRegularPlayback() {
         if audioPlayer.currentTime >= (recordingSnapshot - endTime) {
             regularPlaybackLink.isPaused = true
+            print("Paused")
         }
         
-        if wasTrimmed && audioPlayer.currentTime >= (recordingSnapshot - endTime) {
+        var start = startTime!
+        start.round(.towardZero)
+        
+        if wasTrimmed && audioPlayer.currentTime >= (recordingSnapshot - endTime) ||  audioPlayer.currentTime < start {
+            print("Current time \(audioPlayer.currentTime) Start time: \(startTime!)")
             audioPlayer.stop()
             print("Stopping trimmed audio")
             audioPlayerDidFinishPlaying(audioPlayer, successfully: true)
@@ -533,27 +606,26 @@ class RecordBoothVC: UIViewController {
         return String(format:"%2i:%02i", minutes, seconds)
     }
     
-    func playmerge(audio1: URL, audio2:  URL) {
+    func playMerge(audio1: URL, audio2:  URL) {
        
         let composition = AVMutableComposition()
         let compositionAudioTrack1:AVMutableCompositionTrack = composition.addMutableTrack(withMediaType: AVMediaType.audio, preferredTrackID: CMPersistentTrackID())!
         let compositionAudioTrack2:AVMutableCompositionTrack = composition.addMutableTrack(withMediaType: AVMediaType.audio, preferredTrackID: CMPersistentTrackID())!
 
-        let documentDirectoryURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first! as URL
+        let documentDirectoryURL = FileManager.getDocumentsDirectory()
         let destinationUrl = documentDirectoryURL.appendingPathComponent("resultmerge.m4a")
 
-        let filemanager = FileManager.default
-        if (!filemanager.fileExists(atPath: destinationUrl.path)) {
+        let fileManager = FileManager.default
+        if (!fileManager.fileExists(atPath: destinationUrl.path)) {
             do {
-                try filemanager.removeItem(at: destinationUrl)
+                try fileManager.removeItem(at: destinationUrl)
             }
-           
             catch let error as NSError {
                print("The error is: \(error)")
             }
         } else {
             do {
-                try filemanager.removeItem(at: destinationUrl)
+                try fileManager.removeItem(at: destinationUrl)
             } catch let error as NSError {
                  print("The error is: \(error)")
             }
@@ -570,12 +642,23 @@ class RecordBoothVC: UIViewController {
 
         let assetTrack1:AVAssetTrack = tracks1[0]
         let assetTrack2:AVAssetTrack = tracks2[0]
-
+        
+        let timeRange1: CMTimeRange
+        
         let duration1: CMTime = assetTrack1.timeRange.duration
         let duration2: CMTime = assetTrack2.timeRange.duration
+        
+        if wasTrimmed {
+            let duration = recordingSnapshot - endTime
+            let start = CMTime(seconds: startTime, preferredTimescale: 1)
+            let end = CMTime(seconds: duration, preferredTimescale: 1)
+            timeRange1 = CMTimeRangeMake(start: start, duration: end)
+        } else {
+            timeRange1 = CMTimeRangeMake(start: CMTime.zero, duration: duration1)
+        }
 
-        let timeRange1 = CMTimeRangeMake(start: CMTime.zero, duration: duration1)
         let timeRange2 = CMTimeRangeMake(start: CMTime.zero, duration: duration2)
+        
         do {
             try compositionAudioTrack1.insertTimeRange(timeRange1, of: assetTrack1, at: CMTime.zero)
             try compositionAudioTrack2.insertTimeRange(timeRange2, of: assetTrack2, at: CMTime.zero)
@@ -637,7 +720,7 @@ class RecordBoothVC: UIViewController {
 
 // Audio Extensions
 
-extension RecordBoothVC: AVAudioRecorderDelegate, AVAudioPlayerDelegate {
+extension EditingBoothVC: AVAudioRecorderDelegate, AVAudioPlayerDelegate {
     
     func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
         pauseSafeRegularPlaybackLink()
@@ -662,21 +745,12 @@ extension RecordBoothVC: AVAudioRecorderDelegate, AVAudioPlayerDelegate {
             audioRecorder = try AVAudioRecorder(url: recordingURL, settings: settings)
             audioRecorder.delegate = self
             audioRecorder.record()
-            responsiveSoundWave.isHidden = false
-            fadeInWave()
             audioRecorder.isMeteringEnabled = true
             recordingWaveFeedbackLink = CADisplayLink(target: self, selector: #selector(updateMeters))
             recordingWaveFeedbackLink.add(to: RunLoop.current, forMode: RunLoop.Mode.common)
             recordingWaveFeedbackLink.isPaused = false
         } catch {
             finishRecording(success: false)
-        }
-    }
-    
-    func fadeInWave() {
-        responsiveSoundWave.alpha = 0
-        UIView.animate(withDuration: 1) {
-            self.responsiveSoundWave.alpha = 1
         }
     }
     
@@ -791,7 +865,7 @@ extension RecordBoothVC: AVAudioRecorderDelegate, AVAudioPlayerDelegate {
     }
 }
 
-extension RecordBoothVC: TrimmerDelegate {
+extension EditingBoothVC: TrimmerDelegate {
     
     func trimmerChangedValue() {
         let timeValue = recordingSnapshot / Double(maxValue)

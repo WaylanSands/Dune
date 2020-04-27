@@ -141,7 +141,7 @@ class PublisherAddSummaryVC: UIViewController {
         let label = UILabel()
         label.text = "Program summary"
         label.font = UIFont.systemFont(ofSize: 14, weight: .medium)
-        label.textColor = CustomStyle.fithShade
+        label.textColor = CustomStyle.fifthShade
         return label
     }()
     
@@ -175,7 +175,7 @@ class PublisherAddSummaryVC: UIViewController {
         let label = UILabel()
         label.text = "Program tags"
         label.font = UIFont.systemFont(ofSize: 14, weight: .medium)
-        label.textColor = CustomStyle.fithShade
+        label.textColor = CustomStyle.fifthShade
         return label
     }()
     
@@ -276,6 +276,7 @@ class PublisherAddSummaryVC: UIViewController {
         } else {
             mainImage.image = #imageLiteral(resourceName: "missing-image-large")
             bottomBarImageView.image = #imageLiteral(resourceName: "missing-image-large")
+            Program.image = #imageLiteral(resourceName: "missing-image-large")
         }
     }
     
@@ -734,7 +735,7 @@ extension PublisherAddSummaryVC: UITextViewDelegate, CustomAlertDelegate {
         if textView == summaryTextView {
             if captionPlaceholderText == true {
                 summaryTextView.text.removeAll()
-                self.summaryTextView.textColor = CustomStyle.fithShade
+                self.summaryTextView.textColor = CustomStyle.fifthShade
                 captionPlaceholderText = false
             } else {
                 summaryLabel.textColor = CustomStyle.sixthShade
@@ -745,7 +746,7 @@ extension PublisherAddSummaryVC: UITextViewDelegate, CustomAlertDelegate {
         if textView == tagTextView {
             if tagPlaceholderText == true {
                 tagTextView.text.removeAll()
-                self.tagTextView.textColor = CustomStyle.fithShade
+                self.tagTextView.textColor = CustomStyle.fifthShade
                 tagPlaceholderText = false
             } else {
                 return tagsUsed.count <= 3 && tagCount <= 2

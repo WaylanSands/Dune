@@ -7,12 +7,20 @@
 //
 
 import UIKit
+import AVFoundation
 
 class AddEpisodeDetails: UIViewController {
     
     let imageViewSize:CGFloat = 65.0
     let maxCaptionCharacters = 240
     let maxTagCharacters = 45
+    
+    var episodeFileName: String?
+    var recordingURL: URL!
+    var wasTrimmed = false
+    var startTime: Double = 0
+    var endTime: Double = 0
+    var duration: Double!
     
     var scrollContentHeightConstraint: NSLayoutConstraint!
     var tagContentWidthConstraint: NSLayoutConstraint!
@@ -22,11 +30,17 @@ class AddEpisodeDetails: UIViewController {
     var captionLabelPlaceholderText = true
     var tagPlaceholderText = true
     var tagsUsed: [String] = []
+    var tagCount: Int = 0
+    var caption: String?
+    
+    var successfulStorage = false
+    var successfulStore = false
     
     lazy var screenHeight = view.frame.height
     lazy var tagButtons: [UIButton] = [firstTagButton, secondTagButton, thirdTagButton]
-    lazy var tagscrollViewWidth = tagScrollView.frame.width
+    lazy var tagScrollViewWidth = tagScrollView.frame.width
     
+    var networkingIndicator = NetworkingProgress()
     
     let customNavBar: CustomNavBar = {
         let nav = CustomNavBar()
@@ -38,6 +52,8 @@ class AddEpisodeDetails: UIViewController {
         let view = UIScrollView()
         view.isScrollEnabled = true
         view.contentInsetAdjustmentBehavior = .never
+        view.keyboardDismissMode = .interactive
+        view.showsVerticalScrollIndicator = false
         return view
     }()
     
@@ -48,7 +64,6 @@ class AddEpisodeDetails: UIViewController {
     
     let mainImage: UIImageView = {
         let imageView = UIImageView()
-        imageView.image = #imageLiteral(resourceName: "missing-image-large")
         imageView.layer.cornerRadius = 7
         imageView.clipsToBounds = true
         imageView.contentMode = .scaleAspectFill
@@ -63,14 +78,14 @@ class AddEpisodeDetails: UIViewController {
     
     let programNameLabel: UILabel = {
         let label = UILabel()
-        label.text = "The Daily"
-        label.font = UIFont.systemFont(ofSize: 16, weight: .bold)
+        //        label.text = "The Daily"
+        label.font = UIFont.systemFont(ofSize: 15, weight: .bold)
         return label
     }()
     
     let usernameLabel: UILabel = {
         let label = UILabel()
-        label.text = "@TheDaily"
+        //        label.text = "@TheDaily"
         label.font = UIFont.systemFont(ofSize: 14, weight: .regular)
         label.textColor = CustomStyle.linkBlue
         return label
@@ -103,24 +118,36 @@ class AddEpisodeDetails: UIViewController {
         return view
     }()
     
-    let firstTagButton: UIButton = {
-        let button = UIButton()
-        button.setTitle("one", for: .normal)
-        button.titleLabel?.textColor = CustomStyle.fourthShade
+    lazy var firstTagButton: UIButton = {
+         let button = UIButton()
+        button.layer.cornerRadius = 11
+        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 2, right: 10)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 12, weight: .regular)
+        button.setTitleColor(CustomStyle.fourthShade, for: .normal)
+        button.backgroundColor = CustomStyle.secondShade
+        button.isUserInteractionEnabled = false
         return button
     }()
     
     let secondTagButton: UIButton = {
         let button = UIButton()
-        button.setTitle("two", for: .normal)
-        button.titleLabel?.textColor = CustomStyle.fourthShade
+        button.layer.cornerRadius = 11
+        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 2, right: 10)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 12, weight: .regular)
+        button.setTitleColor(CustomStyle.fourthShade, for: .normal)
+        button.backgroundColor = CustomStyle.secondShade
+        button.isUserInteractionEnabled = false
         return button
     }()
     
     let thirdTagButton: UIButton = {
         let button = UIButton()
-        button.setTitle("three", for: .normal)
-        button.titleLabel?.textColor = CustomStyle.fourthShade
+        button.layer.cornerRadius = 11
+        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 2, right: 10)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 12, weight: .regular)
+        button.setTitleColor(CustomStyle.fourthShade, for: .normal)
+        button.backgroundColor = CustomStyle.secondShade
+        button.isUserInteractionEnabled = false
         return button
     }()
     
@@ -134,7 +161,7 @@ class AddEpisodeDetails: UIViewController {
         let label = UILabel()
         label.text = "Episode caption"
         label.font = UIFont.systemFont(ofSize: 14, weight: .medium)
-        label.textColor = CustomStyle.fithShade
+        label.textColor = CustomStyle.fifthShade
         return label
     }()
     
@@ -167,7 +194,7 @@ class AddEpisodeDetails: UIViewController {
         let label = UILabel()
         label.text = "Episodes tags"
         label.font = UIFont.systemFont(ofSize: 14, weight: .medium)
-        label.textColor = CustomStyle.fithShade
+        label.textColor = CustomStyle.fifthShade
         return label
     }()
     
@@ -201,7 +228,6 @@ class AddEpisodeDetails: UIViewController {
     
     let bottomBarImageView: UIImageView = {
         let imageView = UIImageView()
-        imageView.image = #imageLiteral(resourceName: "missing-imag-small")
         imageView.layer.cornerRadius = 7
         imageView.clipsToBounds = true
         return imageView
@@ -228,13 +254,23 @@ class AddEpisodeDetails: UIViewController {
         button.alpha = 0.2
         button.layer.cornerRadius = 7.0
         button.layer.borderColor = CustomStyle.white.cgColor
+        button.setTitleColor(.white, for: .normal)
+        button.setTitleColor(UIColor.white.withAlphaComponent(0.8), for: .highlighted)
         button.layer.borderWidth = 1
         button.setTitle("Publish", for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 14.0, weight: .semibold)
         button.addTarget(self, action: #selector(publishButtonPress), for: .touchUpInside)
+        button.addTarget(self, action: #selector(publishButtonTouch), for: .touchDown)
         button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 10.0, bottom: 0, right: 10.0)
         button.isEnabled = false
         return button
+    }()
+    
+    
+    let bottomFill: UIView = {
+        let view = UIView()
+        view.backgroundColor = CustomStyle.primaryblack
+        return view
     }()
     
     override var preferredStatusBarStyle: UIStatusBarStyle {
@@ -243,10 +279,14 @@ class AddEpisodeDetails: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        setUpTagButtonsWithTags()
+        removeEmptyTags()
         configureNavBar()
+        checkIfAbleToPublish()
+        //        addBottomFill()
         setupViews()
         addFloatingView()
-        styleTags()
+//        styleTags()
         captionTextView.delegate = self
         tagTextView.delegate = self
         
@@ -254,10 +294,63 @@ class AddEpisodeDetails: UIViewController {
     }
     
     override func viewWillAppear(_ animated: Bool) {
+        if caption != nil {
+            captionLabel.text = caption
+            captionTextView.text = caption
+            captionLabel.textColor = CustomStyle.sixthShade
+            captionTextView.textColor = CustomStyle.fifthShade
+            captionPlaceholderText = false
+        }
+        
         let startPosition: UITextPosition = self.captionTextView.beginningOfDocument
         self.captionTextView.selectedTextRange = self.captionTextView.textRange(from: startPosition, to: startPosition)
         self.floatingDetailsView.frame.origin.y =  self.view.frame.height - ( self.floatingDetailsView.frame.height +  self.homeIndicatorHeight)
+        setProgramImage()
         
+        usernameLabel.text = "@\(User.username!)"
+        programNameLabel.text = Program.name
+        
+        successfulStorage = false
+        successfulStore = false
+    }
+    
+    func setUpTagButtonsWithTags() {
+           if !tagsUsed.isEmpty {
+               tagTextView.text = ""
+               tagTextView.textColor = CustomStyle.fifthShade
+               tagPlaceholderText = false
+               
+               for (index, item) in tagsUsed.enumerated() {
+                    tagCount += 1
+                   
+                   if index < 2 {
+                       tagTextView.text.append("\(item) ")
+                   } else {
+                       tagTextView.text.append("\(item)")
+                   }
+                   
+                   switch index {
+                   case 0:
+                       firstTagButton.setTitle(item, for: .normal)
+                   case 1:
+                       secondTagButton.setTitle(item, for: .normal)
+                   case 2:
+                       thirdTagButton.setTitle(item, for: .normal)
+                   default:
+                       break
+                   }
+               }
+           }
+       }
+    
+    func removeEmptyTags() {
+        for eachTag in tagButtons {
+            if eachTag.titleLabel?.text == nil {
+                eachTag.setTitle("", for: .normal)
+                eachTag.isHidden = true
+            }
+        }
+        tagCounterLabel.text = String(maxTagCharacters - tagTextView.text.count)
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -274,11 +367,21 @@ class AddEpisodeDetails: UIViewController {
         NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
     }
     
+    func setProgramImage() {
+        if Program.image != nil {
+            mainImage.image = Program.image
+            bottomBarImageView.image = Program.image
+        } else {
+            mainImage.image = #imageLiteral(resourceName: "missing-image-large")
+            bottomBarImageView.image = #imageLiteral(resourceName: "missing-image-large")
+        }
+    }
+    
     @objc func keyboardWillChange(notification : Notification) {
         guard let keyboardRect = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue else {
             return
         }
-        floatingDetailsView.frame.origin.y = view.frame.height - keyboardRect.height -  floatingDetailsView.frame.height
+        floatingDetailsView.frame.origin.y = view.frame.height - keyboardRect.height -  (floatingDetailsView.frame.height - 70)
     }
     
     func configureNavBar() {
@@ -296,7 +399,7 @@ class AddEpisodeDetails: UIViewController {
         navBar?.backIndicatorImage = imgBackArrow
         navBar?.backIndicatorTransitionMaskImage = imgBackArrow
         navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
-        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Save", style: .plain, target: self, action: nil)
+        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Save", style: .plain, target: self, action: #selector(saveButtonPress))
         navigationItem.rightBarButtonItem!.setTitleTextAttributes(CustomStyle.barButtonAttributes, for: .normal)
     }
     
@@ -332,11 +435,11 @@ class AddEpisodeDetails: UIViewController {
         programeNameStackedView.addArrangedSubview(programNameLabel)
         programNameLabel.translatesAutoresizingMaskIntoConstraints = false
         programNameLabel.leadingAnchor.constraint(equalTo: programeNameStackedView.leadingAnchor).isActive = true
-        programNameLabel.widthAnchor.constraint(equalToConstant: programNameLabel.intrinsicContentSize.width).isActive = true
+        //        programNameLabel.widthAnchor.constraint(equalToConstant: programNameLabel.intrinsicContentSize.width).isActive = true
         
         programeNameStackedView.addArrangedSubview(usernameLabel)
         usernameLabel.translatesAutoresizingMaskIntoConstraints = false
-        usernameLabel.widthAnchor.constraint(equalToConstant: usernameLabel.intrinsicContentSize.width).isActive = true
+        //        usernameLabel.widthAnchor.constraint(equalToConstant: usernameLabel.intrinsicContentSize.width).isActive = true
         
         scrollContentView.addSubview(captionLabel)
         captionLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -357,7 +460,7 @@ class AddEpisodeDetails: UIViewController {
         tagContentView.leadingAnchor.constraint(equalTo: tagScrollView.leadingAnchor).isActive = true
         tagContentView.heightAnchor.constraint(equalTo: tagScrollView.heightAnchor).isActive = true
         tagContentView.trailingAnchor.constraint(equalTo: tagScrollView.trailingAnchor).isActive = true
-        tagContentWidthConstraint = tagContentView.widthAnchor.constraint(equalToConstant: tagscrollViewWidth)
+        tagContentWidthConstraint = tagContentView.widthAnchor.constraint(equalToConstant: tagScrollViewWidth)
         tagContentWidthConstraint.isActive = true
         
         scrollContentView.addSubview(gradientOverlayView)
@@ -407,6 +510,7 @@ class AddEpisodeDetails: UIViewController {
         captionTextView.topAnchor.constraint(equalTo: captionBar.bottomAnchor, constant: 10).isActive = true
         captionTextView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 13).isActive = true
         captionTextView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -13).isActive = true
+        captionTextView.heightAnchor.constraint(greaterThanOrEqualToConstant: 60).isActive = true
         
         scrollContentView.addSubview(tagBar)
         tagBar.translatesAutoresizingMaskIntoConstraints = false
@@ -440,14 +544,14 @@ class AddEpisodeDetails: UIViewController {
         
         passThoughView.addSubview(floatingDetailsView)
         floatingDetailsView.translatesAutoresizingMaskIntoConstraints = false
-        floatingDetailsView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor).isActive = true
+        floatingDetailsView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
         floatingDetailsView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         floatingDetailsView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        floatingDetailsView.heightAnchor.constraint(equalToConstant: 65.0).isActive = true
+        floatingDetailsView.heightAnchor.constraint(equalToConstant: 135.0).isActive = true
         
         floatingDetailsView.addSubview(bottomBarImageView)
         bottomBarImageView.translatesAutoresizingMaskIntoConstraints = false
-        bottomBarImageView.centerYAnchor.constraint(equalTo: floatingDetailsView.centerYAnchor).isActive = true
+        bottomBarImageView.topAnchor.constraint(equalTo: floatingDetailsView.topAnchor, constant: 10).isActive = true
         bottomBarImageView.leadingAnchor.constraint(equalTo: floatingDetailsView.leadingAnchor, constant: 16.0).isActive = true
         bottomBarImageView.heightAnchor.constraint(equalToConstant: 45.0).isActive = true
         bottomBarImageView.widthAnchor.constraint(equalToConstant: 45.0).isActive = true
@@ -466,15 +570,24 @@ class AddEpisodeDetails: UIViewController {
         
         floatingDetailsView.addSubview(publishButton)
         publishButton.translatesAutoresizingMaskIntoConstraints = false
-        publishButton.centerYAnchor.constraint(equalTo: floatingDetailsView.centerYAnchor).isActive = true
+        publishButton.centerYAnchor.constraint(equalTo: bottomBarImageView.centerYAnchor).isActive = true
         publishButton.trailingAnchor.constraint(equalTo: floatingDetailsView.trailingAnchor, constant: -16.0).isActive = true
         publishButton.heightAnchor.constraint(equalToConstant: 32.0).isActive = true
+    }
+    
+    func addBottomFill() {
+        view.addSubview(bottomFill)
+        view.sendSubviewToBack(bottomFill)
+        bottomFill.translatesAutoresizingMaskIntoConstraints = false
+        bottomFill.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+        bottomFill.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        bottomFill.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        bottomFill.heightAnchor.constraint(equalToConstant: 70.0).isActive = true
     }
     
     func addGradient() {
         let gradient = CAGradientLayer()
         gradient.frame = gradientOverlayView.bounds
-        print(gradientOverlayView.bounds)
         let whiteColor = UIColor.white
         gradient.colors = [whiteColor.withAlphaComponent(0.0).cgColor, whiteColor.withAlphaComponent(1.0).cgColor, whiteColor.withAlphaComponent(1.0).cgColor]
         gradientOverlayView.layer.insertSublayer(gradient, at: 0)
@@ -489,7 +602,7 @@ class AddEpisodeDetails: UIViewController {
             eachTag.layer.cornerRadius = 11
             eachTag.titleLabel?.font = UIFont.systemFont(ofSize: 12, weight: .regular)
             eachTag.setTitleColor(CustomStyle.fourthShade, for: .normal)
-            eachTag.isHidden = true
+//            eachTag.isHidden = true
             eachTag.contentEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 2, right: 10)
             eachTag.isUserInteractionEnabled = false
         }
@@ -540,7 +653,7 @@ class AddEpisodeDetails: UIViewController {
             
             self.captionLabel.text = "placeholder"
             self.captionLabel.textColor = .white
-            self.disablePubishButton()
+            self.disablePublishButton()
         }
     }
     
@@ -554,29 +667,157 @@ class AddEpisodeDetails: UIViewController {
         }
     }
     
-    func enablePubishButton() {
+    func enablePublishButton() {
         publishButton.isEnabled = true
         publishButton.alpha = 1
     }
     
-    func disablePubishButton() {
+    func disablePublishButton() {
         publishButton.isEnabled = false
         publishButton.alpha = 0.2
     }
     
-    @objc func publishButtonPress() {
-        
+    @objc func publishButtonTouch() {
+        publishButton.layer.borderColor = UIColor.white.withAlphaComponent(0.8).cgColor
     }
     
-    func checkIfableToPublish() {
-        print("caption Placeholder Text \(captionPlaceholderText)")
-        if captionPlaceholderText == false && captionTextView.text.count < maxCaptionCharacters && tagTextView.text.count < maxTagCharacters {
-            enablePubishButton()
+    @objc func saveButtonPress() {
+        print("Storing draft episode on Firebase")
+        networkingIndicator.taskLabel.text = "Saving Episode"
+        UIApplication.shared.windows.last?.addSubview(networkingIndicator)
+        
+        let fileExtension = ".\(recordingURL.pathExtension)"
+
+        let audioTrack = FileManager.getAudioFileFromDocumentsDirectory(fileName: episodeFileName!, fileExtension: fileExtension)
+        
+        if audioTrack != nil {
+            FireStorageManager.storeDraftEpisodeAudio(fileName: episodeFileName!, data: audioTrack!) {  url in
+
+                if url != nil {
+                    let length = String.timeString(time: self.duration)
+                    FireStoreManager.saveDraftEpisode(fileName: self.episodeFileName!, wasTrimmed: self.wasTrimmed, startTime: self.startTime, endTime: self.endTime, caption: self.captionTextView.text, tags: self.tagsUsed, audioURL: url!, duration: length) { success in
+                        if success {
+                            self.presentStudioVC()
+                        }
+                    }
+                } else {
+                    // Take care of this error
+                }
+            }
         } else {
-             disablePubishButton()
+            // Take care of this error
         }
     }
     
+    func presentStudioVC() {
+        networkingIndicator.removeFromSuperview()
+        let tabBar = MainTabController()
+        tabBar.selectedIndex = 2
+        let appDelegate = UIApplication.shared.delegate as! AppDelegate
+        appDelegate.window?.rootViewController = tabBar
+    }
+    
+    @objc func publishButtonPress() {
+        UIApplication.shared.windows.last?.addSubview(networkingIndicator)
+        publishButton.layer.borderColor = CustomStyle.white.cgColor
+        networkingIndicator.taskLabel.text = "Publishing Episode"
+      
+        if wasTrimmed {
+            trimThanStoreEpisodeOnFirebase()
+        } else {
+            storeEpisodeOnFirebase()
+        }
+    }
+    
+    func storeEpisodeOnFirebase() {
+        print("Storing episode on Firebase")
+        let fileExtension = ".\(recordingURL.pathExtension)"
+        let audioTrack = FileManager.getAudioFileFromDocumentsDirectory(fileName: episodeFileName!, fileExtension: fileExtension)
+        
+        if audioTrack != nil {
+            FireStorageManager.storeEpisodeAudio(fileName: episodeFileName! + fileExtension, data: audioTrack!) { url in
+                if url != nil {
+                    let length = String.timeString(time: self.duration)
+                    FireStoreManager.publishEpisode(caption: self.captionTextView.text, tags: self.tagsUsed, audioID: self.episodeFileName! + fileExtension , audioURL: url!, duration: length) { success in
+                        if success {
+                            self.presentDailyFeedVC()
+                        }
+                    }
+                    if !self.wasTrimmed {
+                        FileManager.removeFileFromDocumentsDirectory(fileName: self.episodeFileName!)
+                    }
+                } else {
+                    // Take care of this error
+                }
+            }
+        } else {
+            // Take care of this error
+        }
+    }
+    
+    func presentDailyFeedVC() {
+        networkingIndicator.removeFromSuperview()
+            let tabBar = MainTabController()
+            tabBar.selectedIndex = 0
+            let appDelegate = UIApplication.shared.delegate as! AppDelegate
+            appDelegate.window?.rootViewController = tabBar
+    }
+    
+    func trimThanStoreEpisodeOnFirebase() {
+        let asset = AVAsset(url: recordingURL)
+        let documentsDirectory = FileManager.getDocumentsDirectory()
+        let fileURL = documentsDirectory.appendingPathComponent(episodeFileName!)
+        
+        let filePath = fileURL.path
+        let fileManager = FileManager.default
+        if fileManager.fileExists(atPath: filePath) {
+            do {
+                try fileManager.removeItem(atPath: filePath)
+            }
+            catch {
+                print("Couldn't remove existing destination file: \(error)")
+            }
+        }
+        print("creating export session")
+        
+        if let exporter = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetAppleM4A) {
+            exporter.outputFileType = AVFileType.m4a
+            exporter.outputURL = fileURL
+            
+            let start = CMTime(seconds: startTime, preferredTimescale: 1)
+            let stop = CMTime(seconds: duration, preferredTimescale: 1)
+            exporter.timeRange = CMTimeRangeFromTimeToTime(start: start, end: stop)
+            
+            exporter.exportAsynchronously(completionHandler: {
+                switch exporter.status {
+                case AVAssetExportSessionStatus.failed:
+                    print("failed \(exporter.error!)")
+                case AVAssetExportSessionStatus.cancelled:
+                    print("cancelled \(exporter.error!)")
+                case AVAssetExportSessionStatus.unknown:
+                    print("unknown\(exporter.error!)")
+                case AVAssetExportSessionStatus.waiting:
+                    print("waiting\(exporter.error!)")
+                case AVAssetExportSessionStatus.exporting:
+                    print("exporting\(exporter.error!)")
+                default:
+                    print("Finished uploading audio file to FireStorage")
+                    self.storeEpisodeOnFirebase()
+                    FileManager.removeFileFromDocumentsDirectory(fileName: self.episodeFileName!)
+                }
+            })
+        } else {
+            print("cannot create AVAssetExportSession for asset \(asset)")
+        }
+    }
+    
+    func checkIfAbleToPublish() {
+        if captionPlaceholderText == false && captionTextView.text.count < maxCaptionCharacters && tagTextView.text.count < maxTagCharacters {
+            enablePublishButton()
+        } else {
+            disablePublishButton()
+        }
+    }
 }
 
 extension AddEpisodeDetails: UITextViewDelegate {
@@ -598,8 +839,8 @@ extension AddEpisodeDetails: UITextViewDelegate {
     
     func textViewDidChange(_ textView: UITextView) {
         updateCharacterCount(textView: textView)
-        checkIfableToPublish()
-
+        checkIfAbleToPublish()
+        
         if textView == captionTextView {
             if captionTextView.text.isEmpty {
                 addCaptionPlaceholderText()
@@ -643,12 +884,11 @@ extension AddEpisodeDetails: UITextViewDelegate {
     }
     
     func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
-        let tagCount = tagTextView.text.filter() {$0 == " "}.count
+        tagCount = tagTextView.text.filter() {$0 == " "}.count
         let  char = text.cString(using: String.Encoding.utf8)!
         let isBackSpace = strcmp(char, "\\b")
         
         if (isBackSpace == -92) {
-            print("Backspace was pressed")
             updateTagContentWidth()
             return true
         }
@@ -657,7 +897,7 @@ extension AddEpisodeDetails: UITextViewDelegate {
         if textView == captionTextView {
             if captionPlaceholderText == true {
                 captionTextView.text.removeAll()
-                self.captionTextView.textColor = CustomStyle.fithShade
+                self.captionTextView.textColor = CustomStyle.fifthShade
                 captionPlaceholderText = false
             } else {
                 captionLabel.textColor = CustomStyle.sixthShade
@@ -668,7 +908,7 @@ extension AddEpisodeDetails: UITextViewDelegate {
         if textView == tagTextView {
             if tagPlaceholderText == true {
                 tagTextView.text.removeAll()
-                self.tagTextView.textColor = CustomStyle.fithShade
+                self.tagTextView.textColor = CustomStyle.fifthShade
                 tagPlaceholderText = false
             } else {
                 return tagsUsed.count < 4 && tagCount <= 2
