@@ -143,7 +143,7 @@ class ProgramNameVC: UIViewController {
     @objc func continueButtonPress() {
         
         guard let name = self.nameTextField.text else { return }
-        Program.name = name
+        CurrentProgram.name = name
 
         DispatchQueue.global(qos: .userInitiated).async {
             
@@ -152,11 +152,11 @@ class ProgramNameVC: UIViewController {
             
             User.ID = uid
             User.programID = programID
-            Program.ID = programID
+            CurrentProgram.ID = programID
             User.subscriptionIDs = [programID]
-            Program.isPrimaryProgram = true
+            CurrentProgram.isPrimaryProgram = true
             
-            FileManager.createUserFolderForPublisher(programID: Program.ID!)
+//            FileManager.createUserFolderForPublisher(programID: Program.ID!)
             
             let db = Firestore.firestore()
             let userRef = db.collection("users").document(User.ID!)
@@ -175,7 +175,7 @@ class ProgramNameVC: UIViewController {
                     print("Successfully added channel ID")
                     
                     programRef.setData([
-                        "ID" : Program.ID!,
+                        "ID" : CurrentProgram.ID!,
                         "name" : name,
                         "ownerID" : User.ID!,
                         "isPrimaryProgram" : true

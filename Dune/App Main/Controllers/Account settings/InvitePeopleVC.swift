@@ -31,7 +31,7 @@ class InvitePeopleVC: UIViewController {
         let button = UIButton()
         button.setTitle("Invite friends via SMS", for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        button.setTitleColor(CustomStyle.primaryblack, for: .normal)
+        button.setTitleColor(CustomStyle.primaryBlack, for: .normal)
         button.setImage(UIImage(named: "message-friend-icon"), for: .normal)
         button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 0)
         button.contentHorizontalAlignment = .left
@@ -42,7 +42,7 @@ class InvitePeopleVC: UIViewController {
         let button = UIButton()
         button.setTitle("Invite friends via email", for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        button.setTitleColor(CustomStyle.primaryblack, for: .normal)
+        button.setTitleColor(CustomStyle.primaryBlack, for: .normal)
         button.setImage(UIImage(named: "email-friend-icon"), for: .normal)
         button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 0)
         button.contentHorizontalAlignment = .left
@@ -53,7 +53,7 @@ class InvitePeopleVC: UIViewController {
         let button = UIButton()
         button.setTitle("Invite friends via..", for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        button.setTitleColor(CustomStyle.primaryblack, for: .normal)
+        button.setTitleColor(CustomStyle.primaryBlack, for: .normal)
         button.setImage(UIImage(named: "native-share-icon"), for: .normal)
         button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 0)
         button.contentHorizontalAlignment = .left
@@ -64,7 +64,7 @@ class InvitePeopleVC: UIViewController {
         let button = UIButton()
         button.setTitle("Invite friends via Facebook", for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        button.setTitleColor(CustomStyle.primaryblack, for: .normal)
+        button.setTitleColor(CustomStyle.primaryBlack, for: .normal)
         button.setImage(UIImage(named: "facebook-friend-icon"), for: .normal)
         button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 0)
         button.contentHorizontalAlignment = .left
@@ -75,7 +75,7 @@ class InvitePeopleVC: UIViewController {
         let button = UIButton()
         button.setTitle("Invite friends via Twitter", for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        button.setTitleColor(CustomStyle.primaryblack, for: .normal)
+        button.setTitleColor(CustomStyle.primaryBlack, for: .normal)
         button.setImage(UIImage(named: "twitter-friend-icon"), for: .normal)
         button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 0)
         button.contentHorizontalAlignment = .left

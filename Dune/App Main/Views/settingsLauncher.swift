@@ -135,7 +135,7 @@ extension SettingsLauncher: UICollectionViewDelegateFlowLayout, UICollectionView
         if setting.name != "Cancel" {
             switch type {
             case .categories:
-                Program.primaryCategory = setting.name
+                CurrentProgram.primaryCategory = setting.name
                 self.settingsDelegate!.selectionOf(setting: setting.name)
             case .countries:
                 break

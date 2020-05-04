@@ -60,7 +60,7 @@ class CreateUserVC: UIViewController {
         button.isEnabled = false
         button.titleLabel!.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         button.setTitle("", for: .normal)
-        button.setTitleColor(CustomStyle.primaryblack, for: .normal)
+        button.setTitleColor(CustomStyle.primaryBlack, for: .normal)
         button.backgroundColor = CustomStyle.secondShade
         button.layer.cornerRadius = 7
         button.isHidden = true

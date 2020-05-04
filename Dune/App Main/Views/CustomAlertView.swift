@@ -47,7 +47,7 @@ class CustomAlertView: UIView {
     let headingLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
-        label.textColor = CustomStyle.primaryblack
+        label.textColor = CustomStyle.primaryBlack
         label.textAlignment = .center
         return label
     }()
@@ -73,7 +73,7 @@ class CustomAlertView: UIView {
     
     let secondaryButton: UIButton = {
         let button = UIButton()
-        button.setTitleColor(CustomStyle.primaryblack, for: .normal)
+        button.setTitleColor(CustomStyle.primaryBlack, for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         return button
     }()

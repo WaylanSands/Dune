@@ -8,51 +8,51 @@
 
 import Foundation
 
-struct BackgroundMusicOptions {
+struct BackgroundMusic {
     
-static let musicOptions: [MusicOption] =
+static let options: [MusicOption] =
     [
         MusicOption(
             color: hexStringToUIColor(hex: "#735DFF"),
                     artist: "Jeremy Blake",
                     title: "Stardive",
-                    file: Bundle.main.url(forResource: "stardrive", withExtension: "mp3")!,
+                    audioID: "stardrive.mp3",
                     time: "1:00"),
         MusicOption(
                    color: hexStringToUIColor(hex: "#499DD9"),
                            artist: "Jeremy Blake",
                            title: "Stardive",
-                           file: Bundle.main.url(forResource: "stardrive", withExtension: "mp3")!,
+                           audioID: "stardrive",
                            time: "1:00"),
         MusicOption(
                    color: hexStringToUIColor(hex: "#00CE8C"),
                            artist: "Jeremy Blake",
                            title: "Stardive",
-                           file: Bundle.main.url(forResource: "stardrive", withExtension: "mp3")!,
+                           audioID: "stardrive",
                            time: "1:00"),
         MusicOption(
                    color: hexStringToUIColor(hex: "#005EFF"),
                            artist: "Jeremy Blake",
                            title: "Stardive",
-                           file: Bundle.main.url(forResource: "stardrive", withExtension: "mp3")!,
+                           audioID: "stardrive",
                            time: "1:00"),
         MusicOption(
                    color: hexStringToUIColor(hex: "#FF7562"),
                            artist: "Jeremy Blake",
                            title: "Stardive",
-                           file: Bundle.main.url(forResource: "stardrive", withExtension: "mp3")!,
+                           audioID: "stardrive",
                            time: "1:00"),
         MusicOption(
                    color: hexStringToUIColor(hex: "#FF318C"),
                            artist: "Jeremy Blake",
                            title: "Stardive",
-                           file: Bundle.main.url(forResource: "stardrive", withExtension: "mp3")!,
+                           audioID: "stardrive",
                            time: "1:00"),
         MusicOption(
                    color: hexStringToUIColor(hex: "#54E45A"),
                            artist: "Jeremy Blake",
                            title: "Stardive",
-                           file: Bundle.main.url(forResource: "stardrive", withExtension: "mp3")!,
+                           audioID: "stardrive",
                            time: "1:00"),
     ]
 }

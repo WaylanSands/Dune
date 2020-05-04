@@ -70,7 +70,7 @@ class PublisherAddSummaryVC: UIViewController {
     
     let programNameLabel: UILabel = {
         let label = UILabel()
-        label.text = Program.name
+        label.text = CurrentProgram.name
         label.font = UIFont.systemFont(ofSize: 16, weight: .bold)
         return label
     }()
@@ -203,7 +203,7 @@ class PublisherAddSummaryVC: UIViewController {
     
     let floatingDetailsView: UIView = {
         let view = UIView()
-        view.backgroundColor = CustomStyle.primaryblack
+        view.backgroundColor = CustomStyle.primaryBlack
         return view
     }()
     
@@ -217,7 +217,7 @@ class PublisherAddSummaryVC: UIViewController {
     
     let bottomBarProgramNameLabel: UILabel = {
         let label = UILabel()
-        label.text = Program.name
+        label.text = CurrentProgram.name
         label.font = UIFont.systemFont(ofSize: 16.0, weight: .bold)
         label.textColor = .white
         return label
@@ -247,7 +247,7 @@ class PublisherAddSummaryVC: UIViewController {
     
     let bottomFill: UIView = {
         let view = UIView()
-        view.backgroundColor = CustomStyle.primaryblack
+        view.backgroundColor = CustomStyle.primaryBlack
         return view
     }()
     
@@ -270,13 +270,13 @@ class PublisherAddSummaryVC: UIViewController {
     }
     
     func setProgramImage() {
-        if Program.image != nil {
-            mainImage.image = Program.image
-            bottomBarImageView.image = Program.image
+        if CurrentProgram.image != nil {
+            mainImage.image = CurrentProgram.image
+            bottomBarImageView.image = CurrentProgram.image
         } else {
             mainImage.image = #imageLiteral(resourceName: "missing-image-large")
             bottomBarImageView.image = #imageLiteral(resourceName: "missing-image-large")
-            Program.image = #imageLiteral(resourceName: "missing-image-large")
+            CurrentProgram.image = #imageLiteral(resourceName: "missing-image-large")
         }
     }
     
@@ -608,18 +608,20 @@ class PublisherAddSummaryVC: UIViewController {
     }
     
     @objc func confirmButtonPress() {
-        Program.summary = summaryLabel.text
-        Program.tags = tagsUsed
+        CurrentProgram.summary = summaryLabel.text
+        CurrentProgram.tags = tagsUsed
         
         UserDefaults.standard.set(true, forKey: "hasAddSummary")
         UserDefaults.standard.set(true, forKey: "completedOnboarding")
         
         let db = Firestore.firestore()
-        let programRef = db.collection("programs").document(Program.ID!)
+        let programRef = db.collection("programs").document(CurrentProgram.ID!)
+        let userRef = db.collection("users").document(User.ID!)
         
+        DispatchQueue.global(qos: .userInitiated).async {
         programRef.updateData([
-            "summary" :  Program.summary!,
-            "tags" :  Program.tags!
+            "summary" :  CurrentProgram.summary!,
+            "tags" :  CurrentProgram.tags!
         ]) { (error) in
             if let error = error {
                 print("Error adding program Tags: \(error.localizedDescription)")
@@ -627,6 +629,13 @@ class PublisherAddSummaryVC: UIViewController {
                 print("Successfully added program tags and summary ")
                 self.presentProfileView()
             }
+        }
+        
+        userRef.updateData(["completedOnBoarding" : true]) { error in
+            if error != nil {
+                print("Error with updating on-boarding bool for user \(error!)")
+            }
+        }
         }
     }
     // PUSH ACCOUNT VIEW
@@ -757,9 +766,9 @@ extension PublisherAddSummaryVC: UITextViewDelegate, CustomAlertDelegate {
     }
     
     func primaryButtonPress() {
-        Program.summary = "You need to add a summary..."
+        CurrentProgram.summary = "You need to add a summary..."
         let tagController = PublisherTagVC()
-        tagController.summaryTextView.text = Program.summary
+        tagController.summaryTextView.text = CurrentProgram.summary
         navigationController?.pushViewController(tagController, animated: true)
         UserDefaults.standard.set(false, forKey: "hasAddSummary")
     }

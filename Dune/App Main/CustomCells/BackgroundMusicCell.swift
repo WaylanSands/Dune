@@ -11,8 +11,7 @@ import UIKit
 
 class BackgroundMusicCell: UITableViewCell {
     
-    var delegate: musicOptionDelegate!
-    var track: MusicOption?
+    var track: MusicOption!
     var isSelectedCell = false
     
     let playPauseButton: UIButton = {
@@ -21,13 +20,13 @@ class BackgroundMusicCell: UITableViewCell {
         button.isUserInteractionEnabled = false
         button.layer.cornerRadius = 5
         button.clipsToBounds = true
-        button.addTarget(self, action: #selector(cellPressed), for: .touchUpInside)
         return button
     }()
     
     let cellContentButton: UIButton = {
        let button = UIButton()
         button.backgroundColor = hexStringToUIColor(hex: "#272B33")
+        button.isUserInteractionEnabled = false
         button.layer.cornerRadius = 6
         button.clipsToBounds = true
         return button
@@ -36,6 +35,7 @@ class BackgroundMusicCell: UITableViewCell {
     let trackArtistLabel: UILabel = {
        let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 12, weight: .bold)
+        label.isUserInteractionEnabled = false
         label.textColor = .white
         return label
     }()
@@ -43,14 +43,17 @@ class BackgroundMusicCell: UITableViewCell {
     let trackTitleLabel: UILabel = {
        let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 12, weight: .regular)
+        label.isUserInteractionEnabled = false
         label.textColor = .white
         return label
     }()
     
     let trackTime: UILabel = {
-       let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 12, weight: .regular)
+        let label = UILabel()
+        label.font = UIFont.monospacedDigitSystemFont(ofSize: 12, weight: UIFont.Weight.regular)
+        label.isUserInteractionEnabled = false
         label.textColor = CustomStyle.fifthShade
+        label.textAlignment = .center
         return label
     }()
     
@@ -109,9 +112,10 @@ class BackgroundMusicCell: UITableViewCell {
         trackTime.translatesAutoresizingMaskIntoConstraints = false
         trackTime.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -20).isActive = true
         trackTime.centerYAnchor.constraint(equalTo: self.centerYAnchor).isActive = true
+        trackTime.widthAnchor.constraint(equalToConstant: 50).isActive = true
     }
     
-    func activateCell() {
+    func activate() {
         playPauseButton.setImage(UIImage(named: "pause-music-icon"), for: .normal)
 //        cellContentButton.backgroundColor = CustomStyle.secondShade
 //        trackArtistLabel.textColor = CustomStyle.primaryblack
@@ -123,6 +127,7 @@ class BackgroundMusicCell: UITableViewCell {
         playPauseButton.setImage(UIImage(named: "play-music-icon"), for: .normal)
         cellContentButton.backgroundColor = hexStringToUIColor(hex: "#272B33")
         trackTime.textColor = CustomStyle.fifthShade
+        trackTime.text = track.time
         trackArtistLabel.textColor = .white
         trackTitleLabel.textColor = .white
     }
@@ -138,14 +143,10 @@ class BackgroundMusicCell: UITableViewCell {
     func cellSelected() {
         playPauseButton.setImage(UIImage(named: "play-music-icon"), for: .normal)
         cellContentButton.backgroundColor = CustomStyle.secondShade
-        trackArtistLabel.textColor = CustomStyle.primaryblack
-        trackTitleLabel.textColor = CustomStyle.primaryblack
-        trackTime.textColor = CustomStyle.primaryblack
+        trackArtistLabel.textColor = CustomStyle.primaryBlack
+        trackTitleLabel.textColor = CustomStyle.primaryBlack
+        trackTime.textColor = CustomStyle.primaryBlack
+        trackTime.text = track.time
     }
     
-    
-    @objc func cellPressed() {
-        delegate.activatePressedCell(sender: self)
-    }
-
 }

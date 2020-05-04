@@ -39,7 +39,7 @@ class StudioVC: UIViewController {
     
     let noDraftEpisodesLabel: UILabel = {
         let label = UILabel()
-        label.text = "You currently have no unpublished episodes to display"
+        label.text = "Unpublished episodes will display here"
         label.font = UIFont.systemFont(ofSize: 18, weight: .medium)
         label.textAlignment = .center
         label.textColor = CustomStyle.fifthShade
@@ -75,7 +75,7 @@ class StudioVC: UIViewController {
         downloadedDrafts = [DraftEpisode]()
         downloadingIndexes = [Int]()
         initialLoad = true
-        getEpisodeData()
+        getDraftEpisodeIDs()
 
         navigationController?.isNavigationBarHidden = true
         tabBar?.isHidden = false
@@ -139,7 +139,7 @@ class StudioVC: UIViewController {
         noDraftEpisodesLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -40).isActive = true
     }
     
-    func getEpisodeData() {
+    func getDraftEpisodeIDs() {
         if User.draftEpisodeIDs != nil && User.draftEpisodeIDs?.count != 0 {
             noDraftEpisodesLabel.isHidden = true
             tableView.isHidden = false
@@ -270,24 +270,21 @@ class StudioVC: UIViewController {
     func editDraftEpisode(for row: Int) {
         let draft = downloadedDrafts[row]
         print("The draft fileName is \(draft.fileName)")
-        FileManager.getAudioURLFrom(fileName: draft.fileName) { url in
-            if url != nil {
-                
-                let editingVC = EditingBoothVC()
-                editingVC.recordingURL = url
-                editingVC.fileName = draft.fileName
-                editingVC.startTime = draft.startTime
-                editingVC.endTime = draft.endTime
-                editingVC.wasTrimmed = draft.wasTrimmed
-                editingVC.caption = draft.caption
-                editingVC.tags = draft.tags
-                
-                self.navigationController?.pushViewController(editingVC, animated: true)
-            } else {
-                print("The URL is nil")
-            }
+        FileManager.getAudioURLFromTempDirectory(fileName: draft.fileName) { url in
+            
+            let editingVC = EditingBoothVC()
+            editingVC.recordingURL = url
+            editingVC.fileName = draft.fileName
+            editingVC.startTime = draft.startTime
+            editingVC.endTime = draft.endTime
+            editingVC.wasTrimmed = draft.wasTrimmed
+            editingVC.caption = draft.caption
+            editingVC.tags = draft.tags
+            
+            self.navigationController?.pushViewController(editingVC, animated: true)
         }
     }
+
     
     func editUploadedEpisode(url: URL) {
         let fileName = NSUUID().uuidString
@@ -362,7 +359,7 @@ extension StudioVC: UITableViewDelegate, UITableViewDataSource {
             
             //Delete episode
             let draftEpisode = self.downloadedDrafts[indexPath.row]
-            FileManager.removeFileFromDocumentsDirectory(fileName: draftEpisode.fileName)
+            FileManager.removeFileFromTempDirectory(fileName: draftEpisode.fileName)
             FireStorageManager.deleteDraftFileFromStorage(fileName: draftEpisode.fileName)
             FireStoreManager.removeDraftIDFromUser(episodeID: draftEpisode.ID)
             FireStoreManager.deleteDraftDocument(ID: draftEpisode.ID)

@@ -80,7 +80,7 @@ class EditAccountVC: UIViewController {
     let displayNameLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 16, weight: .regular)
-        label.textColor = CustomStyle.primaryblack
+        label.textColor = CustomStyle.primaryBlack
         label.text = "Display Name"
         return label
     }()
@@ -89,7 +89,7 @@ class EditAccountVC: UIViewController {
         let textField = UITextField()
         let placeholder = NSAttributedString(string: "", attributes: [NSAttributedString.Key.foregroundColor : CustomStyle.fourthShade])
         textField.attributedPlaceholder = placeholder;
-        textField.textColor = CustomStyle.primaryblack
+        textField.textColor = CustomStyle.primaryBlack
         textField.font = UIFont.systemFont(ofSize: 16, weight: .regular)
         return textField
     }()
@@ -103,7 +103,7 @@ class EditAccountVC: UIViewController {
     let usernameLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 16, weight: .regular)
-        label.textColor = CustomStyle.primaryblack
+        label.textColor = CustomStyle.primaryBlack
         label.text = "Username"
         return label
     }()
@@ -134,7 +134,7 @@ class EditAccountVC: UIViewController {
     let emailLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 16, weight: .regular)
-        label.textColor = CustomStyle.primaryblack
+        label.textColor = CustomStyle.primaryBlack
         label.text = "Email"
         return label
     }()
@@ -160,7 +160,7 @@ class EditAccountVC: UIViewController {
     let bdayLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 16, weight: .regular)
-        label.textColor = CustomStyle.primaryblack
+        label.textColor = CustomStyle.primaryBlack
         label.text = "Birthday"
         return label
     }()
@@ -182,7 +182,7 @@ class EditAccountVC: UIViewController {
     let countryLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 16, weight: .regular)
-        label.textColor = CustomStyle.primaryblack
+        label.textColor = CustomStyle.primaryBlack
         label.text = "Country"
         return label
     }()
@@ -193,7 +193,7 @@ class EditAccountVC: UIViewController {
         let placeholder = NSAttributedString(string: "Australia", attributes: [NSAttributedString.Key.foregroundColor : CustomStyle.fourthShade])
         textField.font = UIFont.systemFont(ofSize: 16, weight: .regular)
         textField.attributedPlaceholder = placeholder;
-        textField.textColor = CustomStyle.primaryblack
+        textField.textColor = CustomStyle.primaryBlack
         return textField
     }()
     
@@ -206,7 +206,7 @@ class EditAccountVC: UIViewController {
     let passwordLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 16, weight: .regular)
-        label.textColor = CustomStyle.primaryblack
+        label.textColor = CustomStyle.primaryBlack
         label.text = "Password"
         return label
     }()
@@ -273,7 +273,7 @@ class EditAccountVC: UIViewController {
         setProgramImage()
         
         if User.isPublisher!  {
-            let placeholder = NSAttributedString(string: Program.name!, attributes: [NSAttributedString.Key.foregroundColor : CustomStyle.fourthShade])
+            let placeholder = NSAttributedString(string: CurrentProgram.name!, attributes: [NSAttributedString.Key.foregroundColor : CustomStyle.fourthShade])
             displayNameTextField.attributedPlaceholder = placeholder
         } else {
             let placeholder = NSAttributedString(string: User.displayName!, attributes: [NSAttributedString.Key.foregroundColor : CustomStyle.fourthShade])
@@ -293,9 +293,9 @@ class EditAccountVC: UIViewController {
         // Check if display name has changed
         if displayNameTextField.text != "" {
             // Check if display name is new
-            if User.isPublisher! && displayNameTextField.text != Program.name {
+            if User.isPublisher! && displayNameTextField.text != CurrentProgram.name {
                 print("Save new name")
-                Program.name = displayNameTextField.text
+                CurrentProgram.name = displayNameTextField.text
                 FireStoreManager.updatePrimaryProgramName()
             } else if User.isPublisher! == false && displayNameTextField.text != User.displayName  {
                 print("Save new name")
@@ -313,8 +313,8 @@ class EditAccountVC: UIViewController {
     }
     
     func setProgramImage() {
-        if Program.image != nil {
-            profileImageView.image = Program.image
+        if CurrentProgram.image != nil {
+            profileImageView.image = CurrentProgram.image
         } else {
             profileImageView.image = #imageLiteral(resourceName: "missing-image-large")
         }
@@ -600,7 +600,7 @@ extension EditAccountVC: UIImagePickerControllerDelegate, UINavigationController
         
         // Add selected image
         if let selectedImage = selectedImageFromPicker {
-            Program.image = selectedImage
+            CurrentProgram.image = selectedImage
             profileImageView.image = selectedImage
             
             // Store selected image to user or Program

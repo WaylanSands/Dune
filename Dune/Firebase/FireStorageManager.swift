@@ -14,15 +14,15 @@ struct FireStorageManager {
     static func storeProgramImageInFolder(selectedImage: UIImage) {
         
         // If user does not have an imageID assign one
-        if  Program.imageID == nil {
+        if  CurrentProgram.imageID == nil {
             let imageID = NSUUID().uuidString
-            Program.imageID = imageID
+            CurrentProgram.imageID = imageID
             User.imageID = imageID
         }
         
         DispatchQueue.global(qos: .userInitiated).async {
             
-            let storageRef = Storage.storage().reference().child("images/\(Program.imageID!)")
+            let storageRef = Storage.storage().reference().child("images/\(CurrentProgram.imageID!)")
             
             if let uploadData = selectedImage.jpegData(compressionQuality: 0.5) {
                 
@@ -40,7 +40,7 @@ struct FireStorageManager {
                             }
                             
                             if let url = url {
-                                Program.imagePath = url.absoluteString
+                                CurrentProgram.imagePath = url.absoluteString
                                 User.imagePath = url.absoluteString
                                 FireStoreManager.addImagePathToProgram()
                             }
@@ -55,7 +55,7 @@ struct FireStorageManager {
         print("Storing image in Firebase Storage")
         DispatchQueue.global(qos: .userInitiated).async {
             
-            let storageRef = Storage.storage().reference().child("images/\(Program.imageID!)")
+            let storageRef = Storage.storage().reference().child("images/\(CurrentProgram.imageID!)")
             
             if let uploadData = image.jpegData(compressionQuality: 0.5) {
                 
@@ -73,7 +73,7 @@ struct FireStorageManager {
                             }
                             
                             if let url = url {
-                                Program.imagePath = url.absoluteString
+                                CurrentProgram.imagePath = url.absoluteString
                                 FireStoreManager.addImagePathToProgram()
                             }
                         }
@@ -138,7 +138,7 @@ struct FireStorageManager {
                 do {
                     try data.write(to: filePath)
                     if let downloadedImage = UIImage(data: data) {
-                    completion(downloadedImage)
+                        completion(downloadedImage)
                     }
                 }
                 catch {
@@ -165,7 +165,7 @@ struct FireStorageManager {
                 do {
                     try data.write(to: filePath)
                     if let downloadedImage = UIImage(data: data) {
-                    completion(downloadedImage)
+                        completion(downloadedImage)
                     }
                 }
                 catch {
@@ -177,7 +177,7 @@ struct FireStorageManager {
         }
     }
     
-    static func storeEpisodeAudio(fileName: String, data: Data, completion: @escaping (URL?)->()) {
+    static func storeEpisodeAudio(fileName: String, data: Data, completion: @escaping (URL)->()) {
         
         DispatchQueue.global(qos: .userInitiated).async {
             
@@ -187,14 +187,12 @@ struct FireStorageManager {
                 
                 if let errorMessage = error {
                     print("There has was an error storing the audio \(errorMessage)")
-                    completion(nil)
                 } else {
                     print("complete")
                     storageRef.downloadURL { (url, error) in
                         
                         if error != nil {
                             print("Error getting audio url")
-                            completion(nil)
                         }
                         
                         if let url = url {
@@ -209,24 +207,22 @@ struct FireStorageManager {
         }
     }
     
-    static func storeDraftEpisodeAudio(fileName: String, data: Data, completion: @escaping (URL?)->()) {
+    static func storeDraftEpisodeAudio(audioID: String, data: Data, completion: @escaping (URL)->()) {
         
         DispatchQueue.global(qos: .userInitiated).async {
             
-            let storageRef = Storage.storage().reference().child("draftAudio/\(fileName)")
+            let storageRef = Storage.storage().reference().child("draftAudio/\(audioID)")
             
             storageRef.putData(data, metadata: nil, completion: { (metadata, error) in
                 
                 if let errorMessage = error {
                     print("There has was an error storing the draft audio \(errorMessage)")
-                    completion(nil)
                 } else {
                     print("complete")
                     storageRef.downloadURL { (url, error) in
                         
                         if error != nil {
                             print("Error getting audio url")
-                            completion(nil)
                         }
                         
                         if let url = url {
@@ -293,8 +289,8 @@ struct FireStorageManager {
         DispatchQueue.global(qos: .userInitiated).async {
             
             let storageRef = Storage.storage().reference().child("audio/\(audioID)")
-            let documentsURL = FileManager.getDocumentsDirectory()
-            let audioURL = documentsURL.appendingPathComponent(audioID)
+            let tempURL = FileManager.getTempDirectory()
+            let audioURL = tempURL.appendingPathComponent(audioID)
             
             storageRef.write(toFile: audioURL) { (url, error) in
                 
@@ -303,8 +299,103 @@ struct FireStorageManager {
                 } else {
                     print("This is the url: \(url!)")
                     completion(url!)
-//                    FileManager.printContentsOfDocumentsDirectory()
                 }
+            }
+        }
+    }
+    
+    // Download background music and save to cache
+    static func downloadBackgroundMusicToCache(audioID: String, completion: @escaping (URL) -> ()) {
+        
+        DispatchQueue.global(qos: .userInitiated).async {
+            
+            let storageRef = Storage.storage().reference().child("backgroundMusic/\(audioID)")
+            let cacheURL = FileManager.getCacheDirectory()
+            let audioURL = cacheURL.appendingPathComponent(audioID)
+            
+            storageRef.write(toFile: audioURL) { (url, error) in
+                
+                if error != nil {
+                    print(error!)
+                } else {
+                    print("This is the url: \(url!)")
+                    completion(url!)
+                }
+            }
+        }
+    }
+    
+    // Download draft episode from Firebase Storage
+    static func downloadDraftEpisodeAudio(audioID: String, completion: @escaping (URL) -> ()) {
+        
+        DispatchQueue.global(qos: .userInitiated).async {
+            
+            let storageRef = Storage.storage().reference().child("draftAudio/\(audioID)")
+            let tempURL = FileManager.getTempDirectory()
+            let audioURL = tempURL.appendingPathComponent(audioID)
+            
+            storageRef.write(toFile: audioURL) { (url, error) in
+                
+                if error != nil {
+                    print(error!)
+                } else {
+                    print("This is the url: \(url!)")
+                    completion(url!)
+                }
+            }
+        }
+    }
+    
+    // Download image and store in cache directory
+    static func downloadProgramImage(imageID: String, completion: @escaping (UIImage) -> ()) {
+        
+        DispatchQueue.global(qos: .userInitiated).async {
+            
+            let storageRef = Storage.storage().reference().child("images/\(imageID)")
+            let cacheURL = FileManager.getCacheDirectory()
+            let imageURL = cacheURL.appendingPathComponent(imageID)
+             print("About to write the image")
+            storageRef.write(toFile: imageURL) { (url, error) in
+                 print("have written the image")
+                if error != nil {
+                    print(error!)
+                } else {
+                    if let image = UIImage(contentsOfFile: url!.path) {
+                        print("Returning with the program image")
+                        completion(image)
+                    } else {
+                        print("Failed to return Firebase file into an image")
+                    }
+                }
+            }
+        }
+    }
+    
+    static func storeCachedProgram(image: UIImage) {
+        
+        DispatchQueue.global(qos: .userInitiated).async {
+            
+            let storageRef = Storage.storage().reference().child("images/\(CurrentProgram.imageID!)")
+            
+            if let image = image.jpegData(compressionQuality: 0.5) {
+                
+                storageRef.putData(image, metadata: nil, completion: { (metadata, error) in
+                    
+                    if let errorMessage = error {
+                        print("There has was an error adding the image \(errorMessage)")
+                    } else {
+                        print("Image added to Firebase Storage")
+                        storageRef.downloadURL { (url, error) in
+                            
+                            if error != nil {
+                                print("Error getting image url")
+                            } else {
+                                CurrentProgram.imagePath = url!.absoluteString
+                                FireStoreManager.addImagePathToProgram()
+                            }
+                        }
+                    }
+                })
             }
         }
     }

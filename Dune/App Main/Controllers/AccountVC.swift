@@ -20,7 +20,7 @@ class AccountVC: UIViewController {
     var topSectionHeightMin: CGFloat = UIApplication.shared.statusBarFrame.height
     var topSectionHeightMax: CGFloat = 270
     let tableView = UITableView()
-    var programs: [Program] = []
+    var programs: [CurrentProgram] = []
     var tappedPrograms: [String] = []
     var userDetailsYPosition: CGFloat = 125
     var statsYPosition: CGFloat = -80.0
@@ -490,6 +490,10 @@ extension AccountVC: UITableViewDelegate, UITableViewDataSource {
 }
 
 extension AccountVC: EpisodeCellDelegate {
+    func updateLikeCountFor(episode: Episode, at indexPath: IndexPath) {
+        //
+    }
+    
     
     func playEpisode(cell: EpisodeCell) {
         let index = tableView.indexPath(for: cell)

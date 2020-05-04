@@ -1,50 +1,61 @@
 //
-//  Channel.swift
+//  Program.swift
 //  Dune
 //
-//  Created by Waylan Sands on 13/3/20.
+//  Created by Waylan Sands on 1/5/20.
 //  Copyright © 2020 Waylan Sands. All rights reserved.
 //
 
 import UIKit
 
-struct Program {
-    static var ID: String?
-    static var name: String?
-    static var ownerID: String?
-    static var hasIntro: Bool?
-    static var image: UIImage?
-    static var imageID: String?
-    static var imagePath: String?
-    static var introID: String?
-    static var introPath: String?
-    static var summary: String?
-    static var isPrimaryProgram: Bool?
-    static var primaryCategory: String?
-    static var hasMultiplePrograms: Bool?
-    static var tags: [String?]?
-    static var episodeIDs: [String]?
-    static var subscriberIDs: [String]?
+class Program {
     
-    static func modelProgram(data: [String: Any]) {
-        print("Modelling Program Singleton")
-        ID = data["ID"] as? String
-        name = data["name"] as? String
-        summary = data["summary"] as? String
-        ownerID = data["ownerID"] as? String
-        hasIntro = data["hasIntro"] as? Bool
+    var ID: String
+    var name: String
+    var username: String
+    var ownerID: String
+    var hasIntro: Bool
+    var summary: String
+    var isPrimaryProgram: Bool
+    var hasMultiplePrograms: Bool
+    var episodeIDs: [String]
+    var subscriberIDs: [String]
+    var subscriberCount: Int
+    var image: UIImage?
+    var imageID: String?
+    var imagePath: String?
+    var introID: String?
+    var introPath: String?
+    var primaryCategory: String?
+    var tags: [String?]
+    
+    init(data: [String: Any]) {
+        print("Modelling Program")
+        
+        ID = data["ID"] as! String
+        name = data["name"] as! String
+        username = data["username"] as! String
+        summary = data["summary"] as! String
+        ownerID = data["ownerID"] as! String
+        hasIntro = data["hasIntro"] as! Bool
+        subscriberCount = data["subscriberCount"] as! Int
+        hasMultiplePrograms = data["hasMultiplePrograms"] as! Bool
+        isPrimaryProgram = data["isPrimaryProgram"] as! Bool
+        episodeIDs = data["episodeIDs"] as! [String]
+        subscriberIDs = data["subscriberIDs"] as! [String]
         imageID = data["imageID"] as? String
         imagePath = data["imagePath"] as? String
         introID = data["introID"] as? String
         introPath = data["introPath"] as? String
-        hasMultiplePrograms = data["hasMultiplePrograms"] as? Bool
-        isPrimaryProgram = data["isPrimaryProgram"] as? Bool
-        tags = data["tags"] as? [String]
-        episodeIDs = data["episodeIDs"] as? [String]
-        subscriberIDs = data["subscriberIDs"] as? [String]
+        primaryCategory = data["primaryCategory"] as? String
+        tags = data["tags"] as! [String?]
         
-        FileManager.getProgramImage { image in
-            self.image = image
+        guard let imageID = imageID else { return }
+        
+        FileManager.getImageWith(imageID: imageID) { image in
+            DispatchQueue.main.async {
+                self.image = image
+            }
         }
     }
     

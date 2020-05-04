@@ -13,28 +13,36 @@ protocol EpisodeCellDelegate {
     func addTappedProgram(programName: String)
     func playEpisode(cell: EpisodeCell )
     func showSettings(cell: EpisodeCell )
+    func updateLikeCountFor(episode: Episode, at indexPath: IndexPath)
 }
 
 class EpisodeCell: UITableViewCell {
     
     var cellDelegate: EpisodeCellDelegate?
-    var episodeID: String?
+    var episode: Episode!
     var moreButtonPress = false
-    let imageViewSize:CGFloat = 65.0
+    let programImageSize:CGFloat = 55.0
     var unwrapped = false
-    var largeImageSize: CGFloat = 65.0
     var fontNameSize: CGFloat = 16
     var fontIDSize: CGFloat = 14
     let scrollPadding: CGFloat = 40.0
     var episodeTags: [String] = []
     var cellHeight: NSLayoutConstraint!
+    var tagScrollViewHeightConstraint: NSLayoutConstraint!
     var tagContentWidthConstraint: NSLayoutConstraint!
+    
+    var likedEpisode = false
+    
+    // Used for modifying space when adding/removing options
+    var tagContentBottomConstraint: NSLayoutConstraint!
+    
     var summaryViewHeight: NSLayoutConstraint!
     lazy var tagscrollViewWidth = tagScrollView.frame.width
     lazy var deviceType = UIDevice.current.deviceType
     lazy var tagButtons: [UIButton] = [firstTagButton, secondTagButton, thirdTagButton]
     var tagContentSizeWidth: CGFloat = 0
-//    var row: Int?
+    
+    let playbackBarView = PlaybackBarView()
     
     let programImageButton: UIButton = {
         let button = UIButton()
@@ -45,7 +53,7 @@ class EpisodeCell: UITableViewCell {
         return button
     }()
     
-    let programeNameStackedView: UIStackView = {
+    let programNameStackedView: UIStackView = {
         let view = UIStackView()
         view.spacing = 5
         return view
@@ -71,10 +79,10 @@ class EpisodeCell: UITableViewCell {
         label.textColor = CustomStyle.linkBlue
         return label
     }()
-
     
     let captionTextView: UITextView = {
         let view = UITextView()
+        view.font = UIFont.systemFont(ofSize: 14, weight: .regular)
         view.isScrollEnabled = false
         view.textContainer.maximumNumberOfLines = 3
         view.textContainer.lineBreakMode = .byTruncatingTail
@@ -133,17 +141,79 @@ class EpisodeCell: UITableViewCell {
     let timeSinceReleaseLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 12, weight: .medium)
-        label.textColor = CustomStyle.fourthShade
+        label.textColor = CustomStyle.thirdShade
         return label
     }()
     
     let moreButton: UIButton = {
         let button = UIButton()
         button.setTitle("more", for: .normal)
-        button.titleLabel!.font = UIFont.systemFont(ofSize: 14, weight: .regular)
-        button.setTitleColor(CustomStyle.linkBlue, for: .normal)
+        button.titleLabel!.font = UIFont.systemFont(ofSize: 13, weight: .regular)
+        button.setTitleColor(CustomStyle.thirdShade, for: .normal)
         button.addTarget(self, action: #selector(moreUnwrap), for: .touchUpInside)
         return button
+    }()
+    
+    // Episode Options
+    
+    let likeButton: UIButton = {
+        let button = UIButton()
+        button.setImage(UIImage(named: "cell-like-button"), for: .normal)
+        return button
+    }()
+    
+    lazy var likeCountLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 12.0, weight: .medium)
+        label.textAlignment = .left
+        label.text = "\(episode.likeCount)"
+        label.textColor = CustomStyle.thirdShade
+        return label
+    }()
+    
+    let commentButton: UIButton = {
+        let button = UIButton()
+        button.setImage(UIImage(named: "cell-comment-button"), for: .normal)
+        return button
+    }()
+    
+    lazy var commentCountLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 12.0, weight: .medium)
+        label.textAlignment = .left
+        label.textColor = CustomStyle.thirdShade
+        label.text = "\(episode.commentCount)"
+        return label
+    }()
+    
+    let shareButton: UIButton = {
+        let button = UIButton()
+        button.setImage(UIImage(named: "cell-share-button"), for: .normal)
+        return button
+    }()
+    
+    lazy var shareCountLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 12.0, weight: .medium)
+        label.textAlignment = .left
+        label.textColor = CustomStyle.thirdShade
+        label.text = "\(episode.shareCount)"
+        return label
+    }()
+    
+    let listenIconImage: UIImageView = {
+        let imageView = UIImageView()
+        imageView.image = UIImage(named: "cell-listen-icon")
+        return imageView
+    }()
+    
+    lazy var listenCountLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 12.0, weight: .medium)
+        label.textAlignment = .left
+        label.textColor = CustomStyle.thirdShade
+        label.text = "\(episode.listenCount)"
+        return label
     }()
     
     required init?(coder: NSCoder) {
@@ -159,38 +229,28 @@ class EpisodeCell: UITableViewCell {
     
     override func prepareForReuse() {
         clearTagButtons()
-        captionTextView.textContainerInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
         moreButton.removeFromSuperview()
     }
     
     func normalSetUp(episode: Episode) {
-//        self.programImageButton.setImage(nil, for: .normal)
-        episodeID = episode.ID
+        setupLikeButtonAndCounterFor(Episode: episode)
         
-        if episode.programID == Program.ID {
-                self.programImageButton.setImage(Program.image, for: .normal)
-        } else {
-            CacheControl.loadImageFromFolderOrDownloadAndSave(programID: episode.programID, imageID: episode.imageID, imagePath: episode.imagePath) { image in
-                DispatchQueue.main.async {
-                    self.programImageButton.setImage(image, for: .normal)
-                }
+        FileManager.getImageWith(imageID: episode.imageID) { image in
+            DispatchQueue.main.async {
+                self.programImageButton.setImage(image, for: .normal)
             }
         }
-        
-//        FileManager.getAndStoreImage(withUrl: episode.imagePath) { image in
-//            DispatchQueue.main.async {
-//                self.programImageButton.setImage(image, for: .normal)
-//            }
-//        }
         
         programNameLabel.text = episode.programName
         usernameLabel.text = "@\(episode.username)"
         timeSinceReleaseLabel.text = episode.addedAt
-        
-        // Episode caption
-        CustomStyle.createCaptionWith(text: episode.caption, textView: captionTextView)
-        
+        captionTextView.text = episode.caption
         episodeTags = episode.tags!
+        
+        if episodeTags.count == 0 && episode.likeCount > 10 {
+            tagScrollViewHeightConstraint.constant = 0
+        }
+        
         createTagButtons()
         
         DispatchQueue.main.async {
@@ -199,6 +259,19 @@ class EpisodeCell: UITableViewCell {
                 self.addMoreButton()
             }
         }
+    }
+    
+    func configureWithoutOptions() {
+        tagContentBottomConstraint.constant = 15
+        
+        likeButton.removeFromSuperview()
+        likeCountLabel.removeFromSuperview()
+        commentButton.removeFromSuperview()
+        commentCountLabel.removeFromSuperview()
+        shareButton.removeFromSuperview()
+        shareCountLabel.removeFromSuperview()
+        listenIconImage.removeFromSuperview()
+        listenCountLabel.removeFromSuperview()
     }
     
     func refreshSetupMoreTapFalse() {
@@ -213,13 +286,11 @@ class EpisodeCell: UITableViewCell {
         moreButton.isHidden = true
     }
     
-    
     func styleForScreens() {
         switch deviceType {
         case .iPhone4S:
             break
         case .iPhoneSE:
-            largeImageSize = 60
             fontNameSize = 14
             fontIDSize = 12
         case .iPhone8:
@@ -242,19 +313,26 @@ class EpisodeCell: UITableViewCell {
         programImageButton.translatesAutoresizingMaskIntoConstraints = false
         programImageButton.topAnchor.constraint(equalTo: self.topAnchor, constant: 15).isActive = true
         programImageButton.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 16).isActive = true
-        programImageButton.heightAnchor.constraint(equalToConstant: imageViewSize).isActive = true
-        programImageButton.widthAnchor.constraint(equalToConstant: imageViewSize).isActive = true
+        programImageButton.heightAnchor.constraint(equalToConstant: programImageSize).isActive = true
+        programImageButton.widthAnchor.constraint(equalToConstant: programImageSize).isActive = true
         
-        self.addSubview(programeNameStackedView)
-        programeNameStackedView.translatesAutoresizingMaskIntoConstraints = false
-        programeNameStackedView.topAnchor.constraint(equalTo: programImageButton.topAnchor).isActive = true
-        programeNameStackedView.leadingAnchor.constraint(equalTo: programImageButton.trailingAnchor, constant: 10).isActive = true
-        programeNameStackedView.trailingAnchor.constraint(lessThanOrEqualTo: self.trailingAnchor, constant: 20).isActive = true
+        self.addSubview(playbackBarView)
+        playbackBarView.translatesAutoresizingMaskIntoConstraints = false
+        playbackBarView.centerXAnchor.constraint(equalTo: programImageButton.centerXAnchor).isActive = true
+        playbackBarView.topAnchor.constraint(equalTo: programImageButton.bottomAnchor, constant: 10).isActive = true
+        playbackBarView.heightAnchor.constraint(equalToConstant: 5).isActive = true
+        playbackBarView.widthAnchor.constraint(equalToConstant: 50).isActive = true
         
-        programeNameStackedView.addArrangedSubview(programNameLabel)
+        self.addSubview(programNameStackedView)
+        programNameStackedView.translatesAutoresizingMaskIntoConstraints = false
+        programNameStackedView.topAnchor.constraint(equalTo: programImageButton.topAnchor).isActive = true
+        programNameStackedView.leadingAnchor.constraint(equalTo: programImageButton.trailingAnchor, constant: 10).isActive = true
+        programNameStackedView.trailingAnchor.constraint(lessThanOrEqualTo: self.trailingAnchor, constant: 20).isActive = true
+        
+        programNameStackedView.addArrangedSubview(programNameLabel)
         programNameLabel.translatesAutoresizingMaskIntoConstraints = false
         
-        programeNameStackedView.addArrangedSubview(usernameLabel)
+        programNameStackedView.addArrangedSubview(usernameLabel)
         
         self.addSubview(episodeSettingsButton)
         episodeSettingsButton.translatesAutoresizingMaskIntoConstraints = false
@@ -263,17 +341,19 @@ class EpisodeCell: UITableViewCell {
         
         self.addSubview(captionTextView)
         captionTextView.translatesAutoresizingMaskIntoConstraints = false
-        captionTextView.topAnchor.constraint(equalTo: programeNameStackedView.bottomAnchor, constant: 2).isActive = true
-        captionTextView.leadingAnchor.constraint(equalTo: programeNameStackedView.leadingAnchor).isActive = true
+        captionTextView.topAnchor.constraint(equalTo: programNameStackedView.bottomAnchor, constant: 2).isActive = true
+        captionTextView.leadingAnchor.constraint(equalTo: programNameStackedView.leadingAnchor).isActive = true
         captionTextView.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -16.0).isActive = true
         
         self.addSubview(tagScrollView)
         tagScrollView.translatesAutoresizingMaskIntoConstraints = false
         tagScrollView.topAnchor.constraint(equalTo: captionTextView.bottomAnchor, constant: 10).isActive = true
         tagScrollView.leadingAnchor.constraint(equalTo: captionTextView.leadingAnchor).isActive = true
-        tagScrollView.heightAnchor.constraint(equalToConstant: 22).isActive = true
         tagScrollView.trailingAnchor.constraint(equalTo: self.trailingAnchor,constant: -35).isActive = true
-        tagScrollView.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: -15).isActive = true
+        tagContentBottomConstraint = tagScrollView.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: -15)
+        tagScrollViewHeightConstraint = tagScrollView.heightAnchor.constraint(equalToConstant: 22)
+        tagScrollViewHeightConstraint.isActive = true
+        tagContentBottomConstraint.isActive = true
         
         tagScrollView.addSubview(tagContainingStackView)
         tagContainingStackView.translatesAutoresizingMaskIntoConstraints = false
@@ -291,8 +371,69 @@ class EpisodeCell: UITableViewCell {
         
         self.addSubview(timeSinceReleaseLabel)
         timeSinceReleaseLabel.translatesAutoresizingMaskIntoConstraints = false
-        timeSinceReleaseLabel.centerYAnchor.constraint(equalTo: tagScrollView.centerYAnchor).isActive = true
+        timeSinceReleaseLabel.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: -14).isActive = true
         timeSinceReleaseLabel.trailingAnchor.constraint(equalTo: self.trailingAnchor,constant: -16).isActive = true
+    }
+    
+    func configureCellWithOptions() {
+        tagContentBottomConstraint.constant = -40
+        
+        self.addSubview(likeButton)
+        likeButton.translatesAutoresizingMaskIntoConstraints = false
+        likeButton.topAnchor.constraint(equalTo: tagScrollView.bottomAnchor, constant: 10).isActive = true
+        likeButton.leadingAnchor.constraint(equalTo: tagScrollView.leadingAnchor).isActive = true
+        likeButton.widthAnchor.constraint(equalToConstant: 18).isActive = true
+        likeButton.heightAnchor.constraint(equalToConstant: 18).isActive = true
+        
+        self.addSubview(likeCountLabel)
+        likeCountLabel.translatesAutoresizingMaskIntoConstraints = false
+        likeCountLabel.centerYAnchor.constraint(equalTo: likeButton.centerYAnchor).isActive = true
+        likeCountLabel.leadingAnchor.constraint(equalTo: likeButton.trailingAnchor, constant: 5).isActive = true
+        likeCountLabel.widthAnchor.constraint(equalToConstant: 22).isActive = true
+        
+        self.addSubview(commentButton)
+        commentButton.translatesAutoresizingMaskIntoConstraints = false
+        commentButton.topAnchor.constraint(equalTo: tagScrollView.bottomAnchor, constant: 10).isActive = true
+        commentButton.leadingAnchor.constraint(equalTo: likeCountLabel.trailingAnchor, constant: 15).isActive = true
+        commentButton.widthAnchor.constraint(equalToConstant: 18).isActive = true
+        commentButton.heightAnchor.constraint(equalToConstant: 18).isActive = true
+        
+        self.addSubview(commentCountLabel)
+        commentCountLabel.translatesAutoresizingMaskIntoConstraints = false
+        commentCountLabel.centerYAnchor.constraint(equalTo: likeButton.centerYAnchor).isActive = true
+        commentCountLabel.leadingAnchor.constraint(equalTo: commentButton.trailingAnchor, constant: 5).isActive = true
+        commentCountLabel.widthAnchor.constraint(equalToConstant: 22).isActive = true
+        
+        self.addSubview(shareButton)
+        shareButton.translatesAutoresizingMaskIntoConstraints = false
+        shareButton.topAnchor.constraint(equalTo: tagScrollView.bottomAnchor, constant: 10).isActive = true
+        shareButton.leadingAnchor.constraint(equalTo: commentCountLabel.trailingAnchor, constant: 15).isActive = true
+        shareButton.widthAnchor.constraint(equalToConstant: 18).isActive = true
+        shareButton.heightAnchor.constraint(equalToConstant: 18).isActive = true
+        
+        self.addSubview(shareCountLabel)
+        shareCountLabel.translatesAutoresizingMaskIntoConstraints = false
+        shareCountLabel.centerYAnchor.constraint(equalTo: likeButton.centerYAnchor).isActive = true
+        shareCountLabel.leadingAnchor.constraint(equalTo: shareButton.trailingAnchor, constant: 5).isActive = true
+        shareCountLabel.widthAnchor.constraint(equalToConstant: 22).isActive = true
+        
+        self.addSubview(listenIconImage)
+        listenIconImage.translatesAutoresizingMaskIntoConstraints = false
+        listenIconImage.topAnchor.constraint(equalTo: tagScrollView.bottomAnchor, constant: 10).isActive = true
+        listenIconImage.leadingAnchor.constraint(equalTo: shareCountLabel.trailingAnchor, constant: 10).isActive = true
+        listenIconImage.widthAnchor.constraint(equalToConstant: 18).isActive = true
+        listenIconImage.heightAnchor.constraint(equalToConstant: 18).isActive = true
+        
+        self.addSubview(listenCountLabel)
+        listenCountLabel.translatesAutoresizingMaskIntoConstraints = false
+        listenCountLabel.centerYAnchor.constraint(equalTo: likeButton.centerYAnchor).isActive = true
+        listenCountLabel.leadingAnchor.constraint(equalTo: listenIconImage.trailingAnchor, constant: 5).isActive = true
+        listenCountLabel.widthAnchor.constraint(equalToConstant: 30).isActive = true
+        
+        DispatchQueue.main.async {
+            self.cellDelegate?.updateRows()
+            
+        }
     }
     
     func addGradient() {
@@ -316,7 +457,6 @@ class EpisodeCell: UITableViewCell {
     func addMoreButton() {
         DispatchQueue.main.async {
             if !self.unwrapped {
-                self.captionTextView.textContainerInset = UIEdgeInsets(top: 0, left: 0, bottom: -10, right: 0)
                 self.addSubview(self.moreButton)
                 self.moreButton.translatesAutoresizingMaskIntoConstraints = false
                 self.moreButton.bottomAnchor.constraint(equalTo: self.captionTextView.bottomAnchor).isActive = true
@@ -346,17 +486,71 @@ class EpisodeCell: UITableViewCell {
         unwrapped = true
         captionTextView.textContainer.maximumNumberOfLines = 0
         captionTextView.textContainer.exclusionPaths.removeAll()
-        captionTextView.textContainerInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
         captionTextView.text = "\(captionTextView.text!) "
         moreButton.removeFromSuperview()
-            
+        
         if UIDevice.current.deviceType == .iPhoneSE {
         }
         captionTextView.layoutIfNeeded()
-
+        
         DispatchQueue.main.async {
             self.cellDelegate?.updateRows()
             self.cellDelegate?.addTappedProgram(programName: self.programNameLabel.text!)
+        }
+    }
+    
+    func setupLikeButtonAndCounterFor(Episode: Episode) {
+        
+        if let likedEpisodes = User.likedEpisodes {
+            if likedEpisodes.contains(episode.ID) {
+                likedEpisode = true
+                likeButton.setImage(UIImage(named: "cell-liked-button"), for: .normal)
+                likeCountLabel.textColor = CustomStyle.fourthShade
+            } else {
+                likedEpisode = false
+                likeButton.setImage(UIImage(named: "cell-like-button"), for: .normal)
+                likeCountLabel.textColor = CustomStyle.thirdShade
+            }
+        }
+        
+        if episode.likeCount == 0 {
+            likeCountLabel.text = ""
+            likedEpisode = false
+        } else {
+            likeCountLabel.text = String(episode.likeCount)
+        }
+    }
+    
+    @objc func likeButtonPress() {
+        guard let indexPath = getIndexPath() else { return }
+        var likeCount = episode.likeCount
+        
+        if likedEpisode == false {
+            
+            likedEpisode = true
+            likeCount += 1
+            likeCountLabel.text = String(likeCount)
+            likeButton.setImage(UIImage(named: "cell-liked-button"), for: .normal)
+            likeCountLabel.textColor = CustomStyle.fourthShade
+            FireStoreManager.updateEpisodeLikeCountWith(episodeID: episode.ID, by: .increase)
+            
+            episode.likeCount += 1
+            cellDelegate?.updateLikeCountFor(episode: episode, at: indexPath)
+            
+        } else {
+            likedEpisode = false
+            likeCount -= 1
+            likeCountLabel.text = String(likeCount)
+            likeButton.setImage(UIImage(named: "cell-like-button"), for: .normal)
+            likeCountLabel.textColor = CustomStyle.thirdShade
+            FireStoreManager.updateEpisodeLikeCountWith(episodeID: episode.ID, by: .decrease)
+            
+            episode.likeCount -= 1
+            cellDelegate?.updateLikeCountFor(episode: episode, at: indexPath)
+            
+            if likeCount == 0 {
+                likeCountLabel.text = ""
+            }
         }
     }
     
@@ -368,7 +562,19 @@ class EpisodeCell: UITableViewCell {
     @objc func showSettings() {
         cellDelegate?.showSettings(cell: self )
     }
-
+    
+    
+    // Helper functions
+    
+    func getIndexPath() -> IndexPath? {
+        var indexPath: IndexPath!
+        guard let superView = self.superview as? UITableView else {
+            print("superview is not a UITableView - getIndexPath")
+            return nil
+        }
+        indexPath = superView.indexPath(for: self)
+        return indexPath
+    }
+    
 }
-
 

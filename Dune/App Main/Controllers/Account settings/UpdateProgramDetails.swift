@@ -65,7 +65,7 @@ class UpdateProgramDetails: UIViewController {
     let programNameLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 16, weight: .bold)
-        label.textColor = CustomStyle.primaryblack
+        label.textColor = CustomStyle.primaryBlack
         return label
     }()
     
@@ -79,10 +79,10 @@ class UpdateProgramDetails: UIViewController {
     
     lazy var summaryLabel: UILabel = {
         let label = UILabel()
-        label.text = Program.summary
+        label.text = CurrentProgram.summary
         label.numberOfLines = 7
         label.font = UIFont.systemFont(ofSize: 14, weight: .regular)
-        label.textColor = CustomStyle.primaryblack
+        label.textColor = CustomStyle.primaryBlack
         return label
     }()
     
@@ -153,7 +153,7 @@ class UpdateProgramDetails: UIViewController {
     
     lazy var summaryCounterLabel: UILabel = {
         let label = UILabel()
-        label.text = String(maxCaptionCharacters - Program.summary!.count)
+        label.text = String(maxCaptionCharacters - CurrentProgram.summary!.count)
         label.font = UIFont.systemFont(ofSize: 12, weight: .medium)
         label.textColor = CustomStyle.fourthShade
         return label
@@ -161,11 +161,11 @@ class UpdateProgramDetails: UIViewController {
     
     lazy var summaryTextView: UITextView = {
         let textView = UITextView()
-        textView.text = Program.summary
+        textView.text = CurrentProgram.summary
         textView.font = UIFont.systemFont(ofSize: 16, weight: .regular)
         textView.textContainer.maximumNumberOfLines = 12
         textView.isScrollEnabled = false
-        textView.textColor = CustomStyle.primaryblack
+        textView.textColor = CustomStyle.primaryBlack
         textView.keyboardType = .twitter
         return textView
     }()
@@ -198,7 +198,7 @@ class UpdateProgramDetails: UIViewController {
         textView.font = UIFont.systemFont(ofSize: 16, weight: .regular)
         textView.textContainer.maximumNumberOfLines = 2
         textView.isScrollEnabled = false
-        textView.textColor = CustomStyle.primaryblack
+        textView.textColor = CustomStyle.primaryBlack
         textView.keyboardType = .twitter
         textView.autocapitalizationType = .none
         return textView
@@ -220,7 +220,7 @@ class UpdateProgramDetails: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         usernameLabel.text = "@\(User.username!)"
-        programNameLabel.text = Program.name
+        programNameLabel.text = CurrentProgram.name
         
         scrollView.setScrollBarToTopLeft()
         tagScrollView.setScrollBarToTopLeft()
@@ -238,7 +238,7 @@ class UpdateProgramDetails: UIViewController {
     }
     
     func setUpTagButtonsWithTags() {
-        for (index, item) in Program.tags!.enumerated() {
+        for (index, item) in CurrentProgram.tags!.enumerated() {
             if item != nil {
                 tagsUsed.append(item!)
                 tagCount += 1
@@ -274,8 +274,8 @@ class UpdateProgramDetails: UIViewController {
     }
     
     func setProgramImage() {
-        if Program.image != nil {
-            mainImage.image = Program.image
+        if CurrentProgram.image != nil {
+            mainImage.image = CurrentProgram.image
         } else {
             mainImage.image = #imageLiteral(resourceName: "missing-image-large")
         }
@@ -515,8 +515,8 @@ class UpdateProgramDetails: UIViewController {
     
     // Save details to Firebase
     @objc func saveButtonPress() {
-        Program.summary = summaryTextView.text
-        Program.tags = tagsUsed
+        CurrentProgram.summary = summaryTextView.text
+        CurrentProgram.tags = tagsUsed
         FireStoreManager.updateProgramDetails()
         navigationController?.popViewController(animated: true)
     }
@@ -593,7 +593,7 @@ extension UpdateProgramDetails: UITextViewDelegate {
                 self.summaryTextView.textColor = CustomStyle.fifthShade
                 summaryPlaceholderText = false
             } else {
-                summaryLabel.textColor = CustomStyle.primaryblack
+                summaryLabel.textColor = CustomStyle.primaryBlack
             }
         }
         
@@ -601,7 +601,7 @@ extension UpdateProgramDetails: UITextViewDelegate {
         if textView == tagTextView {
             if tagPlaceholderText == true {
                 tagTextView.text.removeAll()
-                self.tagTextView.textColor = CustomStyle.primaryblack
+                self.tagTextView.textColor = CustomStyle.primaryBlack
                 tagPlaceholderText = false
             } else {
                 return tagsUsed.count <= 3 && tagCount <= 2

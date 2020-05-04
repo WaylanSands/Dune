@@ -124,7 +124,8 @@ class AccountTypeVC: UIViewController {
                         "username": User.username!,
                         "email": User.email!,
                         "birthDate": User.birthDate!,
-                        "isPublisher": User.isPublisher!
+                        "isPublisher": User.isPublisher!,
+                        "completedOnBoarding" : false
                     ]) { err in
                         if let err = err {
                             print("Error creating new user document: \(err)")

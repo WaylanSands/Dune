@@ -44,7 +44,7 @@ class PublisherNotificationsVC: UIViewController {
         let label = UILabel()
         label.text = "Episode Likes"
         label.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        label.textColor = CustomStyle.primaryblack
+        label.textColor = CustomStyle.primaryBlack
         return label
     }()
     
@@ -89,7 +89,7 @@ class PublisherNotificationsVC: UIViewController {
         let label = UILabel()
         label.text = "Episode Comments"
         label.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        label.textColor = CustomStyle.primaryblack
+        label.textColor = CustomStyle.primaryBlack
         return label
     }()
     
@@ -134,7 +134,7 @@ class PublisherNotificationsVC: UIViewController {
         let label = UILabel()
         label.text = "New Subscribers"
         label.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        label.textColor = CustomStyle.primaryblack
+        label.textColor = CustomStyle.primaryBlack
         return label
     }()
     

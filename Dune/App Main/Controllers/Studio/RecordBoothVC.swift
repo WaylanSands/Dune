@@ -8,6 +8,7 @@
 
 import UIKit
 import AVFoundation
+import MultiSlider
 
 class RecordBoothVC: UIViewController {
     
@@ -20,41 +21,41 @@ class RecordBoothVC: UIViewController {
     }
     
     var recordingWaveFeedbackLink: CADisplayLink!
-    var regularPlaybackLink: CADisplayLink!
-    var presetPlaybackLink: CADisplayLink!
+    var playbackLink: CADisplayLink!
     
     var recordingSession: AVAudioSession!
     var audioRecorder: AVAudioRecorder!
     var audioPlayer: AVAudioPlayer!
-    var engine: AVAudioEngine!
     
-    var recordingURL: URL!
+    let mergedFileName = NSUUID().uuidString
     let fileName = NSUUID().uuidString
-    
-    var waveWidth: Double?
-    var normalizedTime: CGFloat?
-    var sliderValue: Float?
-    var maxValue: Float = 382
-    
-    let tooShortAlert = CustomAlertView(alertType: .shortAudioLength)
+    var recordingURL: URL!
+    var voiceURL: URL!
     
     var currentState = recordState.ready
     var maxRecordingTime: Double = 60
     var recordingSnapshot: Double = 0
+    var normalizedTime: CGFloat?
     var scrubbedTime: Double = 0
     var scrubbed = false
     
-    var wasTrimmed = false
-    var editedDuration: Double?
+    var currentOption: MusicOption?
+    var hasMergedTracks = false
+    
+    var editedDuration: Double = 0
     var startTime: Double = 0
     var endTime: Double = 0
-        
+    var wasTrimmed = false
+    
+    var maxValue: Float = Float(UIScreen.main.bounds.width) - Float(60)
+    
     lazy var tabBar = navigationController?.tabBarController?.tabBar
-    lazy var drumUrl = Bundle.main.url(forResource: "drums", withExtension: "mp3")
-
+    
+    let tooShortAlert = CustomAlertView(alertType: .shortAudioLength)
+    
     let responsiveSoundWave: ResponsiveWaveformView = {
         let view = ResponsiveWaveformView()
-        view.waveColor = CustomStyle.primaryBlue
+        view.waveColor = CustomStyle.white
         view.backgroundColor = .clear
         view.isHidden = true
         return view
@@ -62,6 +63,7 @@ class RecordBoothVC: UIViewController {
     
     let playBackBars: StaticWaveCreator = {
         let view = StaticWaveCreator()
+        view.backgroundColor = .clear
         view.isHidden = true
         return view
     }()
@@ -69,25 +71,26 @@ class RecordBoothVC: UIViewController {
     let timerLabel: UILabel = {
         let label = UILabel()
         label.text = "0:00"
-        label.font = UIFont.systemFont(ofSize: 29, weight: .bold)
+        label.font = UIFont.monospacedDigitSystemFont(ofSize: 16, weight: UIFont.Weight.bold)
         label.textColor = .white
         return label
     }()
     
     let recordButton: UIButton = {
         let button = UIButton()
-        button.backgroundColor = CustomStyle.primaryYellow
-        button.layer.cornerRadius = 32.5
+        button.backgroundColor = CustomStyle.primaryRed
+        button.layer.cornerRadius = 30
+        button.layer.borderColor = UIColor.white.cgColor
+        button.layer.borderWidth = 4
         button.clipsToBounds = true
         button.addTarget(self, action: #selector(setupRecordingSession), for: .touchUpInside)
-        button.setImage(UIImage(named: "record-audio-icon"), for: .normal)
         return button
     }()
     
     let stopButtonView: UIView = {
         let view = PassThoughView()
         view.backgroundColor = CustomStyle.primaryRed
-        view.layer.cornerRadius = 20
+        view.layer.cornerRadius = 17.5
         view.clipsToBounds = true
         view.isHidden = true
         return view
@@ -103,8 +106,8 @@ class RecordBoothVC: UIViewController {
         slider.minimumValue = 0.0
         slider.maximumValue = maxValue
         slider.setThumbImage(UIImage(named: "slider-thumb"), for: .normal)
-        slider.minimumTrackTintColor = CustomStyle.fifthShade
-        slider.maximumTrackTintColor = CustomStyle.fifthShade
+        slider.minimumTrackTintColor = UIColor.white
+        slider.maximumTrackTintColor = UIColor.white.withAlphaComponent(0.3)
         slider.isContinuous = true
         slider.addTarget(self, action: #selector(changePlaybackValue), for: .valueChanged)
         slider.isHidden = true
@@ -118,6 +121,32 @@ class RecordBoothVC: UIViewController {
         return view
     }()
     
+    lazy var usernameLabel: UILabel = {
+        let label = UILabel()
+        label.text = "@\(User.username!)"
+        label.font = UIFont.systemFont(ofSize: 16, weight: .bold)
+        label.textColor = .white
+        return label
+    }()
+    
+    let rightHandLabel: UILabel = {
+        let label = UILabel()
+        label.text = "0:00"
+        label.font = UIFont.systemFont(ofSize: 10, weight: .medium)
+        label.textColor = .white
+        label.isHidden = true
+        return label
+    }()
+    
+    let leftHandLabel: UILabel = {
+        let label = UILabel()
+        label.text = "0:00"
+        label.font = UIFont.systemFont(ofSize: 10, weight: .medium)
+        label.textColor = .white
+        label.isHidden = true
+        return label
+    }()
+    
     lazy var musicView: BackgroundMusicView = {
         let view = BackgroundMusicView()
         view.isHidden = true
@@ -129,9 +158,34 @@ class RecordBoothVC: UIViewController {
         return view
     }()
     
+    let duneLogoImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.image = UIImage(named: "white-dune-logo")
+        return imageView
+    }()
+    
+    let episodeLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Episode 1"
+        label.font = UIFont.systemFont(ofSize: 16, weight: .bold)
+        label.textColor = .white
+        label.textAlignment = .center
+        return label
+    }()
+    
+    let programImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.layer.shadowColor = UIColor.black.cgColor
+        imageView.layer.shadowOpacity = 0.7
+        imageView.layer.shadowOffset = .zero
+        imageView.layer.shadowRadius = 20
+        imageView.layer.rasterizationScale = UIScreen.main.scale
+        imageView.layer.shouldRasterize = true
+        return imageView
+    }()
+    
     let addFilterButton: UIButton = {
         let button = UIButton()
-        button.backgroundColor = CustomStyle.seventhShade
         button.layer.cornerRadius = 24
         button.clipsToBounds = true
         button.setImage(UIImage(named: "filter-audio-icon"), for: .normal)
@@ -141,7 +195,6 @@ class RecordBoothVC: UIViewController {
     
     let trimButton: UIButton = {
         let button = UIButton()
-        button.backgroundColor = CustomStyle.seventhShade
         button.setImage(UIImage(named: "trim-audio-icon"), for: .normal)
         button.layer.cornerRadius = 24
         button.clipsToBounds = true
@@ -151,7 +204,6 @@ class RecordBoothVC: UIViewController {
     
     let redoButton: UIButton = {
         let button = UIButton()
-        button.backgroundColor = CustomStyle.seventhShade
         button.setImage(UIImage(named: "switch-account-icon"), for: .normal)
         button.layer.cornerRadius = 24
         button.clipsToBounds = true
@@ -161,7 +213,6 @@ class RecordBoothVC: UIViewController {
     
     let addMusicButton: UIButton = {
         let button = UIButton()
-        button.backgroundColor = CustomStyle.seventhShade
         button.setImage(UIImage(named: "music-audio-icon"), for: .normal)
         button.layer.cornerRadius = 24
         button.clipsToBounds = true
@@ -169,13 +220,21 @@ class RecordBoothVC: UIViewController {
         return button
     }()
     
+    let gradientOverlayView: UIView = {
+        let view = UIView()
+        return view
+    }()
+    
     override var preferredStatusBarStyle: UIStatusBarStyle {
         return .lightContent
     }
     
+    // MARK: View did load
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = CustomStyle.onBoardingBlack
+        view.backgroundColor = CurrentProgram.image?.averageColor
+        addGradient()
         configureViews()
     }
     
@@ -183,26 +242,43 @@ class RecordBoothVC: UIViewController {
         navigationController?.interactivePopGestureRecognizer?.isEnabled = false
         setupNavigationBar()
         resetEditingModes()
+        setProgramImage()
         
-        if Track.trackOption != nil {
-            addMusic(track: Track.trackOption!)
+        if currentOption != nil {
+            addMusic(track: currentOption!)
         } else {
             musicView.isHidden = true
         }
     }
     
     override func viewDidAppear(_ animated: Bool) {
-        if currentState != .preview {
+        print(currentState)
+        if currentState != .preview  {
             playBackBars.isHidden = true
             addEditingButtons()
         }
     }
     
     override func viewWillDisappear(_ animated: Bool) {
-         navigationController?.interactivePopGestureRecognizer?.isEnabled = true
+        navigationController?.interactivePopGestureRecognizer?.isEnabled = true
+        
+        if audioPlayer != nil {
+            audioPlayer.setVolume(0, fadeDuration: 2)
+            self.currentState = .preview
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                self.audioPlayer.stop()
+                self.audioPlayer.volume = 1
+                self.audioPlayer.currentTime = 0
+                self.playBackSlider.value = 0
+                self.recordButton.setImage(UIImage(named: "play-audio-icon"), for: .normal)
+                self.pauseSafeRegularPlaybackLink()
+            }
+        }
     }
     
-   @objc func resetViews() {
+    @objc func resetViews() {
+        currentOption = nil
+        hasMergedTracks = false
         currentState = recordState.ready
         trimButton.removeFromSuperview()
         addFilterButton.removeFromSuperview()
@@ -212,7 +288,6 @@ class RecordBoothVC: UIViewController {
     }
     
     func setupNavigationBar() {
-//        self.title = "Record"
         navigationController?.isNavigationBarHidden = false
         navigationController?.navigationBar.prefersLargeTitles = false
         
@@ -229,66 +304,112 @@ class RecordBoothVC: UIViewController {
         tabBar?.isHidden = true
         tabBar!.barTintColor = .none
         tabBar?.isTranslucent = true
-
+    }
+    
+    func addGradient() {
+        view.addSubview(gradientOverlayView)
+        gradientOverlayView.pinEdges(to: view)
+        
+        let gradient = CAGradientLayer()
+        gradient.frame = view.bounds
+        let color = UIColor.black
+        gradient.colors = [color.withAlphaComponent(0.0).cgColor, color.withAlphaComponent(0.3).cgColor, color.withAlphaComponent(0.8).cgColor]
+        gradientOverlayView.layer.insertSublayer(gradient, at: 0)
+        gradientOverlayView.backgroundColor = .clear
+    }
+    
+    func setProgramImage() {
+        if CurrentProgram.image != nil {
+            programImageView.image = CurrentProgram.image
+            programImageView.image = CurrentProgram.image
+        } else {
+            programImageView.image = #imageLiteral(resourceName: "missing-image-large")
+            programImageView.image = #imageLiteral(resourceName: "missing-image-large")
+        }
     }
     
     func configureViews() {
-        view.addSubview(playBackBars)
-        playBackBars.translatesAutoresizingMaskIntoConstraints = false
-        playBackBars.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -40).isActive = true
-        playBackBars.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
-        playBackBars.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
-        playBackBars.heightAnchor.constraint(equalToConstant: 200).isActive = true
-        
-        view.addSubview(responsiveSoundWave)
-        responsiveSoundWave.translatesAutoresizingMaskIntoConstraints = false
-        responsiveSoundWave.topAnchor.constraint(equalTo: view.topAnchor, constant: -20).isActive = true
-        responsiveSoundWave.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
-        responsiveSoundWave.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-        responsiveSoundWave.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        
-        view.addSubview(timerLabel)
-        timerLabel.translatesAutoresizingMaskIntoConstraints = false
-        timerLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
-        timerLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: (view.frame.width / 2) - (timerLabel.intrinsicContentSize.width / 2) - 7).isActive = true
-        timerLabel.topAnchor.constraint(equalTo: view.topAnchor, constant: 200).isActive = true
+        view.addSubview(usernameLabel)
+        usernameLabel.translatesAutoresizingMaskIntoConstraints = false
+        usernameLabel.topAnchor.constraint(equalTo: view.topAnchor, constant: UIDevice.current.navBarButtonTopAnchor()).isActive = true
+        usernameLabel.heightAnchor.constraint(equalToConstant: 35).isActive = true
+        usernameLabel.centerXAnchor.constraint(equalTo:view.centerXAnchor).isActive = true
         
         view.addSubview(recordButton)
         recordButton.translatesAutoresizingMaskIntoConstraints = false
-        recordButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -100).isActive = true
+        recordButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -60).isActive = true
         recordButton.centerXAnchor.constraint(equalTo:view.centerXAnchor).isActive = true
-        recordButton.heightAnchor.constraint(equalToConstant: 65).isActive = true
-        recordButton.widthAnchor.constraint(equalToConstant: 65).isActive = true
+        recordButton.heightAnchor.constraint(equalToConstant: 60).isActive = true
+        recordButton.widthAnchor.constraint(equalToConstant: 60).isActive = true
         
         view.addSubview(circleTimerView)
         circleTimerView.translatesAutoresizingMaskIntoConstraints = false
         circleTimerView.centerYAnchor.constraint(equalTo: recordButton.centerYAnchor).isActive = true
         circleTimerView.centerXAnchor.constraint(equalTo:view.centerXAnchor).isActive = true
-        circleTimerView.heightAnchor.constraint(equalToConstant: 80).isActive = true
-        circleTimerView.widthAnchor.constraint(equalToConstant: 80).isActive = true
+        circleTimerView.heightAnchor.constraint(equalToConstant: 70).isActive = true
+        circleTimerView.widthAnchor.constraint(equalToConstant: 70).isActive = true
         circleTimerView.setupLoadingAnimation()
         
         circleTimerView.addSubview(stopButtonView)
         stopButtonView.translatesAutoresizingMaskIntoConstraints = false
         stopButtonView.centerYAnchor.constraint(equalTo: circleTimerView.centerYAnchor).isActive = true
         stopButtonView.centerXAnchor.constraint(equalTo:circleTimerView.centerXAnchor).isActive = true
-        stopButtonView.heightAnchor.constraint(equalToConstant: 40).isActive = true
-        stopButtonView.widthAnchor.constraint(equalToConstant: 40).isActive = true
+        stopButtonView.heightAnchor.constraint(equalToConstant: 35).isActive = true
+        stopButtonView.widthAnchor.constraint(equalToConstant: 35).isActive = true
         
-        view.addSubview(audioTrimmer)
-        audioTrimmer.translatesAutoresizingMaskIntoConstraints = false
-        audioTrimmer.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -40).isActive = true
-        audioTrimmer.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-        audioTrimmer.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        audioTrimmer.heightAnchor.constraint(equalToConstant: 60).isActive = true
-        audioTrimmer.isHidden = true
+        view.addSubview(programImageView)
+        programImageView.translatesAutoresizingMaskIntoConstraints = false
+        programImageView.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -70).isActive = true
+        programImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
+        programImageView.widthAnchor.constraint(equalToConstant: view.frame.width - 60).isActive = true
+        programImageView.heightAnchor.constraint(equalToConstant: view.frame.width - 60).isActive = true
+        programImageView.backgroundColor = .green
         
         view.addSubview(musicView)
         musicView.translatesAutoresizingMaskIntoConstraints = false
         musicView.heightAnchor.constraint(equalToConstant: 66).isActive = true
-        musicView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-        musicView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        musicView.bottomAnchor.constraint(equalTo: recordButton.topAnchor, constant: -150).isActive = true
+        musicView.leadingAnchor.constraint(equalTo: programImageView.leadingAnchor).isActive = true
+        musicView.trailingAnchor.constraint(equalTo: programImageView.trailingAnchor).isActive = true
+        musicView.bottomAnchor.constraint(equalTo: programImageView.bottomAnchor).isActive = true
+        
+        view.addSubview(episodeLabel)
+        episodeLabel.translatesAutoresizingMaskIntoConstraints = false
+        episodeLabel.bottomAnchor.constraint(equalTo: programImageView.topAnchor, constant: -20).isActive = true
+        episodeLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor, constant: 15).isActive = true
+        
+        view.addSubview(duneLogoImageView)
+        duneLogoImageView.translatesAutoresizingMaskIntoConstraints = false
+        duneLogoImageView.centerYAnchor.constraint(equalTo: episodeLabel.centerYAnchor, constant: 0).isActive = true
+        duneLogoImageView.trailingAnchor.constraint(equalTo: episodeLabel.leadingAnchor, constant: -10).isActive = true
+        duneLogoImageView.widthAnchor.constraint(equalToConstant: 25).isActive = true
+        duneLogoImageView.heightAnchor.constraint(equalToConstant: 25).isActive = true
+        
+        view.addSubview(timerLabel)
+        timerLabel.translatesAutoresizingMaskIntoConstraints = false
+        timerLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
+        timerLabel.topAnchor.constraint(equalTo: programImageView.bottomAnchor, constant: 30).isActive = true
+        
+        view.addSubview(responsiveSoundWave)
+        responsiveSoundWave.translatesAutoresizingMaskIntoConstraints = false
+        responsiveSoundWave.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: 200).isActive = true
+        responsiveSoundWave.heightAnchor.constraint(equalToConstant: 1200).isActive = true
+        responsiveSoundWave.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        responsiveSoundWave.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        
+        view.addSubview(playBackBars)
+        playBackBars.translatesAutoresizingMaskIntoConstraints = false
+        playBackBars.topAnchor.constraint(equalTo: programImageView.bottomAnchor).isActive = true
+        playBackBars.leadingAnchor.constraint(equalTo: programImageView.leadingAnchor).isActive = true
+        playBackBars.trailingAnchor.constraint(equalTo: programImageView.trailingAnchor).isActive = true
+        playBackBars.heightAnchor.constraint(equalToConstant: 60).isActive = true
+        
+        view.addSubview(audioTrimmer)
+        audioTrimmer.translatesAutoresizingMaskIntoConstraints = false
+        audioTrimmer.topAnchor.constraint(equalTo: programImageView.bottomAnchor).isActive = true
+        audioTrimmer.leadingAnchor.constraint(equalTo: programImageView.leadingAnchor).isActive = true
+        audioTrimmer.trailingAnchor.constraint(equalTo: programImageView.trailingAnchor).isActive = true
+        audioTrimmer.heightAnchor.constraint(equalToConstant: 60).isActive = true
+        audioTrimmer.isHidden = true
     }
     
     func addEditingButtons() {
@@ -326,12 +447,31 @@ class RecordBoothVC: UIViewController {
         view.addSubview(playBackSlider)
         playBackSlider.translatesAutoresizingMaskIntoConstraints = false
         playBackSlider.bottomAnchor.constraint(equalTo: recordButton.topAnchor, constant: -40).isActive = true
-        playBackSlider.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 40).isActive = true
-        playBackSlider.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -40).isActive = true
+        playBackSlider.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 30).isActive = true
+        playBackSlider.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -30).isActive = true
+        
+        view.addSubview(leftHandLabel)
+        leftHandLabel.translatesAutoresizingMaskIntoConstraints = false
+        leftHandLabel.topAnchor.constraint(equalTo: playBackSlider.bottomAnchor, constant: 5).isActive = true
+        leftHandLabel.leadingAnchor.constraint(equalTo: playBackSlider.leadingAnchor).isActive = true
+        
+        view.addSubview(rightHandLabel)
+        rightHandLabel.translatesAutoresizingMaskIntoConstraints = false
+        rightHandLabel.topAnchor.constraint(equalTo: playBackSlider.bottomAnchor, constant: 5).isActive = true
+        rightHandLabel.trailingAnchor.constraint(equalTo: playBackSlider.trailingAnchor).isActive = true
+        
     }
     
     @objc func continueButtonPress() {
-        if recordingSnapshot > 10 {
+        let duration: Double
+        
+        if wasTrimmed {
+            duration = editedDuration
+        } else {
+            duration = recordingSnapshot
+        }
+        
+        if duration > 10 {
             let addEpisodeDetails = AddEpisodeDetails()
             addEpisodeDetails.episodeFileName = fileName
             addEpisodeDetails.recordingURL = recordingURL
@@ -343,7 +483,7 @@ class RecordBoothVC: UIViewController {
             navigationController?.pushViewController(addEpisodeDetails, animated: true)
         } else {
             print("Too short bro")
-             UIApplication.shared.windows.last?.addSubview(tooShortAlert)
+            UIApplication.shared.windows.last?.addSubview(tooShortAlert)
         }
     }
     
@@ -352,6 +492,8 @@ class RecordBoothVC: UIViewController {
         musicView.isHidden = false
     }
     
+    
+    // MARK: Record button press
     func recordButtonPress() {
         switch currentState {
         case .ready:
@@ -359,6 +501,7 @@ class RecordBoothVC: UIViewController {
             currentState = .recording
             stopButtonView.isHidden = false
             recordButton.backgroundColor = .clear
+            recordButton.layer.borderColor = UIColor.clear.cgColor
             recordButton.setImage(nil, for: .normal)
             startRecording()
             recordingSnapshot = 0
@@ -371,18 +514,30 @@ class RecordBoothVC: UIViewController {
             responsiveSoundWave.isHidden = true
             recordingWaveFeedbackLink.isPaused = true
             recordButton.setImage(UIImage(named: "play-audio-icon"), for: .normal)
-            recordButton.backgroundColor = CustomStyle.primaryYellow
+            recordButton.backgroundColor = CustomStyle.white
             playBackSlider.isHidden = false
             stopButtonView.isHidden = true
             transitionEditingButtons()
+            timerLabel.isHidden = true
+            rightHandLabel.isHidden = false
+            leftHandLabel.isHidden = false
             navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Next", style: .plain, target: self, action: #selector(continueButtonPress))
             navigationItem.rightBarButtonItem!.setTitleTextAttributes(CustomStyle.barButtonAttributes, for: .normal)
         case .preview:
             currentState = .playing
             playBackSlider.setValue(0.0, animated: false)
             recordButton.setImage(UIImage(named: "pause-audio-icon"), for: .normal)
-            trackAudio()
-            playDefaultRecording()
+            print("Triggered preview press")
+            if currentOption == nil || hasMergedTracks {
+                trackAudio()
+                playDefaultRecording()
+            } else if !hasMergedTracks {
+                print("Triggered background music")
+                FileManager.getMusicURLWith(audioID: currentOption!.audioID) { url in
+                    self.playMerge(audio1: self.recordingURL, audio2: url)
+                    self.hasMergedTracks = true
+                }
+            }
         case .playing:
             pausePlayback()
             currentState = .paused
@@ -392,25 +547,39 @@ class RecordBoothVC: UIViewController {
             recordButton.setImage(UIImage(named: "pause-audio-icon"), for: .normal)
             resumeRegularPlayback()
         }
-}
+    }
     
     // Make another Recording
     @objc func recordAgainButtonPress() {
+        
         if audioPlayer != nil {
             audioPlayer.stop()
         }
         navigationItem.rightBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
-        Track.trackOption = nil
+        currentOption = nil
+        //        hasMergedTracks = false
         musicView.isHidden = true
         resetEditingModes()
         currentState = .ready
         timerLabel.text = "0:00"
-        audioTrimmer.isHidden = true
+        
+        recordButton.backgroundColor = CustomStyle.primaryRed
+        recordButton.layer.borderColor = UIColor.white.cgColor
+        recordButton.setImage(UIImage(), for: .normal)
+        
+        audioTrimmer.resetTrimmer()
+        timerLabel.isHidden = false
+        rightHandLabel.isHidden = true
+        leftHandLabel.isHidden = true
+        wasTrimmed = false
+        startTime = 0
+        endTime = 0
+        
         playBackBars.isHidden = true
         playBackSlider.isHidden = true
         pauseSafeRegularPlaybackLink()
         playBackSlider.setValue(0.0, animated: false)
-        recordButton.setImage(UIImage(named: "record-audio-icon"), for: .normal)
+        
         addFilterButton.removeFromSuperview()
         addMusicButton.removeFromSuperview()
         trimButton.removeFromSuperview()
@@ -437,25 +606,31 @@ class RecordBoothVC: UIViewController {
                     if allowed {
                         self.recordButtonPress()
                     } else {
-                        // failed to record!
+                        // Test this here
+                        print("Refused to record")
                     }
                 }
             }
         } catch {
-            // failed to record!
+            print("Unable to start recording \(error)")
         }
     }
     
     
     func trackAudio() {
-        regularPlaybackLink = CADisplayLink(target: self, selector: #selector(trackRegularPlayback))
-        regularPlaybackLink.add(to: RunLoop.current, forMode: RunLoop.Mode.common)
+        playbackLink = CADisplayLink(target: self, selector: #selector(trackRegularPlayback))
+        playbackLink.add(to: RunLoop.current, forMode: RunLoop.Mode.common)
     }
     
     @objc func trackRegularPlayback() {
         if audioPlayer.currentTime >= (recordingSnapshot - endTime) {
-            regularPlaybackLink.isPaused = true
+            playbackLink.isPaused = true
         }
+        
+        if audioPlayer.currentTime >= (recordingSnapshot - endTime) - 1.5 {
+            audioPlayer.setVolume(0.5, fadeDuration: 1.5)
+        }
+        
         
         if wasTrimmed && audioPlayer.currentTime >= (recordingSnapshot - endTime) {
             audioPlayer.stop()
@@ -466,30 +641,31 @@ class RecordBoothVC: UIViewController {
             playBackSlider.setValue(Float(normalizedTime!), animated: false)
             playBackBars.playbackCoverLeading.constant = normalizedTime!
             timerLabel.text = timeString(time: audioPlayer.currentTime)
+            
+            let leftTime = timeIn()
+            let rightTime = timeToGo()
+            
+            leftHandLabel.text = timeString(time: leftTime)
+            rightHandLabel.text = timeString(time: rightTime)
         }
     }
     
     // Trimming a recording
     @objc func trimAudioButtonPress() {
-        resetEditingModes()
-        trimButton.backgroundColor = .white
-        trimButton.setImage(UIImage(named: "trim-audio-selected"), for: .normal)
         
-        audioTrimmer.isHidden = false
-        playBackBars.playbackCover.isHidden = true
-        playBackBars.showTrimWave()
-        
-        setRightTimeLabel()
-        startTime = 0.0
-//        endTime = recordingSnapshot
-    }
-    
-    func setRightTimeLabel()  {
-        let rightPercent = (audioTrimmer.doubleSlider.value.last! / CGFloat(maxValue)) * 100
-        let rightTimePercent = CGFloat(recordingSnapshot / 100) * rightPercent
-        let rightTime = Double(rightTimePercent)
-        
-        audioTrimmer.rightHandLabel.text = timeString(time: rightTime)
+        if !audioTrimmer.isHidden {
+            resetEditingModes()
+        } else {
+            resetEditingModes()
+            trimButton.backgroundColor = UIColor.white.withAlphaComponent(0.2)
+            playBackBars.isHidden = false
+            audioTrimmer.isHidden = false
+            audioTrimmer.rightHandLabel.text = timeString(time: recordingSnapshot)
+            timerLabel.isHidden = true
+            playBackBars.playbackCover.isHidden = true
+            playBackBars.showTrimWave()
+            startTime = 0.0
+        }
     }
     
     @objc func addFilterButtonPress() {
@@ -498,84 +674,89 @@ class RecordBoothVC: UIViewController {
         addFilterButton.setImage(UIImage(named: "filter-audio-selected"), for: .normal)
     }
     
+    // MARK: BackGround music
+    
     @objc func addBGMusicButtonPress() {
         resetEditingModes()
-        addMusicButton.backgroundColor = .white
-        addMusicButton.setImage(UIImage(named: "music-audio-selected"), for: .normal)
-        
         let musicVC = AddBGMusicVC()
+        if currentOption != nil {
+            musicVC.selectedTrack = currentOption
+        }
+        musicVC.musicDelegate = self
         navigationController?.pushViewController(musicVC, animated: true)
     }
     
     func resetEditingModes() {
         audioTrimmer.isHidden = true
-        
-        trimButton.backgroundColor = CustomStyle.seventhShade
-        trimButton.setImage(UIImage(named: "trim-audio-icon"), for: .normal)
-        
-        addFilterButton.backgroundColor = CustomStyle.seventhShade
-        addFilterButton.setImage(UIImage(named: "filter-audio-icon"), for: .normal)
-        
-        addMusicButton.backgroundColor = CustomStyle.seventhShade
-        addMusicButton.setImage(UIImage(named: "music-audio-icon"), for: .normal)
-        
-        playBackBars.isHidden = false
-        playBackBars.playbackCover.isHidden = false
-        playBackBars.playbackCoverLeading.constant = 0
-
+        view.backgroundColor = CurrentProgram.image?.averageColor
+        trimButton.backgroundColor = .clear
+        programImageView.isHidden = false
+        gradientOverlayView.isHidden = false
+        playBackBars.isHidden = true
         playBackBars.resetPrimaryWave()
     }
     
-    // Helper Time String
     func timeString(time:TimeInterval) -> String {
         let minutes = Int(time) / 60 % 60
         let seconds = Int(time) % 60
         return String(format:"%2i:%02i", minutes, seconds)
     }
     
-    func playmerge(audio1: URL, audio2:  URL) {
-       
+    func playMerge(audio1: URL, audio2:  URL) {
+        print("audio1: \(audio1)")
+        print("audio2: \(audio2)")
+        
+        recordingSnapshot = duration(for: audio2.path)
+        voiceURL = audio1
+        
         let composition = AVMutableComposition()
         let compositionAudioTrack1:AVMutableCompositionTrack = composition.addMutableTrack(withMediaType: AVMediaType.audio, preferredTrackID: CMPersistentTrackID())!
         let compositionAudioTrack2:AVMutableCompositionTrack = composition.addMutableTrack(withMediaType: AVMediaType.audio, preferredTrackID: CMPersistentTrackID())!
-
+        
         let documentDirectoryURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first! as URL
-        let destinationUrl = documentDirectoryURL.appendingPathComponent("resultmerge.m4a")
-
-        let filemanager = FileManager.default
-        if (!filemanager.fileExists(atPath: destinationUrl.path)) {
+        let destinationUrl = documentDirectoryURL.appendingPathComponent(mergedFileName + ".m4a")
+        
+        let fileManager = FileManager.default
+        
+        if fileManager.fileExists(atPath: destinationUrl.path) {
             do {
-                try filemanager.removeItem(at: destinationUrl)
+                try fileManager.removeItem(at: destinationUrl)
             }
-           
             catch let error as NSError {
-               print("The error is: \(error)")
-            }
-        } else {
-            do {
-                try filemanager.removeItem(at: destinationUrl)
-            } catch let error as NSError {
-                 print("The error is: \(error)")
+                print("The error is: \(error)")
             }
         }
-
+        
         let url1 = audio1
         let url2 = audio2
-
+        
         let avAsset1 = AVURLAsset(url: url1 as URL, options: nil)
         let avAsset2 = AVURLAsset(url: url2 as URL, options: nil)
-
+        
         let tracks1 = avAsset1.tracks(withMediaType: AVMediaType.audio)
         let tracks2 = avAsset2.tracks(withMediaType: AVMediaType.audio)
-
+        
         let assetTrack1:AVAssetTrack = tracks1[0]
         let assetTrack2:AVAssetTrack = tracks2[0]
-
-        let duration1: CMTime = assetTrack1.timeRange.duration
-        let duration2: CMTime = assetTrack2.timeRange.duration
-
-        let timeRange1 = CMTimeRangeMake(start: CMTime.zero, duration: duration1)
-        let timeRange2 = CMTimeRangeMake(start: CMTime.zero, duration: duration2)
+        
+        let duration1 = Double(avAsset1.duration.value) / Double(avAsset1.duration.timescale)
+        let duration2 = Double(avAsset2.duration.value) / Double(avAsset2.duration.timescale)
+        
+        print("4")
+        //        if scrubbed == true {
+        //            print("play scrubbed")
+        //            audioPlayer.currentTime = scrubbedTime
+        //            scrubbed = false
+        //        }
+        
+        let trueDuration1: CMTime = CMTime(seconds: duration1 - editedDuration, preferredTimescale: 1)
+        let trueDuration2: CMTime = CMTime(seconds: duration2 - editedDuration, preferredTimescale: 1)
+        
+        let timeRange1 = CMTimeRangeMake(start: CMTime(seconds: startTime, preferredTimescale: 1), duration: trueDuration1)
+        let timeRange2 = CMTimeRangeMake(start: CMTime(seconds: startTime, preferredTimescale: 1), duration: trueDuration2)
+        
+        print("The Start time is \(startTime)")
+        
         do {
             try compositionAudioTrack1.insertTimeRange(timeRange1, of: assetTrack1, at: CMTime.zero)
             try compositionAudioTrack2.insertTimeRange(timeRange2, of: assetTrack2, at: CMTime.zero)
@@ -583,7 +764,7 @@ class RecordBoothVC: UIViewController {
         catch {
             print("The darn error is: \(error)")
         }
-
+        
         let assetExport = AVAssetExportSession(asset: composition, presetName: AVAssetExportPresetAppleM4A)
         assetExport?.outputFileType = AVFileType.m4a
         assetExport?.outputURL = destinationUrl
@@ -602,41 +783,21 @@ class RecordBoothVC: UIViewController {
                 print("exporting\(assetExport!.error!)")
             default:
                 print("complete")
-            }
-
-            do {
-                self.audioPlayer = try AVAudioPlayer(contentsOf: destinationUrl)
-                self.audioPlayer.numberOfLoops = 0
-                self.audioPlayer.prepareToPlay()
-                self.audioPlayer.volume = 1.0
-                self.audioPlayer.play()
-                self.audioPlayer.delegate=self
-            }
-            catch let error as NSError {
-                print(error)
+                DispatchQueue.main.async {
+                    self.recordingURL = destinationUrl
+                    self.playDefaultRecording()
+                }
             }
         })
-        let documentsUrl =  FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-
-        do {
-            // Get the directory contents urls (including subfolders urls)
-            let directoryContents = try FileManager.default.contentsOfDirectory(at: documentsUrl, includingPropertiesForKeys: nil)
-            print(directoryContents)
-
-            // if you want to filter the directory contents you can do like this:
-            let mp3Files = directoryContents.filter{ $0.pathExtension == "m4a" }
-            print("mp3 urls:",mp3Files)
-            let mp3FileNames = mp3Files.map{ $0.deletingPathExtension().lastPathComponent }
-            print("mp3 list:", mp3FileNames)
-
-        } catch {
-            print(error)
-        }
+    }
+    
+    func duration(for resource: String) -> Double {
+        let asset = AVURLAsset(url: URL(fileURLWithPath: resource))
+        return Double(CMTimeGetSeconds(asset.duration))
     }
 }
 
 // Audio Extensions
-
 extension RecordBoothVC: AVAudioRecorderDelegate, AVAudioPlayerDelegate {
     
     func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
@@ -650,8 +811,7 @@ extension RecordBoothVC: AVAudioRecorderDelegate, AVAudioPlayerDelegate {
     }
     
     func startRecording() {
-        recordingURL = FileManager.getDocumentsDirectory().appendingPathComponent(fileName + ".m4a")
-//        recordingURL = FileManager.getDocumentsDirectory().appendingPathComponent(fileName)
+        recordingURL = FileManager.getTempDirectory().appendingPathComponent(fileName + ".m4a")
         let settings = [
             AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
             AVSampleRateKey: 12000,
@@ -684,7 +844,6 @@ extension RecordBoothVC: AVAudioRecorderDelegate, AVAudioPlayerDelegate {
         audioRecorder.updateMeters()
         let normalizedValue = pow(10, audioRecorder.averagePower(forChannel: 0) / 20)
         responsiveSoundWave.updateWithLevel(CGFloat(normalizedValue))
-        
         timerLabel.text = timeString(time: audioRecorder.currentTime)
         
         if audioRecorder.currentTime >= maxRecordingTime {
@@ -701,7 +860,7 @@ extension RecordBoothVC: AVAudioRecorderDelegate, AVAudioPlayerDelegate {
             print("Success recording")
             playBackBars.setupPlaybackBars(url: recordingURL, snapshot: recordingSnapshot)
             playBackBars.resetPrimaryWave()
-            playBackBars.isHidden = false
+            //            playBackBars.isHidden = false
         } else {
             print("Recording failed")
         }
@@ -716,9 +875,12 @@ extension RecordBoothVC: AVAudioRecorderDelegate, AVAudioPlayerDelegate {
     // PLAY
     func playDefaultRecording() {
         audioPlayer = try! AVAudioPlayer(contentsOf: recordingURL)
-        
-        audioPlayer.prepareToPlay()
         playSafeRegularPlaybackLink()
+        audioPlayer.volume = 1
+        
+        
+        //        audioPlayer.prepareToPlay()
+        //        playSafeRegularPlaybackLink()
         
         if wasTrimmed {
             print("play trimmed")
@@ -745,7 +907,7 @@ extension RecordBoothVC: AVAudioRecorderDelegate, AVAudioPlayerDelegate {
     }
     
     func resumeRegularPlayback() {
-        print("resume")
+        
         playSafeRegularPlaybackLink()
         
         if scrubbed == true {
@@ -769,21 +931,38 @@ extension RecordBoothVC: AVAudioRecorderDelegate, AVAudioPlayerDelegate {
         currentState = .paused
         recordButton.setImage(UIImage(named: "play-audio-icon"), for: .normal)
         playBackBars.playbackCoverLeading.constant = CGFloat(playBackSlider.value)
-        let percent = CGFloat(playBackSlider.value / maxValue) * 100
-        let timePercent = CGFloat(recordingSnapshot / 100) * percent
-        scrubbedTime = Double(timePercent)
-        timerLabel.text = timeString(time: scrubbedTime)
+        
+        let leftTime = timeIn()
+        let rightTime = timeToGo()
+        
+        leftHandLabel.text = timeString(time: leftTime)
+        rightHandLabel.text = timeString(time: rightTime)
+        
         scrubbed = true
     }
     
+    func timeIn() -> Double {
+        let percent = CGFloat(playBackSlider.value / maxValue) * 100
+        let timePercent = CGFloat(recordingSnapshot / 100) * percent
+        scrubbedTime = Double(timePercent)
+        return scrubbedTime
+    }
+    
+    func timeToGo() -> Double {
+        let percent = CGFloat(playBackSlider.value / maxValue) * 100
+        let timePercent = CGFloat(recordingSnapshot / 100) * percent
+        scrubbedTime = Double(timePercent)
+        return recordingSnapshot - scrubbedTime
+    }
+    
     func pauseSafeRegularPlaybackLink() {
-        if let link = regularPlaybackLink {
+        if let link = playbackLink {
             link.isPaused = true
         }
     }
     
     func playSafeRegularPlaybackLink() {
-        if let link = regularPlaybackLink {
+        if let link = playbackLink {
             link.isPaused = false
         } else {
             trackAudio()
@@ -802,7 +981,7 @@ extension RecordBoothVC: TrimmerDelegate {
         let leftTimeDifference = audioTrimmer.doubleSlider.value.first!
         let leftTime = Double(leftTimeDifference) * timeValue
         
-        audioTrimmer.leftHandLabel.text = timeString(time: leftTime)
+        audioTrimmer.leftHandLabel.text =  timeString(time: leftTime)
         audioTrimmer.rightHandLabel.text = timeString(time: recordingSnapshot - rightTime)
         
         editedDuration = (recordingSnapshot - rightTime) - leftTime
@@ -815,6 +994,32 @@ extension RecordBoothVC: TrimmerDelegate {
         } else {
             wasTrimmed = false
         }
+    }
+}
+
+extension RecordBoothVC: BackgroundMusicDelegate {
+    
+    func handleRemovedMusic() {
+        recordingURL = voiceURL
+        recordingSnapshot = duration(for: recordingURL.path)
+        audioTrimmer.resetTrimmer()
+        currentOption = nil
+        wasTrimmed = false
+        scrubbed = false
+        editedDuration = 0
+        startTime = 0
+        endTime = 0
+    }
+    
+    func addCurrentOption(track: MusicOption) {
+        currentOption = track
+        audioTrimmer.resetTrimmer()
+        hasMergedTracks = false
+        wasTrimmed = false
+        scrubbed = false
+        editedDuration = 0
+        startTime = 0
+        endTime = 0
     }
 }
 

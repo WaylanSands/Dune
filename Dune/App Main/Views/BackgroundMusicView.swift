@@ -9,9 +9,7 @@
 import UIKit
 
 class BackgroundMusicView: UIView {
-        
-        var delegate: musicOptionDelegate!
-        
+                
         let playPauseButton: UIButton = {
            let button = UIButton()
             button.setImage(UIImage(named: "play-music-icon"), for: .normal)
@@ -23,9 +21,9 @@ class BackgroundMusicView: UIView {
         
         let cellContentView: UIView = {
            let view = UIButton()
-            view.backgroundColor = hexStringToUIColor(hex: "#272B33")
-            view.layer.cornerRadius = 6
-            view.clipsToBounds = true
+            view.backgroundColor = UIColor.black.withAlphaComponent(0.8)
+//            view.layer.cornerRadius = 6
+//            view.clipsToBounds = true
             return view
         }()
         
@@ -46,7 +44,7 @@ class BackgroundMusicView: UIView {
         let trackTime: UILabel = {
            let label = UILabel()
             label.font = UIFont.systemFont(ofSize: 12, weight: .regular)
-            label.textColor = CustomStyle.fifthShade
+            label.textColor = CustomStyle.secondShade
             return label
         }()
     
@@ -71,10 +69,10 @@ class BackgroundMusicView: UIView {
         func configureViews() {
             self.addSubview(cellContentView)
             cellContentView.translatesAutoresizingMaskIntoConstraints = false
-            cellContentView.topAnchor.constraint(equalTo: self.topAnchor, constant: 5).isActive = true
-            cellContentView.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: -5).isActive = true
-            cellContentView.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 20).isActive = true
-            cellContentView.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -20).isActive = true
+            cellContentView.topAnchor.constraint(equalTo: self.topAnchor, constant: 0).isActive = true
+            cellContentView.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: 0).isActive = true
+            cellContentView.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 0).isActive = true
+            cellContentView.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: 0).isActive = true
             
             cellContentView.addSubview(playPauseButton)
             playPauseButton.translatesAutoresizingMaskIntoConstraints = false

@@ -166,13 +166,7 @@ class DraftEpisodeCell: UITableViewCell {
     }
         
     func normalSetUp(episode: DraftEpisode) {
-        self.programImageButton.setImage(Program.image, for: .normal)
-        
-//        FileManager.getAndStoreImageInCustomFolder(withUrl: episode.imageURL) { image in
-//            DispatchQueue.main.async {
-//                self.programImageButton.setImage(image, for: .normal)
-//            }
-//        }
+        self.programImageButton.setImage(CurrentProgram.image, for: .normal)
         
         programNameLabel.text = episode.programName
         usernameLabel.text = "@\(episode.username)"

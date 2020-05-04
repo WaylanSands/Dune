@@ -18,7 +18,7 @@ class AudioTrimmerView: UIView {
     
     var trimmerLeftConstraint: NSLayoutConstraint!
     var trimmerRightConstraint: NSLayoutConstraint!
-    var maxValue: Float = 382
+    var maxValue: Float = Float(UIScreen.main.bounds.width) - Float(60)
     var trimmerDelegate: TrimmerDelegate!
 
     
@@ -40,36 +40,36 @@ class AudioTrimmerView: UIView {
     
     let trimmer: UIView = {
         let view = UIView()
-        view.backgroundColor = hexStringToUIColor(hex:"#B21EFF").withAlphaComponent(0.77)
-        view.layer.borderColor = hexStringToUIColor(hex:"#D179FF").cgColor
-        view.layer.borderWidth = 2
-        view.layer.cornerRadius = 10
-        view.clipsToBounds = true
+        view.backgroundColor = UIColor.white.withAlphaComponent(0.4)
+        view.layer.borderColor = UIColor.white.cgColor
+//        view.layer.borderWidth = 2
+//        view.layer.cornerRadius = 10
+//        view.clipsToBounds = true
         return view
     }()
     
     
     let leftHandleView: UIImageView = {
         let view = UIImageView()
-        view.image = UIImage(named: "handle-icon")
+        view.image = UIImage()
         return view
     }()
     
     let rightHandleView: UIImageView = {
         let view = UIImageView()
-        view.image = UIImage(named: "handle-icon")
+        view.image = UIImage()
         return view
     }()
     
     let leftWaveCoverView: UIView = {
         let view = UIView()
-        view.backgroundColor = CustomStyle.onBoardingBlack.withAlphaComponent(0.9)
+        view.backgroundColor =  UIColor.black.withAlphaComponent(0.7)
         return view
     }()
     
     let rightWaveCoverView: UIView = {
         let view = UIView()
-        view.backgroundColor = CustomStyle.onBoardingBlack.withAlphaComponent(0.9)
+        view.backgroundColor = UIColor.black.withAlphaComponent(0.7)
         return view
     }()
     
@@ -103,8 +103,8 @@ class AudioTrimmerView: UIView {
         self.addSubview(trimmer)
         trimmer.translatesAutoresizingMaskIntoConstraints = false
         trimmer.topAnchor.constraint(equalTo: self.topAnchor).isActive = true
-        trimmerLeftConstraint = trimmer.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 16)
-        trimmerRightConstraint = trimmer.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -16)
+        trimmerLeftConstraint = trimmer.leadingAnchor.constraint(equalTo: self.leadingAnchor)
+        trimmerRightConstraint = trimmer.trailingAnchor.constraint(equalTo: self.trailingAnchor)
         trimmer.heightAnchor.constraint(equalToConstant: 60).isActive = true
         trimmerLeftConstraint.isActive = true
         trimmerRightConstraint.isActive = true
@@ -112,8 +112,8 @@ class AudioTrimmerView: UIView {
         self.addSubview(doubleSlider)
         doubleSlider.translatesAutoresizingMaskIntoConstraints = false
         doubleSlider.centerYAnchor.constraint(equalTo: self.centerYAnchor).isActive = true
-        doubleSlider.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 16).isActive = true
-        doubleSlider.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -16).isActive = true
+        doubleSlider.leadingAnchor.constraint(equalTo: self.leadingAnchor).isActive = true
+        doubleSlider.trailingAnchor.constraint(equalTo: self.trailingAnchor).isActive = true
         
         self.addSubview(leftHandleView)
         leftHandleView.translatesAutoresizingMaskIntoConstraints = false
@@ -128,32 +128,38 @@ class AudioTrimmerView: UIView {
         self.addSubview(leftWaveCoverView)
         leftWaveCoverView.translatesAutoresizingMaskIntoConstraints = false
         leftWaveCoverView.centerYAnchor.constraint(equalTo: doubleSlider.centerYAnchor).isActive = true
-        leftWaveCoverView.heightAnchor.constraint(equalToConstant: 200).isActive = true
-        leftWaveCoverView.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: -16).isActive = true
+        leftWaveCoverView.heightAnchor.constraint(equalToConstant: 60).isActive = true
+        leftWaveCoverView.leadingAnchor.constraint(equalTo: self.leadingAnchor).isActive = true
         leftWaveCoverView.trailingAnchor.constraint(equalTo: trimmer.leadingAnchor).isActive = true
         
         self.addSubview(rightWaveCoverView)
         rightWaveCoverView.translatesAutoresizingMaskIntoConstraints = false
         rightWaveCoverView.centerYAnchor.constraint(equalTo: doubleSlider.centerYAnchor).isActive = true
-        rightWaveCoverView.heightAnchor.constraint(equalToConstant: 200).isActive = true
+        rightWaveCoverView.heightAnchor.constraint(equalToConstant: 60).isActive = true
         rightWaveCoverView.leadingAnchor.constraint(equalTo: trimmer.trailingAnchor).isActive = true
-        rightWaveCoverView.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: 16).isActive = true
+        rightWaveCoverView.trailingAnchor.constraint(equalTo: self.trailingAnchor).isActive = true
         
         self.addSubview(leftHandLabel)
         leftHandLabel.translatesAutoresizingMaskIntoConstraints = false
-        leftHandLabel.centerYAnchor.constraint(equalTo: doubleSlider.centerYAnchor, constant: -50).isActive = true
+        leftHandLabel.centerYAnchor.constraint(equalTo: doubleSlider.centerYAnchor, constant: 50).isActive = true
         leftHandLabel.centerXAnchor.constraint(equalTo: trimmer.leadingAnchor, constant: 9).isActive = true
         
         self.addSubview(rightHandLabel)
         rightHandLabel.translatesAutoresizingMaskIntoConstraints = false
-        rightHandLabel.centerYAnchor.constraint(equalTo: doubleSlider.centerYAnchor, constant: -50).isActive = true
+        rightHandLabel.centerYAnchor.constraint(equalTo: doubleSlider.centerYAnchor, constant: 50).isActive = true
         rightHandLabel.centerXAnchor.constraint(equalTo: trimmer.trailingAnchor, constant: -9).isActive = true
     }
     
    @objc func trimmerChangedValue() {
-    trimmerLeftConstraint.constant =  doubleSlider.value.first! + 16
-    trimmerRightConstraint.constant = doubleSlider.value.last! - CGFloat(maxValue) - 16
+    trimmerLeftConstraint.constant =  doubleSlider.value.first!
+    trimmerRightConstraint.constant = doubleSlider.value.last! - CGFloat(maxValue)
     trimmerDelegate.trimmerChangedValue()
+    }
+    
+    func resetTrimmer() {
+        doubleSlider.value = [0.0,CGFloat(maxValue)]
+        trimmerLeftConstraint.constant =  0
+        trimmerRightConstraint.constant =  0
     }
     
 }

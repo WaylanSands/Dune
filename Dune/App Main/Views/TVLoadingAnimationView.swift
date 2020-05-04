@@ -10,9 +10,9 @@ import UIKit
 
 class TVLoadingAnimationView: UIView {
     
-    let imageViewSize: CGFloat = 65
+    let imageViewSize: CGFloat = 55
     let gradient = CAGradientLayer()
-    
+    var topHeight: CGFloat!
     
     let cellview: UIView = {
         let view = UIView()
@@ -557,8 +557,11 @@ class TVLoadingAnimationView: UIView {
         return view
     }()
     
-    override init(frame: CGRect) {
-        super.init(frame: frame)
+    
+
+    required init(topHeight: CGFloat)  {
+        super.init(frame: UIScreen.main.bounds)
+        self.topHeight = topHeight
         self.backgroundColor = .white
         makeGradient()
         configureView()
@@ -591,7 +594,7 @@ class TVLoadingAnimationView: UIView {
         // First cell Bottom Layer
         self.addSubview(bottomprogramImageView)
         bottomprogramImageView.translatesAutoresizingMaskIntoConstraints = false
-        bottomprogramImageView.topAnchor.constraint(equalTo: self.topAnchor, constant: 150).isActive = true
+        bottomprogramImageView.topAnchor.constraint(equalTo: self.topAnchor, constant: topHeight).isActive = true
         bottomprogramImageView.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 16).isActive = true
         bottomprogramImageView.heightAnchor.constraint(equalToConstant: imageViewSize).isActive = true
         bottomprogramImageView.widthAnchor.constraint(equalToConstant: imageViewSize).isActive = true
@@ -858,7 +861,7 @@ class TVLoadingAnimationView: UIView {
         // First Cell top layer
         cellview.addSubview(programImageView)
         programImageView.translatesAutoresizingMaskIntoConstraints = false
-        programImageView.topAnchor.constraint(equalTo: cellview.topAnchor, constant: 150).isActive = true
+        programImageView.topAnchor.constraint(equalTo: cellview.topAnchor, constant: topHeight).isActive = true
         programImageView.leadingAnchor.constraint(equalTo: cellview.leadingAnchor, constant: 16).isActive = true
         programImageView.heightAnchor.constraint(equalToConstant: imageViewSize).isActive = true
         programImageView.widthAnchor.constraint(equalToConstant: imageViewSize).isActive = true

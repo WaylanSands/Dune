@@ -16,7 +16,7 @@ class TrendingVC: UIViewController {
     }
     
     var tappedPrograms: [String] = []
-    var programs: [Program] = []
+    var programs: [CurrentProgram] = []
     let tableView = UITableView()
     
     
@@ -91,6 +91,10 @@ extension TrendingVC: UITableViewDelegate, UITableViewDataSource {
 }
 
 extension TrendingVC: EpisodeCellDelegate {
+    func updateLikeCountFor(episode: Episode, at indexPath: IndexPath) {
+        //
+    }
+    
     
     func playEpisode(cell: EpisodeCell) {
         let index = tableView.indexPath(for: cell)

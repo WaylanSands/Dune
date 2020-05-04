@@ -119,7 +119,7 @@ class AddEpisodeDetails: UIViewController {
     }()
     
     lazy var firstTagButton: UIButton = {
-         let button = UIButton()
+        let button = UIButton()
         button.layer.cornerRadius = 11
         button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 2, right: 10)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 12, weight: .regular)
@@ -222,7 +222,7 @@ class AddEpisodeDetails: UIViewController {
     
     let floatingDetailsView: UIView = {
         let view = UIView()
-        view.backgroundColor = CustomStyle.primaryblack
+        view.backgroundColor = CustomStyle.primaryBlack
         return view
     }()
     
@@ -269,7 +269,7 @@ class AddEpisodeDetails: UIViewController {
     
     let bottomFill: UIView = {
         let view = UIView()
-        view.backgroundColor = CustomStyle.primaryblack
+        view.backgroundColor = CustomStyle.primaryBlack
         return view
     }()
     
@@ -286,7 +286,7 @@ class AddEpisodeDetails: UIViewController {
         //        addBottomFill()
         setupViews()
         addFloatingView()
-//        styleTags()
+        //        styleTags()
         captionTextView.delegate = self
         tagTextView.delegate = self
         
@@ -308,40 +308,40 @@ class AddEpisodeDetails: UIViewController {
         setProgramImage()
         
         usernameLabel.text = "@\(User.username!)"
-        programNameLabel.text = Program.name
+        programNameLabel.text = CurrentProgram.name
         
         successfulStorage = false
         successfulStore = false
     }
     
     func setUpTagButtonsWithTags() {
-           if !tagsUsed.isEmpty {
-               tagTextView.text = ""
-               tagTextView.textColor = CustomStyle.fifthShade
-               tagPlaceholderText = false
-               
-               for (index, item) in tagsUsed.enumerated() {
-                    tagCount += 1
-                   
-                   if index < 2 {
-                       tagTextView.text.append("\(item) ")
-                   } else {
-                       tagTextView.text.append("\(item)")
-                   }
-                   
-                   switch index {
-                   case 0:
-                       firstTagButton.setTitle(item, for: .normal)
-                   case 1:
-                       secondTagButton.setTitle(item, for: .normal)
-                   case 2:
-                       thirdTagButton.setTitle(item, for: .normal)
-                   default:
-                       break
-                   }
-               }
-           }
-       }
+        if !tagsUsed.isEmpty {
+            tagTextView.text = ""
+            tagTextView.textColor = CustomStyle.fifthShade
+            tagPlaceholderText = false
+            
+            for (index, item) in tagsUsed.enumerated() {
+                tagCount += 1
+                
+                if index < 2 {
+                    tagTextView.text.append("\(item) ")
+                } else {
+                    tagTextView.text.append("\(item)")
+                }
+                
+                switch index {
+                case 0:
+                    firstTagButton.setTitle(item, for: .normal)
+                case 1:
+                    secondTagButton.setTitle(item, for: .normal)
+                case 2:
+                    thirdTagButton.setTitle(item, for: .normal)
+                default:
+                    break
+                }
+            }
+        }
+    }
     
     func removeEmptyTags() {
         for eachTag in tagButtons {
@@ -368,9 +368,9 @@ class AddEpisodeDetails: UIViewController {
     }
     
     func setProgramImage() {
-        if Program.image != nil {
-            mainImage.image = Program.image
-            bottomBarImageView.image = Program.image
+        if CurrentProgram.image != nil {
+            mainImage.image = CurrentProgram.image
+            bottomBarImageView.image = CurrentProgram.image
         } else {
             mainImage.image = #imageLiteral(resourceName: "missing-image-large")
             bottomBarImageView.image = #imageLiteral(resourceName: "missing-image-large")
@@ -602,7 +602,7 @@ class AddEpisodeDetails: UIViewController {
             eachTag.layer.cornerRadius = 11
             eachTag.titleLabel?.font = UIFont.systemFont(ofSize: 12, weight: .regular)
             eachTag.setTitleColor(CustomStyle.fourthShade, for: .normal)
-//            eachTag.isHidden = true
+            //            eachTag.isHidden = true
             eachTag.contentEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 2, right: 10)
             eachTag.isUserInteractionEnabled = false
         }
@@ -687,25 +687,54 @@ class AddEpisodeDetails: UIViewController {
         UIApplication.shared.windows.last?.addSubview(networkingIndicator)
         
         let fileExtension = ".\(recordingURL.pathExtension)"
-
-        let audioTrack = FileManager.getAudioFileFromDocumentsDirectory(fileName: episodeFileName!, fileExtension: fileExtension)
         
-        if audioTrack != nil {
-            FireStorageManager.storeDraftEpisodeAudio(fileName: episodeFileName!, data: audioTrack!) {  url in
-
-                if url != nil {
-                    let length = String.timeString(time: self.duration)
-                    FireStoreManager.saveDraftEpisode(fileName: self.episodeFileName!, wasTrimmed: self.wasTrimmed, startTime: self.startTime, endTime: self.endTime, caption: self.captionTextView.text, tags: self.tagsUsed, audioURL: url!, duration: length) { success in
-                        if success {
-                            self.presentStudioVC()
-                        }
-                    }
-                } else {
-                    // Take care of this error
+        let audioTrack = FileManager.getAudioFileFromTempDirectory(fileName: episodeFileName!, fileExtension: fileExtension)
+        
+        guard let episode = audioTrack else { return }
+        
+        FireStorageManager.storeDraftEpisodeAudio(audioID: episodeFileName! + fileExtension, data: episode) {  url in
+            
+            let length = String.timeString(time: self.duration)
+            FireStoreManager.saveDraftEpisode(fileName: self.episodeFileName! + fileExtension, wasTrimmed: self.wasTrimmed, startTime: self.startTime, endTime: self.endTime, caption: self.captionTextView.text, tags: self.tagsUsed, audioURL: url, duration: length) { success in
+                if success {
+                    self.presentStudioVC()
                 }
             }
-        } else {
-            // Take care of this error
+        }
+    }
+    
+    func storeEpisodeOnFirebase() {
+        print("Storing episode on Firebase")
+        let fileExtension = ".\(recordingURL.pathExtension)"
+        let audioTrack = FileManager.getAudioFileFromTempDirectory(fileName: episodeFileName!, fileExtension: fileExtension)
+        
+        guard let episode = audioTrack else { return }
+        
+        FireStorageManager.storeEpisodeAudio(fileName: episodeFileName! + fileExtension, data: episode) { url in
+            
+            let length = String.timeString(time: self.duration)
+            FireStoreManager.publishEpisode(caption: self.captionTextView.text, tags: self.tagsUsed, audioID: self.episodeFileName! + fileExtension , audioURL: url, duration: length) { success in
+                if success {
+                    self.presentDailyFeedVC()
+                }
+            }
+        }
+    }
+    
+    func storeOnFirebaseStorage(fileName: String, url: URL) {
+        print("Storing episode on Firebase")
+        let audioTrack = FileManager.getTrimmedAudioFileFromTempDirectory(fileName: fileName)
+        
+        guard let episode = audioTrack else { return }
+
+        FireStorageManager.storeEpisodeAudio(fileName: fileName, data: episode) { url in
+
+            let length = String.timeString(time: self.duration)
+            FireStoreManager.publishEpisode(caption: self.captionTextView.text, tags: self.tagsUsed, audioID: fileName, audioURL: url, duration: length) { success in
+                if success {
+                    self.presentDailyFeedVC()
+                }
+            }
         }
     }
     
@@ -721,7 +750,7 @@ class AddEpisodeDetails: UIViewController {
         UIApplication.shared.windows.last?.addSubview(networkingIndicator)
         publishButton.layer.borderColor = CustomStyle.white.cgColor
         networkingIndicator.taskLabel.text = "Publishing Episode"
-      
+        
         if wasTrimmed {
             trimThanStoreEpisodeOnFirebase()
         } else {
@@ -729,50 +758,28 @@ class AddEpisodeDetails: UIViewController {
         }
     }
     
-    func storeEpisodeOnFirebase() {
-        print("Storing episode on Firebase")
-        let fileExtension = ".\(recordingURL.pathExtension)"
-        let audioTrack = FileManager.getAudioFileFromDocumentsDirectory(fileName: episodeFileName!, fileExtension: fileExtension)
-        
-        if audioTrack != nil {
-            FireStorageManager.storeEpisodeAudio(fileName: episodeFileName! + fileExtension, data: audioTrack!) { url in
-                if url != nil {
-                    let length = String.timeString(time: self.duration)
-                    FireStoreManager.publishEpisode(caption: self.captionTextView.text, tags: self.tagsUsed, audioID: self.episodeFileName! + fileExtension , audioURL: url!, duration: length) { success in
-                        if success {
-                            self.presentDailyFeedVC()
-                        }
-                    }
-                    if !self.wasTrimmed {
-                        FileManager.removeFileFromDocumentsDirectory(fileName: self.episodeFileName!)
-                    }
-                } else {
-                    // Take care of this error
-                }
-            }
-        } else {
-            // Take care of this error
-        }
-    }
-    
     func presentDailyFeedVC() {
         networkingIndicator.removeFromSuperview()
-            let tabBar = MainTabController()
-            tabBar.selectedIndex = 0
-            let appDelegate = UIApplication.shared.delegate as! AppDelegate
-            appDelegate.window?.rootViewController = tabBar
+        let tabBar = MainTabController()
+        tabBar.selectedIndex = 0
+        let appDelegate = UIApplication.shared.delegate as! AppDelegate
+        appDelegate.window?.rootViewController = tabBar
     }
     
     func trimThanStoreEpisodeOnFirebase() {
+        print("The duration before \(self.duration(for: recordingURL.path))")
+        let fileName = "\(NSUUID().uuidString).m4a"
+
         let asset = AVAsset(url: recordingURL)
-        let documentsDirectory = FileManager.getDocumentsDirectory()
-        let fileURL = documentsDirectory.appendingPathComponent(episodeFileName!)
+        let tempDirectory = FileManager.getTempDirectory()
+        let fileURL = tempDirectory.appendingPathComponent(fileName)
         
         let filePath = fileURL.path
         let fileManager = FileManager.default
         if fileManager.fileExists(atPath: filePath) {
             do {
                 try fileManager.removeItem(atPath: filePath)
+                 print("Removing file from \(fileURL.path)")
             }
             catch {
                 print("Couldn't remove existing destination file: \(error)")
@@ -783,10 +790,11 @@ class AddEpisodeDetails: UIViewController {
         if let exporter = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetAppleM4A) {
             exporter.outputFileType = AVFileType.m4a
             exporter.outputURL = fileURL
-            
+
             let start = CMTime(seconds: startTime, preferredTimescale: 1)
             let stop = CMTime(seconds: duration, preferredTimescale: 1)
             exporter.timeRange = CMTimeRangeFromTimeToTime(start: start, end: stop)
+
             
             exporter.exportAsynchronously(completionHandler: {
                 switch exporter.status {
@@ -801,14 +809,19 @@ class AddEpisodeDetails: UIViewController {
                 case AVAssetExportSessionStatus.exporting:
                     print("exporting\(exporter.error!)")
                 default:
-                    print("Finished uploading audio file to FireStorage")
-                    self.storeEpisodeOnFirebase()
-                    FileManager.removeFileFromDocumentsDirectory(fileName: self.episodeFileName!)
+                    print("complete")
+                    print("The duration after \(self.duration(for: fileURL.path))")
+                    self.storeOnFirebaseStorage(fileName: fileName, url: fileURL)
                 }
             })
         } else {
             print("cannot create AVAssetExportSession for asset \(asset)")
         }
+    }
+    
+    func duration(for resource: String) -> Double {
+        let asset = AVURLAsset(url: URL(fileURLWithPath: resource))
+        return Double(CMTimeGetSeconds(asset.duration))
     }
     
     func checkIfAbleToPublish() {

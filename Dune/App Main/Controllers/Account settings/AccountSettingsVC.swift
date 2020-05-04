@@ -39,7 +39,7 @@ class AccountSettingsVC: UIViewController {
         let button = UIButton()
         button.setTitle("Invite Friends", for: .normal)
         button.contentHorizontalAlignment = .left
-        button.setTitleColor(CustomStyle.primaryblack, for: .normal)
+        button.setTitleColor(CustomStyle.primaryBlack, for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         button.addTarget(self, action: #selector(presentInvitePeopleVC), for: .touchUpInside)
         button.imageEdgeInsets = UIEdgeInsets(top: 0, left: view.frame.width - 40, bottom: 0, right: 0)
@@ -52,7 +52,7 @@ class AccountSettingsVC: UIViewController {
         let button = UIButton()
         button.setTitle("Help Centre", for: .normal)
         button.contentHorizontalAlignment = .left
-        button.setTitleColor(CustomStyle.primaryblack, for: .normal)
+        button.setTitleColor(CustomStyle.primaryBlack, for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         button.addTarget(self, action: #selector(presentInvitePeopleVC), for: .touchUpInside)
         button.imageEdgeInsets = UIEdgeInsets(top: 0, left: view.frame.width - 40, bottom: 0, right: 0)
@@ -65,7 +65,7 @@ class AccountSettingsVC: UIViewController {
         let button = UIButton()
         button.setTitle("Send App Feedback", for: .normal)
         button.contentHorizontalAlignment = .left
-        button.setTitleColor(CustomStyle.primaryblack, for: .normal)
+        button.setTitleColor(CustomStyle.primaryBlack, for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         button.addTarget(self, action: #selector(presentInvitePeopleVC), for: .touchUpInside)
         button.imageEdgeInsets = UIEdgeInsets(top: 0, left: view.frame.width - 40, bottom: 0, right: 0)
@@ -78,7 +78,7 @@ class AccountSettingsVC: UIViewController {
         let button = UIButton()
         button.setTitle("Edit Account", for: .normal)
         button.contentHorizontalAlignment = .left
-        button.setTitleColor(CustomStyle.primaryblack, for: .normal)
+        button.setTitleColor(CustomStyle.primaryBlack, for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         button.addTarget(self, action: #selector(presentEditListenerVC), for: .touchUpInside)
         button.imageEdgeInsets = UIEdgeInsets(top: 0, left: view.frame.width - 40, bottom: 0, right: 0)
@@ -101,7 +101,7 @@ class AccountSettingsVC: UIViewController {
         let label = UILabel()
         label.text = "Push Notifications"
         label.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
-        label.textColor = CustomStyle.primaryblack
+        label.textColor = CustomStyle.primaryBlack
         return label
     }()
     
@@ -131,7 +131,7 @@ class AccountSettingsVC: UIViewController {
         let label = UILabel()
         label.text = "New Episodes"
         label.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        label.textColor = CustomStyle.primaryblack
+        label.textColor = CustomStyle.primaryBlack
         return label
     }()
     
@@ -176,7 +176,7 @@ class AccountSettingsVC: UIViewController {
         let label = UILabel()
         label.text = "Comments tags or replies"
         label.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        label.textColor = CustomStyle.primaryblack
+        label.textColor = CustomStyle.primaryBlack
         return label
     }()
     
@@ -221,7 +221,7 @@ class AccountSettingsVC: UIViewController {
         let label = UILabel()
         label.text = "Episode Mentions"
         label.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        label.textColor = CustomStyle.primaryblack
+        label.textColor = CustomStyle.primaryBlack
         return label
     }()
     
@@ -266,7 +266,7 @@ class AccountSettingsVC: UIViewController {
         let label = UILabel()
         label.text = "Marketing & App updates"
         label.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        label.textColor = CustomStyle.primaryblack
+        label.textColor = CustomStyle.primaryBlack
         return label
     }()
     
@@ -304,7 +304,7 @@ class AccountSettingsVC: UIViewController {
         let button = UIButton()
         button.setTitle("Publisher Notifications", for: .normal)
         button.contentHorizontalAlignment = .left
-        button.setTitleColor(CustomStyle.primaryblack, for: .normal)
+        button.setTitleColor(CustomStyle.primaryBlack, for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         button.addTarget(self, action: #selector(presentPublisherNotificationsVC), for: .touchUpInside)
         button.imageEdgeInsets = UIEdgeInsets(top: 0, left: view.frame.width - 40, bottom: 0, right: 0)
@@ -327,7 +327,7 @@ class AccountSettingsVC: UIViewController {
         let label = UILabel()
         label.text = "Email Notifications"
         label.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
-        label.textColor = CustomStyle.primaryblack
+        label.textColor = CustomStyle.primaryBlack
         return label
     }()
     
@@ -348,7 +348,7 @@ class AccountSettingsVC: UIViewController {
         let label = UILabel()
         label.text = "Marketing & App updates"
         label.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        label.textColor = CustomStyle.primaryblack
+        label.textColor = CustomStyle.primaryBlack
         return label
     }()
     
@@ -397,7 +397,7 @@ class AccountSettingsVC: UIViewController {
         button.setTitle("Log out", for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         button.addTarget(self, action: #selector(logoutButtonPress), for: .touchUpInside)
-        button.setTitleColor(CustomStyle.primaryblack, for: .normal)
+        button.setTitleColor(CustomStyle.primaryBlack, for: .normal)
         return button
     }()
     
@@ -405,7 +405,7 @@ class AccountSettingsVC: UIViewController {
         let button = UIButton()
         button.setTitle("Delete Account", for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        button.setTitleColor(CustomStyle.primaryblack, for: .normal)
+        button.setTitleColor(CustomStyle.primaryBlack, for: .normal)
         return button
     }()
     

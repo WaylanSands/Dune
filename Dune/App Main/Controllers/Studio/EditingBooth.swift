@@ -82,7 +82,7 @@ class EditingBoothVC: UIViewController {
         button.backgroundColor = CustomStyle.primaryYellow
         button.layer.cornerRadius = 30
         button.clipsToBounds = true
-        button.addTarget(self, action: #selector(setupRecordingSession), for: .touchUpInside)
+        button.addTarget(self, action: #selector(recordButtonPress), for: .touchUpInside)
         button.setImage(UIImage(named: "play-audio-icon"), for: .normal)
         return button
     }()
@@ -419,7 +419,7 @@ class EditingBoothVC: UIViewController {
         musicView.isHidden = false
     }
     
-    func recordButtonPress() {
+   @objc func recordButtonPress() {
         switch currentState {
         case .ready:
             circleTimerView.animate()
@@ -467,6 +467,9 @@ class EditingBoothVC: UIViewController {
         if audioPlayer != nil {
             audioPlayer.stop()
         }
+        startTime = 0
+        endTime = 0
+        
         navigationItem.rightBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
         Track.trackOption = nil
         musicView.isHidden = true
@@ -492,28 +495,6 @@ class EditingBoothVC: UIViewController {
         CustomAnimation.transitionTrim(button: trimButton, to: recordButton)
         CustomAnimation.transitionRedo(button: redoButton, to: recordButton)
     }
-    
-    // Get permission to record
-    @objc func setupRecordingSession() {
-        recordingSession = AVAudioSession.sharedInstance()
-        
-        do {
-            try recordingSession.setCategory(.playAndRecord, mode: .default)
-            try recordingSession.setActive(true)
-            recordingSession.requestRecordPermission() { [unowned self] allowed in
-                DispatchQueue.main.async {
-                    if allowed {
-                        self.recordButtonPress()
-                    } else {
-                        // failed to record!
-                    }
-                }
-            }
-        } catch {
-            // failed to record!
-        }
-    }
-    
     
     func trackAudio() {
         regularPlaybackLink = CADisplayLink(target: self, selector: #selector(trackRegularPlayback))
@@ -733,8 +714,7 @@ extension EditingBoothVC: AVAudioRecorderDelegate, AVAudioPlayerDelegate {
     }
     
     func startRecording() {
-        recordingURL = FileManager.getDocumentsDirectory().appendingPathComponent(fileName + ".m4a")
-//        recordingURL = FileManager.getDocumentsDirectory().appendingPathComponent(fileName)
+        recordingURL = FileManager.getTempDirectory().appendingPathComponent(fileName + ".m4a")
         let settings = [
             AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
             AVSampleRateKey: 12000,

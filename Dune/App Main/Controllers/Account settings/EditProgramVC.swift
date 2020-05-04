@@ -77,7 +77,7 @@ class EditProgramVC: UIViewController {
     let programNameLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 16, weight: .regular)
-        label.textColor = CustomStyle.primaryblack
+        label.textColor = CustomStyle.primaryBlack
         label.text = "Program Name"
         return label
     }()
@@ -86,7 +86,7 @@ class EditProgramVC: UIViewController {
         let textField = UITextField()
         let placeholder = NSAttributedString(string: User.username!, attributes: [NSAttributedString.Key.foregroundColor : CustomStyle.fourthShade])
         textField.attributedPlaceholder = placeholder;
-        textField.textColor = CustomStyle.primaryblack
+        textField.textColor = CustomStyle.primaryBlack
         textField.font = UIFont.systemFont(ofSize: 16, weight: .regular)
         //        textField.addTarget(self, action: #selector(textFieldDidChange(_:)), for: UIControl.Event.editingChanged)
         return textField
@@ -101,7 +101,7 @@ class EditProgramVC: UIViewController {
     let summaryLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 16, weight: .regular)
-        label.textColor = CustomStyle.primaryblack
+        label.textColor = CustomStyle.primaryBlack
         label.text = "Summary"
         return label
     }()
@@ -127,7 +127,7 @@ class EditProgramVC: UIViewController {
     let tagsLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 16, weight: .regular)
-        label.textColor = CustomStyle.primaryblack
+        label.textColor = CustomStyle.primaryBlack
         label.text = "Tags"
         return label
     }()
@@ -165,14 +165,14 @@ class EditProgramVC: UIViewController {
     let primaryGenreLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 16, weight: .regular)
-        label.textColor = CustomStyle.primaryblack
+        label.textColor = CustomStyle.primaryBlack
         label.text = "Primary Genre"
         return label
     }()
     
     let primaryGenreButton: UIButton = {
         let button = UIButton()
-        button.setTitle(Program.primaryCategory, for: .normal)
+        button.setTitle(CurrentProgram.primaryCategory, for: .normal)
         button.titleLabel!.font = UIFont.systemFont(ofSize: 16, weight: .regular)
         button.setTitleColor(CustomStyle.fourthShade, for: .normal)
         button.addTarget(self, action: #selector(selectGenrePress), for: .touchUpInside)
@@ -188,7 +188,7 @@ class EditProgramVC: UIViewController {
     let programIntroLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 16, weight: .regular)
-        label.textColor = CustomStyle.primaryblack
+        label.textColor = CustomStyle.primaryBlack
         label.text = "Program Intro"
         return label
     }()
@@ -252,9 +252,9 @@ class EditProgramVC: UIViewController {
         self.hidesBottomBarWhenPushed = true
         scrollView.setScrollBarToTopLeft()
         tagScrollView.setScrollBarToTopLeft()
-        summaryTextLabel.text = Program.summary
+        summaryTextLabel.text = CurrentProgram.summary
         programNameTextView.text = ""
-        programNameTextView.placeholder = Program.name
+        programNameTextView.placeholder = CurrentProgram.name
         createTagButtons()
         setProgramImage()
     }
@@ -262,11 +262,11 @@ class EditProgramVC: UIViewController {
     // Save changed program name
     override func viewWillDisappear(_ animated: Bool) {
         
-        if programNameTextView.text != Program.name && programNameTextView.text != "" {
+        if programNameTextView.text != CurrentProgram.name && programNameTextView.text != "" {
             print("Save New Name")
-            Program.name = programNameTextView.text
+            CurrentProgram.name = programNameTextView.text
             
-            if Program.isPrimaryProgram! {
+            if CurrentProgram.isPrimaryProgram! {
                 FireStoreManager.updatePrimaryProgramName()
             } else {
                 FireStoreManager.updateSecondaryProgramName()
@@ -275,7 +275,7 @@ class EditProgramVC: UIViewController {
     }
     
     func checkIfPrimaryProgram() {
-        guard let isPrimaryProgram = Program.isPrimaryProgram else { return }
+        guard let isPrimaryProgram = CurrentProgram.isPrimaryProgram else { return }
       
         if isPrimaryProgram {
             primaryGenreButton.isEnabled = true
@@ -307,8 +307,8 @@ class EditProgramVC: UIViewController {
     
     
     func setProgramImage() {
-        if Program.image != nil {
-            profileImageView.image = Program.image
+        if CurrentProgram.image != nil {
+            profileImageView.image = CurrentProgram.image
         } else {
             profileImageView.image = #imageLiteral(resourceName: "missing-image-large")
         }
@@ -478,7 +478,7 @@ class EditProgramVC: UIViewController {
     // Program tag creation
     func createTagButtons() {
         tagContainingStackView.removeAllArrangedSubviewsCompletely()
-        for eachTag in Program.tags! {
+        for eachTag in CurrentProgram.tags! {
             let button = tagButton(with: eachTag!)
             button.addTarget(self, action: #selector(updateProgramDetails), for: .touchUpInside)
             tagContainingStackView.addArrangedSubview(button)
@@ -528,7 +528,7 @@ extension EditProgramVC: SettingsLauncherDelegate {
     
     func selectionOf() {
         programNameTextView.resignFirstResponder()
-        primaryGenreButton.setTitle(Program.primaryCategory, for: .normal)
+        primaryGenreButton.setTitle(CurrentProgram.primaryCategory, for: .normal)
         FireStoreManager.updatePrimaryCategory()
     }
 }
@@ -546,15 +546,17 @@ extension EditProgramVC: UIImagePickerControllerDelegate, UINavigationController
         }
         
         if let selectedImage = selectedImageFromPicker {
-            Program.image = selectedImage
+            CurrentProgram.image = selectedImage
             profileImageView.image = selectedImage
             
-            FireStorageManager.deleteProgramImageFileFromStorage(imageID: Program.imageID!) {                    FileManager.removeFilesIn(folder: .programImage) {
-                FileManager.storeSelectedProgram(image: selectedImage) {
-                    FireStorageManager.storeProgram(image: selectedImage)
-                }
-                }
-            }
+            FileManager.storeSelectedProgramImage(image: selectedImage)
+            
+//            FireStorageManager.deleteProgramImageFileFromStorage(imageID: Program.imageID!) {                    FileManager.removeFilesIn(folder: .programImage) {
+//                FileManager.storeSelectedProgram(image: selectedImage) {
+//                    FireStorageManager.storeProgram(image: selectedImage)
+//                }
+//                }
+//            }
             dismiss(animated: true, completion: nil)
         }
     }

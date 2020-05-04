@@ -229,7 +229,29 @@ class SignInVC: UIViewController, UITextFieldDelegate {
                 UserDefaults.standard.set(true, forKey: "loggedIn")
                 guard let data = snapshot?.data() else { return }
                 User.modelUser(data: data)
-                LaunchControllerSwitch.updateRootVC()
+                let completedOnBoarding = data["completedOnBoarding"] as! Bool
+                let isPublisher = data["isPublisher"] as! Bool
+                
+                if isPublisher {
+                    UserDefaults.standard.set(true, forKey: "isPublisher")
+                } else {
+                     UserDefaults.standard.set(false, forKey: "isPublisher")
+                }
+                
+                if completedOnBoarding {
+                    UserDefaults.standard.set(true, forKey: "completedOnboarding")
+                } else {
+                    UserDefaults.standard.set(false, forKey: "completedOnboarding")
+                }
+
+                if isPublisher {
+                    FireStoreManager.getProgramData { success in
+                     print("Received program data: \(success)")
+                     LaunchControllerSwitch.updateRootVC()
+                    }
+                } else {
+                     LaunchControllerSwitch.updateRootVC()
+                }
             }
         }
     }

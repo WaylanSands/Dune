@@ -56,7 +56,7 @@ class ProgramAccountVC: UIViewController {
     let nameLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
-        label.textColor = CustomStyle.primaryblack
+        label.textColor = CustomStyle.primaryBlack
         return label
     }()
     
@@ -79,7 +79,7 @@ class ProgramAccountVC: UIViewController {
         button.backgroundColor = CustomStyle.primaryYellow
         button.layer.cornerRadius = 13
         button.setTitle("Play Intro", for: .normal)
-        button.setTitleColor(CustomStyle.primaryblack, for: .normal)
+        button.setTitleColor(CustomStyle.primaryBlack, for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
 //        button.addTarget(self, action: #selector(introPress), for: .touchUpInside)
         button.setImage(UIImage(named: "small-play-icon"), for: .normal)
@@ -159,7 +159,7 @@ class ProgramAccountVC: UIViewController {
     
     let multiplePorgramsLabel: UILabel = {
         let label = UILabel()
-        label.textColor = CustomStyle.primaryblack
+        label.textColor = CustomStyle.primaryBlack
         label.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
         label.text = "Multiple programs"
         return label
@@ -167,7 +167,7 @@ class ProgramAccountVC: UIViewController {
     
     let multiplePorgramsSubLabel: UILabel = {
         let label = UILabel()
-        label.textColor = CustomStyle.primaryblack
+        label.textColor = CustomStyle.primaryBlack
         label.font = UIFont.systemFont(ofSize: 12, weight: .regular)
         label.text = "Create multiple programs for your channel"
         return label
@@ -193,7 +193,7 @@ class ProgramAccountVC: UIViewController {
     
     let createLabel: UILabel = {
         let label = UILabel()
-        label.textColor = CustomStyle.primaryblack
+        label.textColor = CustomStyle.primaryBlack
         label.font = UIFont.systemFont(ofSize: 12, weight: .regular)
         label.text = "Create"
         label.textAlignment = .center
@@ -224,11 +224,11 @@ class ProgramAccountVC: UIViewController {
         setProgramImage()
         setupTopBar()
         
-        nameLabel.text = Program.name
+        nameLabel.text = CurrentProgram.name
         usernameLabel.text = "@\(User.username!)"
-        categoryLabel.text = Program.primaryCategory
-        summaryTextView.text = Program.summary
-        
+        categoryLabel.text = CurrentProgram.primaryCategory
+        summaryTextView.text = CurrentProgram.summary
+
         if  unwrapped {
             summaryTextView.textContainer.maximumNumberOfLines = 3
             unwrapped = false
@@ -291,15 +291,15 @@ class ProgramAccountVC: UIViewController {
     }
     
     func setProgramImage() {
-        if Program.image != nil {
-            mainImage.image = Program.image
+        if CurrentProgram.image != nil {
+            mainImage.image = CurrentProgram.image
         } else {
-            mainImage.image = #imageLiteral(resourceName: "profile-image-sevn")
+            mainImage.image = #imageLiteral(resourceName: "missing-image-large")
         }
     }
     
     func addIntroButton() {
-        if Program.hasIntro == true {
+        if CurrentProgram.hasIntro == true {
             playIntroButton.setTitle("Play Intro", for: .normal)
             playIntroButton.backgroundColor = CustomStyle.primaryBlue
             playIntroButton.setImage(nil, for: .normal)
@@ -308,7 +308,7 @@ class ProgramAccountVC: UIViewController {
             playIntroButton.contentEdgeInsets = UIEdgeInsets(top: 0, left: 25, bottom: 0, right: 15)
             playIntroButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: -10, bottom: 0, right: 0)
         } else {
-            playIntroButton.setTitle("Record Intro", for: .normal)
+            playIntroButton.setTitle("Add Intro", for: .normal)
             playIntroButton.backgroundColor = CustomStyle.primaryBlue
             playIntroButton.setTitleColor(.white, for: .normal)
             playIntroButton.setImage(nil, for: .normal)
@@ -480,7 +480,7 @@ class ProgramAccountVC: UIViewController {
         unwrapped = true
 //        summaryHeightClosed = summaryTextView.frame.height
         summaryTextView.textContainer.maximumNumberOfLines = 0
-        summaryTextView.text = "\(Program.summary!) "
+        summaryTextView.text = "\(CurrentProgram.summary!) "
 //        summaryViewHeight.constant = summaryTextView.intrinsicContentSize.height
         moreButton.removeFromSuperview()
         summaryTextView.textContainer.exclusionPaths.removeAll()

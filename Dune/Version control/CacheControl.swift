@@ -44,41 +44,41 @@ class CacheControl {
         UserDefaults.standard.set(dict, forKey: "audioCache")
     }
     
-    static func loadImageFromFolderOrDownloadAndSave(programID: String, imageID: String, imagePath: String, completion: @escaping (UIImage) -> ()) {
-        
-        if User.subscriptionIDs!.contains(programID) {
-            if let subscriptionImagesDict = UserDefaults.standard.object(forKey: "subscriptionImages") as? [String: [String:String]] {
-                if let programDict = subscriptionImagesDict["programID"] {
-                    if imageID == programDict["imageID"] {
-                        FileManager.getSubscriptionImage(with: imageID) { image in
-                            completion(image)
-                        }
-                    } else {
-                        createSubscriptionImageDict(programID: programID, imageID: imagePath, imagePath: imagePath)
-                        FireStorageManager.downloadSubscriptionImageAndSaveToDocuments(imageID: imageID) { image in
-                            completion(image)
-                        }
-                    }
-                } else {
-                    createSubscriptionImageDict(programID: programID, imageID: imageID, imagePath: imagePath)
-                }
-            } else {
-                print("Error no subscriptionImagesDict saved")
-            }
-        } else {
-            // The user is not subscribed to this program. Check cache folder for image.
-            FileManager.checkCacheFor(imageID: imageID) { image in
-                if image != nil {
-                    completion(image!)
-                } else {
-                    // There is no image in the cache for this program
-                    FireStorageManager.downloadNonSubscriptionImageAndSaveToCache(imageID: imageID) { image in
-                        completion(image)
-                    }
-                }
-            }
-        }
-    }
+//    static func loadImageFromFolderOrDownloadAndSave(programID: String, imageID: String, imagePath: String, completion: @escaping (UIImage) -> ()) {
+//        
+//        if User.subscriptionIDs!.contains(programID) {
+//            if let subscriptionImagesDict = UserDefaults.standard.object(forKey: "subscriptionImages") as? [String: [String:String]] {
+//                if let programDict = subscriptionImagesDict["programID"] {
+//                    if imageID == programDict["imageID"] {
+//                        FileManager.getSubscriptionImage(with: imageID) { image in
+//                            completion(image)
+//                        }
+//                    } else {
+//                        createSubscriptionImageDict(programID: programID, imageID: imagePath, imagePath: imagePath)
+//                        FireStorageManager.downloadSubscriptionImageAndSaveToDocuments(imageID: imageID) { image in
+//                            completion(image)
+//                        }
+//                    }
+//                } else {
+//                    createSubscriptionImageDict(programID: programID, imageID: imageID, imagePath: imagePath)
+//                }
+//            } else {
+//                print("Error no subscriptionImagesDict saved")
+//            }
+//        } else {
+//            // The user is not subscribed to this program. Check cache folder for image.
+//            FileManager.checkCacheFor(imageID: imageID) { image in
+//                if image != nil {
+//                    completion(image!)
+//                } else {
+//                    // There is no image in the cache for this program
+//                    FireStorageManager.downloadNonSubscriptionImageAndSaveToCache(imageID: imageID) { image in
+//                        completion(image)
+//                    }
+//                }
+//            }
+//        }
+//    }
     
     // Creating a new program Image dictionary and adding it to the subscriptionImages object
     static func createSubscriptionImageDict(programID: String, imageID: String, imagePath: String) {

@@ -84,7 +84,7 @@ class PublisherTagVC: UIViewController  {
     
     let channelNameLabel: UILabel = {
         let label = UILabel()
-        label.text = Program.name
+        label.text = CurrentProgram.name
         label.font = UIFont.systemFont(ofSize: 16, weight: .bold)
         return label
     }()
@@ -100,14 +100,14 @@ class PublisherTagVC: UIViewController  {
     let summaryTextView: UITextView = {
         let view = UITextView()
         view.isScrollEnabled = false
-        view.text = Program.summary
+        view.text = CurrentProgram.summary
         view.font = UIFont.systemFont(ofSize: 14, weight: .regular)
         view.textContainer.lineBreakMode = .byTruncatingTail
         view.textContainer.maximumNumberOfLines = 3
         view.isUserInteractionEnabled = false
         view.textContainerInset = .zero
         view.textContainer.lineFragmentPadding = 0
-        view.textColor = CustomStyle.primaryblack
+        view.textColor = CustomStyle.primaryBlack
         return view
     }()
     
@@ -200,7 +200,7 @@ class PublisherTagVC: UIViewController  {
     
     let floatingDetailsView: UIView = {
         let view = UIView()
-        view.backgroundColor = CustomStyle.primaryblack
+        view.backgroundColor = CustomStyle.primaryBlack
         return view
     }()
     
@@ -214,7 +214,7 @@ class PublisherTagVC: UIViewController  {
     
     let bottomBarProgramNameLabel: UILabel = {
         let label = UILabel()
-        label.text = Program.name
+        label.text = CurrentProgram.name
         label.font = UIFont.systemFont(ofSize: 16.0, weight: .bold)
         label.textColor = .white
         return label
@@ -243,7 +243,7 @@ class PublisherTagVC: UIViewController  {
     
     let bottomFill: UIView = {
         let view = UIView()
-        view.backgroundColor = CustomStyle.primaryblack
+        view.backgroundColor = CustomStyle.primaryBlack
         return view
     }()
     
@@ -280,9 +280,9 @@ class PublisherTagVC: UIViewController  {
 
     
     func setProgramImage() {
-        if Program.imagePath != nil {
-            largeUserImage.setImageAndCache(from: Program.imagePath!)
-            bottomBarImageView.setImageAndCache(from: Program.imagePath!)
+        if CurrentProgram.imagePath != nil {
+            largeUserImage.setImageAndCache(from: CurrentProgram.imagePath!)
+            bottomBarImageView.setImageAndCache(from: CurrentProgram.imagePath!)
         } else {
             largeUserImage.image = #imageLiteral(resourceName: "missing-image-large")
             bottomBarImageView.image = #imageLiteral(resourceName: "missing-image-large")
@@ -598,15 +598,15 @@ class PublisherTagVC: UIViewController  {
     }
     
     @objc func confirmButtonPress() {
-        Program.tags = tagsUsed
+        CurrentProgram.tags = tagsUsed
         
         let db = Firestore.firestore()
-        let programRef = db.collection("programs").document(Program.ID!)
+        let programRef = db.collection("programs").document(CurrentProgram.ID!)
         UserDefaults.standard.set(true, forKey: "completedOnboarding")
         
         programRef.updateData([
-            "programSummary" :  Program.summary!,
-            "programTags" :  Program.tags!
+            "programSummary" :  CurrentProgram.summary!,
+            "programTags" :  CurrentProgram.tags!
         ]) { (error) in
             if let error = error {
                 print("Error adding program Tags: \(error.localizedDescription)")

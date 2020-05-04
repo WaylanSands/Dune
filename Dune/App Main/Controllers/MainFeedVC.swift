@@ -8,6 +8,7 @@
 
 import UIKit
 import FirebaseAuth
+import AVFoundation
 import FirebaseFirestore
 
 
@@ -15,6 +16,7 @@ class MainFeedVC: UIViewController {
    
     let tableView = UITableView()
     var audioPlayer = DuneAudioPlayer()
+    var audioPlayerInPosition = false
     
     var firstBatchAmount = 10
     var episodeIDs = [String]()
@@ -23,12 +25,13 @@ class MainFeedVC: UIViewController {
     var audioUrls = [String]()
     var downloadedIndexes = [Int]()
     var episodesToDisplay = true
+    var activeCell: EpisodeCell?
     var selectedCellRow: Int?
     
     var audioIDs = [String]()
     var downloadedAudioIDs = [String]()
 
-    let loadingView = TVLoadingAnimationView()
+    let loadingView = TVLoadingAnimationView(topHeight: 150)
     
     let subscriptionSettings = SettingsLauncher(options: SettingOptions.subscriptionEpisode, type: .subscriptionEpisode)
     let ownEpisodeSettings = SettingsLauncher(options: SettingOptions.ownEpisode, type: .ownEpisode)
@@ -81,6 +84,8 @@ class MainFeedVC: UIViewController {
     }
     
     override func viewWillDisappear(_ animated: Bool) {
+        audioPlayer.finishSession()
+
         FileManager.removeAudioFilesFromDocumentsDirectory() {
             print("Audio removed")
         }
@@ -88,6 +93,7 @@ class MainFeedVC: UIViewController {
     
     @objc func appMovedToBackground() {
         tableView.setScrollBarToTopLeft()
+        audioPlayer.finishSession()
     }
     
     @objc func appMovedForward() {
@@ -157,7 +163,11 @@ class MainFeedVC: UIViewController {
     
     func addLoadingView() {
         view.addSubview(loadingView)
-        loadingView.pinEdges(to: view)
+        loadingView.translatesAutoresizingMaskIntoConstraints = false
+        loadingView.topAnchor.constraint(equalTo: tableView.topAnchor).isActive = true
+        loadingView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        loadingView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        loadingView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
     }
     
     func configureViews() {
@@ -178,12 +188,31 @@ class MainFeedVC: UIViewController {
         currentDateLabel.translatesAutoresizingMaskIntoConstraints = false
         currentDateLabel.bottomAnchor.constraint(equalTo: tableView.topAnchor, constant: -10).isActive = true
         currentDateLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
+        
+        view.addSubview(audioPlayer)
+        audioPlayer.frame = CGRect(x: 0, y: view.frame.height, width: view.frame.width, height: 70)
+    }
+    
+    func transitionAudioPlayerIn() {
+        if audioPlayerInPosition == false {
+            print("The tab bar height is : \(tabBarController!.tabBar.frame.height)")
+            let navBarHeight = view.frame.height - tabBarController!.tabBar.frame.height - 70
+            
+            UIView.animateKeyframes(withDuration: 0.2, delay: 0, options: .beginFromCurrentState, animations: {
+                self.audioPlayer.frame = CGRect(x: 0, y: navBarHeight, width: self.view.frame.width, height: 70)
+            }) { success in
+                if success {
+                    self.audioPlayerInPosition = true
+                }
+            }
+        }
     }
     
     func configureDelegates() {
         subscriptionSettings.settingsDelegate = self
         ownEpisodeSettings.settingsDelegate = self
         tableView.register(EpisodeCell.self, forCellReuseIdentifier: "episodeCell")
+        audioPlayer.playbackDelegate = self
         tableView.dataSource = self
         tableView.delegate = self
     }
@@ -238,16 +267,24 @@ class MainFeedVC: UIViewController {
                 let programName = data["programName"] as! String
                 let username = data["username"] as! String
                 let caption = data["caption"] as! String
+                let likeCount = data["likeCount"] as! Int
+                let commentCount = data["commentCount"] as! Int
+                let shareCount = data["shareCount"] as! Int
+                let listenCount = data["listenCount"] as! Int
                 let tags = data["tags"] as! [String]?
                 let programID = data["programID"] as! String
                 let ownerID = data["ownerID"] as! String
-                                
+                
                 let newEp = Episode(
                     id: id,
                     addedAt: time,
                     duration: duration,
                     imageID: imageID,
                     audioID: audioID,
+                    likeCount: likeCount,
+                    commentCount: commentCount,
+                    shareCount: shareCount,
+                    listenCount: listenCount,
                     audioPath: audioPath,
                     imagePath: imagePath,
                     programName: programName,
@@ -259,7 +296,8 @@ class MainFeedVC: UIViewController {
                 )
                 
                 self.downloadedEps.append(newEp)
-                self.audioIDs.append(audioID)
+                self.audioPlayer.audioIDs.append(audioID)
+                self.audioPlayer.downloadedEps.append(newEp)
                             
                 if self.downloadedEps.count >= self.firstBatchAmount {
                     self.tableView.reloadData()
@@ -271,15 +309,15 @@ class MainFeedVC: UIViewController {
     
     func getAudioWith(audioID: String, completion: @escaping (URL) -> ()) {
         
-        let documentsURL = FileManager.getDocumentsDirectory()
-        let fileURL = documentsURL.appendingPathComponent(audioID)
+        let tempURL = FileManager.getTempDirectory()
+        let fileURL = tempURL.appendingPathComponent(audioID)
         
         if FileManager.default.fileExists(atPath: fileURL.path) {
-            self.downloadedAudioIDs.append(audioID)
+//            self.downloadedAudioIDs.append(audioID)
             completion(fileURL)
         } else {
             FireStorageManager.downloadEpisodeAudio(audioID: audioID) { url in
-                self.downloadedAudioIDs.append(audioID)
+//                self.downloadedAudioIDs.append(audioID)
                 completion(url)
             }
         }
@@ -298,9 +336,15 @@ extension MainFeedVC: UITableViewDataSource, UITableViewDelegate {
         episodeCell.moreButton.addTarget(episodeCell, action: #selector(EpisodeCell.moreUnwrap), for: .touchUpInside)
         episodeCell.programImageButton.addTarget(episodeCell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
         episodeCell.episodeSettingsButton.addTarget(episodeCell, action: #selector(EpisodeCell.showSettings), for: .touchUpInside)
+        episodeCell.likeButton.addTarget(episodeCell, action: #selector(EpisodeCell.likeButtonPress), for: .touchUpInside)
+//        episodeCell.configureCellWithOptions()
 //        episodeCell.row = indexPath.row
         // Set up the cell with the downloaded ep data
         let episode = downloadedEps[indexPath.row]
+        episodeCell.episode = episode
+        if episode.likeCount >= 10 {
+            episodeCell.configureCellWithOptions()
+        }
         episodeCell.cellDelegate = self
         episodeCell.normalSetUp(episode: episode)
         return episodeCell
@@ -329,24 +373,46 @@ extension MainFeedVC: UITableViewDataSource, UITableViewDelegate {
 }
 
 extension MainFeedVC: EpisodeCellDelegate {
+    func updateLikeCountFor(episode: Episode, at indexPath: IndexPath) {
+        //
+    }
+    
+    
+   func duration(for resource: String) -> Double {
+       let asset = AVURLAsset(url: URL(fileURLWithPath: resource))
+       return Double(CMTimeGetSeconds(asset.duration))
+   }
    
     func playEpisode(cell: EpisodeCell) {
+        activeCell = cell
+        if !cell.playbackBarView.playbackBarIsSetup {
+            cell.playbackBarView.setupPlaybackBar()
+        }
+//      audioPlayer.playbackDelegate = cell
+        audioPlayer.navHeight = self.tabBarController?.tabBar.frame.height
+        
+//        if cell.episode.likeCount >= 10 {
+//            audioPlayer.animateAudioPlayerWithoutOptions()
+//        } else {
+//            audioPlayer.animateAudioPlayerWithOptions()
+//        }
+       
         guard let audioIndex = tableView.indexPath(for: cell)?.row else { return }
         let image = cell.programImageButton.imageView?.image
-        let programName = cell.programNameLabel.text
-        let username = cell.usernameLabel.text
-        let caption = cell.captionTextView.text
-        
-        let audioID = audioIDs[audioIndex]
+        let audioID = audioPlayer.audioIDs[audioIndex]
             
         getAudioWith(audioID: audioID) { url in
-            self.audioPlayer.playOrPauseEpisode(url: url, image: image!, programName: programName!, username: username!, caption: caption!)
+            self.audioPlayer.playOrPause(episode: cell.episode, with: url, image: image!)
+        }
+        
+        func updateLikeCountFor(episode: Episode, at indexPath: IndexPath) {
+            downloadedEps[indexPath.row] = episode
         }
     }
     
     func showSettings(cell: EpisodeCell) {
 
-        selectedCellRow = episodeIDs.firstIndex(of: cell.episodeID!)
+        selectedCellRow = episodeIDs.firstIndex(of: cell.episode.ID)
 
         if cell.usernameLabel.text == "@\(User.username!)" {
             ownEpisodeSettings.showSettings()
@@ -369,12 +435,17 @@ extension MainFeedVC: EpisodeCellDelegate {
         let index = IndexPath(item: row, section: 0)
         episodeIDs.remove(at: row)
         downloadedEps.remove(at: row)
+        audioPlayer.audioIDs.remove(at: row)
+        audioPlayer.downloadedEps.remove(at: row)
         tableView.deleteRows(at: [index], with: .fade)
         
         if episodeIDs.count == 0 {
              resetTableView()
              checkUserHasSubscriptions()
         }
+        
+        audioPlayer.transitionOutOfView()
+        
     }
 
     
@@ -390,8 +461,6 @@ extension MainFeedVC: EpisodeCellDelegate {
             self.tableView.endUpdates()
         }
     }
-    
-    
 }
 
 extension MainFeedVC: SettingsLauncherDelegate {
@@ -404,5 +473,20 @@ extension MainFeedVC: SettingsLauncherDelegate {
             break
         }
     }
+}
 
+extension MainFeedVC: PlaybackBarDelegate {
+   
+    func updateProgressBarWith(percentage: CGFloat) {
+        guard let cell = activeCell else { return }
+        cell.playbackBarView.progressUpdateWith(percentage: percentage)
+    }
+    
+    func updateActiveCell(atIndex: Int) {
+        let cell = tableView.cellForRow(at: IndexPath(item: atIndex, section: 0)) as! EpisodeCell
+        cell.playbackBarView.setupPlaybackBar()
+        activeCell = cell
+    }
+    
+    
 }

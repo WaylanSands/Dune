@@ -16,7 +16,7 @@ public class ResponsiveWaveformView: UIView {
     @IBInspectable public var frequency: CGFloat = 1.25
     @IBInspectable public var density: CGFloat = 5
     @IBInspectable public var phaseShift: CGFloat = -0.15
-
+    
     @IBInspectable public var amplitude: CGFloat {
         get {
             return _amplitude
@@ -27,6 +27,11 @@ public class ResponsiveWaveformView: UIView {
         _phase += phaseShift
         _amplitude = fmax(level, idleAmplitude)
         setNeedsDisplay()
+    }
+    
+    override public func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+        let view = super.hitTest(point, with: event)
+        return view == self ? nil : view
     }
 
     override public func draw(_ rect: CGRect) {

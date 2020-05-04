@@ -12,8 +12,8 @@ class AccountButton: UIButton {
     
     required init() {
         super.init(frame: .zero)
-        self.setTitleColor(CustomStyle.primaryblack, for: .normal)
-        self.setTitleColor(CustomStyle.primaryblack.withAlphaComponent(0.8), for: .highlighted)
+        self.setTitleColor(CustomStyle.primaryBlack, for: .normal)
+        self.setTitleColor(CustomStyle.primaryBlack.withAlphaComponent(0.8), for: .highlighted)
         self.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
         self.backgroundColor = CustomStyle.accountButtonGrey
         self.layer.cornerRadius = 6

@@ -20,17 +20,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 
 //        let startingController = MainTabController()
 //        startingController.selectedIndex = 4
-//
-//        User.ID = "2486"
-//        Program.name = "DuneTV"
-//        Program.summary = "This is the Dune showwsmsknjj sojs os is the Dune showwsmsknjj sojs ojs osj osj osj osj osj oaks is the Dune showwsmsknjj sojs ojs osj osj osj osj osj oakjs osj osj osj osj osj oak la podj lja oidhj ian ipsdn ins insa lid lins sn osn ins ins lins ins ins ;ljs psj pojs"
-//        Program.primaryCategory = "News"
-//        Program.tags = ["TVhhhhhhhhhh", "holidajjjjjjjjjjjys", "hedkjhskhs"]
-//        User.username = "DuneDaily"
-//        User.displayName = "DuneTV"
-//        User.birthDate = "19 Sep 2019"
-//        User.email = "dunedaily@gmail.com"
-//        User.isPublisher = true
 
 //        let navigation = UINavigationController(rootViewController: startingController)
 //
@@ -41,7 +30,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 //        window!.makeKeyAndVisible()
 //
         FirebaseApp.configure()
-        LaunchControllerSwitch.updateRootVC()
+        let launchScreen = LaunchVC()
+//        let navigation = UINavigationController(rootViewController: launchScreen)
+        
+        let frame = UIScreen.main.bounds
+        window = UIWindow(frame: frame)
+        
+        window!.rootViewController = launchScreen
+        window!.makeKeyAndVisible()
+        
+//      LaunchControllerSwitch.updateRootVC()
         return true
     }
     

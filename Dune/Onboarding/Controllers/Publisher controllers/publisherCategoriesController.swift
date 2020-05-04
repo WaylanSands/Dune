@@ -98,7 +98,7 @@ class publisherCategoriesVC: UIViewController {
         selectedCategory = sender.titleLabel?.text
         CacheControl.createSubscriptionImageDict()
         
-        CustomStyle.categoryButtonSelected(backgroundColor: CustomStyle.white ,textColor: CustomStyle.primaryblack ,button: sender)
+        CustomStyle.categoryButtonSelected(backgroundColor: CustomStyle.white ,textColor: CustomStyle.primaryBlack ,button: sender)
         
         let deselectButtons = categoryButtons.filter { $0.titleLabel?.text != sender.titleLabel?.text }
         for eachButton in deselectButtons {
@@ -112,13 +112,13 @@ class publisherCategoriesVC: UIViewController {
     
     @IBAction func continueButtonPress() {
         
-        Program.primaryCategory = selectedCategory
+        CurrentProgram.primaryCategory = selectedCategory
         
         let db = Firestore.firestore()
-        let programRef = db.collection("programs").document(Program.ID!)
+        let programRef = db.collection("programs").document(CurrentProgram.ID!)
         
         programRef.updateData([
-            "primaryCategory" : Program.primaryCategory!
+            "primaryCategory" : CurrentProgram.primaryCategory!
         ]) { (error) in
             if let error = error {
                 print("Error adding primaryCategory: \(error.localizedDescription)")

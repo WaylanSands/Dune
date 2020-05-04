@@ -48,7 +48,6 @@ class NetworkingProgress: UIView {
     }
 
     func animate() {
-        print("Animating")
         
         let xPosition = downloadProgressBackground.frame.minX
         let yPosition = downloadProgressBackground.frame.minY
@@ -56,9 +55,6 @@ class NetworkingProgress: UIView {
         let height = downloadProgressBackground.frame.height
         
         downloadProgressBar.frame = CGRect(x: xPosition, y: yPosition, width: 0, height: height)
-        
-          print("height \(height)")
-
         
         UIView.animate(withDuration: 1,
                                    delay: 0.0,
