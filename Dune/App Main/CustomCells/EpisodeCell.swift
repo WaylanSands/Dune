@@ -240,10 +240,10 @@ class EpisodeCell: UITableViewCell {
                 self.programImageButton.setImage(image, for: .normal)
             }
         }
-        
+                
         programNameLabel.text = episode.programName
         usernameLabel.text = "@\(episode.username)"
-        timeSinceReleaseLabel.text = episode.addedAt
+        timeSinceReleaseLabel.text = episode.timeSince
         captionTextView.text = episode.caption
         episodeTags = episode.tags!
         
@@ -327,10 +327,10 @@ class EpisodeCell: UITableViewCell {
         programNameStackedView.translatesAutoresizingMaskIntoConstraints = false
         programNameStackedView.topAnchor.constraint(equalTo: programImageButton.topAnchor).isActive = true
         programNameStackedView.leadingAnchor.constraint(equalTo: programImageButton.trailingAnchor, constant: 10).isActive = true
-        programNameStackedView.trailingAnchor.constraint(lessThanOrEqualTo: self.trailingAnchor, constant: 20).isActive = true
+        programNameStackedView.trailingAnchor.constraint(lessThanOrEqualTo: self.trailingAnchor, constant: -35).isActive = true
         
         programNameStackedView.addArrangedSubview(programNameLabel)
-        programNameLabel.translatesAutoresizingMaskIntoConstraints = false
+//        programNameLabel.translatesAutoresizingMaskIntoConstraints = false
         
         programNameStackedView.addArrangedSubview(usernameLabel)
         

@@ -12,7 +12,7 @@ class NetworkingProgress: UIView {
         
     let containerView: UIView = {
        let view = UIView()
-        view.backgroundColor = CustomStyle.darkestBlack
+        view.backgroundColor = CustomStyle.darkestBlack.withAlphaComponent(0)
         view.layer.cornerRadius = 5
         view.clipsToBounds = true
         return view
@@ -39,7 +39,7 @@ class NetworkingProgress: UIView {
     
     required init() {
         super.init(frame: UIScreen.main.bounds)
-        self.backgroundColor = UIColor.black.withAlphaComponent(0.7)
+        self.backgroundColor = UIColor.black.withAlphaComponent(0.85)
         addViews()
     }
     
@@ -92,7 +92,7 @@ class NetworkingProgress: UIView {
         containerView.addSubview(downloadProgressBackground)
         downloadProgressBackground.translatesAutoresizingMaskIntoConstraints = false
         downloadProgressBackground.topAnchor.constraint(equalTo: taskLabel.bottomAnchor, constant: 30).isActive = true
-        downloadProgressBackground.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20).isActive = true
+        downloadProgressBackground.leadingAnchor.constraint(equalTo: taskLabel.leadingAnchor).isActive = true
         downloadProgressBackground.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20).isActive = true
         downloadProgressBackground.heightAnchor.constraint(equalToConstant: 6).isActive = true
         

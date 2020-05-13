@@ -11,16 +11,16 @@ import UIKit
 
 class StaticWaveCreator: UIView {
     
-    var playbackCoverLeading: NSLayoutConstraint!
-    var trailingPlayAnchor: NSLayoutConstraint!
+//    var playbackCoverLeading: NSLayoutConstraint!
+//    var trailingPlayAnchor: NSLayoutConstraint!
     
-    lazy var presetWaves = [primaryPlayBackBars, trimPlayBackBars]
+//    lazy var presetWaves = [primaryPlayBackBars, trimPlayBackBars]
     
-    let primaryPlayBackBars: StaticAudioWave = {
-        let view = StaticAudioWave(color: CustomStyle.primaryBlue, height: 400)
-        view.backgroundColor = .clear
-        return view
-    }()
+//    let primaryPlayBackBars: StaticAudioWave = {
+//        let view = StaticAudioWave(color: CustomStyle.primaryBlue, height: 400)
+//        view.backgroundColor = .clear
+//        return view
+//    }()
     
     let trimPlayBackBars: StaticAudioWave = {
         let view = StaticAudioWave(color: CustomStyle.primaryBlue, height: 100)
@@ -44,13 +44,13 @@ class StaticWaveCreator: UIView {
     }
     
     func configureViews() {
-        self.addSubview(primaryPlayBackBars)
-        primaryPlayBackBars.translatesAutoresizingMaskIntoConstraints = false
-        primaryPlayBackBars.centerYAnchor.constraint(equalTo: self.centerYAnchor).isActive = true
-        primaryPlayBackBars.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 16).isActive = true
-        primaryPlayBackBars.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -16).isActive = true
-        primaryPlayBackBars.heightAnchor.constraint(equalToConstant: 200).isActive = true
-     
+//        self.addSubview(primaryPlayBackBars)
+//        primaryPlayBackBars.translatesAutoresizingMaskIntoConstraints = false
+//        primaryPlayBackBars.centerYAnchor.constraint(equalTo: self.centerYAnchor).isActive = true
+//        primaryPlayBackBars.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 16).isActive = true
+//        primaryPlayBackBars.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -16).isActive = true
+//        primaryPlayBackBars.heightAnchor.constraint(equalToConstant: 200).isActive = true
+//
         self.addSubview(trimPlayBackBars)
         trimPlayBackBars.translatesAutoresizingMaskIntoConstraints = false
         trimPlayBackBars.centerYAnchor.constraint(equalTo: self.centerYAnchor).isActive = true
@@ -62,37 +62,36 @@ class StaticWaveCreator: UIView {
         playbackCover.translatesAutoresizingMaskIntoConstraints = false
         playbackCover.centerYAnchor.constraint(equalTo: self.centerYAnchor).isActive = true
        
-        playbackCoverLeading = playbackCover.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 0)
-        playbackCoverLeading.isActive = true
-        
-        trailingPlayAnchor = playbackCover.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: 0)
-        trailingPlayAnchor.priority = UILayoutPriority(rawValue: 750)
-        trailingPlayAnchor.isActive = true
+//        playbackCoverLeading = playbackCover.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 0)
+//        playbackCoverLeading.isActive = true
+//        
+//        trailingPlayAnchor = playbackCover.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: 0)
+//        trailingPlayAnchor.priority = UILayoutPriority(rawValue: 750)
+//        trailingPlayAnchor.isActive = true
         
         playbackCover.heightAnchor.constraint(equalToConstant: 200).isActive = true
     }
     
     func setupPlaybackBars(url: URL, snapshot: Double) {
         
-        print("Setting up playback bars with \(url)")
-        primaryPlayBackBars.timeInSeconds = snapshot
+//        primaryPlayBackBars.timeInSeconds = snapshot
         trimPlayBackBars.timeInSeconds = snapshot
 
-        primaryPlayBackBars.reDrawBars(url : url, color: CustomStyle.primaryBlue, height: 400.0)
+//        primaryPlayBackBars.reDrawBars(url : url, color: CustomStyle.primaryBlue, height: 400.0)
         trimPlayBackBars.reDrawBars(url : url, color: .white, height: 100.0)
         
-        primaryPlayBackBars.setNeedsDisplay()
+//        primaryPlayBackBars.setNeedsDisplay()
         trimPlayBackBars.setNeedsDisplay()
     }
     
     func showTrimWave() {
         trimPlayBackBars.isHidden = false
-        primaryPlayBackBars.isHidden = true
+//        primaryPlayBackBars.isHidden = true
     }
-    
-    func resetPrimaryWave() {
-        trimPlayBackBars.isHidden = true
-        primaryPlayBackBars.isHidden = false
-    }
+//    
+//    func resetPrimaryWave() {
+//        trimPlayBackBars.isHidden = true
+////        primaryPlayBackBars.isHidden = false
+//    }
     
 }

@@ -18,21 +18,22 @@ class LoadingCircleView: PassThoughView {
 
     lazy var viewCenter = CGPoint(x:35, y: 35)
     
-    
     func setupLoadingAnimation() {
-        let circularPath = UIBezierPath(arcCenter: viewCenter, radius: 35, startAngle: -CGFloat.pi / 2 , endAngle: CGFloat.pi * 2, clockwise: true)
-        let underPath = UIBezierPath(arcCenter: viewCenter, radius: 38, startAngle: -CGFloat.pi / 2 , endAngle: CGFloat.pi * 2, clockwise: true)
+        let circularPath = UIBezierPath(arcCenter: viewCenter, radius: 35, startAngle:0 , endAngle: CGFloat.pi * 2, clockwise: true)
+        let trackPath = UIBezierPath(arcCenter: viewCenter, radius: 38, startAngle:0 , endAngle: CGFloat.pi * 2, clockwise: true)
         self.isHidden = true
         
-        tracklayer.path = underPath.cgPath
+        tracklayer.path = trackPath.cgPath
+        tracklayer.bounds = trackPath.bounds
         tracklayer.lineWidth = 6
-//        tracklayer.strokeEnd = 0
         tracklayer.lineCap = .round
         tracklayer.fillColor = UIColor.white.withAlphaComponent(0.1).cgColor
         
         self.layer.addSublayer(tracklayer)
         
         shapeLayer.path = circularPath.cgPath
+        shapeLayer.bounds = circularPath.bounds
+        shapeLayer.transform = CATransform3DMakeRotation(CGFloat(-90 * Double.pi/180), 0, 0, 1)
         shapeLayer.strokeColor = CustomStyle.white.cgColor
         shapeLayer.lineWidth = 6
         shapeLayer.strokeEnd = 0

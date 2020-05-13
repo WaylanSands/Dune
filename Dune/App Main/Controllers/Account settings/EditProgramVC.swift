@@ -14,10 +14,12 @@ class EditProgramVC: UIViewController {
     
     var tagContentWidth: NSLayoutConstraint!
     var tags: [String]?
-    
+        
+    let headerViewHeight: CGFloat = 300
     lazy var viewHeight = view.frame.height
     lazy var tagscrollViewWidth = tagScrollView.frame.width
     
+    let deleteIntroAlter = CustomAlertView(alertType: .removeIntro)
     let settingsLauncher = SettingsLauncher(options: SettingOptions.categories, type: .categories)
     let db = Firestore.firestore()
     
@@ -32,26 +34,38 @@ class EditProgramVC: UIViewController {
         let view = UIScrollView()
         view.showsVerticalScrollIndicator = false
         view.contentInsetAdjustmentBehavior = .never
+        
         return view
     }()
     
     let scrollContentView: UIView = {
         let view = UIView()
+        view.backgroundColor = .white
         return view
     }()
     
     let headerView: UIView = {
         let view = UIView()
-        view.backgroundColor = CustomStyle.seventhShade
+        view.backgroundColor = CustomStyle.onBoardingBlack
         return view
     }()
     
     let profileImageView: UIImageView = {
         let imageView = UIImageView()
-        imageView.image = #imageLiteral(resourceName: "momentum")
+        imageView.image = CurrentProgram.image!
         imageView.layer.cornerRadius = 7
         imageView.clipsToBounds = true
         return imageView
+    }()
+    
+    let changeImageButton: UIButton = {
+        let button = UIButton()
+        button.setTitle("Change program image", for: .normal)
+        button.setTitleColor(hexStringToUIColor(hex: "#4875FF"), for: .normal)
+        button.setTitleColor(hexStringToUIColor(hex: "#4875FF").withAlphaComponent(0.8), for: .highlighted)
+        button.addTarget(self, action: #selector(changeImageButtonPress), for: .touchUpInside)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
+        return button
     }()
     
     let profileInfoView: UIView = {
@@ -84,7 +98,7 @@ class EditProgramVC: UIViewController {
     
     let programNameTextView: UITextField = {
         let textField = UITextField()
-        let placeholder = NSAttributedString(string: User.username!, attributes: [NSAttributedString.Key.foregroundColor : CustomStyle.fourthShade])
+        let placeholder = NSAttributedString(string: "", attributes: [NSAttributedString.Key.foregroundColor : CustomStyle.fourthShade])
         textField.attributedPlaceholder = placeholder;
         textField.textColor = CustomStyle.primaryBlack
         textField.font = UIFont.systemFont(ofSize: 16, weight: .regular)
@@ -128,7 +142,7 @@ class EditProgramVC: UIViewController {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 16, weight: .regular)
         label.textColor = CustomStyle.primaryBlack
-        label.text = "Tags"
+        label.text = "Program tags"
         return label
     }()
     
@@ -199,14 +213,27 @@ class EditProgramVC: UIViewController {
         return view
     }()
     
-    let programIntroButton: UIButton = {
+    let removeIntroButton: UIButton = {
         let button = UIButton()
         button.setTitle("Remove", for: .normal)
         button.titleLabel!.font = UIFont.systemFont(ofSize: 12, weight: .medium)
-        button.setTitleColor(.white, for: .normal)
+        button.setTitleColor(CustomStyle.buttonBlue, for: .normal)
         button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 15, bottom: 2, right: 15)
-        button.backgroundColor = CustomStyle.seventhShade
-        button.layer.cornerRadius = 4
+        button.addTarget(self, action: #selector(removeIntroButtonPress), for: .touchUpInside)
+        button.backgroundColor = CustomStyle.secondShade
+        button.layer.cornerRadius = 13
+        return button
+    }()
+    
+    let recordIntroButton: UIButton = {
+        let button = UIButton()
+        button.setTitle("Record", for: .normal)
+        button.titleLabel!.font = UIFont.systemFont(ofSize: 12, weight: .medium)
+        button.setTitleColor(CustomStyle.buttonBlue, for: .normal)
+        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 15, bottom: 2, right: 15)
+        button.addTarget(self, action: #selector(recordIntroButtonPress), for: .touchUpInside)
+        button.backgroundColor = CustomStyle.secondShade
+        button.layer.cornerRadius = 13
         return button
     }()
     
@@ -222,21 +249,17 @@ class EditProgramVC: UIViewController {
         return view
     }()
     
-    let changeImageButton: UIButton = {
-        let button = UIButton()
-        button.setTitle("Change program image", for: .normal)
-        button.setTitleColor(hexStringToUIColor(hex: "#4875FF"), for: .normal)
-        button.setTitleColor(hexStringToUIColor(hex: "#4875FF").withAlphaComponent(0.8), for: .highlighted)
-        button.addTarget(self, action: #selector(changeImageButtonPress), for: .touchUpInside)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
-        return button
-    }()
-    
     let firstCustomCell: UITableViewCell = {
         let cell = UITableViewCell()
         cell.backgroundColor = .red
         cell.frame.size = CGSize(width: 200, height: 100)
         return cell
+    }()
+    
+    let blackBGView: UIView = {
+        let view = UIView()
+        view.backgroundColor = CustomStyle.onBoardingBlack
+        return view
     }()
     
     override func viewDidLoad() {
@@ -253,10 +276,11 @@ class EditProgramVC: UIViewController {
         scrollView.setScrollBarToTopLeft()
         tagScrollView.setScrollBarToTopLeft()
         summaryTextLabel.text = CurrentProgram.summary
-        programNameTextView.text = ""
-        programNameTextView.placeholder = CurrentProgram.name
+        let placeholder = NSAttributedString(string: CurrentProgram.name!, attributes: [NSAttributedString.Key.foregroundColor : CustomStyle.fourthShade])
+        programNameTextView.attributedPlaceholder = placeholder;
+        
         createTagButtons()
-        setProgramImage()
+//        setProgramImage()
     }
     
     // Save changed program name
@@ -265,12 +289,7 @@ class EditProgramVC: UIViewController {
         if programNameTextView.text != CurrentProgram.name && programNameTextView.text != "" {
             print("Save New Name")
             CurrentProgram.name = programNameTextView.text
-            
-            if CurrentProgram.isPrimaryProgram! {
-                FireStoreManager.updatePrimaryProgramName()
-            } else {
-                FireStoreManager.updateSecondaryProgramName()
-            }
+            FireStoreManager.updatePrimaryProgramName()
         }
     }
     
@@ -306,16 +325,19 @@ class EditProgramVC: UIViewController {
     }
     
     
-    func setProgramImage() {
-        if CurrentProgram.image != nil {
-            profileImageView.image = CurrentProgram.image
-        } else {
-            profileImageView.image = #imageLiteral(resourceName: "missing-image-large")
-        }
-    }
+//    func setProgramImage() {
+//        if CurrentProgram.image != nil {
+//            profileImageView.image = CurrentProgram.image
+//        } else {
+//            profileImageView.image = #imageLiteral(resourceName: "missing-image-large")
+//        }
+//    }
     
     func configiureViews() {
         view.backgroundColor = .white
+        
+        view.addSubview(blackBGView)
+        blackBGView.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: headerViewHeight)
         
         view.addSubview(scrollView)
         scrollView.pinEdges(to: view)
@@ -365,8 +387,8 @@ class EditProgramVC: UIViewController {
         
         userFieldsStackedView.addArrangedSubview(programNameLabel)
         userFieldsStackedView.addArrangedSubview(summaryLabel)
-        userFieldsStackedView.addArrangedSubview(tagsLabel)
         userFieldsStackedView.addArrangedSubview(primaryGenreLabel)
+        userFieldsStackedView.addArrangedSubview(tagsLabel)
         userFieldsStackedView.addArrangedSubview(programIntroLabel)
         
         // Add user values
@@ -440,11 +462,27 @@ class EditProgramVC: UIViewController {
         primaryGenreUnlineView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         primaryGenreUnlineView.heightAnchor.constraint(equalToConstant: 1).isActive = true
         
-        scrollContentView.addSubview(programIntroButton)
-        programIntroButton.translatesAutoresizingMaskIntoConstraints = false
-        programIntroButton.topAnchor.constraint(equalTo: programIntroLabel.topAnchor).isActive = true
-        programIntroButton.leadingAnchor.constraint(equalTo: userFieldsStackedView.trailingAnchor).isActive = true
-        programIntroButton.heightAnchor.constraint(equalToConstant: 30).isActive = true
+        if CurrentProgram.hasIntro! {
+            scrollContentView.addSubview(recordIntroButton)
+            recordIntroButton.translatesAutoresizingMaskIntoConstraints = false
+            recordIntroButton.topAnchor.constraint(equalTo: programIntroLabel.topAnchor).isActive = true
+            recordIntroButton.leadingAnchor.constraint(equalTo: userFieldsStackedView.trailingAnchor).isActive = true
+            recordIntroButton.heightAnchor.constraint(equalToConstant: 26).isActive = true
+            recordIntroButton.titleLabel?.text = "Replace"
+            
+            scrollContentView.addSubview(removeIntroButton)
+            removeIntroButton.translatesAutoresizingMaskIntoConstraints = false
+            removeIntroButton.topAnchor.constraint(equalTo: programIntroLabel.topAnchor).isActive = true
+            removeIntroButton.leadingAnchor.constraint(equalTo: recordIntroButton.trailingAnchor, constant: 15).isActive = true
+            removeIntroButton.heightAnchor.constraint(equalToConstant: 26).isActive = true
+        } else {
+            scrollContentView.addSubview(recordIntroButton)
+            recordIntroButton.translatesAutoresizingMaskIntoConstraints = false
+            recordIntroButton.topAnchor.constraint(equalTo: programIntroLabel.topAnchor).isActive = true
+            recordIntroButton.leadingAnchor.constraint(equalTo: userFieldsStackedView.trailingAnchor).isActive = true
+            recordIntroButton.heightAnchor.constraint(equalToConstant: 26).isActive = true
+            recordIntroButton.titleLabel?.text = "Record"
+        }
         
         scrollContentView.addSubview(topUnlineView)
         topUnlineView.translatesAutoresizingMaskIntoConstraints = false
@@ -455,7 +493,7 @@ class EditProgramVC: UIViewController {
         
         scrollContentView.addSubview(bottomlineView)
         bottomlineView.translatesAutoresizingMaskIntoConstraints = false
-        bottomlineView.topAnchor.constraint(equalTo: programIntroButton.bottomAnchor, constant: 20).isActive = true
+        bottomlineView.topAnchor.constraint(equalTo: recordIntroButton.bottomAnchor, constant: 20).isActive = true
         bottomlineView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         bottomlineView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         bottomlineView.heightAnchor.constraint(equalToConstant: 1).isActive = true
@@ -463,23 +501,13 @@ class EditProgramVC: UIViewController {
         view.addSubview(customNavBar)
         customNavBar.pinNavBarTo(view)
     }
-    
-    @objc func selectGenrePress() {
-        programNameTextView.resignFirstResponder()
-        settingsLauncher.showSettings()
-    }
-    
-    @objc func updateProgramDetails() {
-        programNameTextView.resignFirstResponder()
-        let programDetailsVC = UpdateProgramDetails()
-        navigationController?.pushViewController(programDetailsVC, animated: true)
-    }
+
     
     // Program tag creation
     func createTagButtons() {
         tagContainingStackView.removeAllArrangedSubviewsCompletely()
         for eachTag in CurrentProgram.tags! {
-            let button = tagButton(with: eachTag!)
+            let button = tagButton(with: eachTag)
             button.addTarget(self, action: #selector(updateProgramDetails), for: .touchUpInside)
             tagContainingStackView.addArrangedSubview(button)
         }
@@ -500,11 +528,33 @@ class EditProgramVC: UIViewController {
         gradientOverlayView.backgroundColor = .clear
     }
     
+    @objc func updateProgramDetails() {
+        programNameTextView.resignFirstResponder()
+        let programDetailsVC = UpdateProgramDetails()
+        navigationController?.pushViewController(programDetailsVC, animated: true)
+    }
+    
+    @objc func selectGenrePress() {
+        programNameTextView.resignFirstResponder()
+        settingsLauncher.showSettings()
+    }
+    
     @objc func changeImageButtonPress() {
         let imagePicker = UIImagePickerController()
         imagePicker.delegate = self
         imagePicker.allowsEditing = true
         present(imagePicker, animated: true, completion: nil)
+    }
+    
+    @objc func recordIntroButtonPress() {
+        let recordBoothVC = RecordBoothVC()
+        recordBoothVC.currentScope = .intro
+        navigationController?.pushViewController(recordBoothVC, animated: true)
+    }
+    
+    @objc func removeIntroButtonPress () {
+        deleteIntroAlter.alertDelegate = self
+        UIApplication.shared.windows.last?.addSubview(deleteIntroAlter)
     }
 }
 
@@ -522,15 +572,16 @@ extension EditProgramVC: UIScrollViewDelegate {
 extension EditProgramVC: SettingsLauncherDelegate {
  
     func selectionOf(setting: String) {
-        // do things
-    }
-    
-    
-    func selectionOf() {
-        programNameTextView.resignFirstResponder()
-        primaryGenreButton.setTitle(CurrentProgram.primaryCategory, for: .normal)
+        primaryGenreButton.setTitle(setting, for: .normal)
         FireStoreManager.updatePrimaryCategory()
     }
+    
+    
+//    func selectionOf() {
+//        programNameTextView.resignFirstResponder()
+//        primaryGenreButton.setTitle(CurrentProgram.primaryCategory, for: .normal)
+//        FireStoreManager.updatePrimaryCategory()
+//    }
 }
 
 extension EditProgramVC: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
@@ -549,15 +600,24 @@ extension EditProgramVC: UIImagePickerControllerDelegate, UINavigationController
             CurrentProgram.image = selectedImage
             profileImageView.image = selectedImage
             
-            FileManager.storeSelectedProgramImage(image: selectedImage)
-            
-//            FireStorageManager.deleteProgramImageFileFromStorage(imageID: Program.imageID!) {                    FileManager.removeFilesIn(folder: .programImage) {
-//                FileManager.storeSelectedProgram(image: selectedImage) {
-//                    FireStorageManager.storeProgram(image: selectedImage)
-//                }
-//                }
-//            }
+            FileManager.storeSelectedProgramImage(image: selectedImage, imageID: CurrentProgram.imageID, programID: CurrentProgram.ID!)
             dismiss(animated: true, completion: nil)
         }
     }
+}
+
+extension EditProgramVC: CustomAlertDelegate {
+    func primaryButtonPress() {
+        CurrentProgram.hasIntro = false
+        
+        FireStoreManager.removeIntroFromProgram()
+        FireStorageManager.deleteIntroAudioFromStorage(audioID: CurrentProgram.introID!)
+        recordIntroButton.titleLabel?.text = "Record"
+        removeIntroButton.removeFromSuperview()
+    }
+    
+    func cancelButtonPress() {
+        //
+    }
+    
 }

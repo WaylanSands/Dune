@@ -53,6 +53,39 @@ extension FireStoreManager {
         }
     }
     
+    static func fetchSubProgramsWithIDs(programIDs: [String], for program: Program?) {
+        
+        let programsRef = db.collection("programs").whereField("ID", in: programIDs)
+        
+        programsRef.getDocuments { snapshot, error in
+            
+            if error != nil {
+                print("Error fetching batch of programs: \(error!)")
+            } else if snapshot?.count == 0 {
+                 print("There are no programs to fetch")
+            } else {
+                guard let data = snapshot?.documents else { return }
+               
+                if program == nil {
+                    CurrentProgram.subPrograms = [Program]()
+                } else {
+                    program?.subPrograms = [Program]()
+                }
+               
+                for each in data {
+                    let programData = each.data()
+                    let loadedProgram = Program(data: programData)
+                   
+                    if program == nil {
+                        CurrentProgram.subPrograms!.append(loadedProgram)
+                    } else {
+                        program!.subPrograms!.append(loadedProgram)
+                    }
+                }
+            }
+        }
+    }
+    
     // Add a subscriber to a program
     static func updateProgramWithSubscription(programID: String) {
         
@@ -91,7 +124,7 @@ extension FireStoreManager {
         }
     }
     
-     // Subscriber to a program
+     // Subscribe to a program
     static func subscribeUserToProgramWith(programID: String) {
         
         let userRef = db.collection("users").document(User.ID!)
@@ -123,7 +156,46 @@ extension FireStoreManager {
         }
     }
     
+    // Fetch first batch of programs within category
+    static func fetchProgramsWithinCategory(limit: Int, category: String, completion: @escaping ([QueryDocumentSnapshot]) -> ()) {
+        
+        let programsRef = db.collection("programs")
+                            .whereField("primaryCategory", isEqualTo: category)
+                            .order(by: "subscriberCount")
+                            .limit(to: limit)
+        
+        programsRef.getDocuments { snapshot, error in
+            
+            if error != nil {
+                print("Error fetching batch of programs: \(error!)")
+            } else if snapshot?.count == 0 {
+                 print("There are no programs to fetch")
+            } else {
+                guard let data = snapshot?.documents else { return }
+                completion(data)
+            }
+        }
+    }
     
-    
+    static func fetchMoreProgramsWithinCategoryFrom(lastSnapshot: DocumentSnapshot, limit: Int, category: String, completion: @escaping ([QueryDocumentSnapshot]) -> ()) {
+        
+        let programsRef = db.collection("programs")
+                            .whereField("primaryCategory", isEqualTo: category)
+                            .order(by: "subscriberCount")
+                            .start(afterDocument: lastSnapshot)
+                            .limit(to: limit)
+        
+        programsRef.getDocuments { snapshot, error in
+            
+            if error != nil {
+                print("Error fetching batch of programs: \(error!)")
+            } else if snapshot?.count == 0 {
+                 print("There are no programs to fetch")
+            } else {
+                guard let data = snapshot?.documents else { return }
+                completion(data)
+            }
+        }
+    }
     
 }

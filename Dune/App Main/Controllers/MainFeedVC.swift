@@ -7,10 +7,8 @@
 //
 
 import UIKit
-import FirebaseAuth
+import Firebase
 import AVFoundation
-import FirebaseFirestore
-
 
 class MainFeedVC: UIViewController {
    
@@ -18,8 +16,12 @@ class MainFeedVC: UIViewController {
     var audioPlayer = DuneAudioPlayer()
     var audioPlayerInPosition = false
     
-    var firstBatchAmount = 10
+    var batchLimit = 10
+    var subscriptionIDs = [String]()
+    var fetchedEpisodeIDs = [String]()
+    var episodesToFetch = [String]()
     var episodeIDs = [String]()
+    
     var tappedPrograms = [String]()
     var downloadedEps = [Episode]()
     var audioUrls = [String]()
@@ -65,17 +67,18 @@ class MainFeedVC: UIViewController {
         let notificationCenter = NotificationCenter.default
         notificationCenter.addObserver(self, selector: #selector(appMovedToBackground), name: UIApplication.willResignActiveNotification, object: nil)
         notificationCenter.addObserver(self, selector: #selector(appMovedForward), name: UIApplication.willEnterForegroundNotification, object: nil)
-
     }
     
     override func viewWillAppear(_ animated: Bool) {
-       navigationItem.title = "Daily Feed"
-       selectedCellRow = nil
+        tableView.setScrollBarToTopLeft()
+        navigationItem.title = "Daily Feed"
+        selectedCellRow = nil
+        subscriptionIDs =  User.subscriptionIDs!
         
         if User.ID == nil {
             getUserData()
         } else {
-            checkUserHasSubscriptions()
+            fetchEpisodeIDsForUser()
         }
         
         if episodesToDisplay == false {
@@ -89,6 +92,15 @@ class MainFeedVC: UIViewController {
         FileManager.removeAudioFilesFromDocumentsDirectory() {
             print("Audio removed")
         }
+    }
+    
+    func configureDelegates() {
+        subscriptionSettings.settingsDelegate = self
+        ownEpisodeSettings.settingsDelegate = self
+        tableView.register(EpisodeCell.self, forCellReuseIdentifier: "episodeCell")
+        audioPlayer.playbackDelegate = self
+        tableView.dataSource = self
+        tableView.delegate = self
     }
     
     @objc func appMovedToBackground() {
@@ -105,61 +117,20 @@ class MainFeedVC: UIViewController {
         addLoadingView()
         navigationItem.title = "Daily Feed"
         noEpisodesLabel.isHidden = true
+        fetchedEpisodeIDs = [String]()
         downloadedEps = [Episode]()
         downloadedIndexes = [Int]()
         episodeIDs = [String]()
         tableView.isHidden = false
         tableView.reloadData()
-        firstBatchAmount = 10
     }
     
     func configureNavigation() {
-        UINavigationBar.appearance().titleTextAttributes = CustomStyle.blackNavbarAttributes
+        UINavigationBar.appearance().titleTextAttributes = CustomStyle.blackNavBarAttributes
         navigationItem.title = "Daily Feed"
         navigationController?.navigationBar.prefersLargeTitles = true
         navigationController?.navigationBar.isHidden = false
     }
-    
-    func getUserData() {
-        print("getting user data")
-        FireStoreManager.getUserData() {
-            self.resetTableView()
-            self.checkUserHasSubscriptions()
-        }
-    }
-    
-    func newEpisodesHaveBeenAdded(episodeIDs : [String]) -> Bool {
-        if episodeIDs != self.episodeIDs {
-            // Reset tableView
-            print("New episodes added")
-            resetTableView()
-            return true
-        } else {
-            return false
-        }
-    }
-    
-    func checkUserHasSubscriptions() {
-        print("checking user subscriptions")
-        FireStoreManager.getEpisodesFromPrograms { (ids) in
-            
-            if ids != nil {
-                if self.newEpisodesHaveBeenAdded(episodeIDs: ids!) {
-                    self.episodeIDs = ids!
-                    self.checkToLoadFirstBatch()
-                    self.episodesToDisplay = true
-                }
-            } else {
-                print("No episodes to display")
-                self.episodesToDisplay = false
-                self.tableView.isHidden = true
-                self.noEpisodesLabel.isHidden = false
-                self.loadingView.removeFromSuperview()
-                self.navigationItem.title = ""
-            }
-        }
-    }
-    
     
     func addLoadingView() {
         view.addSubview(loadingView)
@@ -193,115 +164,103 @@ class MainFeedVC: UIViewController {
         audioPlayer.frame = CGRect(x: 0, y: view.frame.height, width: view.frame.width, height: 70)
     }
     
-    func transitionAudioPlayerIn() {
-        if audioPlayerInPosition == false {
-            print("The tab bar height is : \(tabBarController!.tabBar.frame.height)")
-            let navBarHeight = view.frame.height - tabBarController!.tabBar.frame.height - 70
+    func getUserData() {
+        print("getting user data")
+        FireStoreManager.getUserData() {
+            self.resetTableView()
+            self.fetchEpisodeIDsForUser()
+        }
+    }
+    
+    func fetchEpisodeIDsForUser() {
+        FireStoreManager.fetchEpisodesIDsWith(with: subscriptionIDs) { ids in
             
-            UIView.animateKeyframes(withDuration: 0.2, delay: 0, options: .beginFromCurrentState, animations: {
-                self.audioPlayer.frame = CGRect(x: 0, y: navBarHeight, width: self.view.frame.width, height: 70)
-            }) { success in
-                if success {
-                    self.audioPlayerInPosition = true
+            if ids.isEmpty {
+                print("No episodes to display")
+                self.episodesToDisplay = false
+                self.tableView.isHidden = true
+                self.noEpisodesLabel.isHidden = false
+                self.loadingView.removeFromSuperview()
+                self.navigationItem.title = ""
+            } else {
+                self.episodesToDisplay = true
+                if ids.count != self.episodeIDs.count {
+                    self.resetTableView()
+                    self.episodeIDs = ids
+                    self.loadFirstBatch()
                 }
             }
         }
     }
     
-    func configureDelegates() {
-        subscriptionSettings.settingsDelegate = self
-        ownEpisodeSettings.settingsDelegate = self
-        tableView.register(EpisodeCell.self, forCellReuseIdentifier: "episodeCell")
-        audioPlayer.playbackDelegate = self
-        tableView.dataSource = self
-        tableView.delegate = self
-    }
-    
-    func checkToLoadFirstBatch() {
-        if episodeIDs.count >= firstBatchAmount {
-            for each in 0..<firstBatchAmount {
-                downloadEpisode(forItemAtIndex: each)
-            }
-        } else {
-            for each in 0..<episodeIDs.count {
-                downloadEpisode(forItemAtIndex: each)
-                firstBatchAmount = episodeIDs.count
-            }
-        }
-    }
-    
-    func  getAnotherBatchOrLastWith(row: Int) {
-        if episodeIDs.count - downloadedEps.count >= 5  {
-            for each in stride(from: row, to: row + 5, by: 1) {
-                downloadEpisode(forItemAtIndex: each)
-            }
-        } else {
-            for each in row..<episodeIDs.count {
-                downloadEpisode(forItemAtIndex: each)
-            }
-        }
-    }
-    
-    func downloadEpisode(forItemAtIndex index: Int) {
-       
-        let epID = self.episodeIDs[index]
-
-        let alreadyDownloaded = self.downloadedEps.contains(where: { $0.ID == epID })
-        let startedDownloading = self.downloadedIndexes.contains(where: { $0 == index })
+    func loadFirstBatch() {
+         var endIndex = batchLimit
         
-        if !alreadyDownloaded && !startedDownloading {
-            downloadedIndexes.append(index)
-            FireStoreManager.getEpisodeDataWith(ID: epID) { (data) in
+         if episodeIDs.count < batchLimit {
+             endIndex = episodeIDs.count
+         }
+         
+         episodesToFetch = Array(episodeIDs[0..<endIndex])
+        
+        for eachID in episodesToFetch {
+            print("Downloading \(eachID)")
+             downloadEpisodeWith(ID: eachID)
+        }
+    }
+    
+    func  loadNextBatch() {
+        var endIndex = batchLimit
+        
+        if (episodeIDs.count - fetchedEpisodeIDs.count) < batchLimit {
+             endIndex = episodeIDs.count - fetchedEpisodeIDs.count
+         }
+
+        let lastEp = fetchedEpisodeIDs.last!
+        let startIndex = episodeIDs.firstIndex(of: lastEp)
+        endIndex += startIndex!
+        
+        episodesToFetch = Array(episodeIDs[startIndex!..<endIndex])
+        
+        for eachID in episodesToFetch {
+             downloadEpisodeWith(ID: eachID)
+        }
+    }
+    
+    
+    // MARK: Download episodes
+    var batch = [Episode]()
+    
+    func downloadEpisodeWith(ID: String) {
+                        
+        let alreadyDownloaded = self.fetchedEpisodeIDs.contains(where: { $0 == ID })
+               
+        if !alreadyDownloaded {
+            FireStoreManager.getEpisodeDataWith(ID: ID) { (data) in
                 
-                let id = data["ID"] as! String
+                let episode = Episode(data: data)
+                self.batch.append(episode)
                 
-                let postedDate = data["postedAt"] as! Timestamp
-                let date = postedDate.dateValue()
-                let time = date.timeAgoDisplay()
-                
-                let duration = data["duration"] as! String
-                let imageID = data["imageID"] as! String
-                let imagePath = data["imagePath"] as! String
-                let audioID = data["audioID"] as! String
-                let audioPath = data["audioPath"] as! String
-                let programName = data["programName"] as! String
-                let username = data["username"] as! String
-                let caption = data["caption"] as! String
-                let likeCount = data["likeCount"] as! Int
-                let commentCount = data["commentCount"] as! Int
-                let shareCount = data["shareCount"] as! Int
-                let listenCount = data["listenCount"] as! Int
-                let tags = data["tags"] as! [String]?
-                let programID = data["programID"] as! String
-                let ownerID = data["ownerID"] as! String
-                
-                let newEp = Episode(
-                    id: id,
-                    addedAt: time,
-                    duration: duration,
-                    imageID: imageID,
-                    audioID: audioID,
-                    likeCount: likeCount,
-                    commentCount: commentCount,
-                    shareCount: shareCount,
-                    listenCount: listenCount,
-                    audioPath: audioPath,
-                    imagePath: imagePath,
-                    programName: programName,
-                    username: username,
-                    caption: caption,
-                    tags: tags,
-                    programID: programID,
-                    ownerID: ownerID
-                )
-                
-                self.downloadedEps.append(newEp)
-                self.audioPlayer.audioIDs.append(audioID)
-                self.audioPlayer.downloadedEps.append(newEp)
-                            
-                if self.downloadedEps.count >= self.firstBatchAmount {
-                    self.tableView.reloadData()
+                print("Batch count \(self.batch.count) eps to fetch count \(self.episodesToFetch.count)")
+                if self.batch.count == self.episodesToFetch.count{
+                   
+                    let orderedBatch = self.batch.sorted { (epA , epB) -> Bool in
+                        let dateA = epA.timeStamp.dateValue()
+                        let dateB = epB.timeStamp.dateValue()
+                        return dateA > dateB
+                    }
+                    
+                    for each in orderedBatch {
+                        self.downloadedEps.append(each)
+                        self.audioPlayer.downloadedEps.append(each)
+                        self.audioPlayer.audioIDs.append(each.audioID)
+                    }
+                    
+                    print("Im here")
+                    self.fetchedEpisodeIDs += self.episodesToFetch
                     self.loadingView.removeFromSuperview()
+                    self.episodesToFetch.removeAll()
+                    self.tableView.reloadData()
+                    self.batch.removeAll()
                 }
             }
         }
@@ -365,18 +324,16 @@ extension MainFeedVC: UITableViewDataSource, UITableViewDelegate {
         let maximumOffset = scrollView.contentSize.height - scrollView.frame.size.height
 
         // Change 10.0 to adjust the distance from bottom
-        if maximumOffset - currentOffset <= 90.0 {
-            getAnotherBatchOrLastWith(row: downloadedEps.count)
+        if maximumOffset - currentOffset <= 90.0 && fetchedEpisodeIDs != episodeIDs {
+            loadNextBatch()
+            print("getting more")
         }
     }
     
 }
 
 extension MainFeedVC: EpisodeCellDelegate {
-    func updateLikeCountFor(episode: Episode, at indexPath: IndexPath) {
-        //
-    }
-    
+
     
    func duration(for resource: String) -> Double {
        let asset = AVURLAsset(url: URL(fileURLWithPath: resource))
@@ -388,14 +345,7 @@ extension MainFeedVC: EpisodeCellDelegate {
         if !cell.playbackBarView.playbackBarIsSetup {
             cell.playbackBarView.setupPlaybackBar()
         }
-//      audioPlayer.playbackDelegate = cell
         audioPlayer.navHeight = self.tabBarController?.tabBar.frame.height
-        
-//        if cell.episode.likeCount >= 10 {
-//            audioPlayer.animateAudioPlayerWithoutOptions()
-//        } else {
-//            audioPlayer.animateAudioPlayerWithOptions()
-//        }
        
         guard let audioIndex = tableView.indexPath(for: cell)?.row else { return }
         let image = cell.programImageButton.imageView?.image
@@ -404,10 +354,10 @@ extension MainFeedVC: EpisodeCellDelegate {
         getAudioWith(audioID: audioID) { url in
             self.audioPlayer.playOrPause(episode: cell.episode, with: url, image: image!)
         }
-        
-        func updateLikeCountFor(episode: Episode, at indexPath: IndexPath) {
-            downloadedEps[indexPath.row] = episode
-        }
+    }
+    
+    func updateLikeCountFor(episode: Episode, at indexPath: IndexPath) {
+        downloadedEps[indexPath.row] = episode
     }
     
     func showSettings(cell: EpisodeCell) {
@@ -428,9 +378,12 @@ extension MainFeedVC: EpisodeCellDelegate {
         //Delete own episode
         let episode = self.downloadedEps[row]
         FireStorageManager.deletePublishedAudioFromStorage(audioID: episode.audioID)
-        FireStoreManager.removeEpisodeIDFromProgram(episodeID: episode.ID)
+        FireStoreManager.removeEpisodeIDFromProgram(programID: episode.programID, episodeID: episode.ID)
         FireStoreManager.deleteEpisodeDocument(ID: episode.ID)
-        User.subscriptionIDs!.removeAll { $0 == episode.ID }
+        
+        if episode.programID == CurrentProgram.ID {
+            CurrentProgram.episodeIDs!.removeAll { $0["ID"] as! String == episode.ID }
+        }
         
         let index = IndexPath(item: row, section: 0)
         episodeIDs.remove(at: row)
@@ -441,7 +394,7 @@ extension MainFeedVC: EpisodeCellDelegate {
         
         if episodeIDs.count == 0 {
              resetTableView()
-             checkUserHasSubscriptions()
+             fetchEpisodeIDsForUser()
         }
         
         audioPlayer.transitionOutOfView()

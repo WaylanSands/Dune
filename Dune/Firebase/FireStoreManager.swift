@@ -13,15 +13,43 @@ struct FireStoreManager {
     
     static let db = Firestore.firestore()
     
-    
-    static func addImagePathToProgram() {
+    static func addImagePathToProgram(with programID: String, imagePath: String, imageID: String) {
         DispatchQueue.global(qos: .userInitiated).async {
             
-            let programRef = db.collection("programs").document(CurrentProgram.ID!)
+            let programRef = db.collection("programs").document(programID)
+            
+            if programID != CurrentProgram.ID! {
+                let program = CurrentProgram.subPrograms?.first(where: { $0.ID == programID })
+                program?.imagePath = imagePath
+            } else {
+                CurrentProgram.imagePath = imagePath
+            }
             
             programRef.updateData([
-                "imagePath" : CurrentProgram.imagePath!,
-                "imageID" : CurrentProgram.imageID!
+                "imagePath" : imagePath,
+                "imageID" : imageID
+            ]) { (error) in
+                if let error = error {
+                    print("There has been an error adding the imagePath to program: \(error.localizedDescription)")
+                } else {
+                    print("Successfully added imagePath to program")
+                }
+            }
+        }
+    }
+    
+    static func addImagePathToSubProgram(with programID: String, imageID: String, imagePath: String) {
+        DispatchQueue.global(qos: .userInitiated).async {
+            
+            let program = CurrentProgram.subPrograms?.first(where: {$0.ID == programID})
+            program?.imagePath = imagePath
+            program?.imageID = imageID
+            
+            let programRef = db.collection("programs").document(programID)
+            
+            programRef.updateData([
+                "imagePath" : imagePath,
+                "imageID" : imageID
             ]) { (error) in
                 if let error = error {
                     print("There has been an error adding the imagePath to program: \(error.localizedDescription)")
@@ -45,7 +73,6 @@ struct FireStoreManager {
                     print("There has been an error adding the imagePath to User: \(error.localizedDescription)")
                 } else {
                     print("Successfully added imagePath to user")
-                    UserDefaults.standard.set(true, forKey: "hasCustomImage")
                 }
             }
         }
@@ -79,13 +106,13 @@ struct FireStoreManager {
         }
     }
     
-    static func updateSecondaryProgramName() {
+    static func updateSubProgramWith(name: String, programID: String) {
         DispatchQueue.global(qos: .userInitiated).async {
             
-            let programRef = db.collection("programs").document(CurrentProgram.ID!)
+            let programRef = db.collection("programs").document(programID)
             
             programRef.updateData([
-                "name" :  CurrentProgram.name!
+                "name" :  name
             ]) { (error) in
                 if let error = error {
                     print("Error updating program's name: \(error.localizedDescription)")
@@ -147,32 +174,15 @@ struct FireStoreManager {
         }
     }
     
-    static func updatePrimaryCategory() {
+    
+    static func updateProgram(summary: String, tags: [String], for programID: String) {
         DispatchQueue.global(qos: .userInitiated).async {
             
-            let programRef = db.collection("programs").document(CurrentProgram.ID!)
+            let programRef = db.collection("programs").document(programID)
             
             programRef.updateData([
-                "primaryCategory" : CurrentProgram.primaryCategory!
-            ]) { (error) in
-                if let error = error {
-                    print("Error updating programs's primaryCategory: \(error.localizedDescription)")
-                } else {
-                    print("Successfully updated program's primaryCategory")
-                }
-            }
-        }
-    }
-    
-    
-    static func updateProgramDetails() {
-        DispatchQueue.global(qos: .userInitiated).async {
-            
-            let programRef = db.collection("programs").document(CurrentProgram.ID!)
-            
-            programRef.updateData([
-                "summary" :  CurrentProgram.summary!,
-                "tags" :     CurrentProgram.tags!
+                "summary" :  summary,
+                "tags" :     tags
             ]) { (error) in
                 if let error = error {
                     print("Error updating programs's details: \(error.localizedDescription)")
@@ -262,7 +272,7 @@ struct FireStoreManager {
                     print("There was an error getting episodes")
                 } else {
                     guard let data = snapshot?.data() else { return }
-                    
+
                     if let epIDs = data["episodeIDs"] {
                         
                         for eachID in (epIDs as! [String]) {
@@ -286,6 +296,7 @@ struct FireStoreManager {
             }
         }
     }
+
     
     static func getEpisodesInOrder(episodeIDs: [String], completion: @escaping ([String]) -> ()) {
        
@@ -398,24 +409,40 @@ struct FireStoreManager {
         }
     }
     
-    static func publishEpisode(caption: String, tags: [String], audioID: String, audioURL: URL, duration: String, completion: @escaping (Bool) ->()) {
+    static func deleteDraftEpisodeWith(ID: String) {
+        DispatchQueue.global(qos: .userInitiated).sync {
+            
+            let epRef = db.collection("draftEpisodes").document(ID)
+            
+            epRef.delete { error in
+                if error != nil {
+                    print("Error attempting to delete draft episode")
+                } else {
+                    print("Success deleting draft episode")
+                }
+            }
+        }
+    }
+    
+    static func publishEpisode(programID: String, imageID: String, imagePath: String, programName: String, caption: String, tags: [String], audioID: String, audioURL: URL, duration: String, completion: @escaping (Bool) ->()) {
         
         DispatchQueue.global(qos: .userInitiated).async {
             
             let episodeRef = db.collection("episodes").document()
             let ID = episodeRef.documentID
+            //            let IDDict = ["ID" : ID , "timeStamp" : FieldValue.serverTimestamp()] as [String : Any]
             
             episodeRef.setData([
                 "ID": ID,
                 "postedAt" : FieldValue.serverTimestamp(),
                 "duration" : duration,
-                "imageID" : CurrentProgram.imageID!,
-                "imagePath" : CurrentProgram.imagePath!,
-                "programName" : CurrentProgram.name!,
+                "imageID" : imageID,
+                "imagePath" :imagePath,
+                "programName" : programName,
                 "username" : User.username!,
                 "caption" : caption,
                 "tags" : tags,
-                "programID" : CurrentProgram.ID!,
+                "programID" : programID,
                 "ownerID" : User.ID!,
                 "audioPath" : audioURL.absoluteString,
                 "audioID" : audioID,
@@ -428,31 +455,151 @@ struct FireStoreManager {
                     print("There has been an error adding the publishing the episode: \(error.localizedDescription)")
                 } else {
                     print("Successfully published episode")
-
-                    let programRef = db.collection("programs").document(CurrentProgram.ID!)
                     
-                    programRef.updateData([
-                        "episodeIDs" : FieldValue.arrayUnion([ID])
-                    ]) { (error) in
-                        if let error = error {
-                            print("There has been an error adding the episodeID to program: \(error.localizedDescription)")
+                    
+                    episodeRef.getDocument { (snapshot, error) in
+                        if error != nil {
+                            print("Error getting snapshot")
                         } else {
-                            print("Successfully added episodeID to program")
-                            completion(true)
+                            
+                            var timeStamp: Timestamp
+                            
+                            let data = snapshot!.data()
+                            timeStamp = data!["postedAt"] as! Timestamp
+                            
+                            let programRef = db.collection("programs").document(programID)
+                            
+                            programRef.updateData([
+                                "episodeIDs" : FieldValue.arrayUnion([["ID" : ID , "timeStamp" : timeStamp]])
+                            ]) { (error) in
+                                if let error = error {
+                                    print("There has been an error adding the episodeID to program: \(error.localizedDescription)")
+                                } else {
+                                    print("Successfully added episodeID to program")
+                                    completion(true)
+                                }
+                            }
                         }
                     }
-                    removeDraftIDFromUser(episodeID: ID)
                 }
             }
         }
     }
     
-    static func saveDraftEpisode(fileName: String, wasTrimmed: Bool, startTime: Double, endTime: Double, caption: String, tags: [String], audioURL: URL, duration: String, completion: @escaping (Bool)->()) {
+    static func addIntroToProgram(programID: String, introID: String, introPath: String) {
+        
+        DispatchQueue.global(qos: .userInitiated).async {
+            
+            let programRef = db.collection("programs").document(programID)
+            
+            programRef.updateData([
+                "hasIntro" : true,
+                "introID": introID,
+                "introPath" : introPath,
+            ]) { error in
+                if error != nil {
+                    print("Error adding intro to program \(error!)")
+                } else {
+                    print("Successfully added intro to program")
+                }
+            }
+        }
+    }
+    
+    static func removeIntroFromProgram() {
+        
+        DispatchQueue.global(qos: .userInitiated).async {
+            
+            let programRef = db.collection("programs").document(CurrentProgram.ID!)
+            
+            programRef.updateData([
+                "hasIntro" : false,
+                "introID": FieldValue.delete(),
+                "introPath" : FieldValue.delete(),
+            ]) { error in
+                if error != nil {
+                    print("Error adding intro to program \(error!)")
+                } else {
+                    print("Successfully added intro to program")
+                }
+            }
+        }
+    }
+    
+    // MARK: Delete a program
+    static func deleteProgram(with ID: String, introID: String?, imageID: String?, isSubProgram: Bool) {
+        
+        DispatchQueue.global(qos: .userInitiated).async {
+            
+            let programRef = db.collection("programs").document(ID)
+            let episodeRef = db.collection("episodes").whereField("programID", isEqualTo: ID)
+            let draftEpRef = db.collection("draftEpisodes").whereField("programID", isEqualTo: ID)
+            let usersRef = db.collection("users").whereField("subscriptionIDs", arrayContains: ID)
+
+            programRef.delete { error in
+                if error != nil {
+                    print("Error attempting to delete program")
+                }
+            }
+            
+            episodeRef.getDocuments { (snapshot, error) in
+                if error != nil {
+                    print("Error attempting to get program episode documents ")
+                } else {
+                    for each in snapshot!.documents {
+                        let data = each.data()
+                        let audioID = data["audioID"] as! String
+                        FireStorageManager.deletePublishedAudioFromStorage(audioID: audioID)
+                        each.reference.delete()
+                    }
+                }
+            }
+            
+            draftEpRef.getDocuments { (snapshot, error) in
+                if error != nil {
+                    print("Error attempting to get draft episode documents ")
+                } else {
+                    for each in snapshot!.documents {
+                        let data = each.data()
+                        let audioID = data["audioID"] as! String
+                        FireStorageManager.deleteDraftFileFromStorage(fileName: audioID)
+                        each.reference.delete()
+                    }
+                }
+            }
+            
+            usersRef.getDocuments { (snapshot, error) in
+                if error != nil {
+                    print("Error attempting to get draft episode documents ")
+                } else {
+                    for each in snapshot!.documents {
+                        each.reference.updateData(["subscriptionIDs" : FieldValue.arrayRemove([ID])])
+                    }
+                }
+            }
+            
+            if introID != nil {
+                FireStorageManager.deleteIntroFileFromStorage(fileName: introID!)
+            }
+            
+            if imageID != nil {
+                FireStorageManager.deleteImageFileFromStorage(imageID: imageID!)
+            }
+            
+            if isSubProgram {
+                print("Is a sub program")
+                let programRef = db.collection("programs").document(CurrentProgram.ID!)
+                programRef.updateData(["programIDs" : FieldValue.arrayRemove([ID])])
+            }
+        }
+    }
+    
+    
+    static func saveDraftEpisode(ID: String, fileName: String, programID: String, programName: String,  wasTrimmed: Bool, startTime: Double, endTime: Double, caption: String, tags: [String], audioURL: URL, duration: String, completion: @escaping (Bool)->()) {
 
         DispatchQueue.global(qos: .userInitiated).async {
             
-            let episodeRef = db.collection("draftEpisodes").document()
-            let ID = episodeRef.documentID
+            let episodeRef = db.collection("draftEpisodes").document(ID)
             
          episodeRef.setData([
                 "ID": ID,
@@ -462,11 +609,11 @@ struct FireStoreManager {
                 "startTime" : startTime,
                 "endTime" : endTime,
                 "duration" : duration,
-                "programName" : CurrentProgram.name!,
+                "programName" : programName,
                 "username" : User.username!,
                 "caption" : caption,
                 "tags" : tags,
-                "programID" : CurrentProgram.ID!,
+                "programID" : programID,
                 "ownerID" : User.ID!,
                 "audioURL" : audioURL.absoluteString
             ])
@@ -524,6 +671,23 @@ struct FireStoreManager {
         }
     }
     
+    static func removeMultipleProgramsStatus() {
+        DispatchQueue.global(qos: .userInitiated).async {
+            
+            let programRef = db.collection("programs").document(CurrentProgram.ID!)
+            
+            programRef.updateData([
+                "hasMultiplePrograms" : false
+            ]) { (error) in
+                if let error = error {
+                    print("Error removing multiple programs status: \(error.localizedDescription)")
+                } else {
+                    print("Success removing multiple programs status")
+                }
+            }
+        }
+    }
+    
     static func removeDraftIDFromUser(episodeID: String) {
         DispatchQueue.global(qos: .userInitiated).async {
             
@@ -550,10 +714,10 @@ struct FireStoreManager {
         }
     }
     
-    static func removeEpisodeIDFromProgram(episodeID: String) {
+    static func removeEpisodeIDFromProgram(programID: String, episodeID: String) {
         DispatchQueue.global(qos: .userInitiated).async {
             
-            let programRef = db.collection("programs").document(CurrentProgram.ID!)
+            let programRef = db.collection("programs").document(programID)
             
             programRef.updateData([
                 "episodeIDs" : FieldValue.arrayRemove([episodeID])
@@ -625,8 +789,9 @@ struct FireStoreManager {
                     User.modelUser(data: data)
                     
                     let isPublisher = data["isPublisher"] as! Bool
+                    let onBoarded = data["completedOnBoarding"] as! Bool
                     
-                    if isPublisher {
+                    if isPublisher && onBoarded {
                         FireStoreManager.getProgramData { success in
                             if success {
                                 completion()

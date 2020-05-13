@@ -352,18 +352,23 @@ extension FileManager {
     }
     
     // Store selected image in cache directory
-    static func storeSelectedProgramImage(image: UIImage, imageID: inout String?, programID: String) {
+    static func storeSelectedProgramImage(image: UIImage, imageID: String?, programID: String) {
         
         let fileManager = FileManager.default
         
-        if imageID == nil {
-            imageID = NSUUID().uuidString
+        let imageID = imageID ?? NSUUID().uuidString
+        
+        if CurrentProgram.ID != programID {
+            let program = CurrentProgram.subPrograms?.first(where: { $0.ID == programID })
+            program?.imageID = imageID
+        } else {
+            CurrentProgram.imageID = imageID
         }
         
         if let data = image.jpegData(compressionQuality: 0.5) {
            
             let cacheURL = getCacheDirectory()
-            let fileURL = cacheURL.appendingPathComponent(imageID!)
+            let fileURL = cacheURL.appendingPathComponent(imageID)
             
             if fileManager.fileExists(atPath: fileURL.path) {
                 do {
@@ -378,7 +383,41 @@ extension FileManager {
             do {
                 try data.write(to: fileURL)
                 print("Adding image to cache")
-                FireStorageManager.storeCachedProgram(image: image, with: imageID!, for: programID)
+                FireStorageManager.storeCachedProgram(image: image, with: imageID, for: programID)
+            }
+            catch {
+                print("Unable to add Image to cache: (\(error))")
+            }
+        }
+    }
+    
+    static func storeInitialProgramImage(image: UIImage, programID: String) {
+        
+        let fileManager = FileManager.default
+        let imageID = NSUUID().uuidString
+        CurrentProgram.imageID = imageID
+        CurrentProgram.image = image
+
+        if let data = image.jpegData(compressionQuality: 0.5) {
+           
+            let cacheURL = getCacheDirectory()
+            
+            let fileURL = cacheURL.appendingPathComponent(imageID)
+            
+            if fileManager.fileExists(atPath: fileURL.path) {
+                do {
+                    try fileManager.removeItem(at: fileURL)
+                } catch {
+                    print("Unable to remove file from cache \(error)")
+                }
+            } else {
+                print("There is no data with that fileName")
+            }
+
+            do {
+                try data.write(to: fileURL)
+                print("Adding image to cache")
+                FireStorageManager.storeCachedProgram(image: image, with: imageID, for: programID)
             }
             catch {
                 print("Unable to add Image to cache: (\(error))")

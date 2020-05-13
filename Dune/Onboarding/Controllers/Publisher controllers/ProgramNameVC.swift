@@ -155,8 +155,13 @@ class ProgramNameVC: UIViewController {
             CurrentProgram.ID = programID
             User.subscriptionIDs = [programID]
             CurrentProgram.isPrimaryProgram = true
-            
-//            FileManager.createUserFolderForPublisher(programID: Program.ID!)
+            CurrentProgram.episodeIDs = [[String:Any]]()
+            CurrentProgram.subscriberCount = 0
+            CurrentProgram.hasIntro = false
+            CurrentProgram.hasIntro = false
+            CurrentProgram.hasMultiplePrograms = false
+            CurrentProgram.subscriberIDs = [String]()
+
             
             let db = Firestore.firestore()
             let userRef = db.collection("users").document(User.ID!)
@@ -178,7 +183,13 @@ class ProgramNameVC: UIViewController {
                         "ID" : CurrentProgram.ID!,
                         "name" : name,
                         "ownerID" : User.ID!,
-                        "isPrimaryProgram" : true
+                        "username" : User.username!,
+                        "isPrimaryProgram" : true,
+                        "episodeIDs" : [],
+                        "subscriberCount" : 0,
+                        "hasIntro" : false,
+                        "hasMultiplePrograms" : false,
+                        "subscriberIDs": [],
                     ]) { (error) in
                         if let error = error {
                             print("There has been an error adding the program: \(error.localizedDescription)")

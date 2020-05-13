@@ -45,7 +45,7 @@ class EditAccountVC: UIViewController {
     
     let headerView: UIView = {
         let view = UIView()
-        view.backgroundColor = CustomStyle.seventhShade
+        view.backgroundColor = CustomStyle.onBoardingBlack
         return view
     }()
     
@@ -254,7 +254,7 @@ class EditAccountVC: UIViewController {
     
     let blackBGView: UIView = {
         let view = UIView()
-        view.backgroundColor = CustomStyle.seventhShade
+        view.backgroundColor = CustomStyle.onBoardingBlack
         return view
     }()
     
@@ -605,7 +605,7 @@ extension EditAccountVC: UIImagePickerControllerDelegate, UINavigationController
             
             // Store selected image to user or Program
             if User.isPublisher! {
-                FireStorageManager.storeProgram(image: selectedImage)
+                  FileManager.storeSelectedProgramImage(image: selectedImage, imageID: CurrentProgram.imageID, programID: CurrentProgram.ID!)
             } else {
                 FireStorageManager.storeUserImage(selectedImage: selectedImage)
             }

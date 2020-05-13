@@ -18,7 +18,7 @@ class MainTabController: UITabBarController {
     
     func setupTabBar() {
         
-        let isPublisher = UserDefaults.standard.bool(forKey: "isPublisher")
+//        let isPublisher = UserDefaults.standard.bool(forKey: "isPublisher")
         var accountController: UINavigationController
         
         let mainFeedController = UINavigationController(rootViewController: MainFeedVC())
@@ -26,7 +26,7 @@ class MainTabController: UITabBarController {
         let studioController = UINavigationController(rootViewController: StudioVC())
         let playlistController = UINavigationController(rootViewController: TrendingVC())
        
-        if isPublisher {
+        if User.isPublisher! {
             accountController = UINavigationController(rootViewController: ProgramAccountVC())
         } else {
             accountController = UINavigationController(rootViewController: AccountVC())

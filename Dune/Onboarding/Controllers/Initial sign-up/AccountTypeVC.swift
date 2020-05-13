@@ -88,14 +88,14 @@ class AccountTypeVC: UIViewController {
         if sender.titleLabel?.text == "Publisher" {
             print("hit publisher")
             User.isPublisher = true
-            UserDefaults.standard.set(true, forKey: "isPublisher")
+           
             if let programNameVC = UIStoryboard(name: "OnboardingPublisher", bundle: nil).instantiateViewController(withIdentifier: "programNameVC") as? ProgramNameVC {
                 navigationController?.pushViewController(programNameVC, animated: true)
                 print("publisher push")
             }
         } else if sender.titleLabel?.text == "Listener" {
             User.isPublisher = false
-            UserDefaults.standard.set(false, forKey: "isPublisher")
+
             if let listenerImageVC = UIStoryboard(name: "OnboardingListener", bundle: nil).instantiateViewController(withIdentifier: "listenerImageVC") as? ListenerImageVC {
                 navigationController?.pushViewController(listenerImageVC, animated: true)
             }
@@ -114,10 +114,10 @@ class AccountTypeVC: UIViewController {
                 } else {
                     
                     UserDefaults.standard.set(true, forKey: "loggedIn")
-                    UserDefaults.standard.set(false, forKey: "completedOnboarding")
                     
                     guard let uid = result?.user.uid else { return }
                     User.ID = uid
+                    User.subscriptionIDs = [String]()
                     
                     self.db.collection("users").document(uid).setData([
                         "ID" : User.ID!,
@@ -125,7 +125,8 @@ class AccountTypeVC: UIViewController {
                         "email": User.email!,
                         "birthDate": User.birthDate!,
                         "isPublisher": User.isPublisher!,
-                        "completedOnBoarding" : false
+                        "completedOnBoarding" : false,
+                        "subscriptionIDs" : User.subscriptionIDs!
                     ]) { err in
                         if let err = err {
                             print("Error creating new user document: \(err)")

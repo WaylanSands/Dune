@@ -20,7 +20,6 @@ protocol PlaybackBarDelegate {
     func updateActiveCell(atIndex: Int)
 }
 
-
 class DuneAudioPlayer: UIView {
        
     var audioIDs = [String]()
@@ -33,7 +32,7 @@ class DuneAudioPlayer: UIView {
     var playbackDelegate: PlaybackBarDelegate!
     var episode: Episode!
 
-    var playerIsOutOfPosition = false
+    var playerIsOutOfPosition = true
     var optionsArePresented = false
     var optionsAreHidden = false
     var navHeight: CGFloat!
@@ -42,10 +41,18 @@ class DuneAudioPlayer: UIView {
     var episodeID: String!
     var likeCount = 0
     var likedEpisode = false
+    
+    var withOutNavBar = true
 
     var playbackCircleLink: CADisplayLink!
     
     let playbackView: UIView = {
+        let view = UIView()
+        view.backgroundColor = UIColor.black.withAlphaComponent(0.88)
+        return view
+    }()
+    
+    let playbackBottomView: UIView = {
         let view = UIView()
         view.backgroundColor = UIColor.black.withAlphaComponent(0.88)
         return view
@@ -151,10 +158,16 @@ class DuneAudioPlayer: UIView {
         return button
     }()
     
+    lazy var slideDown = UISwipeGestureRecognizer(target: self, action: #selector(dismissView))
+
     override init(frame: CGRect) {
         super.init(frame: frame)
         playbackCircleView.setupPlaybackCircle()
         configureViews()
+        
+        slideDown.direction = .down
+        self.addGestureRecognizer(slideDown)
+        self.isUserInteractionEnabled = true
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -189,8 +202,8 @@ class DuneAudioPlayer: UIView {
         
         playbackView.addSubview(playbackCircleView)
         playbackCircleView.translatesAutoresizingMaskIntoConstraints = false
-        playbackCircleView.centerYAnchor.constraint(equalTo: playbackButton.centerYAnchor, constant: -20).isActive = true
-        playbackCircleView.centerXAnchor.constraint(equalTo: playbackButton.centerXAnchor, constant: -20).isActive = true
+        playbackCircleView.centerYAnchor.constraint(equalTo: playbackButton.centerYAnchor, constant: 0).isActive = true
+        playbackCircleView.centerXAnchor.constraint(equalTo: playbackButton.centerXAnchor, constant: 0).isActive = true
 //        playbackCircleView.isHidden = true
         
         playbackView.addSubview(captionLabel)
@@ -255,6 +268,15 @@ class DuneAudioPlayer: UIView {
         listenCountLabel.leadingAnchor.constraint(equalTo: listenIconImage.trailingAnchor, constant: 7).isActive = true
         listenCountLabel.widthAnchor.constraint(equalToConstant: 22).isActive = true
     }
+    
+    func addBottomSection() {
+         self.addSubview(playbackBottomView)
+         playbackBottomView.translatesAutoresizingMaskIntoConstraints = false
+         playbackBottomView.topAnchor.constraint(equalTo: playbackView.bottomAnchor).isActive = true
+         playbackBottomView.leadingAnchor.constraint(equalTo: playbackView.leadingAnchor).isActive = true
+         playbackBottomView.trailingAnchor.constraint(equalTo: playbackView.trailingAnchor).isActive = true
+         playbackBottomView.heightAnchor.constraint(equalToConstant: 90).isActive = true
+     }
     
     func configureWithoutOptions() {
         topImageConstraint.constant = 12
@@ -333,7 +355,7 @@ class DuneAudioPlayer: UIView {
         playbackCircleLink.add(to: RunLoop.current, forMode: RunLoop.Mode.common)
     }
     
-   @objc func updatePlaybackPosition() {
+    @objc func updatePlaybackPosition() {
         let duration = audioPlayer.duration
         let currentTime = audioPlayer.currentTime
         let percentagePlayed = CGFloat(currentTime / duration)
@@ -377,6 +399,11 @@ class DuneAudioPlayer: UIView {
 //        playbackCircleView.isHidden = false
 //        playbackButton.isHidden = false
 //    }
+    
+    @objc func dismissView() {
+        print("Swipe")
+       finishSession()
+    }
     
     @objc func playbackButtonPress() {
         
@@ -452,7 +479,8 @@ class DuneAudioPlayer: UIView {
     
     func animateAudioPlayerWithOptions() {
         let height = UIScreen.main.bounds.height - navHeight - 100
-        
+        playerIsOutOfPosition = false
+        optionsArePresented = true
         configureSettingOptions()
 //        isInPosition = true
         topImageConstraint.constant = 15
@@ -462,6 +490,8 @@ class DuneAudioPlayer: UIView {
     }
     
     func animateAudioPlayerWithoutOptions() {
+        playerIsOutOfPosition = false
+        optionsArePresented = false
         let height =  UIScreen.main.bounds.height - navHeight - 70
         
         configureWithoutOptions()
@@ -480,10 +510,17 @@ class DuneAudioPlayer: UIView {
     }
     
     func finishSession() {
+        playerIsOutOfPosition = true
+        optionsArePresented = false
+        optionsAreHidden = false
         transitionOutOfView()
         currentState = .ready
         if audioPlayer != nil {
-            audioPlayer.stop()
+            audioPlayer.setVolume(0, fadeDuration: 2)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                self.audioPlayer.volume = 1
+                self.audioPlayer.stop()
+            }
         }
     }
     
@@ -503,17 +540,22 @@ extension DuneAudioPlayer: AVAudioPlayerDelegate {
         playbackCircleLink.isPaused = true
         playbackButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: 3, bottom: 0, right: 0)
         playbackButton.setImage(UIImage(named: "play-episode-icon"), for: .normal)
+        playbackCircleView.setupPlaybackCircle()
         
-        guard let index = audioIDs.firstIndex(of: episode.audioID) else { return }
-        let episode = downloadedEps[index]
-        episodeID = episode.ID
-        
-        FireStoreManager.updateListenCountFor(episode: episodeID)
+        print("episodeID \(episode!.audioID)")
+        guard let index = downloadedEps.firstIndex(where: { $0.audioID == episode!.audioID }) else { return }
+//        let episode = downloadedEps[index]
+//        episodeID = episode.ID
+        print("The index was \(index)")
+         print("The end was \(downloadedEps.endIndex - 1)")
+        FireStoreManager.updateListenCountFor(episode: episode.ID)
             
         print("NextIndex: \(index + 1)")
-        if (audioIDs.endIndex - 1) > index {
+        if (downloadedEps.endIndex - 1) > index {
             playNextEpisodeWith(nextIndex: index + 1)
             playbackDelegate.updateActiveCell(atIndex: index + 1)
+        } else {
+            finishSession()
         }
     }
     

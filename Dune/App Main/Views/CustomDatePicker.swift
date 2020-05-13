@@ -34,7 +34,7 @@ class CustomDatePicker: UIView {
     func presentDatePicker() {
         if let window =  UIApplication.shared.keyWindow {
             blackView.backgroundColor = UIColor.black.withAlphaComponent(0.8)
-            blackView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handelDismiss)))
+            blackView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleDismiss)))
             
             window.addSubview(blackView)
             blackView.frame = window.frame
@@ -62,7 +62,7 @@ class CustomDatePicker: UIView {
         }
     }
     
-    @objc func handelDismiss() {
+    @objc func handleDismiss() {
         UIView.animate(withDuration: 0.5) {
             self.blackView.alpha = 0
             self.datePicker.alpha = 0
@@ -73,7 +73,7 @@ class CustomDatePicker: UIView {
     @objc func updateDateLabel() {
         print("hit")
         delegate?.confirmDateSelected(date: datePicker.date)
-        handelDismiss()
+        handleDismiss()
     }
 }
 

@@ -82,7 +82,7 @@ class publisherCategoriesVC: UIViewController {
     }
     
     func setupCategoryButtons() {
-        for eachCase in Categories.allCases {
+        for eachCase in Category.allCases {
             categories.append(eachCase.rawValue)
         }
         

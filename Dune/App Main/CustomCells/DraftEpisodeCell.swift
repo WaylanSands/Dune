@@ -119,27 +119,6 @@ class DraftEpisodeCell: UITableViewCell {
         return view
     }()
     
-//    let firstTagButton: UIButton = {
-//        let button = UIButton()
-//        button.setTitle("one", for: .normal)
-//        button.titleLabel?.textColor = CustomStyle.fifthShade
-//        return button
-//    }()
-//
-//    let secondTagButton: UIButton = {
-//        let button = UIButton()
-//        button.setTitle("two", for: .normal)
-//        button.titleLabel?.textColor = CustomStyle.fifthShade
-//        return button
-//    }()
-//
-//    let thirdTagButton: UIButton = {
-//        let button = UIButton()
-//        button.setTitle("three", for: .normal)
-//        button.titleLabel?.textColor = CustomStyle.fifthShade
-//        return button
-//    }()
-    
     let episodeDurationLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 10, weight: .medium)
@@ -166,7 +145,15 @@ class DraftEpisodeCell: UITableViewCell {
     }
         
     func normalSetUp(episode: DraftEpisode) {
-        self.programImageButton.setImage(CurrentProgram.image, for: .normal)
+        var selectedProgram: Program?
+        
+        if CurrentProgram.subPrograms != nil && episode.programID != CurrentProgram.ID {
+            selectedProgram = CurrentProgram.subPrograms?.first(where: {$0.ID == episode.programID })
+            guard let program = selectedProgram else { return }
+            self.programImageButton.setImage(program.image, for: .normal)
+        } else {
+            self.programImageButton.setImage(CurrentProgram.image, for: .normal)
+        }
         
         programNameLabel.text = episode.programName
         usernameLabel.text = "@\(episode.username)"
@@ -224,7 +211,7 @@ class DraftEpisodeCell: UITableViewCell {
         programNameStackedView.translatesAutoresizingMaskIntoConstraints = false
         programNameStackedView.topAnchor.constraint(equalTo: programImageButton.topAnchor).isActive = true
         programNameStackedView.leadingAnchor.constraint(equalTo: programImageButton.trailingAnchor, constant: 10).isActive = true
-        programNameStackedView.trailingAnchor.constraint(lessThanOrEqualTo: cellContentView.trailingAnchor, constant: 20).isActive = true
+        programNameStackedView.trailingAnchor.constraint(lessThanOrEqualTo: cellContentView.trailingAnchor, constant: -40).isActive = true
         
         programNameStackedView.addArrangedSubview(programNameLabel)
         programNameLabel.translatesAutoresizingMaskIntoConstraints = false

@@ -14,7 +14,8 @@ import AVFoundation
 import MobileCoreServices
 
 class StudioVC: UIViewController {
-    
+   
+    var programSelectionView: SettingsLauncher!
     lazy var tabBar = navigationController?.tabBarController?.tabBar
     var audioPlayer: AVPlayer!
     
@@ -24,17 +25,31 @@ class StudioVC: UIViewController {
     var downloadedDrafts = [DraftEpisode]()
     var downloadingIndexes = [Int]()
     var initialLoad: Bool = true
+    var selectedProgramName: String?
     
     var customNav: CustomNavBar = {
         let nav = CustomNavBar()
         nav.backgroundColor = CustomStyle.onBoardingBlack.withAlphaComponent(0.8)
         nav.leftButton.setImage(UIImage(named: "upload-icon-white"), for: .normal)
-        nav.rightButton.setImage(UIImage(named: "record-icon"), for: .normal)
+//        nav.rightButton.setImage(UIImage(named: "record-icon"), for: .normal)
+        nav.rightButton.setTitle("Record", for: .normal)
         nav.leftButton.addTarget(self, action: #selector(selectDocument), for: .touchUpInside)
         nav.rightButton.addTarget(self, action: #selector(recordButtonPress), for: .touchUpInside)
         nav.titleLabel.font = UIFont.systemFont(ofSize: 18, weight: .bold)
-        nav.titleLabel.text = "Studio"
         return nav
+    }()
+    
+    let programNameButton: UIButton = {
+        let button = UIButton()
+        button.setTitleColor(CustomStyle.primaryBlack, for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .bold)
+        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 20)
+        button.backgroundColor = .white
+        button.layer.cornerRadius = 12.5
+        button.clipsToBounds = true
+        button.titleLabel!.lineBreakMode = .byTruncatingTail
+        button.addTarget(self, action: #selector(selectProgram), for: .touchUpInside)
+        return button
     }()
     
     let noDraftEpisodesLabel: UILabel = {
@@ -63,8 +78,6 @@ class StudioVC: UIViewController {
         navigationController?.isNavigationBarHidden = true
         view.backgroundColor = CustomStyle.onBoardingBlack
         configureViews()
-        view.addSubview(customNav)
-        customNav.pinNavBarTo(view)
         configureDelegates()
     }
     
@@ -76,6 +89,8 @@ class StudioVC: UIViewController {
         downloadingIndexes = [Int]()
         initialLoad = true
         getDraftEpisodeIDs()
+        
+        programNameButton.setTitle(CurrentProgram.name, for: .normal)
 
         navigationController?.isNavigationBarHidden = true
         tabBar?.isHidden = false
@@ -137,9 +152,28 @@ class StudioVC: UIViewController {
         noDraftEpisodesLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: 0).isActive = true
         noDraftEpisodesLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 40).isActive = true
         noDraftEpisodesLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -40).isActive = true
+        
+        view.addSubview(customNav)
+        customNav.pinNavBarTo(view)
+        
+        if CurrentProgram.hasMultiplePrograms! {
+            
+            view.addSubview(programNameButton)
+            programNameButton.translatesAutoresizingMaskIntoConstraints = false
+            programNameButton.centerXAnchor.constraint(equalTo: view.centerXAnchor, constant: 0).isActive = true
+            programNameButton.centerYAnchor.constraint(equalTo: customNav.centerYAnchor, constant: 22).isActive = true
+            programNameButton.heightAnchor.constraint(equalToConstant: 25).isActive = true
+            programNameButton.widthAnchor.constraint(lessThanOrEqualToConstant: 200).isActive = true
+            
+        } else {
+            customNav.titleLabel.text = "Studio"
+        }
+
+
     }
     
     func getDraftEpisodeIDs() {
+       
         if User.draftEpisodeIDs != nil && User.draftEpisodeIDs?.count != 0 {
             noDraftEpisodesLabel.isHidden = true
             tableView.isHidden = false
@@ -242,6 +276,12 @@ class StudioVC: UIViewController {
     
     @objc func recordButtonPress() {
         let recordVC = RecordBoothVC()
+        
+        if selectedProgramName != nil && selectedProgramName != CurrentProgram.name {
+            recordVC.selectedProgram = CurrentProgram.subPrograms?.first(where: { $0.name == selectedProgramName })
+        }
+        
+        recordVC.currentScope = .episode
         navigationController?.pushViewController(recordVC, animated: false)
     }
     
@@ -258,6 +298,20 @@ class StudioVC: UIViewController {
 //            }
 //        }
     }
+    
+    @objc func selectProgram() {
+        var options = [Setting]()
+        
+        for each in CurrentProgram.subPrograms! {
+            options.append(Setting(name: each.name, imageName: nil))
+        }
+        
+        programSelectionView = SettingsLauncher(options: options, type: .programNames)
+        programSelectionView.settingsDelegate = self
+        programSelectionView.showSettings()
+        
+    }
+
 
     func play(url: URL) {
         let playerItem = AVPlayerItem(url: url)
@@ -275,12 +329,19 @@ class StudioVC: UIViewController {
             let editingVC = EditingBoothVC()
             editingVC.recordingURL = url
             editingVC.fileName = draft.fileName
+            print("The Filename is \(draft.fileName)")
             editingVC.startTime = draft.startTime
             editingVC.endTime = draft.endTime
             editingVC.wasTrimmed = draft.wasTrimmed
             editingVC.caption = draft.caption
             editingVC.tags = draft.tags
+            editingVC.isDraft = true
+            editingVC.draftID = draft.ID
             
+            if draft.programName != CurrentProgram.name {
+                let program = CurrentProgram.subPrograms?.first(where: {$0.name == draft.programName})
+                editingVC.selectedProgram = program
+            }
             self.navigationController?.pushViewController(editingVC, animated: true)
         }
     }
@@ -427,4 +488,15 @@ extension StudioVC: UIDocumentPickerDelegate,UINavigationControllerDelegate {
         present(importMenu, animated: true)
     }
     
+}
+
+extension StudioVC: SettingsLauncherDelegate {
+   
+    func selectionOf(setting: String) {
+        print("Selection made")
+        programNameButton.setTitle(setting, for: .normal)
+        selectedProgramName = setting
+    }
+    
+
 }

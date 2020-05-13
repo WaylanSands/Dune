@@ -611,8 +611,7 @@ class PublisherAddSummaryVC: UIViewController {
         CurrentProgram.summary = summaryLabel.text
         CurrentProgram.tags = tagsUsed
         
-        UserDefaults.standard.set(true, forKey: "hasAddSummary")
-        UserDefaults.standard.set(true, forKey: "completedOnboarding")
+//        UserDefaults.standard.set(true, forKey: "hasAddSummary")
         
         let db = Firestore.firestore()
         let programRef = db.collection("programs").document(CurrentProgram.ID!)
@@ -766,11 +765,10 @@ extension PublisherAddSummaryVC: UITextViewDelegate, CustomAlertDelegate {
     }
     
     func primaryButtonPress() {
-        CurrentProgram.summary = "You need to add a summary..."
-        let tagController = PublisherTagVC()
-        tagController.summaryTextView.text = CurrentProgram.summary
-        navigationController?.pushViewController(tagController, animated: true)
-        UserDefaults.standard.set(false, forKey: "hasAddSummary")
+//        CurrentProgram.summary = "You need to add a summary..."
+//        let tagController = PublisherTagVC()
+//        tagController.summaryTextView.text = CurrentProgram.summary
+//        navigationController?.pushViewController(tagController, animated: true)
     }
     
     func cancelButtonPress() {

@@ -119,7 +119,7 @@ extension publisherImageVC: UIImagePickerControllerDelegate, UINavigationControl
         // Add selected image to singleton and Firebase Storage
         if let selectedImage = selectedImageFromPicker {
             CurrentProgram.image = selectedImage
-            FileManager.storeSelectedProgramImage(image: selectedImage)
+            FileManager.storeInitialProgramImage(image: selectedImage, programID: CurrentProgram.ID!)
             
             dismiss(animated: true, completion: nil)
             self.presentNextVC()

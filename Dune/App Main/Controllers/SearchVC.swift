@@ -11,16 +11,31 @@ import Firebase
 
 class SearchVC: UIViewController {
     
+    enum searchMode {
+        case all
+        case category
+        case episode
+    }
+    
     let searchController = UISearchController(searchResultsController: nil)
     let tableView = UITableView()
     var searchContentWidth: CGFloat = 0
     var pillSpacing: CGFloat = 7
-   
+    
+    var pillsHeightConstraint: NSLayoutConstraint!
+    
     let loadingView = TVLoadingAnimationView(topHeight: 20)
     var initialSnapshot = [QueryDocumentSnapshot]()
     var downloadedPrograms = [Program]()
     var lastSnapshot: DocumentSnapshot?
     var moreToLoad = true
+    var currentMode: searchMode = .all
+    var categorySelected: String?
+    var isGoingForward = false
+    
+    let subscriptionSettings = SettingsLauncher(options: SettingOptions.subscriptionEpisode, type: .subscriptionEpisode)
+    let programSettings = SettingsLauncher(options: SettingOptions.programSettings, type: .program)
+
     
     let searchScrollView: UIScrollView = {
         let view = UIScrollView()
@@ -44,11 +59,9 @@ class SearchVC: UIViewController {
         return view
     }()
     
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = CustomStyle.darkestBlack
-        setupSearchController()
         createCategoryPills()
         configureDelegates()
         configureViews()
@@ -57,122 +70,19 @@ class SearchVC: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         searchScrollView.setScrollBarToTopLeft()
+        tableView.setScrollBarToTopLeft()
+        setupSearchController()
+        isGoingForward = false
         fetchTopPrograms()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
-//        resetTableView()
-    }
-    
-    func configureDelegates() {
-        tableView.delegate = self
-        tableView.dataSource = self
-        tableView.register(ProgramCell.self, forCellReuseIdentifier: "programCell")
-        
-    }
-    
-    func resetTableView() {
-        addLoadingView()
-        downloadedPrograms = []
-        initialSnapshot = []
-        lastSnapshot = nil
-        moreToLoad = true
-    }
-    
-    func fetchTopPrograms() {
-        print("Fetching programs")
-        FireStoreManager.fetchProgramsOrderedBySubscriptions(limit: 10) { snapshot in
-            
-            if self.initialSnapshot != snapshot {
-               
-                self.resetTableView()
-                self.initialSnapshot = snapshot
-                self.lastSnapshot = snapshot.last!
-                var counter = 0
-                
-                for eachDocument in snapshot {
-                    counter += 1
-                    
-                    let data = eachDocument.data()
-                    let documentID = eachDocument.documentID
-                    
-                    if User.isPublisher! && documentID == CurrentProgram.ID! {
-                        let program = Program(data: data)
-                        self.downloadedPrograms.append(program)
-                    } else {
-                        let program = Program(data: data)
-                        self.downloadedPrograms.append(program)
-                        print(program.name)
-                    }
-                    
-                    if counter == snapshot.count {
-                        self.tableView.reloadData()
-                        self.loadingView.removeFromSuperview()
-                    }
-                }
-            }
+      
+        if isGoingForward {
+            pillsHeightConstraint.constant = 15
+        } else {
+            pillsHeightConstraint.constant = 0
         }
-    }
-    
-    func  fetchAnotherBatch() {
-        print("Fetching another batch")
-        FireStoreManager.fetchProgramsOrderedBySubscriptionsFrom(lastSnapshot: lastSnapshot!, limit: 10) { snapshots in
-            
-            if snapshots.count == 0 {
-                self.moreToLoad = false
-            } else {
-            
-            self.lastSnapshot = snapshots.last!
-            var counter = 0
-            
-            for eachDocument in snapshots {
-                counter += 1
-                
-                let data = eachDocument.data()
-                let documentID = eachDocument.documentID
-                
-                if User.isPublisher! && documentID != CurrentProgram.ID! {
-                    let program = Program(data: data)
-                    self.downloadedPrograms.append(program)
-                } else {
-                    let program = Program(data: data)
-                    self.downloadedPrograms.append(program)
-                }
-                
-                if counter == snapshots.count {
-                    self.tableView.reloadData()
-                }
-                }
-            }
-        }
-    }
-    
-    func createCategoryPills() {
-        for each in Categories.allCases {
-            let button = categoryPill()
-            button.setTitle(each.rawValue, for: .normal)
-            searchContentStackView.addArrangedSubview(button)
-            searchContentWidth += button.intrinsicContentSize.width
-        }
-    }
-    
-    func categoryPill() -> UIButton {
-        let button = UIButton()
-        button.backgroundColor = CustomStyle.sixthShade
-        button.layer.cornerRadius = 15
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .regular)
-        button.setTitleColor(.white, for: .normal)
-        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 2, right: 10)
-        return button
-    }
-    
-    func addLoadingView() {
-        view.addSubview(loadingView)
-        loadingView.translatesAutoresizingMaskIntoConstraints = false
-        loadingView.topAnchor.constraint(equalTo: searchScrollView.bottomAnchor).isActive = true
-        loadingView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-        loadingView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        loadingView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
     }
     
     func setupSearchController() {
@@ -198,12 +108,130 @@ class SearchVC: UIViewController {
         let offset = UIOffset(horizontal: 10, vertical: 0)
         searchController.searchBar.setPositionAdjustment(offset, for: .search)
         UIBarButtonItem.appearance(whenContainedInInstancesOf: [UISearchBar.self]).setTitleTextAttributes([.foregroundColor : UIColor.white], for: .normal)
+        
+        let imgBackArrow = #imageLiteral(resourceName: "back-button-white")
+        navigationController?.navigationBar.backIndicatorImage = imgBackArrow
+        navigationController?.navigationBar.backIndicatorTransitionMaskImage = imgBackArrow
+        navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
+    }
+    
+    func configureDelegates() {
+        tableView.delegate = self
+        tableView.dataSource = self
+        tableView.register(ProgramCell.self, forCellReuseIdentifier: "programCell")
+    }
+    
+    func resetTableView() {
+        addLoadingView()
+        downloadedPrograms = []
+        initialSnapshot = []
+        lastSnapshot = nil
+        moreToLoad = true
+    }
+    
+    func fetchTopPrograms() {
+        print("Fetching programs")
+        FireStoreManager.fetchProgramsOrderedBySubscriptions(limit: 10) { snapshot in
+            
+            if self.initialSnapshot != snapshot {
+                
+                self.resetTableView()
+                self.initialSnapshot = snapshot
+                self.lastSnapshot = snapshot.last!
+                var counter = 0
+                
+                for eachDocument in snapshot {
+                    counter += 1
+                    
+                    let data = eachDocument.data()
+                    //                    let documentID = eachDocument.documentID
+                    let imageID = data["imageID"] as? String
+                    
+                    if imageID != nil {
+                        let program = Program(data: data)
+                        self.downloadedPrograms.append(program)
+                        print(program.name)
+                    }
+                    
+                    if counter == snapshot.count {
+                        self.tableView.reloadData()
+                        self.loadingView.removeFromSuperview()
+                    }
+                }
+            } else {
+                self.tableView.reloadData()
+            }
+        }
+    }
+    
+    func  fetchAnotherBatch() {
+        print("Fetching another batch")
+        FireStoreManager.fetchProgramsOrderedBySubscriptionsFrom(lastSnapshot: lastSnapshot!, limit: 10) { snapshots in
+            
+            if snapshots.count == 0 {
+                self.moreToLoad = false
+            } else {
+                
+                self.lastSnapshot = snapshots.last!
+                var counter = 0
+                
+                for eachDocument in snapshots {
+                    counter += 1
+                    
+                    let data = eachDocument.data()
+                    let documentID = eachDocument.documentID
+                    let imageID = data["imageID"] as? String
+                    
+                    if User.isPublisher! && documentID == CurrentProgram.ID! {
+                        print("Skipping program")
+                    } else if imageID != nil {
+                        let program = Program(data: data)
+                        self.downloadedPrograms.append(program)
+                        print(program.name)
+                    }
+                    
+                    if counter == snapshots.count {
+                        self.tableView.reloadData()
+                    }
+                }
+            }
+        }
+    }
+    
+    func createCategoryPills() {
+        for each in Category.allCases {
+            let button = categoryPill()
+            button.setTitle(each.rawValue, for: .normal)
+            button.addTarget(self, action: #selector(categorySelection), for: .touchUpInside)
+            searchContentStackView.addArrangedSubview(button)
+            searchContentWidth += button.intrinsicContentSize.width
+        }
+    }
+    
+    func categoryPill() -> UIButton {
+        let button = UIButton()
+        button.backgroundColor = CustomStyle.sixthShade
+        button.layer.cornerRadius = 15
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .regular)
+        button.setTitleColor(.white, for: .normal)
+        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 2, right: 10)
+        return button
+    }
+    
+    func addLoadingView() {
+        view.addSubview(loadingView)
+        loadingView.translatesAutoresizingMaskIntoConstraints = false
+        loadingView.topAnchor.constraint(equalTo: searchScrollView.bottomAnchor).isActive = true
+        loadingView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        loadingView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        loadingView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
     }
     
     func configureViews() {
         view.addSubview(searchScrollView)
         searchScrollView.translatesAutoresizingMaskIntoConstraints = false
-        searchScrollView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+        pillsHeightConstraint = searchScrollView.topAnchor.constraint(equalTo: view.topAnchor)
+        pillsHeightConstraint.isActive = true
         searchScrollView.heightAnchor.constraint(equalToConstant:40.0).isActive = true
         searchScrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         searchScrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
@@ -225,6 +253,88 @@ class SearchVC: UIViewController {
         
         view.bringSubviewToFront(searchScrollView)
     }
+    
+    // MARK: Category Selection
+    @objc func categorySelection(sender: UIButton) {
+        currentMode = .category
+        resetTableView()
+        let category = sender.titleLabel!.text!
+        categorySelected = category
+        
+        FireStoreManager.fetchProgramsWithinCategory(limit: 10, category: category) { snapshot in
+            print(snapshot)
+            
+            if self.initialSnapshot != snapshot {
+                
+                self.initialSnapshot = snapshot
+                self.lastSnapshot = snapshot.last!
+                var counter = 0
+                
+                if snapshot.count < 10 {
+                    self.moreToLoad = false
+                }
+                
+                for eachDocument in snapshot {
+                    counter += 1
+                    
+                    let data = eachDocument.data()
+                    let imageID = data["imageID"] as? String
+                    
+                    if imageID != nil {
+                        let program = Program(data: data)
+                        self.downloadedPrograms.append(program)
+                        print(program.name)
+                    }
+                    
+                    if counter == snapshot.count {
+                        self.tableView.reloadData()
+                        self.loadingView.removeFromSuperview()
+                    }
+                }
+            } else {
+                self.tableView.reloadData()
+            }
+        }
+    }
+    
+    func  fetchAnotherBatchOfCategory() {
+        print("Fetching another batch for category")
+        FireStoreManager.fetchMoreProgramsWithinCategoryFrom(lastSnapshot: lastSnapshot!, limit: 10, category: categorySelected!) { snapshot in
+            
+            if snapshot.count == 0 {
+                self.moreToLoad = false
+            } else {
+                
+                if snapshot.count < 10 {
+                    self.moreToLoad = false
+                }
+                
+                self.lastSnapshot = snapshot.last!
+                var counter = 0
+                
+                for eachDocument in snapshot {
+                    counter += 1
+                    
+                    let data = eachDocument.data()
+                    let documentID = eachDocument.documentID
+                    let imageID = data["imageID"] as? String
+                    
+                    if User.isPublisher! && documentID == CurrentProgram.ID! {
+                        print("Skipping program")
+                    } else if imageID != nil {
+                        let program = Program(data: data)
+                        self.downloadedPrograms.append(program)
+                        print(program.name)
+                    }
+                    
+                    if counter == snapshot.count {
+                        self.tableView.reloadData()
+                    }
+                }
+            }
+        }
+    }
+
 }
 
 extension SearchVC: UISearchResultsUpdating {
@@ -242,13 +352,14 @@ extension SearchVC: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let programCell = tableView.dequeueReusableCell(withIdentifier: "programCell") as! ProgramCell
         programCell.moreButton.addTarget(programCell, action: #selector(ProgramCell.moreUnwrap), for: .touchUpInside)
-        programCell.programImageButton.addTarget(programCell, action: #selector(ProgramCell.playEpisode), for: .touchUpInside)
+        programCell.programImageButton.addTarget(programCell, action: #selector(ProgramCell.playProgramIntro), for: .touchUpInside)
         programCell.programSettingsButton.addTarget(programCell, action: #selector(ProgramCell.showSettings), for: .touchUpInside)
-        
+        programCell.subscribeButton.addTarget(programCell, action: #selector(ProgramCell.subscribeButtonPress), for: .touchUpInside)
+        programCell.usernameButton.addTarget(programCell, action: #selector(ProgramCell.visitProfile), for: .touchUpInside)
         let program = downloadedPrograms[indexPath.row]
         programCell.program = program
         
-        //        program.cellDelegate = self
+        programCell.cellDelegate = self
         programCell.normalSetUp(program: program)
         return programCell
     }
@@ -269,11 +380,64 @@ extension SearchVC: UITableViewDelegate, UITableViewDataSource {
         
         // Change 10.0 to adjust the distance from bottom
         if maximumOffset - currentOffset <= 90.0 {
-            if moreToLoad == true {
-            fetchAnotherBatch()
+            switch currentMode {
+            case .all:
+                if moreToLoad == true {
+                    fetchAnotherBatch()
+                }
+            case .category:
+                if moreToLoad == true {
+                    fetchAnotherBatchOfCategory()
+                }
+            case .episode:
+                break
             }
+            
+        }
+    }
+}
+
+extension SearchVC: ProgramCellDelegate {
+    
+    func visitProfile(program: Program) {
+        
+        if User.isPublisher! && CurrentProgram.programsIDs().contains(program.ID) {
+            let tabBar = MainTabController()
+            tabBar.selectedIndex = 4
+            let appDelegate = UIApplication.shared.delegate as! AppDelegate
+            appDelegate.window?.rootViewController = tabBar
+        } else {
+            if program.isPrimaryProgram && program.hasMultiplePrograms!  {
+                let programVC = ProgramProfileVC()
+                programVC.program = program
+                isGoingForward = true
+                navigationController?.pushViewController(programVC, animated: true)
+            } else {
+                let programVC = SubProgramProfileVC(program: program)
+                navigationController?.present(programVC, animated: true, completion: nil)
+            }
+        }
+       
+    }
+    
+    func playProgramIntro(cell: ProgramCell) {
+        //
+    }
+    
+    func showSettings(cell: ProgramCell) {
+        programSettings.showSettings()
+    }
+    
+    
+    func updateRows() {
+        DispatchQueue.main.async {
+            self.tableView.beginUpdates()
+            self.tableView.endUpdates()
         }
     }
     
+    func addTappedProgram(programName: String) {
+        //
+    }
     
 }

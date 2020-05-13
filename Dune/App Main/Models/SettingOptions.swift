@@ -19,33 +19,35 @@ class Setting {
 }
 
 enum settingsType {
+    case programNames
     case categories
     case countries
     case sharing
     case subscriptionEpisode
+    case program
     case ownEpisode
 }
 
 class SettingOptions {
     
     static let categories: [Setting] = [
-        Setting(name: Categories.arts.rawValue, imageName: nil),
-        Setting(name: Categories.business.rawValue, imageName: nil),
-        Setting(name: Categories.comedy.rawValue, imageName: nil),
-        Setting(name: Categories.education.rawValue, imageName: nil),
-        Setting(name: Categories.entertainment.rawValue, imageName: nil),
-        Setting(name: Categories.gamesAndHobbies.rawValue, imageName: nil),
-        Setting(name: Categories.healthAndFitness.rawValue, imageName: nil),
-        Setting(name: Categories.history.rawValue, imageName: nil),
-        Setting(name: Categories.mindfulness.rawValue, imageName: nil),
-        Setting(name: Categories.motivation.rawValue, imageName: nil),
-        Setting(name: Categories.music.rawValue, imageName: nil),
-        Setting(name: Categories.news.rawValue, imageName: nil),
-        Setting(name: Categories.religionAndSpirituality.rawValue, imageName: nil),
-        Setting(name: Categories.science.rawValue, imageName: nil),
-        Setting(name: Categories.sports.rawValue, imageName: nil),
-        Setting(name: Categories.tech.rawValue, imageName: nil),
-        Setting(name: Categories.trueCrime.rawValue, imageName: nil),
+        Setting(name: Category.arts.rawValue, imageName: nil),
+        Setting(name: Category.business.rawValue, imageName: nil),
+        Setting(name: Category.comedy.rawValue, imageName: nil),
+        Setting(name: Category.education.rawValue, imageName: nil),
+        Setting(name: Category.entertainment.rawValue, imageName: nil),
+        Setting(name: Category.gamesAndHobbies.rawValue, imageName: nil),
+        Setting(name: Category.healthAndFitness.rawValue, imageName: nil),
+        Setting(name: Category.history.rawValue, imageName: nil),
+        Setting(name: Category.mindfulness.rawValue, imageName: nil),
+        Setting(name: Category.motivation.rawValue, imageName: nil),
+        Setting(name: Category.music.rawValue, imageName: nil),
+        Setting(name: Category.news.rawValue, imageName: nil),
+        Setting(name: Category.religionAndSpirituality.rawValue, imageName: nil),
+        Setting(name: Category.science.rawValue, imageName: nil),
+        Setting(name: Category.sports.rawValue, imageName: nil),
+        Setting(name: Category.tech.rawValue, imageName: nil),
+        Setting(name: Category.trueCrime.rawValue, imageName: nil),
         Setting(name: "Cancel", imageName: "cancel-icon"),
     ]
     
@@ -64,7 +66,22 @@ class SettingOptions {
         Setting(name: "Share via...", imageName: "native-share-icon"),
         Setting(name: "Share on Facebook", imageName: "facebook-friend-icon"),
         Setting(name: "Share on Twitter", imageName: "twitter-friend-icon"),
-        Setting(name: "Turn on post notifications", imageName: nil),
+        Setting(name: "Cancel", imageName: "cancel-icon"),
+    ]
+    
+    static let nonSubscriptionEpisode: [Setting] = [
+        Setting(name: "Report", imageName: nil),
+        Setting(name: "Share via...", imageName: "native-share-icon"),
+        Setting(name: "Share on Facebook", imageName: "facebook-friend-icon"),
+        Setting(name: "Share on Twitter", imageName: "twitter-friend-icon"),
+        Setting(name: "Cancel", imageName: "cancel-icon"),
+    ]
+    
+    static let programSettings: [Setting] = [
+        Setting(name: "Report", imageName: nil),
+        Setting(name: "Share via...", imageName: "native-share-icon"),
+        Setting(name: "Share on Facebook", imageName: "facebook-friend-icon"),
+        Setting(name: "Share on Twitter", imageName: "twitter-friend-icon"),
         Setting(name: "Cancel", imageName: "cancel-icon"),
     ]
     

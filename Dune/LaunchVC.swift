@@ -11,16 +11,17 @@ import UIKit
 class LaunchVC: UIViewController {
     
     let loggedIn = UserDefaults.standard.bool(forKey: "loggedIn")
-    let completedOnboarding = UserDefaults.standard.bool(forKey: "completedOnboarding")
+    let appDelegate = UIApplication.shared.delegate as! AppDelegate
+    var rootVC : UIViewController?
     
     let logoStackView: UIStackView = {
-       let view = UIStackView()
+        let view = UIStackView()
         view.spacing = 10
         return view
     }()
-   
+    
     let logoImageView: UIImageView = {
-       let imageView = UIImageView()
+        let imageView = UIImageView()
         imageView.image = UIImage(named: "signup-logo-icon")
         return imageView
     }()
@@ -41,11 +42,12 @@ class LaunchVC: UIViewController {
         super.viewDidLoad()
         view.backgroundColor = CustomStyle.onBoardingBlack
         configureView()
-        
+//        FileManager.clearCacheDirectory()
+        print("IS logged in? \(loggedIn)")
         if loggedIn {
             getUserData()
         } else {
-            determineFirstScreen()
+            sendToSignUp()
         }
     }
     
@@ -59,7 +61,7 @@ class LaunchVC: UIViewController {
         logoImageView.translatesAutoresizingMaskIntoConstraints = false
         logoImageView.widthAnchor.constraint(equalToConstant: 32).isActive = true
         logoImageView.heightAnchor.constraint(equalToConstant: 32).isActive = true
-
+        
         logoStackView.addArrangedSubview(duneLabel)
     }
     
@@ -71,32 +73,19 @@ class LaunchVC: UIViewController {
     }
     
     func determineFirstScreen() {
-                let appDelegate = UIApplication.shared.delegate as! AppDelegate
-                var rootVC : UIViewController?
-print("Checking")
-        //        UserDefaults.standard.set(false, forKey: "loggedIn")
-        //        UserDefaults.standard.set(false, forKey: "hasCustomImage")
-        //        UserDefaults.standard.set(false, forKey: "completedOnboarding")
-                
-                        
-                print("Loggedin \(loggedIn)")
-                print("CompletedOnboarding \(completedOnboarding)")
-                
-                if loggedIn && completedOnboarding {
-                    rootVC = MainTabController()
-                    appDelegate.window?.rootViewController = rootVC
-                } else if loggedIn && completedOnboarding == false  {
-                    rootVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "accountTypeController") as! AccountTypeVC
-                    let navController = UINavigationController()
-                    navController.viewControllers = [rootVC!]
-                    appDelegate.window?.rootViewController = navController
-                } else if loggedIn == false {
-                    rootVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "mainNavController") as! UINavigationController
-                    appDelegate.window?.rootViewController = rootVC
-                    print("This was triggered")
-                }
+        if User.completedOnBoarding! {
+            rootVC = MainTabController()
+            appDelegate.window?.rootViewController = rootVC
+        } else {
+            rootVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "accountTypeController") as! AccountTypeVC
+            let navController = UINavigationController()
+            navController.viewControllers = [rootVC!]
+            appDelegate.window?.rootViewController = navController
+        }
     }
     
-    
-    
+    func sendToSignUp() {
+        rootVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "mainNavController") as! UINavigationController
+        appDelegate.window?.rootViewController = rootVC
+    }
 }

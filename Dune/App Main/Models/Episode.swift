@@ -6,14 +6,15 @@
 //  Copyright © 2020 Waylan Sands. All rights reserved.
 //
 
-import Foundation
 import UIKit
+import Firebase
 
 
 class Episode {
     
     var ID: String
-    var addedAt: String
+    var timeSince: String
+    var timeStamp: Timestamp
     var duration: String
     var imageID: String
     var imagePath: String
@@ -30,24 +31,30 @@ class Episode {
     var programID: String
     var ownerID: String
 
-    init(id: String, addedAt: String, duration: String, imageID: String, audioID: String, likeCount: Int, commentCount: Int, shareCount: Int, listenCount: Int, audioPath: String, imagePath: String, programName: String, username: String, caption: String, tags: [String]?, programID: String, ownerID: String) {
-        self.ID = id
-        self.addedAt = addedAt
-        self.duration = duration
-        self.imageID = imageID
-        self.imagePath = imagePath
-        self.audioID = audioID
-        self.likeCount = likeCount
-        self.commentCount = commentCount
-        self.shareCount = shareCount
-        self.listenCount = listenCount
-        self.audioPath = audioPath
-        self.programName = programName
-        self.username = username
-        self.caption = caption
-        self.tags = tags
-        self.programID = programID
-        self.ownerID = ownerID
+    init(data: [String: Any]) {
+         ID = data["ID"] as! String
+        
+        let postedDate = data["postedAt"] as! Timestamp
+        let date = postedDate.dateValue()
+        let time = date.timeAgoDisplay()
+        
+        timeSince = time
+        timeStamp = data["postedAt"] as! Timestamp
+        duration = data["duration"] as! String
+        imageID = data["imageID"] as! String
+        imagePath = data["imagePath"] as! String
+        audioID = data["audioID"] as! String
+        audioPath = data["audioPath"] as! String
+        programName = data["programName"] as! String
+        username = data["username"] as! String
+        caption = data["caption"] as! String
+        likeCount = data["likeCount"] as! Int
+        commentCount = data["commentCount"] as! Int
+        shareCount = data["shareCount"] as! Int
+        listenCount = data["listenCount"] as! Int
+        tags = data["tags"] as! [String]?
+        programID = data["programID"] as! String
+        ownerID = data["ownerID"] as! String
     }
 }
 

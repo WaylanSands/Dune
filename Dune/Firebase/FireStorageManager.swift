@@ -11,51 +11,13 @@ import Firebase
 
 struct FireStorageManager {
     
-    static func storeProgramImageInFolder(selectedImage: UIImage) {
+    static func storeSubProgram(image: UIImage, to programID: String) {
         
-        // If user does not have an imageID assign one
-        if  CurrentProgram.imageID == nil {
-            let imageID = NSUUID().uuidString
-            CurrentProgram.imageID = imageID
-            User.imageID = imageID
-        }
-        
+        let imageID = NSUUID().uuidString
+
         DispatchQueue.global(qos: .userInitiated).async {
             
-            let storageRef = Storage.storage().reference().child("images/\(CurrentProgram.imageID!)")
-            
-            if let uploadData = selectedImage.jpegData(compressionQuality: 0.5) {
-                
-                storageRef.putData(uploadData, metadata: nil, completion: { (metadata, error) in
-                    
-                    if let errorMessage = error {
-                        print("There has was an error adding the image \(errorMessage)")
-                        return
-                    } else {
-                        print("complete")
-                        storageRef.downloadURL { (url, error) in
-                            
-                            if error != nil {
-                                print("Error getting image url")
-                            }
-                            
-                            if let url = url {
-                                CurrentProgram.imagePath = url.absoluteString
-                                User.imagePath = url.absoluteString
-                                FireStoreManager.addImagePathToProgram()
-                            }
-                        }
-                    }
-                })
-            }
-        }
-    }
-    
-    static func storeProgram(image: UIImage) {
-        print("Storing image in Firebase Storage")
-        DispatchQueue.global(qos: .userInitiated).async {
-            
-            let storageRef = Storage.storage().reference().child("images/\(CurrentProgram.imageID!)")
+            let storageRef = Storage.storage().reference().child("images/\(imageID)")
             
             if let uploadData = image.jpegData(compressionQuality: 0.5) {
                 
@@ -73,8 +35,7 @@ struct FireStorageManager {
                             }
                             
                             if let url = url {
-                                CurrentProgram.imagePath = url.absoluteString
-                                FireStoreManager.addImagePathToProgram()
+                                FireStoreManager.addImagePathToSubProgram(with: programID, imageID: imageID, imagePath: url.path)
                             }
                         }
                     }
@@ -82,6 +43,38 @@ struct FireStorageManager {
             }
         }
     }
+    
+//    static func storeProgram(image: UIImage) {
+//        print("Storing image in Firebase Storage")
+//        DispatchQueue.global(qos: .userInitiated).async {
+//            
+//            let storageRef = Storage.storage().reference().child("images/\(CurrentProgram.imageID!)")
+//            
+//            if let uploadData = image.jpegData(compressionQuality: 0.5) {
+//                
+//                storageRef.putData(uploadData, metadata: nil, completion: { (metadata, error) in
+//                    
+//                    if let errorMessage = error {
+//                        print("There has was an error adding the image \(errorMessage)")
+//                        return
+//                    } else {
+//                        print("complete")
+//                        storageRef.downloadURL { (url, error) in
+//                            
+//                            if error != nil {
+//                                print("Error getting image url")
+//                            }
+//                            
+//                            if let url = url {
+//                                CurrentProgram.imagePath = url.absoluteString
+//                                FireStoreManager.addImagePathToProgram()
+//                            }
+//                        }
+//                    }
+//                })
+//            }
+//        }
+//    }
     
     static func storeUserImage(selectedImage: UIImage) {
         
@@ -97,7 +90,7 @@ struct FireStorageManager {
             
             if let uploadData = selectedImage.jpegData(compressionQuality: 0.5) {
                 
-                let uploadTask = storageRef.putData(uploadData, metadata: nil, completion: { (metadata, error) in
+                storageRef.putData(uploadData, metadata: nil, completion: { (metadata, error) in
                     
                     if let errorMessage = error {
                         print("There has was an error adding the image \(errorMessage)")
@@ -117,8 +110,6 @@ struct FireStorageManager {
                         }
                     }
                 })
-                uploadTask.observe(.progress) { snapshot in
-                }
             }
         }
     }
@@ -196,8 +187,9 @@ struct FireStorageManager {
                         }
                         
                         if let url = url {
+                            deleteDraftFileFromStorage(fileName: fileName)
                             completion(url)
-                            // Remove draft episode from user
+                            
                         }
                     }
                 }
@@ -207,13 +199,42 @@ struct FireStorageManager {
         }
     }
     
+    static func storeIntroAudio(fileName: String, data: Data, completion: @escaping (URL)->()) {
+         
+         DispatchQueue.global(qos: .userInitiated).async {
+             
+             let storageRef = Storage.storage().reference().child("introAudio/\(fileName)")
+             
+             let uploadTask = storageRef.putData(data, metadata: nil, completion: { (metadata, error) in
+                 
+                 if let errorMessage = error {
+                     print("There has was an error storing the intro \(errorMessage)")
+                 } else {
+                     print("Intro has been stored in Firebase Storage")
+                     storageRef.downloadURL { (url, error) in
+                         
+                         if error != nil {
+                             print("Error getting audio url")
+                         }
+                         
+                         if let url = url {
+                             completion(url)
+                         }
+                     }
+                 }
+             })
+             uploadTask.observe(.progress) { snapshot in
+             }
+         }
+     }
+    
     static func storeDraftEpisodeAudio(audioID: String, data: Data, completion: @escaping (URL)->()) {
         
         DispatchQueue.global(qos: .userInitiated).async {
             
             let storageRef = Storage.storage().reference().child("draftAudio/\(audioID)")
             
-            storageRef.putData(data, metadata: nil, completion: { (metadata, error) in
+            storageRef.putData (data, metadata: nil, completion: { (metadata, error) in
                 
                 if let errorMessage = error {
                     print("There has was an error storing the draft audio \(errorMessage)")
@@ -233,18 +254,33 @@ struct FireStorageManager {
             })
         }
     }
+
     
     static func deleteDraftFileFromStorage(fileName: String) {
         
         DispatchQueue.global(qos: .userInitiated).async {
             let deleteRef = Storage.storage().reference().child("draftAudio/\(fileName)")
             
-            // Delete the file
             deleteRef.delete { error in
                 if error != nil {
-                    print("There was an error deleting the draft from storage")
+                    print("Possible error deleting the draft from storage if there was a draft.")
                 } else {
                     print("Draft file deleted successfully")
+                }
+            }
+        }
+    }
+    
+    static func deleteIntroFileFromStorage(fileName: String) {
+        
+        DispatchQueue.global(qos: .userInitiated).async {
+            let deleteRef = Storage.storage().reference().child("introAudio/\(fileName)")
+            
+            deleteRef.delete { error in
+                if error != nil {
+                    print("There was an error deleting the intro from storage")
+                } else {
+                    print("Intro file deleted successfully")
                 }
             }
         }
@@ -255,7 +291,6 @@ struct FireStorageManager {
         DispatchQueue.global(qos: .userInitiated).async {
             let deleteRef = Storage.storage().reference().child("audio/\(audioID)")
             
-            // Delete the file
             deleteRef.delete { error in
                 if error != nil {
                     print("There was an error deleting the audio from storage")
@@ -266,7 +301,7 @@ struct FireStorageManager {
         }
     }
     
-    static func deleteProgramImageFileFromStorage(imageID: String, completion: @escaping () -> ()) {
+    static func deleteImageFileFromStorage(imageID: String) {
         
         DispatchQueue.global(qos: .userInitiated).async {
             let deleteRef = Storage.storage().reference().child("images/\(imageID)")
@@ -274,10 +309,23 @@ struct FireStorageManager {
             deleteRef.delete { error in
                 if error != nil {
                     print("There was an error deleting the draft from Firebase Storage")
-                    completion()
                 } else {
                     print("Draft file deleted successfully")
-                    completion()
+                }
+            }
+        }
+    }
+    
+    static func deleteIntroAudioFromStorage(audioID: String) {
+        
+        DispatchQueue.global(qos: .userInitiated).async {
+            let deleteRef = Storage.storage().reference().child("introAudio/\(audioID)")
+            
+            deleteRef.delete { error in
+                if error != nil {
+                    print("There was an error deleting the audio from storage")
+                } else {
+                    print("Audio file deleted successfully")
                 }
             }
         }
@@ -289,6 +337,27 @@ struct FireStorageManager {
         DispatchQueue.global(qos: .userInitiated).async {
             
             let storageRef = Storage.storage().reference().child("audio/\(audioID)")
+            let tempURL = FileManager.getTempDirectory()
+            let audioURL = tempURL.appendingPathComponent(audioID)
+            
+            storageRef.write(toFile: audioURL) { (url, error) in
+                
+                if error != nil {
+                    print(error!)
+                } else {
+                    print("This is the url: \(url!)")
+                    completion(url!)
+                }
+            }
+        }
+    }
+    
+    
+    static func downloadIntroAudio(audioID: String, completion: @escaping (URL) -> ()) {
+        
+        DispatchQueue.global(qos: .userInitiated).async {
+            
+            let storageRef = Storage.storage().reference().child("introAudio/\(audioID)")
             let tempURL = FileManager.getTempDirectory()
             let audioURL = tempURL.appendingPathComponent(audioID)
             
@@ -339,7 +408,7 @@ struct FireStorageManager {
                 if error != nil {
                     print(error!)
                 } else {
-                    print("This is the url: \(url!)")
+                    print("Returning with audio file from firebase")
                     completion(url!)
                 }
             }
@@ -371,13 +440,13 @@ struct FireStorageManager {
         }
     }
     
-    static func storeCachedProgram(image: UIImage) {
+    static func storeCachedProgram(image: UIImage, with ID: String, for programID: String) {
         
         DispatchQueue.global(qos: .userInitiated).async {
             
-            let storageRef = Storage.storage().reference().child("images/\(CurrentProgram.imageID!)")
+            let storageRef = Storage.storage().reference().child("images/\(ID)")
             
-            if let image = image.jpegData(compressionQuality: 0.5) {
+            if let image = image.jpegData(compressionQuality: .zero) {
                 
                 storageRef.putData(image, metadata: nil, completion: { (metadata, error) in
                     
@@ -390,8 +459,8 @@ struct FireStorageManager {
                             if error != nil {
                                 print("Error getting image url")
                             } else {
-                                CurrentProgram.imagePath = url!.absoluteString
-                                FireStoreManager.addImagePathToProgram()
+//                                CurrentProgram.imagePath = url!.absoluteString
+                                FireStoreManager.addImagePathToProgram(with: programID, imagePath: url!.path, imageID: ID)
                             }
                         }
                     }

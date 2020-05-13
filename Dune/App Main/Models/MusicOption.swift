@@ -15,4 +15,5 @@ struct MusicOption: Equatable {
     var title: String
     var audioID: String
     var time: String
+    var duration: Double
 }

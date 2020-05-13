@@ -15,6 +15,10 @@ class AddEpisodeDetails: UIViewController {
     let maxCaptionCharacters = 240
     let maxTagCharacters = 45
     
+    var selectedProgram: Program?
+    var isDraft = false
+    var draftID: String?
+    
     var episodeFileName: String?
     var recordingURL: URL!
     var wasTrimmed = false
@@ -29,7 +33,7 @@ class AddEpisodeDetails: UIViewController {
     var captionPlaceholderText = true
     var captionLabelPlaceholderText = true
     var tagPlaceholderText = true
-    var tagsUsed: [String] = []
+    var tagsUsed = [String]()
     var tagCount: Int = 0
     var caption: String?
     
@@ -70,7 +74,7 @@ class AddEpisodeDetails: UIViewController {
         return imageView
     }()
     
-    let programeNameStackedView: UIStackView = {
+    let programNameStackedView: UIStackView = {
         let view = UIStackView()
         view.spacing = 5
         return view
@@ -78,14 +82,12 @@ class AddEpisodeDetails: UIViewController {
     
     let programNameLabel: UILabel = {
         let label = UILabel()
-        //        label.text = "The Daily"
         label.font = UIFont.systemFont(ofSize: 15, weight: .bold)
         return label
     }()
     
     let usernameLabel: UILabel = {
         let label = UILabel()
-        //        label.text = "@TheDaily"
         label.font = UIFont.systemFont(ofSize: 14, weight: .regular)
         label.textColor = CustomStyle.linkBlue
         return label
@@ -235,15 +237,13 @@ class AddEpisodeDetails: UIViewController {
     
     let bottomBarProgramNameLabel: UILabel = {
         let label = UILabel()
-        label.text = "The Daily"
         label.font = UIFont.systemFont(ofSize: 16.0, weight: .bold)
         label.textColor = .white
         return label
     }()
     
-    let bottomBarHandelLabel: UILabel = {
+    let bottomBarUsernameLabel: UILabel = {
         let label = UILabel()
-        label.text = "@TheDaily"
         label.font = UIFont.systemFont(ofSize: 14.0, weight: .regular)
         label.textColor = .white
         return label
@@ -283,10 +283,8 @@ class AddEpisodeDetails: UIViewController {
         removeEmptyTags()
         configureNavBar()
         checkIfAbleToPublish()
-        //        addBottomFill()
         setupViews()
         addFloatingView()
-        //        styleTags()
         captionTextView.delegate = self
         tagTextView.delegate = self
         
@@ -307,8 +305,16 @@ class AddEpisodeDetails: UIViewController {
         self.floatingDetailsView.frame.origin.y =  self.view.frame.height - ( self.floatingDetailsView.frame.height +  self.homeIndicatorHeight)
         setProgramImage()
         
+        if selectedProgram == nil {
+            programNameLabel.text = CurrentProgram.name
+            bottomBarProgramNameLabel.text = CurrentProgram.name
+        } else {
+            programNameLabel.text = selectedProgram!.name
+            bottomBarProgramNameLabel.text = selectedProgram!.name
+        }
+        
         usernameLabel.text = "@\(User.username!)"
-        programNameLabel.text = CurrentProgram.name
+        bottomBarUsernameLabel.text = "@\(User.username!)"
         
         successfulStorage = false
         successfulStore = false
@@ -355,6 +361,7 @@ class AddEpisodeDetails: UIViewController {
     
     override func viewDidAppear(_ animated: Bool) {
         captionTextView.becomeFirstResponder()
+        checkIfAbleToPublish()
         addGradient()
     }
     
@@ -368,12 +375,13 @@ class AddEpisodeDetails: UIViewController {
     }
     
     func setProgramImage() {
-        if CurrentProgram.image != nil {
+        
+        if selectedProgram == nil {
             mainImage.image = CurrentProgram.image
             bottomBarImageView.image = CurrentProgram.image
         } else {
-            mainImage.image = #imageLiteral(resourceName: "missing-image-large")
-            bottomBarImageView.image = #imageLiteral(resourceName: "missing-image-large")
+            mainImage.image = selectedProgram!.image
+            bottomBarImageView.image = selectedProgram!.image
         }
     }
     
@@ -421,30 +429,24 @@ class AddEpisodeDetails: UIViewController {
         
         scrollContentView.addSubview(mainImage)
         mainImage.translatesAutoresizingMaskIntoConstraints = false
-        mainImage.topAnchor.constraint(equalTo: scrollContentView.topAnchor, constant: 110).isActive = true
+        mainImage.topAnchor.constraint(equalTo: scrollContentView.topAnchor, constant: UIDevice.current.navBarHeight() + 15).isActive = true
         mainImage.leadingAnchor.constraint(equalTo: scrollContentView.leadingAnchor, constant: 16).isActive = true
         mainImage.heightAnchor.constraint(equalToConstant: imageViewSize).isActive = true
         mainImage.widthAnchor.constraint(equalToConstant: imageViewSize).isActive = true
         
-        scrollContentView.addSubview(programeNameStackedView)
-        programeNameStackedView.translatesAutoresizingMaskIntoConstraints = false
-        programeNameStackedView.topAnchor.constraint(equalTo: mainImage.topAnchor).isActive = true
-        programeNameStackedView.leadingAnchor.constraint(equalTo: mainImage.trailingAnchor, constant: 10).isActive = true
-        programeNameStackedView.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: 20).isActive = true
+        scrollContentView.addSubview(programNameStackedView)
+        programNameStackedView.translatesAutoresizingMaskIntoConstraints = false
+        programNameStackedView.topAnchor.constraint(equalTo: mainImage.topAnchor).isActive = true
+        programNameStackedView.leadingAnchor.constraint(equalTo: mainImage.trailingAnchor, constant: 10).isActive = true
+        programNameStackedView.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -20).isActive = true
         
-        programeNameStackedView.addArrangedSubview(programNameLabel)
-        programNameLabel.translatesAutoresizingMaskIntoConstraints = false
-        programNameLabel.leadingAnchor.constraint(equalTo: programeNameStackedView.leadingAnchor).isActive = true
-        //        programNameLabel.widthAnchor.constraint(equalToConstant: programNameLabel.intrinsicContentSize.width).isActive = true
-        
-        programeNameStackedView.addArrangedSubview(usernameLabel)
-        usernameLabel.translatesAutoresizingMaskIntoConstraints = false
-        //        usernameLabel.widthAnchor.constraint(equalToConstant: usernameLabel.intrinsicContentSize.width).isActive = true
-        
+        programNameStackedView.addArrangedSubview(programNameLabel)
+        programNameStackedView.addArrangedSubview(usernameLabel)
+
         scrollContentView.addSubview(captionLabel)
         captionLabel.translatesAutoresizingMaskIntoConstraints = false
-        captionLabel.topAnchor.constraint(equalTo: programeNameStackedView.bottomAnchor, constant: 2).isActive = true
-        captionLabel.leadingAnchor.constraint(equalTo: programeNameStackedView.leadingAnchor).isActive = true
+        captionLabel.topAnchor.constraint(equalTo: programNameStackedView.bottomAnchor, constant: 2).isActive = true
+        captionLabel.leadingAnchor.constraint(equalTo: programNameStackedView.leadingAnchor).isActive = true
         captionLabel.trailingAnchor.constraint(equalTo: scrollContentView.trailingAnchor, constant: -16.0).isActive = true
         
         scrollContentView.addSubview(tagScrollView)
@@ -493,7 +495,7 @@ class AddEpisodeDetails: UIViewController {
         captionBar.topAnchor.constraint(equalTo: tagScrollView.bottomAnchor, constant: 20).isActive = true
         captionBar.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         captionBar.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        captionBar.heightAnchor.constraint(equalToConstant: 40.0).isActive = true
+        captionBar.heightAnchor.constraint(equalToConstant: 35.0).isActive = true
         
         captionBar.addSubview(captionBarLabel)
         captionBarLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -514,10 +516,10 @@ class AddEpisodeDetails: UIViewController {
         
         scrollContentView.addSubview(tagBar)
         tagBar.translatesAutoresizingMaskIntoConstraints = false
-        tagBar.topAnchor.constraint(equalTo: captionTextView.bottomAnchor, constant: 30).isActive = true
+        tagBar.topAnchor.constraint(equalTo: captionTextView.bottomAnchor, constant: 10).isActive = true
         tagBar.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         tagBar.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        tagBar.heightAnchor.constraint(equalToConstant: 40.0).isActive = true
+        tagBar.heightAnchor.constraint(equalToConstant: 35.0).isActive = true
         
         tagBar.addSubview(tagBarLabel)
         tagBarLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -562,11 +564,11 @@ class AddEpisodeDetails: UIViewController {
         bottomBarProgramNameLabel.leadingAnchor.constraint(equalTo: bottomBarImageView.trailingAnchor, constant: 10.0).isActive = true
         bottomBarProgramNameLabel.heightAnchor.constraint(equalToConstant: 20.0).isActive = true
         
-        floatingDetailsView.addSubview(bottomBarHandelLabel)
-        bottomBarHandelLabel.translatesAutoresizingMaskIntoConstraints = false
-        bottomBarHandelLabel.topAnchor.constraint(equalTo: bottomBarProgramNameLabel.bottomAnchor).isActive = true
-        bottomBarHandelLabel.leadingAnchor.constraint(equalTo: bottomBarProgramNameLabel.leadingAnchor).isActive = true
-        bottomBarHandelLabel.heightAnchor.constraint(equalToConstant: 20.0).isActive = true
+        floatingDetailsView.addSubview(bottomBarUsernameLabel)
+        bottomBarUsernameLabel.translatesAutoresizingMaskIntoConstraints = false
+        bottomBarUsernameLabel.topAnchor.constraint(equalTo: bottomBarProgramNameLabel.bottomAnchor).isActive = true
+        bottomBarUsernameLabel.leadingAnchor.constraint(equalTo: bottomBarProgramNameLabel.leadingAnchor).isActive = true
+        bottomBarUsernameLabel.heightAnchor.constraint(equalToConstant: 20.0).isActive = true
         
         floatingDetailsView.addSubview(publishButton)
         publishButton.translatesAutoresizingMaskIntoConstraints = false
@@ -692,28 +694,77 @@ class AddEpisodeDetails: UIViewController {
         
         guard let episode = audioTrack else { return }
         
-        FireStorageManager.storeDraftEpisodeAudio(audioID: episodeFileName! + fileExtension, data: episode) {  url in
+        var programID: String
+        var programName: String
+        
+        if selectedProgram == nil {
+            programID = CurrentProgram.ID!
+            programName = CurrentProgram.name!
+        } else {
+            programID = selectedProgram!.ID
+            programName = selectedProgram!.name
+        }
+        
+        var audioID: String
+        var ID: String
+        
+        if isDraft {
+            ID = self.draftID!
+            audioID = episodeFileName!
+            User.draftEpisodeIDs?.removeAll(where: { $0 == ID})
+        } else {
+            ID = NSUUID().uuidString
+            audioID = episodeFileName! + fileExtension
+        }
+        print("Content before \(FileManager.printContentsOfTempDirectory())")
+        FireStorageManager.storeDraftEpisodeAudio(audioID: audioID, data: episode) {  url in
             
             let length = String.timeString(time: self.duration)
-            FireStoreManager.saveDraftEpisode(fileName: self.episodeFileName! + fileExtension, wasTrimmed: self.wasTrimmed, startTime: self.startTime, endTime: self.endTime, caption: self.captionTextView.text, tags: self.tagsUsed, audioURL: url, duration: length) { success in
+            FireStoreManager.saveDraftEpisode(ID: ID, fileName: audioID, programID: programID, programName: programName, wasTrimmed: self.wasTrimmed, startTime: self.startTime, endTime: self.endTime, caption: self.captionTextView.text, tags: self.tagsUsed, audioURL: url, duration: length) { success in
                 if success {
                     self.presentStudioVC()
+                    FileManager.removeFileFromTempDirectory(fileName: self.episodeFileName! + fileExtension)
+                       print("Content after \(FileManager.printContentsOfTempDirectory())")
                 }
             }
         }
     }
     
-    func storeEpisodeOnFirebase() {
+    func storePublishedEpisodeOnFirebase() {
         print("Storing episode on Firebase")
         let fileExtension = ".\(recordingURL.pathExtension)"
         let audioTrack = FileManager.getAudioFileFromTempDirectory(fileName: episodeFileName!, fileExtension: fileExtension)
         
         guard let episode = audioTrack else { return }
         
+        var programID: String
+        var programName: String
+        var imageID: String
+        var imagePath: String
+        
+        if selectedProgram == nil {
+            programID = CurrentProgram.ID!
+            programName = CurrentProgram.name!
+            imageID =  CurrentProgram.imageID!
+            imagePath = CurrentProgram.imagePath!
+        } else {
+            programID = selectedProgram!.ID
+            programName = selectedProgram!.name
+            imageID = selectedProgram!.imageID!
+            imagePath = selectedProgram!.imagePath!
+        }
+        
+        if isDraft {
+            User.draftEpisodeIDs?.removeAll(where: { $0 == draftID })
+            FireStoreManager.deleteDraftEpisodeWith(ID: draftID!)
+            FireStoreManager.removeDraftIDFromUser(episodeID: draftID!)
+            FireStorageManager.deleteDraftFileFromStorage(fileName: episodeFileName!)
+        }
+        
         FireStorageManager.storeEpisodeAudio(fileName: episodeFileName! + fileExtension, data: episode) { url in
             
             let length = String.timeString(time: self.duration)
-            FireStoreManager.publishEpisode(caption: self.captionTextView.text, tags: self.tagsUsed, audioID: self.episodeFileName! + fileExtension , audioURL: url, duration: length) { success in
+            FireStoreManager.publishEpisode(programID: programID, imageID: imageID, imagePath: imagePath, programName: programName, caption: self.captionTextView.text, tags: self.tagsUsed, audioID: self.episodeFileName! + fileExtension , audioURL: url, duration: length) { success in
                 if success {
                     self.presentDailyFeedVC()
                 }
@@ -721,16 +772,40 @@ class AddEpisodeDetails: UIViewController {
         }
     }
     
-    func storeOnFirebaseStorage(fileName: String, url: URL) {
+    func storeTrimmedEpisodeOnFirebase(fileName: String, url: URL) {
         print("Storing episode on Firebase")
         let audioTrack = FileManager.getTrimmedAudioFileFromTempDirectory(fileName: fileName)
         
         guard let episode = audioTrack else { return }
+        
+        var programID: String
+        var programName: String
+        var imageID: String
+        var imagePath: String
+        
+        if selectedProgram == nil {
+            programID = CurrentProgram.ID!
+            programName = CurrentProgram.name!
+            imageID =  CurrentProgram.imageID!
+            imagePath = CurrentProgram.imagePath!
+        } else {
+            programID = selectedProgram!.ID
+            programName = selectedProgram!.name
+            imageID = selectedProgram!.imageID!
+            imagePath = selectedProgram!.imagePath!
+        }
+        
+        if isDraft {
+            User.draftEpisodeIDs?.removeAll(where: { $0 == draftID })
+            FireStoreManager.deleteDraftEpisodeWith(ID: draftID!)
+            FireStoreManager.removeDraftIDFromUser(episodeID: draftID!)
+            FireStorageManager.deleteDraftFileFromStorage(fileName: episodeFileName!)
+        }
 
         FireStorageManager.storeEpisodeAudio(fileName: fileName, data: episode) { url in
 
             let length = String.timeString(time: self.duration)
-            FireStoreManager.publishEpisode(caption: self.captionTextView.text, tags: self.tagsUsed, audioID: fileName, audioURL: url, duration: length) { success in
+            FireStoreManager.publishEpisode(programID: programID, imageID: imageID, imagePath: imagePath, programName: programName, caption: self.captionTextView.text, tags: self.tagsUsed, audioID: fileName, audioURL: url, duration: length) { success in
                 if success {
                     self.presentDailyFeedVC()
                 }
@@ -754,7 +829,7 @@ class AddEpisodeDetails: UIViewController {
         if wasTrimmed {
             trimThanStoreEpisodeOnFirebase()
         } else {
-            storeEpisodeOnFirebase()
+            storePublishedEpisodeOnFirebase()
         }
     }
     
@@ -811,7 +886,7 @@ class AddEpisodeDetails: UIViewController {
                 default:
                     print("complete")
                     print("The duration after \(self.duration(for: fileURL.path))")
-                    self.storeOnFirebaseStorage(fileName: fileName, url: fileURL)
+                    self.storeTrimmedEpisodeOnFirebase(fileName: fileName, url: fileURL)
                 }
             })
         } else {
@@ -910,10 +985,8 @@ extension AddEpisodeDetails: UITextViewDelegate {
         if textView == captionTextView {
             if captionPlaceholderText == true {
                 captionTextView.text.removeAll()
-                self.captionTextView.textColor = CustomStyle.fifthShade
+                captionTextView.textColor = CustomStyle.fifthShade
                 captionPlaceholderText = false
-            } else {
-                captionLabel.textColor = CustomStyle.sixthShade
             }
         }
         

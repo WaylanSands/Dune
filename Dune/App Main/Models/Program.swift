@@ -14,20 +14,22 @@ class Program {
     var name: String
     var username: String
     var ownerID: String
-    var hasIntro: Bool
     var summary: String
     var isPrimaryProgram: Bool
-    var hasMultiplePrograms: Bool
-    var episodeIDs: [String]
-    var subscriberIDs: [String]
+    var tags: [String]
     var subscriberCount: Int
+    var episodeIDs: [[String : Any]]
+    var subscriberIDs: [String]
+    var hasIntro: Bool
+    var hasMultiplePrograms: Bool?
+    var subPrograms: [Program]?
+    var programIDs: [String]?
     var image: UIImage?
     var imageID: String?
     var imagePath: String?
     var introID: String?
     var introPath: String?
     var primaryCategory: String?
-    var tags: [String?]
     
     init(data: [String: Any]) {
         print("Modelling Program")
@@ -39,25 +41,43 @@ class Program {
         ownerID = data["ownerID"] as! String
         hasIntro = data["hasIntro"] as! Bool
         subscriberCount = data["subscriberCount"] as! Int
-        hasMultiplePrograms = data["hasMultiplePrograms"] as! Bool
+        tags = data["tags"] as! [String]
         isPrimaryProgram = data["isPrimaryProgram"] as! Bool
-        episodeIDs = data["episodeIDs"] as! [String]
+        episodeIDs = data["episodeIDs"] as! [[String : Any]]
         subscriberIDs = data["subscriberIDs"] as! [String]
+        hasMultiplePrograms = data["hasMultiplePrograms"] as? Bool
+        programIDs = data["programIDs"] as? [String]
         imageID = data["imageID"] as? String
         imagePath = data["imagePath"] as? String
         introID = data["introID"] as? String
         introPath = data["introPath"] as? String
         primaryCategory = data["primaryCategory"] as? String
-        tags = data["tags"] as! [String?]
         
-        guard let imageID = imageID else { return }
         
-        FileManager.getImageWith(imageID: imageID) { image in
-            DispatchQueue.main.async {
-                self.image = image
+        if imageID != nil {
+            
+            FileManager.getImageWith(imageID: imageID!) { image in
+                DispatchQueue.main.async {
+                    self.image = image
+                }
             }
+        } else {
+            self.image = #imageLiteral(resourceName: "missing-image-large")
+        }
+        
+        if isPrimaryProgram && hasMultiplePrograms! {
+            FireStoreManager.fetchSubProgramsWithIDs(programIDs: programIDs!, for: self)
         }
     }
     
-    
+    func programsIDs() -> [String] {
+        if self.hasMultiplePrograms! {
+            var ids = programIDs!
+            ids.append(ID)
+            return ids
+        } else {
+            return [CurrentProgram.ID!]
+        }
+    }
+
 }

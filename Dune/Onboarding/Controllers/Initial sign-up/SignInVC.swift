@@ -31,7 +31,10 @@ class SignInVC: UIViewController, UITextFieldDelegate {
     let wrongPasswordAlert = CustomAlertView(alertType: .wrongPassword)
     let noUserAlert = CustomAlertView(alertType: .noUserFound)
     let invalidEmailAlert = CustomAlertView(alertType: .invalidEmail)
-
+    
+    let appDelegate = UIApplication.shared.delegate as! AppDelegate
+    var rootVC : UIViewController?
+    
     var signInButtonPadding: CGFloat = 10.0
     
     lazy var containerView: PassThoughView = {
@@ -81,7 +84,7 @@ class SignInVC: UIViewController, UITextFieldDelegate {
     }
     
     func addKeyBoardObserver() {
-         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillChange(notification:)), name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillChange(notification:)), name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
     }
     
     @objc func keyboardWillChange(notification : Notification) {
@@ -97,40 +100,40 @@ class SignInVC: UIViewController, UITextFieldDelegate {
     }
     
     func configureViews() {
-         customNavBar.backgroundColor = .clear
-         customNavBar.titleLabel.text = "Sign in"
-         customNavBar.rightButton.isHidden = true
-         customNavBar.leftButton.addTarget(self, action: #selector(backButtonPress), for: .touchUpInside)
-                        
-         view.addSubview(containerView)
-         containerView.translatesAutoresizingMaskIntoConstraints = false
-         containerView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
-         containerView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-         containerView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-         containerView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+        customNavBar.backgroundColor = .clear
+        customNavBar.titleLabel.text = "Sign in"
+        customNavBar.rightButton.isHidden = true
+        customNavBar.leftButton.addTarget(self, action: #selector(backButtonPress), for: .touchUpInside)
         
-         containerView.addSubview(signInButton)
-         signInButton.translatesAutoresizingMaskIntoConstraints = false
-         signInButton.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
-         signInButton.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-         signInButton.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-         signInButton.heightAnchor.constraint(equalToConstant: 50.0).isActive = true
-         
-         view.addSubview(customNavBar)
-         customNavBar.bringSubviewToFront(customNavBar)
-         customNavBar.translatesAutoresizingMaskIntoConstraints = false
-         customNavBar.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
-         customNavBar.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-         customNavBar.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-         customNavBar.heightAnchor.constraint(equalToConstant: dynamicNavBarHeight).isActive = true
+        view.addSubview(containerView)
+        containerView.translatesAutoresizingMaskIntoConstraints = false
+        containerView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+        containerView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        containerView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        containerView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+        
+        containerView.addSubview(signInButton)
+        signInButton.translatesAutoresizingMaskIntoConstraints = false
+        signInButton.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+        signInButton.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        signInButton.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        signInButton.heightAnchor.constraint(equalToConstant: 50.0).isActive = true
+        
+        view.addSubview(customNavBar)
+        customNavBar.bringSubviewToFront(customNavBar)
+        customNavBar.translatesAutoresizingMaskIntoConstraints = false
+        customNavBar.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+        customNavBar.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        customNavBar.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        customNavBar.heightAnchor.constraint(equalToConstant: dynamicNavBarHeight).isActive = true
         
         view.addSubview(textFieldToggle)
         textFieldToggle.translatesAutoresizingMaskIntoConstraints = false
         textFieldToggle.centerYAnchor.constraint(equalTo: passwordTextField.centerYAnchor).isActive = true
         textFieldToggle.trailingAnchor.constraint(equalTo: passwordTextField.trailingAnchor, constant: -20).isActive = true
-         
-         styleTextFields(textField: emailTextField, placeholder: "Enter email")
-         styleTextFields(textField: passwordTextField, placeholder: "Enter password")
+        
+        styleTextFields(textField: emailTextField, placeholder: "Enter email")
+        styleTextFields(textField: passwordTextField, placeholder: "Enter password")
         
         passwordTextField.clearButtonMode = .never
         passwordTextField.isSecureTextEntry = true
@@ -189,20 +192,20 @@ class SignInVC: UIViewController, UITextFieldDelegate {
         Auth.auth().signIn(withEmail: email, password: password) { [weak self] authResult, error in
             
             guard let vc = self else { return }
-          
+            
             if let error = error {
-               if let errCode = AuthErrorCode(rawValue: error._code) {
-
+                if let errCode = AuthErrorCode(rawValue: error._code) {
+                    
                     switch errCode {
                     case .networkError:
                         UIApplication.shared.windows.last?.addSubview(vc.networkIssueAlert)
                         print("There was a networkError")
                     case .wrongPassword:
-                         UIApplication.shared.windows.last?.addSubview(vc.wrongPasswordAlert)
+                        UIApplication.shared.windows.last?.addSubview(vc.wrongPasswordAlert)
                         print("Wrong password")
                     case .userNotFound:
-                         UIApplication.shared.windows.last?.addSubview(vc.noUserAlert)
-                         print("No user found")
+                        UIApplication.shared.windows.last?.addSubview(vc.noUserAlert)
+                        print("No user found")
                     case .invalidEmail:
                         UIApplication.shared.windows.last?.addSubview(vc.invalidEmailAlert)
                         print("Invalid Email")
@@ -213,11 +216,12 @@ class SignInVC: UIViewController, UITextFieldDelegate {
             } else {
                 vc.signInUser()
             }
-           
         }
     }
     
     func signInUser() {
+        signInButton.setTitle("Signing in...", for: .normal)
+        
         guard let uid = Auth.auth().currentUser?.uid else { return }
         let db = Firestore.firestore()
         let userRef = db.collection("users").document(uid)
@@ -229,31 +233,40 @@ class SignInVC: UIViewController, UITextFieldDelegate {
                 UserDefaults.standard.set(true, forKey: "loggedIn")
                 guard let data = snapshot?.data() else { return }
                 User.modelUser(data: data)
+                
                 let completedOnBoarding = data["completedOnBoarding"] as! Bool
-                let isPublisher = data["isPublisher"] as! Bool
                 
-                if isPublisher {
-                    UserDefaults.standard.set(true, forKey: "isPublisher")
-                } else {
-                     UserDefaults.standard.set(false, forKey: "isPublisher")
-                }
-                
-                if completedOnBoarding {
-                    UserDefaults.standard.set(true, forKey: "completedOnboarding")
-                } else {
-                    UserDefaults.standard.set(false, forKey: "completedOnboarding")
-                }
-
-                if isPublisher {
+                if User.isPublisher! {
                     FireStoreManager.getProgramData { success in
-                     print("Received program data: \(success)")
-                     LaunchControllerSwitch.updateRootVC()
+                        print("Received program data: \(success)")
+                        
+                        if completedOnBoarding {
+                            self.sendToMainFeed()
+                        } else {
+                            self.sendToAccountType()
+                        }
                     }
                 } else {
-                     LaunchControllerSwitch.updateRootVC()
+                    if completedOnBoarding {
+                        self.sendToMainFeed()
+                    } else {
+                        self.sendToAccountType()
+                    }
                 }
             }
         }
+    }
+    
+    func sendToAccountType() {
+        rootVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "accountTypeController") as! AccountTypeVC
+        let navController = UINavigationController()
+        navController.viewControllers = [rootVC!]
+        appDelegate.window?.rootViewController = navController
+    }
+    
+    func sendToMainFeed() {
+        rootVC = MainTabController()
+        appDelegate.window?.rootViewController = rootVC
     }
     
     func resignTextBoard() {

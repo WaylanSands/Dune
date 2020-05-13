@@ -22,7 +22,10 @@ enum alertType {
     case changingEmail
     case signOutAttempt
     case deleteAccount
+    case deleteProgram
     case shortAudioLength
+    case shortIntroLength
+    case removeIntro
 }
 
 protocol CustomAlertDelegate {
@@ -55,7 +58,7 @@ class CustomAlertView: UIView {
     let bodyTextLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 14, weight: .regular)
-        label.textColor = CustomStyle.fifthShade
+        label.textColor = CustomStyle.primaryBlack
         label.textAlignment = .center
         label.numberOfLines = 0
         return label
@@ -192,9 +195,28 @@ class CustomAlertView: UIView {
         //          secondaryButton.addTarget(self, action: #selector(cancelPress), for: .touchUpInside)
         case .shortAudioLength:
             headingLabel.text = "Insufficient length"
-            bodyTextLabel.text = "Episodes must at least be 10 seconds in length"
+            bodyTextLabel.text = "Episodes must at least be 10 seconds"
             primaryButton.setTitle("Dismiss", for: .normal)
             primaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
+        case .shortIntroLength:
+            headingLabel.text = "Insufficient length"
+            bodyTextLabel.text = "Intro recordings must at least be 10 seconds"
+            primaryButton.setTitle("Dismiss", for: .normal)
+            primaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
+        case .removeIntro:
+            headingLabel.text = "Remove intro"
+            bodyTextLabel.text = "Are you sure you would like to remove your intro recording?"
+            primaryButton.setTitle("Please remove", for: .normal)
+            primaryButton.addTarget(self, action: #selector(primaryButtonPress), for: .touchUpInside)
+            secondaryButton.setTitle("Dismiss", for: .normal)
+            secondaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
+        case .deleteProgram:
+            headingLabel.text = "Delete program"
+            bodyTextLabel.text = "Are you sure you would like delete this program? You will not be able to get it back."
+            primaryButton.setTitle("Delete", for: .normal)
+            primaryButton.addTarget(self, action: #selector(primaryButtonPress), for: .touchUpInside)
+            secondaryButton.setTitle("Cancel", for: .normal)
+            secondaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
         }
     }
     

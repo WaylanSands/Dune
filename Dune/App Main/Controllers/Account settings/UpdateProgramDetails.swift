@@ -14,6 +14,8 @@ class UpdateProgramDetails: UIViewController {
     let maxCaptionCharacters = 240
     let maxTagCharacters = 45
     
+    var program: Program?
+    
     var scrollContentHeightConstraint: NSLayoutConstraint!
     var tagContentWidthConstraint: NSLayoutConstraint!
     
@@ -22,7 +24,7 @@ class UpdateProgramDetails: UIViewController {
     var summaryPlaceholderText = false
     var captionLabelPlaceholderText = false
     var tagPlaceholderText = false
-    var tagsUsed: [String] = []
+    var tagsUsed = [String]()
     var tagCount: Int = 0
     
     lazy var screenHeight = view.frame.height
@@ -49,7 +51,6 @@ class UpdateProgramDetails: UIViewController {
     
     let mainImage: UIImageView = {
         let imageView = UIImageView()
-        imageView.image = #imageLiteral(resourceName: "missing-image-large")
         imageView.layer.cornerRadius = 7
         imageView.clipsToBounds = true
         imageView.contentMode = .scaleAspectFill
@@ -77,12 +78,11 @@ class UpdateProgramDetails: UIViewController {
         return label
     }()
     
-    lazy var summaryLabel: UILabel = {
+    let summaryLabel: UILabel = {
         let label = UILabel()
-        label.text = CurrentProgram.summary
         label.numberOfLines = 7
         label.font = UIFont.systemFont(ofSize: 14, weight: .regular)
-        label.textColor = CustomStyle.primaryBlack
+        label.textColor = CustomStyle.sixthShade
         return label
     }()
     
@@ -159,13 +159,12 @@ class UpdateProgramDetails: UIViewController {
         return label
     }()
     
-    lazy var summaryTextView: UITextView = {
+    let summaryTextView: UITextView = {
         let textView = UITextView()
-        textView.text = CurrentProgram.summary
         textView.font = UIFont.systemFont(ofSize: 16, weight: .regular)
         textView.textContainer.maximumNumberOfLines = 12
         textView.isScrollEnabled = false
-        textView.textColor = CustomStyle.primaryBlack
+        textView.textColor = CustomStyle.fifthShade
         textView.keyboardType = .twitter
         return textView
     }()
@@ -198,7 +197,7 @@ class UpdateProgramDetails: UIViewController {
         textView.font = UIFont.systemFont(ofSize: 16, weight: .regular)
         textView.textContainer.maximumNumberOfLines = 2
         textView.isScrollEnabled = false
-        textView.textColor = CustomStyle.primaryBlack
+        textView.textColor = CustomStyle.fifthShade
         textView.keyboardType = .twitter
         textView.autocapitalizationType = .none
         return textView
@@ -220,11 +219,22 @@ class UpdateProgramDetails: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         usernameLabel.text = "@\(User.username!)"
-        programNameLabel.text = CurrentProgram.name
+
+        if program == nil {
+            mainImage.image = CurrentProgram.image
+            summaryLabel.text = CurrentProgram.summary
+            summaryTextView.text = CurrentProgram.summary
+            programNameLabel.text = CurrentProgram.name
+        } else {
+            mainImage.image = program?.image
+            programNameLabel.text = program?.name
+            summaryLabel.text = program?.summary
+            summaryTextView.text = program?.summary
+        }
         
         scrollView.setScrollBarToTopLeft()
         tagScrollView.setScrollBarToTopLeft()
-        setProgramImage()
+//        setProgramImage()
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -238,27 +248,33 @@ class UpdateProgramDetails: UIViewController {
     }
     
     func setUpTagButtonsWithTags() {
-        for (index, item) in CurrentProgram.tags!.enumerated() {
-            if item != nil {
-                tagsUsed.append(item!)
-                tagCount += 1
-                
-                if index <= 1 {
-                    tagTextView.text.append("\(item!) ")
-                } else {
-                    tagTextView.text.append("\(item!)")
-                }
-                
-                switch index {
-                case 0:
-                    firstTagButton.setTitle(item, for: .normal)
-                case 1:
-                    secondTagButton.setTitle(item, for: .normal)
-                case 2:
-                    thirdTagButton.setTitle(item, for: .normal)
-                default:
-                    break
-                }
+        var tags = [String]()
+       
+        if program == nil {
+            tags = CurrentProgram.tags!
+        } else {
+            tags = program!.tags
+        }
+        
+        for (index, item) in tags.enumerated() {
+            tagsUsed.append(item)
+            tagCount += 1
+            
+            if index <= 1 {
+                tagTextView.text.append("\(item) ")
+            } else {
+                tagTextView.text.append("\(item)")
+            }
+            
+            switch index {
+            case 0:
+                firstTagButton.setTitle(item, for: .normal)
+            case 1:
+                secondTagButton.setTitle(item, for: .normal)
+            case 2:
+                thirdTagButton.setTitle(item, for: .normal)
+            default:
+                break
             }
         }
     }
@@ -273,13 +289,13 @@ class UpdateProgramDetails: UIViewController {
         tagCounterLabel.text = String(maxTagCharacters - tagTextView.text.count)
     }
     
-    func setProgramImage() {
-        if CurrentProgram.image != nil {
-            mainImage.image = CurrentProgram.image
-        } else {
-            mainImage.image = #imageLiteral(resourceName: "missing-image-large")
-        }
-    }
+//    func setProgramImage() {
+//        if CurrentProgram.image != nil {
+//            mainImage.image = CurrentProgram.image
+//        } else {
+//            mainImage.image = #imageLiteral(resourceName: "missing-image-large")
+//        }
+//    }
     
     func configureNavBar() {
         navigationItem.title = "Program Details"
@@ -318,7 +334,7 @@ class UpdateProgramDetails: UIViewController {
         
         scrollContentView.addSubview(mainImage)
         mainImage.translatesAutoresizingMaskIntoConstraints = false
-        mainImage.topAnchor.constraint(equalTo: scrollContentView.topAnchor, constant: 110).isActive = true
+        mainImage.topAnchor.constraint(equalTo: scrollContentView.topAnchor, constant: UIDevice.current.navBarHeight() + 15).isActive = true
         mainImage.leadingAnchor.constraint(equalTo: scrollContentView.leadingAnchor, constant: 16).isActive = true
         mainImage.heightAnchor.constraint(equalToConstant: imageViewSize).isActive = true
         mainImage.widthAnchor.constraint(equalToConstant: imageViewSize).isActive = true
@@ -327,16 +343,16 @@ class UpdateProgramDetails: UIViewController {
         programeNameStackedView.translatesAutoresizingMaskIntoConstraints = false
         programeNameStackedView.topAnchor.constraint(equalTo: mainImage.topAnchor).isActive = true
         programeNameStackedView.leadingAnchor.constraint(equalTo: mainImage.trailingAnchor, constant: 10).isActive = true
-        programeNameStackedView.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: 20).isActive = true
+        programeNameStackedView.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -20).isActive = true
         
         programeNameStackedView.addArrangedSubview(programNameLabel)
         programNameLabel.translatesAutoresizingMaskIntoConstraints = false
         programNameLabel.leadingAnchor.constraint(equalTo: programeNameStackedView.leadingAnchor).isActive = true
-        programNameLabel.widthAnchor.constraint(equalToConstant: programNameLabel.intrinsicContentSize.width).isActive = true
+//        programNameLabel.widthAnchor.constraint(equalToConstant: programNameLabel.intrinsicContentSize.width).isActive = true
         
         programeNameStackedView.addArrangedSubview(usernameLabel)
         usernameLabel.translatesAutoresizingMaskIntoConstraints = false
-        usernameLabel.widthAnchor.constraint(equalToConstant: usernameLabel.intrinsicContentSize.width).isActive = true
+//        usernameLabel.widthAnchor.constraint(equalToConstant: usernameLabel.intrinsicContentSize.width).isActive = true
         
         scrollContentView.addSubview(summaryLabel)
         summaryLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -391,7 +407,7 @@ class UpdateProgramDetails: UIViewController {
         summaryBar.topAnchor.constraint(equalTo: tagScrollView.bottomAnchor, constant: 20).isActive = true
         summaryBar.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         summaryBar.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        summaryBar.heightAnchor.constraint(equalToConstant: 40.0).isActive = true
+        summaryBar.heightAnchor.constraint(equalToConstant: 35.0).isActive = true
         
         summaryBar.addSubview(summaryBarLabel)
         summaryBarLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -411,10 +427,10 @@ class UpdateProgramDetails: UIViewController {
         
         scrollContentView.addSubview(tagBar)
         tagBar.translatesAutoresizingMaskIntoConstraints = false
-        tagBar.topAnchor.constraint(equalTo: summaryTextView.bottomAnchor, constant: 30).isActive = true
+        tagBar.topAnchor.constraint(equalTo: summaryTextView.bottomAnchor, constant: 10).isActive = true
         tagBar.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         tagBar.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        tagBar.heightAnchor.constraint(equalToConstant: 40.0).isActive = true
+        tagBar.heightAnchor.constraint(equalToConstant: 35.0).isActive = true
         
         tagBar.addSubview(tagBarLabel)
         tagBarLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -515,12 +531,27 @@ class UpdateProgramDetails: UIViewController {
     
     // Save details to Firebase
     @objc func saveButtonPress() {
-        CurrentProgram.summary = summaryTextView.text
-        CurrentProgram.tags = tagsUsed
-        FireStoreManager.updateProgramDetails()
+        
+        if program == nil {
+            CurrentProgram.summary = summaryTextView.text
+            CurrentProgram.tags = tagsUsed
+            FireStoreManager.updateProgram(summary: summaryTextView.text, tags: tagsUsed, for: CurrentProgram.ID!)
+        } else {
+            program?.tags = tagsUsed
+            program?.summary = summaryTextView.text
+            FireStoreManager.updateProgram(summary: summaryTextView.text, tags: tagsUsed, for: program!.ID)
+        }
         navigationController?.popViewController(animated: true)
     }
     
+}
+
+extension UINavigationController {
+  func popToViewController(ofClass: AnyClass, animated: Bool = true) {
+    if let vc = viewControllers.last(where: { $0.isKind(of: ofClass) }) {
+      popToViewController(vc, animated: animated)
+    }
+  }
 }
 
 extension UpdateProgramDetails: UITextViewDelegate {
@@ -590,10 +621,8 @@ extension UpdateProgramDetails: UITextViewDelegate {
         if textView == summaryTextView {
             if summaryPlaceholderText == true {
                 summaryTextView.text.removeAll()
-                self.summaryTextView.textColor = CustomStyle.fifthShade
+                summaryTextView.textColor = CustomStyle.fifthShade
                 summaryPlaceholderText = false
-            } else {
-                summaryLabel.textColor = CustomStyle.primaryBlack
             }
         }
         
@@ -601,7 +630,7 @@ extension UpdateProgramDetails: UITextViewDelegate {
         if textView == tagTextView {
             if tagPlaceholderText == true {
                 tagTextView.text.removeAll()
-                self.tagTextView.textColor = CustomStyle.primaryBlack
+                self.tagTextView.textColor = CustomStyle.fifthShade
                 tagPlaceholderText = false
             } else {
                 return tagsUsed.count <= 3 && tagCount <= 2

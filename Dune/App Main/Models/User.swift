@@ -29,6 +29,7 @@ struct User {
     static var savedContent: [String]?     // Episode IDs
     static var draftEpisodeIDs: [String]?    // Episode IDs
     static var interests: [String]?    // Categories
+    static var completedOnBoarding: Bool?
     
     static func modelUser(data: [String: Any]) {
         print("Modelling User Singleton")
@@ -48,6 +49,7 @@ struct User {
         savedContent = data["savedContent"] as? [String]
         draftEpisodeIDs = data["draftEpisodeIDs"] as? [String]
         interests = data["interests"] as? [String]
+        completedOnBoarding = data["completedOnBoarding"] as? Bool
     }
     
 }

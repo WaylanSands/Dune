@@ -7,18 +7,17 @@
 //
 
 import UIKit
+import Firebase
 
 class TrendingVC: UIViewController {
     
-    struct Cells {
-        static let regularCell = "regularCell"
-        static let socialCell = "socialCell"
-    }
+    let loadingView = TVLoadingAnimationView(topHeight: 150)
+    var initialSnapshot = [QueryDocumentSnapshot]()
+    var downloadedEpisodes = [Episode]()
+    var lastSnapshot: DocumentSnapshot?
+    var moreToLoad = true
     
-    var tappedPrograms: [String] = []
-    var programs: [CurrentProgram] = []
     let tableView = UITableView()
-    
     
     let currentDateLabel: UILabel = {
         let label = UILabel()
@@ -30,11 +29,15 @@ class TrendingVC: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-//        programs = fetchData()
-        setTableViewDelegates()
+        configureDelegates()
         configureViews()
+        addLoadingView()
         setupTopBar()
-        tableView.register(EpisodeCell.self, forCellReuseIdentifier: Cells.regularCell)
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        tableView.setScrollBarToTopLeft()
+        fetchTrendingEpisodes()
     }
     
     func setupTopBar() {
@@ -47,37 +50,114 @@ class TrendingVC: UIViewController {
         currentDateLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
     }
     
-    func setTableViewDelegates() {
+    func configureDelegates() {
         tableView.delegate = self
         tableView.dataSource = self
+        tableView.register(EpisodeCell.self, forCellReuseIdentifier: "episodeCell")
     }
     
     func configureViews() {
         view.addSubview(tableView)
         tableView.pinEdges(to: view)
-        
     }
+    
+    func addLoadingView() {
+        view.addSubview(loadingView)
+        loadingView.translatesAutoresizingMaskIntoConstraints = false
+        loadingView.topAnchor.constraint(equalTo: tableView.topAnchor).isActive = true
+        loadingView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        loadingView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        loadingView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+    }
+    
+    func resetTableView() {
+        addLoadingView()
+        downloadedEpisodes = []
+        initialSnapshot = []
+        lastSnapshot = nil
+        moreToLoad = true
+    }
+    
+    func fetchTrendingEpisodes() {
+        print("Fetching trending episodes")
+        FireStoreManager.fetchTrendingEpisodesWith(limit: 10) { snapshot in
+            
+            if snapshot.count == 0 {
+                self.moreToLoad = false
+            } else if self.initialSnapshot != snapshot {
+                            
+                self.resetTableView()
+                self.initialSnapshot = snapshot
+                self.lastSnapshot = snapshot.last!
+                var counter = 0
+                
+                for eachDocument in snapshot {
+                    counter += 1
+                    
+                    let data = eachDocument.data()
+                    let episode = Episode(data: data)
+                    
+                    self.downloadedEpisodes.append(episode)
+                    
+                    if counter == snapshot.count {
+                        self.tableView.reloadData()
+                        self.loadingView.removeFromSuperview()
+                    }
+                }
+            }
+        }
+    }
+    
+    func  fetchAnotherBatch() {
+        print("Fetching another batch")
+        FireStoreManager.fetchTrendingEpisodesFrom(lastSnapshot: lastSnapshot!, limit: 10) { snapshots in
+            
+            if snapshots.count == 0 {
+                self.moreToLoad = false
+            } else {
+                
+                self.lastSnapshot = snapshots.last!
+                var counter = 0
+                
+                for eachDocument in snapshots {
+                    counter += 1
+                    
+                    let data = eachDocument.data()
+                    let episode = Episode(data: data)
+                    
+                    self.downloadedEpisodes.append(episode)
+                    
+                    if counter == snapshots.count {
+                        self.tableView.reloadData()
+                    }
+                }
+            }
+        }
+    }
+    
+    
+    
 }
 
 extension TrendingVC: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return programs.count
+        return downloadedEpisodes.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let episodeCell = tableView.dequeueReusableCell(withIdentifier: Cells.regularCell) as! EpisodeCell
-//        let program = programs[indexPath.row]
-//        regularCell.normalSetUp(episode: Episode)
+        let episodeCell = tableView.dequeueReusableCell(withIdentifier: "episodeCell") as! EpisodeCell
         episodeCell.moreButton.addTarget(episodeCell, action: #selector(EpisodeCell.moreUnwrap), for: .touchUpInside)
+        episodeCell.programImageButton.addTarget(episodeCell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
+        episodeCell.episodeSettingsButton.addTarget(episodeCell, action: #selector(EpisodeCell.showSettings), for: .touchUpInside)
+        episodeCell.likeButton.addTarget(episodeCell, action: #selector(EpisodeCell.likeButtonPress), for: .touchUpInside)
+
+        let episode = downloadedEpisodes[indexPath.row]
+        episodeCell.episode = episode
+        if episode.likeCount >= 10 {
+            episodeCell.configureCellWithOptions()
+        }
         episodeCell.cellDelegate = self
-        
-//        if tappedPrograms.contains(programs[indexPath.row].name) {
-//            regularCell.refreshSetupMoreTapTrue()
-//            return regularCell
-//        } else {
-//            regularCell.refreshSetupMoreTapFalse()
-//            return regularCell
-//        }
+        episodeCell.normalSetUp(episode: episode)
         return episodeCell
     }
     
@@ -88,13 +168,26 @@ extension TrendingVC: UITableViewDelegate, UITableViewDataSource {
         view.heightAnchor.constraint(equalToConstant: 1).isActive = true
         return view
     }
+    
+    func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+        
+        // UITableView only moves in one direction, y axis
+        let currentOffset = scrollView.contentOffset.y
+        let maximumOffset = scrollView.contentSize.height - scrollView.frame.size.height
+        
+        // Change 10.0 to adjust the distance from bottom
+        if maximumOffset - currentOffset <= 90.0 {
+            if moreToLoad == true {
+                fetchAnotherBatch()
+            }
+        }
+    }
 }
 
 extension TrendingVC: EpisodeCellDelegate {
     func updateLikeCountFor(episode: Episode, at indexPath: IndexPath) {
         //
     }
-    
     
     func playEpisode(cell: EpisodeCell) {
         let index = tableView.indexPath(for: cell)
@@ -108,12 +201,11 @@ extension TrendingVC: EpisodeCellDelegate {
     
     
     func addTappedProgram(programName: String) {
-        tappedPrograms.append(programName)
+        //        tappedPrograms.append(programName)
     }
     
     func updateRows() {
         DispatchQueue.main.async {
-            print("ROWS UPDATED")
             self.tableView.beginUpdates()
             self.tableView.endUpdates()
         }

@@ -55,7 +55,7 @@ class SettingsLauncher: NSObject {
         if let window =  UIApplication.shared.keyWindow {
             blackView.backgroundColor = UIColor.black.withAlphaComponent(0.5)
             print(window.frame.size)
-            blackView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handelDismiss)))
+            blackView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleDismiss)))
             
             window.addSubview(blackView)
             blackView.frame = window.frame
@@ -80,7 +80,6 @@ class SettingsLauncher: NSObject {
             collectionView.heightAnchor.constraint(equalToConstant: height).isActive = true
             
             UIView.animate(withDuration: 0.5, delay: 0, usingSpringWithDamping: 1, initialSpringVelocity: 1, options: .curveEaseOut, animations: {
-                print("yes it ran")
                 self.blackView.alpha = 1
                 self.collectionContentView.frame.origin.y = self.y! - 40
             }, completion: nil)
@@ -91,7 +90,7 @@ class SettingsLauncher: NSObject {
         }
     }
     
-    @objc func handelDismiss() {
+    @objc func handleDismiss() {
         UIView.animate(withDuration: 0.5) {
             self.blackView.alpha = 0
             if let window =  UIApplication.shared.windows.last {
@@ -111,6 +110,7 @@ class SettingsLauncher: NSObject {
 }
 
 extension SettingsLauncher: UICollectionViewDelegateFlowLayout, UICollectionViewDelegate, UICollectionViewDataSource {
+    
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return options.count
     }
@@ -145,9 +145,13 @@ extension SettingsLauncher: UICollectionViewDelegateFlowLayout, UICollectionView
                 break
             case .ownEpisode:
                 self.settingsDelegate!.selectionOf(setting: setting.name)
+            case .programNames:
+                  self.settingsDelegate!.selectionOf(setting: setting.name)
+            case .program:
+                self.settingsDelegate!.selectionOf(setting: setting.name)
             }
         }
-        handelDismiss()
+        handleDismiss()
     }
 }
 
