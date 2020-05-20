@@ -180,6 +180,7 @@ class ProgramCell: UITableViewCell {
         moreButton.removeFromSuperview()
     }
     
+    // MARK: Setup Cell
     func normalSetUp(program: Program) {
         
         if program.hasIntro {
@@ -444,7 +445,9 @@ class ProgramCell: UITableViewCell {
     
     
     @objc func playProgramIntro(cell: ProgramCell) {
-//        cellDelegate?.playEpisode(cell: self )
+        if program.hasIntro {
+             cellDelegate?.playProgramIntro(cell: self)
+        }
     }
     
     @objc func showSettings() {

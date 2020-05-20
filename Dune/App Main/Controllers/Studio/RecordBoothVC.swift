@@ -30,7 +30,7 @@ class RecordBoothVC: UIViewController {
     var recordingWaveFeedbackLink: CADisplayLink!
     var playbackLink: CADisplayLink!
     
-    var recordingSession: AVAudioSession!
+//    var recordingSession: AVAudioSession!
     var audioRecorder: AVAudioRecorder!
     var audioPlayer: AVAudioPlayer!
     
@@ -43,6 +43,7 @@ class RecordBoothVC: UIViewController {
     
     var currentState = recordState.ready
     var maxRecordingTime: Double = 60
+    var minRecordingTime: Double = 1
     var recordingSnapshot: Double = 0
     var normalizedTime: CGFloat?
     var scrubbedTime: Double = 0
@@ -95,7 +96,7 @@ class RecordBoothVC: UIViewController {
         button.layer.borderColor = UIColor.white.withAlphaComponent(0.8).cgColor
         button.layer.borderWidth = 6
         button.clipsToBounds = true
-        button.addTarget(self, action: #selector(setupRecordingSession), for: .touchUpInside)
+        button.addTarget(self, action: #selector(recordButtonPress), for: .touchUpInside)
         return button
     }()
     
@@ -283,7 +284,6 @@ class RecordBoothVC: UIViewController {
     }
     
     override func viewDidAppear(_ animated: Bool) {
-        print(currentState)
         if currentState != .preview  {
             playBackBars.isHidden = true
             addEditingButtons()
@@ -521,7 +521,6 @@ class RecordBoothVC: UIViewController {
                         FireStoreManager.addIntroToProgram(programID: CurrentProgram.ID!, introID: self.fileName + fileExtension, introPath: url.path)
                     }
                 } else {
-                    print("This hit")
                     let program = self.getSelectedProgram()
                     program.introID = self.fileName + fileExtension
                     program.introPath = url.path
@@ -557,6 +556,8 @@ class RecordBoothVC: UIViewController {
         tabBar!.items?[4].image =  UIImage(named: "account-icon")
     }
     
+    // MARK: Continue Button Press
+    
     @objc func continueButtonPress() {
         let duration: Double
         
@@ -566,7 +567,7 @@ class RecordBoothVC: UIViewController {
             duration = recordingSnapshot
         }
         
-        if duration >= 10 {
+        if duration >= minRecordingTime {
             let addEpisodeDetails = AddEpisodeDetails()
             addEpisodeDetails.episodeFileName = fileName
             addEpisodeDetails.recordingURL = recordingURL
@@ -581,7 +582,7 @@ class RecordBoothVC: UIViewController {
             
             navigationController?.pushViewController(addEpisodeDetails, animated: true)
         } else {
-            print("Too short bro")
+            print("Too short of a recording")
             UIApplication.shared.windows.last?.addSubview(tooShortAlert)
         }
     }
@@ -599,7 +600,7 @@ class RecordBoothVC: UIViewController {
     
     
     // MARK: Record button press
-    func recordButtonPress() {
+   @objc func recordButtonPress() {
         switch currentState {
         case .ready:
             circleTimerView.animate()
@@ -637,12 +638,11 @@ class RecordBoothVC: UIViewController {
             currentState = .playing
             playBackSlider.setValue(0.0, animated: false)
             recordButton.setImage(UIImage(named: "pause-audio-icon"), for: .normal)
-            print("Triggered preview press")
+
             if currentOption == nil || hasMergedTracks {
                 trackAudio()
                 playDefaultRecording()
             } else if !hasMergedTracks {
-                print("Triggered background music")
                 FileManager.getMusicURLWith(audioID: currentOption!.audioID) { url in
                     self.playMerge(audio1: self.recordingURL, audio2: url)
                     self.hasMergedTracks = true
@@ -705,26 +705,26 @@ class RecordBoothVC: UIViewController {
     }
     
     // Get permission to record
-    @objc func setupRecordingSession() {
-        recordingSession = AVAudioSession.sharedInstance()
-        
-        do {
-            try recordingSession.setCategory(.playAndRecord, mode: .default)
-            try recordingSession.setActive(true)
-            recordingSession.requestRecordPermission() { [unowned self] allowed in
-                DispatchQueue.main.async {
-                    if allowed {
-                        self.recordButtonPress()
-                    } else {
-                        // Test this here
-                        print("Refused to record")
-                    }
-                }
-            }
-        } catch {
-            print("Unable to start recording \(error)")
-        }
-    }
+//    @objc func setupRecordingSession() {
+//        recordingSession = AVAudioSession.sharedInstance()
+//
+//        do {
+//            try recordingSession.setCategory(.playAndRecord, mode: .default)
+//            try recordingSession.setActive(true)
+//            recordingSession.requestRecordPermission() { [unowned self] allowed in
+//                DispatchQueue.main.async {
+//                    if allowed {
+//                        self.recordButtonPress()
+//                    } else {
+//                        // Test this here
+//                        print("Refused to record")
+//                    }
+//                }
+//            }
+//        } catch {
+//            print("Unable to start recording \(error)")
+//        }
+//    }
     
     
     func trackAudio() {
@@ -813,8 +813,6 @@ class RecordBoothVC: UIViewController {
     }
     
     func playMerge(audio1: URL, audio2:  URL) {
-        print("audio1: \(audio1)")
-        print("audio2: \(audio2)")
         
         voiceURL = audio1
         
@@ -856,9 +854,7 @@ class RecordBoothVC: UIViewController {
         
         let timeRange1 = CMTimeRangeMake(start: CMTime(seconds: startTime, preferredTimescale: 1), duration: trueDuration1)
         let timeRange2 = CMTimeRangeMake(start: CMTime(seconds: startTime, preferredTimescale: 1), duration: trueDuration2)
-        
-        print("The Start time is \(startTime)")
-        
+                
         do {
             try compositionAudioTrack1.insertTimeRange(timeRange1, of: assetTrack1, at: CMTime.zero)
             try compositionAudioTrack2.insertTimeRange(timeRange2, of: assetTrack2, at: CMTime.zero)

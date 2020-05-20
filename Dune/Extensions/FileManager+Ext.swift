@@ -117,7 +117,7 @@ extension FileManager {
         let tempDirectory = FileManager.getTempDirectory()
         var fileURL: URL
         
-        if fileName.contains(".m4a") {
+        if fileName.contains(".") {
              fileURL = tempDirectory.appendingPathComponent(fileName)
         } else {
              fileURL = tempDirectory.appendingPathComponent(fileName + fileExtension)

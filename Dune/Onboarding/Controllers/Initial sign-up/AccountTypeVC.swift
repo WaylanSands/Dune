@@ -79,6 +79,7 @@ class AccountTypeVC: UIViewController {
         
         // If is already logged in they are returning to finish onboarding
         let loggedIn = UserDefaults.standard.bool(forKey: "loggedIn")
+        
         if loggedIn {
             updateReturningUser()
         } else {

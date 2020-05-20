@@ -26,6 +26,23 @@ extension String {
         return passwordTest.evaluate(with: self)
     }
     
+    var isValidURL: Bool {
+        let detector = try! NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue)
+        if let match = detector.firstMatch(in: self, options: [], range: NSRange(location: 0, length: self.utf16.count)) {
+            // it is a link, if the match covers the whole string
+            return match.range.length == self.utf16.count
+        } else {
+            return false
+        }
+    }
+    
+    var trimmingTrailingSpaces: String {
+        if let range = rangeOfCharacter(from: .whitespacesAndNewlines, options: [.anchored, .backwards]) {
+            return String(self[..<range.lowerBound]).trimmingTrailingSpaces
+        }
+        return self
+    }
+    
     static func timeString(time:TimeInterval) -> String {
         let minutes = Int(time) / 60 % 60
         let seconds = Int(time) % 60

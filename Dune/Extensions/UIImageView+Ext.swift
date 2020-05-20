@@ -11,34 +11,6 @@ import UIKit
 
 extension UIImageView {
     
-    func setImageAndCache(from urlString: String) {
-        
-        guard let imageURL = URL(string: urlString) else { return }
-        
-        if  let dict = UserDefaults.standard.object(forKey: "ImageCache") as? [String:String] {
-            if let path = dict[urlString] {
-                if let data = try? Data(contentsOf: URL(fileURLWithPath: path)) {
-                    let image = UIImage(data: data)
-                    
-                    DispatchQueue.main.async {
-                        self.image = image
-                    }
-                }
-            }
-        } else {
-            DispatchQueue.global().async { [weak self] in
-                guard let imageData = try? Data(contentsOf: imageURL) else { return }
-                
-                let image = UIImage(data: imageData)
-                CacheControl.storeImage(urlString: urlString, image: image!)
-                
-                DispatchQueue.main.async {
-                    self!.image = image
-                }
-            }
-        }
-    }
-    
     func dropShadow() {
 //        self.layer.masksToBounds = false
         self.layer.shadowColor = UIColor.black.cgColor

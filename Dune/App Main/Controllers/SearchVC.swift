@@ -27,6 +27,7 @@ class SearchVC: UIViewController {
     let loadingView = TVLoadingAnimationView(topHeight: 20)
     var initialSnapshot = [QueryDocumentSnapshot]()
     var downloadedPrograms = [Program]()
+    var filteredPrograms = [Program]()
     var lastSnapshot: DocumentSnapshot?
     var moreToLoad = true
     var currentMode: searchMode = .all
@@ -35,7 +36,11 @@ class SearchVC: UIViewController {
     
     let subscriptionSettings = SettingsLauncher(options: SettingOptions.subscriptionEpisode, type: .subscriptionEpisode)
     let programSettings = SettingsLauncher(options: SettingOptions.programSettings, type: .program)
-
+    
+    let introPlayer = DuneIntroPlayer()
+    var activeProgramCell: ProgramCell?
+    
+//    lazy var tabButtons = [programButton]
     
     let searchScrollView: UIScrollView = {
         let view = UIScrollView()
@@ -43,6 +48,37 @@ class SearchVC: UIViewController {
         view.showsHorizontalScrollIndicator = false
         view.contentInsetAdjustmentBehavior = .never
         return view
+    }()
+    
+    let searchButtons: UIView = {
+        let view = UIView()
+//        view.backgroundColor = .green
+        view.isHidden = true
+        return view
+    }()
+    
+    let programButton: UIButton = {
+        let button = UIButton()
+        button.setTitle("Program names", for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 12, weight: .medium)
+        button.setTitleColor(.white, for: .normal)
+        return button
+    }()
+    
+    let programNamesButton: UIButton = {
+        let button = UIButton()
+        button.setTitle("Programs tags", for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 12, weight: .medium)
+        button.setTitleColor(.white, for: .normal)
+        return button
+    }()
+    
+    let episodesButton: UIButton = {
+        let button = UIButton()
+        button.setTitle("Episodes", for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 12, weight: .medium)
+        button.setTitleColor(.white, for: .normal)
+        return button
     }()
     
     lazy var searchContentStackView: UIStackView = {
@@ -61,6 +97,7 @@ class SearchVC: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        self.definesPresentationContext = true
         view.backgroundColor = CustomStyle.darkestBlack
         createCategoryPills()
         configureDelegates()
@@ -77,21 +114,22 @@ class SearchVC: UIViewController {
     }
     
     override func viewWillDisappear(_ animated: Bool) {
-      
+        introPlayer.finishSession()
         if isGoingForward {
             pillsHeightConstraint.constant = 15
         } else {
             pillsHeightConstraint.constant = 0
         }
+        searchController.isActive = false
     }
     
     func setupSearchController() {
-        searchController.searchResultsUpdater = self
         searchController.hidesNavigationBarDuringPresentation = false
         searchController.obscuresBackgroundDuringPresentation = false
         searchController.searchBar.placeholder = "Search"
         searchController.searchBar.searchTextField.textColor = CustomStyle.primaryBlack
         searchController.searchBar.searchTextField.backgroundColor = .white
+//        navigationItem.searchController = searchController
         navigationItem.titleView = searchController.searchBar
         navigationController?.navigationBar.isTranslucent = false
         navigationController?.navigationBar.barTintColor = CustomStyle.darkestBlack
@@ -116,14 +154,35 @@ class SearchVC: UIViewController {
     }
     
     func configureDelegates() {
-        tableView.delegate = self
-        tableView.dataSource = self
         tableView.register(ProgramCell.self, forCellReuseIdentifier: "programCell")
+        searchController.searchResultsUpdater = self
+        searchController.searchBar.delegate = self
+        introPlayer.playbackDelegate = self
+        tableView.dataSource = self
+        tableView.delegate = self
     }
+    
+    var isSearchBarEmpty: Bool {
+      return searchController.searchBar.text?.isEmpty ?? true
+    }
+    
+    var isFiltering: Bool {
+      return searchController.isActive && !isSearchBarEmpty
+    }
+    
+    func filterContentForSearchText(_ searchText: String) {
+     filteredPrograms = downloadedPrograms.filter { program -> Bool in
+        return program.name.lowercased().contains(searchText.lowercased())
+      }
+      
+      tableView.reloadData()
+    }
+
     
     func resetTableView() {
         addLoadingView()
         downloadedPrograms = []
+        filteredPrograms = []
         initialSnapshot = []
         lastSnapshot = nil
         moreToLoad = true
@@ -150,7 +209,6 @@ class SearchVC: UIViewController {
                     if imageID != nil {
                         let program = Program(data: data)
                         self.downloadedPrograms.append(program)
-                        print(program.name)
                     }
                     
                     if counter == snapshot.count {
@@ -187,7 +245,6 @@ class SearchVC: UIViewController {
                     } else if imageID != nil {
                         let program = Program(data: data)
                         self.downloadedPrograms.append(program)
-                        print(program.name)
                     }
                     
                     if counter == snapshots.count {
@@ -236,6 +293,29 @@ class SearchVC: UIViewController {
         searchScrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         searchScrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         
+//        view.addSubview(searchButtons)
+//        searchButtons.translatesAutoresizingMaskIntoConstraints = false
+//        pillsHeightConstraint = searchButtons.topAnchor.constraint(equalTo: view.topAnchor)
+//        pillsHeightConstraint.isActive = true
+//        searchButtons.heightAnchor.constraint(equalToConstant:40.0).isActive = true
+//        searchButtons.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+//        searchButtons.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+//
+//        searchButtons.addSubview(programButton)
+//        programButton.translatesAutoresizingMaskIntoConstraints = false
+//        programButton.leadingAnchor.constraint(equalTo: searchButtons.leadingAnchor, constant: 16).isActive = true
+//        programButton.topAnchor.constraint(equalTo: searchButtons.topAnchor, constant: 5).isActive = true
+//
+//        searchButtons.addSubview(programNamesButton)
+//        programNamesButton.translatesAutoresizingMaskIntoConstraints = false
+//        programNamesButton.leadingAnchor.constraint(equalTo: programButton.trailingAnchor, constant: 17).isActive = true
+//        programNamesButton.topAnchor.constraint(equalTo: searchButtons.topAnchor, constant: 5).isActive = true
+//
+//        searchButtons.addSubview(episodesButton)
+//        episodesButton.translatesAutoresizingMaskIntoConstraints = false
+//        episodesButton.leadingAnchor.constraint(equalTo: programNamesButton.trailingAnchor, constant: 17).isActive = true
+//        episodesButton.topAnchor.constraint(equalTo: searchButtons.topAnchor, constant: 5).isActive = true
+
         searchScrollView.addSubview(searchContentStackView)
         searchContentStackView.translatesAutoresizingMaskIntoConstraints = false
         searchContentStackView.topAnchor.constraint(equalTo: searchScrollView.topAnchor).isActive = true
@@ -252,6 +332,9 @@ class SearchVC: UIViewController {
         tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         
         view.bringSubviewToFront(searchScrollView)
+        
+        view.addSubview(introPlayer)
+        introPlayer.frame = CGRect(x: 0, y: view.frame.height, width: view.frame.width, height: 70)
     }
     
     // MARK: Category Selection
@@ -262,7 +345,6 @@ class SearchVC: UIViewController {
         categorySelected = category
         
         FireStoreManager.fetchProgramsWithinCategory(limit: 10, category: category) { snapshot in
-            print(snapshot)
             
             if self.initialSnapshot != snapshot {
                 
@@ -283,7 +365,6 @@ class SearchVC: UIViewController {
                     if imageID != nil {
                         let program = Program(data: data)
                         self.downloadedPrograms.append(program)
-                        print(program.name)
                     }
                     
                     if counter == snapshot.count {
@@ -322,9 +403,10 @@ class SearchVC: UIViewController {
                     if User.isPublisher! && documentID == CurrentProgram.ID! {
                         print("Skipping program")
                     } else if imageID != nil {
-                        let program = Program(data: data)
-                        self.downloadedPrograms.append(program)
-                        print(program.name)
+                         let program = Program(data: data)
+                        if !self.downloadedPrograms.contains(where: { $0.ID == program.ID }) {
+                             self.downloadedPrograms.append(program)
+                        }
                     }
                     
                     if counter == snapshot.count {
@@ -337,15 +419,13 @@ class SearchVC: UIViewController {
 
 }
 
-extension SearchVC: UISearchResultsUpdating {
-    func updateSearchResults(for searchController: UISearchController) {
-        //TO DO
-    }
-}
-
 extension SearchVC: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+          if isFiltering {
+            print("The count is \(filteredPrograms.count)")
+            return filteredPrograms.count
+          }
         return downloadedPrograms.count
     }
     
@@ -356,9 +436,15 @@ extension SearchVC: UITableViewDelegate, UITableViewDataSource {
         programCell.programSettingsButton.addTarget(programCell, action: #selector(ProgramCell.showSettings), for: .touchUpInside)
         programCell.subscribeButton.addTarget(programCell, action: #selector(ProgramCell.subscribeButtonPress), for: .touchUpInside)
         programCell.usernameButton.addTarget(programCell, action: #selector(ProgramCell.visitProfile), for: .touchUpInside)
-        let program = downloadedPrograms[indexPath.row]
-        programCell.program = program
         
+        var program: Program
+        if isFiltering {
+            program = filteredPrograms[indexPath.row]
+        } else {
+            program = downloadedPrograms[indexPath.row]
+        }
+        
+        programCell.program = program
         programCell.cellDelegate = self
         programCell.normalSetUp(program: program)
         return programCell
@@ -407,27 +493,40 @@ extension SearchVC: ProgramCellDelegate {
             let appDelegate = UIApplication.shared.delegate as! AppDelegate
             appDelegate.window?.rootViewController = tabBar
         } else {
+            isGoingForward = true
             if program.isPrimaryProgram && program.hasMultiplePrograms!  {
                 let programVC = ProgramProfileVC()
                 programVC.program = program
-                isGoingForward = true
                 navigationController?.pushViewController(programVC, animated: true)
             } else {
                 let programVC = SubProgramProfileVC(program: program)
                 navigationController?.present(programVC, animated: true, completion: nil)
             }
         }
-       
     }
     
     func playProgramIntro(cell: ProgramCell) {
-        //
+        introPlayer.isProgramPageIntro = false
+        activeProgramCell = cell
+
+        let programIntro = cell.program.introID!
+        let programImage = cell.program.image!
+        let programName = cell.program.name
+                
+        print("NAV height \(self.tabBarController!.tabBar.frame.height)")
+        print("Screen height \(view.frame.height)")
+        
+        introPlayer.yPosition = view.frame.height - tabBarController!.tabBar.frame.height - introPlayer.frame.height
+        
+        introPlayer.getAudioWith(audioID: programIntro) { url in
+            self.introPlayer.playOrPauseWith(url: url, name: programName, image: programImage)
+        }
+        print("Play intro")
     }
     
     func showSettings(cell: ProgramCell) {
         programSettings.showSettings()
     }
-    
     
     func updateRows() {
         DispatchQueue.main.async {
@@ -439,5 +538,62 @@ extension SearchVC: ProgramCellDelegate {
     func addTappedProgram(programName: String) {
         //
     }
+}
+
+extension SearchVC: PlaybackBarDelegate {
+   
+    func updateProgressBarWith(percentage: CGFloat, forType: PlayBackType) {
+        guard let cell = activeProgramCell else { return }
+        cell.playbackBarView.progressUpdateWith(percentage: percentage)
+    }
     
+    func updateActiveCell(atIndex: Int, forType: PlayBackType) {
+        let cell = tableView.cellForRow(at: IndexPath(item: atIndex, section: 0)) as! ProgramCell
+        cell.playbackBarView.setupPlaybackBar()
+        activeProgramCell = cell
+    }
+    
+}
+
+extension SearchVC: UISearchResultsUpdating {
+    
+    func updateSearchResults(for searchController: UISearchController) {
+        let searchBar = searchController.searchBar
+        self.filterContentForSearchText(searchBar.text!)
+        
+//        if isFiltering && !isSearchBarEmpty {
+//            searchButtons.isHidden = false
+//            searchScrollView.isHidden = true
+//        }
+
+        FireStoreManager.searchForProgramStartingWith(string: searchBar.text!) { results in
+
+            if results.count != 0 {
+                for each in results {
+                    let data = each.data()
+                    let program = Program(data: data)
+                    if !self.downloadedPrograms.contains(where: { $0.ID == program.ID }) {
+                         self.downloadedPrograms.append(program)
+                    }
+                }
+            }
+        }
+    }
+}
+
+extension SearchVC: UISearchBarDelegate {
+    
+//    func searchBarShouldBeginEditing(_ searchBar: UISearchBar) -> Bool {
+//
+//        searchScrollView.isHidden = true
+//        searchButtons.isHidden = false
+//        return true
+//    }
+//
+//    func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
+//                searchScrollView.isHidden = false
+//        searchButtons.isHidden = true
+//    }
+//
+ 
 }

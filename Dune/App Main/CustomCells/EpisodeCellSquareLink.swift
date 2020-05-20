@@ -10,19 +10,9 @@ import UIKit
 import WebKit
 import SwiftLinkPreview
 
-protocol EpisodeCellDelegate {
-    func updateRows()
-    func addTappedProgram(programName: String)
-    func playEpisode(cell: EpisodeCell )
-    func showSettings(cell: EpisodeCell )
-    func updateLikeCountFor(episode: Episode, at indexPath: IndexPath)
-    func visitProfile(program: Program)
-    func tagSelected(tag: String)
-}
-
-class EpisodeCell: UITableViewCell {
+class EpisodeCellSquareLink: UITableViewCell {
     
-    var cellDelegate: EpisodeCellDelegate?
+//    var cellDelegate: EpisodeCellDelegate?
     var episode: Episode!
     var link: String?
     var moreButtonPress = false
@@ -46,6 +36,7 @@ class EpisodeCell: UITableViewCell {
     var summaryViewHeight: NSLayoutConstraint!
     lazy var tagscrollViewWidth = tagScrollView.frame.width
     lazy var deviceType = UIDevice.current.deviceType
+//    lazy var tagButtons: [UIButton] = [firstTagButton, secondTagButton, thirdTagButton]
     var tagContentSizeWidth: CGFloat = 0
     
     let swiftLinkPreview = SwiftLinkPreview(session: URLSession.shared, workQueue: SwiftLinkPreview.defaultWorkQueue, responseQueue: DispatchQueue.main, cache: InMemoryCache())
@@ -100,6 +91,14 @@ class EpisodeCell: UITableViewCell {
         view.textColor = CustomStyle.sixthShade
         return view
     }()
+    
+    let linkStackView: UIStackView = {
+        let view = UIStackView()
+        view.contentMode = .scaleToFill
+        return view
+    }()
+    
+    let squarePreview  = DuneSquareLinkPreview()
     
     let tagScrollView: UIScrollView = {
         let view = UIScrollView()
@@ -216,11 +215,13 @@ class EpisodeCell: UITableViewCell {
     
     override func prepareForReuse() {
         moreButton.removeFromSuperview()
+        clearTagButtons()
     }
     
     // MARK: Cell setup
     
     func normalSetUp(episode: Episode) {
+        includeRichLink()
         setupLikeButtonAndCounterFor(Episode: episode)
         
         FileManager.getImageWith(imageID: episode.imageID) { image in
@@ -249,10 +250,40 @@ class EpisodeCell: UITableViewCell {
         }
     }
     
+    
+    // MARK: Rich Link
+    func includeRichLink() {
+        configureRegularPreview { (result) in
+            DispatchQueue.main.async {
+                if result == true {
+                    self.squarePreview.imageButton.setImage(self.richLinkGenerator.squareImage, for: .normal)
+                    self.squarePreview.imageButton.addTarget(self, action: #selector(self.linkTouched), for: .touchUpInside)
+                    self.squarePreview.backgroundButton.addTarget(self, action: #selector(self.linkTouched), for: .touchUpInside)
+                    self.squarePreview.squareLabel.text = self.richLinkGenerator.mainTitle
+                    self.squarePreview.urlLabel.text = self.richLinkGenerator.canonicalUrl
+                }
+            }
+        }
+    }
+
+    func configureRegularPreview(completion: @escaping (Bool) -> ()) {
+        swiftLinkPreview.preview(episode.richLink!, onSuccess: { result in
+            self.richLinkGenerator = RichLinkGenerator(response: result)
+            self.richLinkGenerator.isImageLarge(completion: { result in
+                if result != true {
+                    completion(true)
+                }
+            })
+        }, onError: { error in
+            print("\(error)")
+            completion(false)
+        })
+    }
+    
     @objc func linkTouched() {
         print("link touched")
 
-        guard let url = URL(string: link!) else { return }
+        guard let url = URL(string: episode.richLink!) else { return }
         UIApplication.shared.open(url)
     }
 
@@ -337,9 +368,21 @@ class EpisodeCell: UITableViewCell {
         captionTextView.leadingAnchor.constraint(equalTo: programNameStackedView.leadingAnchor).isActive = true
         captionTextView.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -16.0).isActive = true
         
+        self.addSubview(linkStackView)
+        linkStackView.translatesAutoresizingMaskIntoConstraints = false
+        linkStackView.topAnchor.constraint(equalTo: captionTextView.bottomAnchor, constant: 10).isActive = true
+        linkStackView.leadingAnchor.constraint(equalTo: programNameStackedView.leadingAnchor).isActive = true
+        linkStackView.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -16.0).isActive = true
+        
+        linkStackView.addArrangedSubview(squarePreview)
+        squarePreview.translatesAutoresizingMaskIntoConstraints = false
+        squarePreview.leadingAnchor.constraint(equalTo: linkStackView.leadingAnchor).isActive = true
+        squarePreview.trailingAnchor.constraint(equalTo: linkStackView.trailingAnchor).isActive = true
+        squarePreview.heightAnchor.constraint(equalToConstant: 72).isActive = true
+        
         self.addSubview(tagScrollView)
         tagScrollView.translatesAutoresizingMaskIntoConstraints = false
-        tagScrollView.topAnchor.constraint(equalTo: captionTextView.bottomAnchor, constant: 10).isActive = true
+        tagScrollView.topAnchor.constraint(equalTo: linkStackView.bottomAnchor, constant: 10).isActive = true
         tagScrollView.leadingAnchor.constraint(equalTo: captionTextView.leadingAnchor).isActive = true
         tagScrollView.trailingAnchor.constraint(equalTo: self.trailingAnchor,constant: -35).isActive = true
         tagContentBottomConstraint = tagScrollView.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: -15)
@@ -423,9 +466,25 @@ class EpisodeCell: UITableViewCell {
         listenCountLabel.widthAnchor.constraint(equalToConstant: 30).isActive = true
         
         DispatchQueue.main.async {
-            self.cellDelegate?.updateRows()
+//            self.cellDelegate?.updateRows()
         }
     }
+//
+//    func addRegularLinkPreview() {
+//        linkStackView.addArrangedSubview(squarePreview)
+//        regularPreview.translatesAutoresizingMaskIntoConstraints = false
+//        regularPreview.leadingAnchor.constraint(equalTo: linkStackView.leadingAnchor).isActive = true
+//        regularPreview.trailingAnchor.constraint(equalTo: linkStackView.trailingAnchor).isActive = true
+//        regularPreview.heightAnchor.constraint(equalToConstant: 200).isActive = true
+//    }
+//
+//    func addSquareLinkPreview() {
+//        linkStackView.addArrangedSubview(squarePreview)
+//        squarePreview.translatesAutoresizingMaskIntoConstraints = false
+//        squarePreview.leadingAnchor.constraint(equalTo: linkStackView.leadingAnchor).isActive = true
+//        squarePreview.trailingAnchor.constraint(equalTo: linkStackView.trailingAnchor).isActive = true
+//        squarePreview.heightAnchor.constraint(equalToConstant: 74).isActive = true
+//    }
     
     func addGradient() {
         if gradientOverlayView.layer.sublayers == nil {
@@ -437,6 +496,12 @@ class EpisodeCell: UITableViewCell {
             gradientOverlayView.transform = CGAffineTransform(rotationAngle: (-90.0 * .pi) / 180.0)
             gradientOverlayView.backgroundColor = .clear
         }
+    }
+    
+    func clearTagButtons() {
+//        for eachButton in tagButtons {
+//            eachButton.setTitle("", for: .normal)
+//        }
     }
     
     func addMoreButton() {
@@ -469,8 +534,8 @@ class EpisodeCell: UITableViewCell {
     }
     
     @objc func tagSelected(sender: UIButton) {
-        let tag = sender.titleLabel!.text!
-        cellDelegate?.tagSelected(tag: tag)
+//        let tag = sender.titleLabel!.text!
+//       cellDelegate?.tagSelected(tag: tag)
     }
     
     @objc func moreUnwrap() {
@@ -485,8 +550,8 @@ class EpisodeCell: UITableViewCell {
         captionTextView.layoutIfNeeded()
         
         DispatchQueue.main.async {
-            self.cellDelegate?.updateRows()
-            self.cellDelegate?.addTappedProgram(programName: self.programNameLabel.text!)
+//            self.cellDelegate?.updateRows()
+//            self.cellDelegate?.addTappedProgram(programName: self.programNameLabel.text!)
         }
     }
     
@@ -526,7 +591,7 @@ class EpisodeCell: UITableViewCell {
             FireStoreManager.updateEpisodeLikeCountWith(episodeID: episode.ID, by: .increase)
             
             episode.likeCount += 1
-            cellDelegate?.updateLikeCountFor(episode: episode, at: indexPath)
+//            cellDelegate?.updateLikeCountFor(episode: episode, at: indexPath)
             
         } else {
             likedEpisode = false
@@ -537,7 +602,7 @@ class EpisodeCell: UITableViewCell {
             FireStoreManager.updateEpisodeLikeCountWith(episodeID: episode.ID, by: .decrease)
             
             episode.likeCount -= 1
-            cellDelegate?.updateLikeCountFor(episode: episode, at: indexPath)
+//            cellDelegate?.updateLikeCountFor(episode: episode, at: indexPath)
             
             if likeCount == 0 {
                 likeCountLabel.text = ""
@@ -546,11 +611,11 @@ class EpisodeCell: UITableViewCell {
     }
     
     @objc func playEpisode() {
-        cellDelegate?.playEpisode(cell: self )
+//        cellDelegate?.playEpisode(cell: self)
     }
-    
+
     @objc func showSettings() {
-        cellDelegate?.showSettings(cell: self )
+//        cellDelegate?.showSettings(cell: self)
     }
     
     @objc func visitProfile() {
@@ -564,10 +629,10 @@ class EpisodeCell: UITableViewCell {
             FireStoreManager.fetchAndCreateProgramWith(programID: episode.programID) { program in
                 if program.isPrimaryProgram && program.hasMultiplePrograms! {
                     FireStoreManager.fetchSubProgramsWithIDs(programIDs: program.programIDs!, for: program) {
-                        self.cellDelegate!.visitProfile(program: program)
+//                        self.cellDelegate!.visitProfile(program: program)
                     }
                 } else {
-                     self.cellDelegate!.visitProfile(program: program)
+//                     self.cellDelegate!.visitProfile(program: program)
                 }
             }
         }
@@ -588,7 +653,9 @@ class EpisodeCell: UITableViewCell {
     
 }
 
-extension EpisodeCell: WKNavigationDelegate {
+extension EpisodeCellSquareLink: WKNavigationDelegate {
     
 }
+
+
 

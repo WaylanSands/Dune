@@ -36,6 +36,7 @@ class SubProgramAccountVC: UIViewController {
     let maxPrograms = 10
     
     lazy var tabBar = navigationController?.tabBarController?.tabBar
+    
     let settingsLauncher = SettingsLauncher(options: SettingOptions.sharing, type: .sharing)
     let ownEpisodeSettings = SettingsLauncher(options: SettingOptions.ownEpisode, type: .ownEpisode)
     
@@ -246,10 +247,12 @@ class SubProgramAccountVC: UIViewController {
     }
     
     func configureDelegates() {
-        audioPlayer.playbackDelegate = self
-        episodeTV.delegate = self
-        episodeTV.dataSource = self
         episodeTV.register(EpisodeCell.self, forCellReuseIdentifier: "episodeCell")
+        ownEpisodeSettings.settingsDelegate = self
+        settingsLauncher.settingsDelegate = self
+        audioPlayer.playbackDelegate = self
+        episodeTV.dataSource = self
+        episodeTV.delegate = self
     }
     
     func setupTopBar() {
@@ -267,15 +270,6 @@ class SubProgramAccountVC: UIViewController {
         navBar?.backIndicatorImage = imgBackArrow
         navBar?.backIndicatorTransitionMaskImage = imgBackArrow
         navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
-    }
-    
-    func addLoadingView() {
-        view.addSubview(loadingView)
-        loadingView.translatesAutoresizingMaskIntoConstraints = false
-        loadingView.topAnchor.constraint(equalTo: episodeTV.topAnchor).isActive = true
-        loadingView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-        loadingView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        loadingView.bottomAnchor.constraint(equalTo: episodeTV.bottomAnchor).isActive = true
     }
         
     // MARK: Fetch batch of episode IDs
@@ -362,7 +356,7 @@ class SubProgramAccountVC: UIViewController {
                     
                     for each in orderedBatch {
                         self.downloadedEpisodes.append(each)
-                        self.audioPlayer.downloadedEps.append(each)
+                        self.audioPlayer.downloadedEpisodes.append(each)
                         self.audioPlayer.audioIDs.append(each.audioID)
                     }
                     
@@ -511,13 +505,25 @@ class SubProgramAccountVC: UIViewController {
         audioPlayer.frame = CGRect(x: 0, y: view.frame.height, width: view.frame.width, height: 70)
     }
     
+    func addLoadingView() {
+        view.addSubview(loadingView)
+        loadingView.translatesAutoresizingMaskIntoConstraints = false
+        loadingView.topAnchor.constraint(equalTo: episodeTV.topAnchor).isActive = true
+        loadingView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        loadingView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        loadingView.bottomAnchor.constraint(equalTo: episodeTV.bottomAnchor).isActive = true
+        
+        view.bringSubviewToFront(introPlayer)
+        view.bringSubviewToFront(audioPlayer)
+    }
+    
     @objc func playIntro() {
         
         if !audioPlayer.playerIsOutOfPosition {
             audioPlayer.finishSession()
         }
         
-        introPlayer.navHeight = self.tabBarController?.tabBar.frame.height
+        introPlayer.yPosition = self.tabBarController?.tabBar.frame.height
         introPlayer.getAudioWith(audioID: program.introID!) { url in
             self.introPlayer.playOrPauseWith(url: url, name: self.program.name, image: self.program.image!)
         }
@@ -640,6 +646,16 @@ extension SubProgramAccountVC: UITableViewDataSource, UITableViewDelegate {
 
 extension SubProgramAccountVC :EpisodeCellDelegate {
     
+    func tagSelected(tag: String) {
+        let tagSelectedVC = EpisodeTagLookupVC(tag: tag)
+        navigationController?.pushViewController(tagSelectedVC, animated: true)
+    }
+    
+    func visitProfile(program: Program) {
+        //
+    }
+    
+    
     func updateRows() {
         //
     }
@@ -698,7 +714,7 @@ extension SubProgramAccountVC: SettingsLauncherDelegate {
         //Delete own episode
         let episode = downloadedEpisodes[row]
         FireStorageManager.deletePublishedAudioFromStorage(audioID: episode.audioID)
-        FireStoreManager.removeEpisodeIDFromProgram(programID: episode.programID, episodeID: episode.ID)
+        FireStoreManager.removeEpisodeIDFromProgram(programID: episode.programID, episodeID: episode.ID, time: episode.timeStamp)
         FireStoreManager.deleteEpisodeDocument(ID: episode.ID)
         program.episodeIDs.removeAll { $0["ID"] as! String == episode.ID }
         
@@ -708,6 +724,10 @@ extension SubProgramAccountVC: SettingsLauncherDelegate {
         
         episodeTV.deleteRows(at: [index], with: .fade)
         
+        if downloadedEpisodes.count == 0 {
+            resetTableView()
+        }
+        
         audioPlayer.transitionOutOfView()
         
     }
@@ -715,12 +735,12 @@ extension SubProgramAccountVC: SettingsLauncherDelegate {
 
 extension SubProgramAccountVC: PlaybackBarDelegate {
     
-    func updateProgressBarWith(percentage: CGFloat) {
+    func updateProgressBarWith(percentage: CGFloat, forType: PlayBackType) {
         guard let cell = activeCell else { return }
         cell.playbackBarView.progressUpdateWith(percentage: percentage)
     }
     
-    func updateActiveCell(atIndex: Int) {
+    func updateActiveCell(atIndex: Int, forType: PlayBackType) {
         let cell = episodeTV.cellForRow(at: IndexPath(item: atIndex, section: 0)) as! EpisodeCell
         cell.playbackBarView.setupPlaybackBar()
         activeCell = cell

@@ -64,7 +64,9 @@ struct CurrentProgram {
         }
         
         if hasMultiplePrograms! {
-            FireStoreManager.fetchSubProgramsWithIDs(programIDs: programIDs!, for: nil)
+            FireStoreManager.fetchSubProgramsWithIDs(programIDs: programIDs!, for: nil) {
+                print("Sub programs added")
+            }
         }  
     }
     
@@ -77,6 +79,30 @@ struct CurrentProgram {
             return [CurrentProgram.ID!]
         }
     }
+    
+    static func signOutProgram() {
+        ID = nil
+        name = nil
+        username = nil
+        ownerID = nil
+        image = nil
+        imageID = nil
+        imagePath = nil
+        hasIntro = nil
+        introID = nil
+        introPath = nil
+        summary = nil
+        isPrimaryProgram = nil
+        primaryCategory = nil
+        hasMultiplePrograms = nil
+        programIDs = nil
+        subPrograms = nil
+        tags = nil
+        episodeIDs = nil
+        subscriberCount = nil
+        subscriberIDs = nil
+    }
+
     
     
 }

@@ -15,15 +15,10 @@ enum playerStatus {
     case ready
 }
 
-protocol PlaybackBarDelegate {
-    func updateProgressBarWith(percentage: CGFloat)
-    func updateActiveCell(atIndex: Int)
-}
-
 class DuneAudioPlayer: UIView {
        
     var audioIDs = [String]()
-    var downloadedEps = [Episode]()
+    var downloadedEpisodes = [Episode]()
     var currentAudioID: String!
     var audioPlayer: AVAudioPlayer!
     var currentState: playerStatus = .ready
@@ -292,10 +287,10 @@ class DuneAudioPlayer: UIView {
     
     func setupLikeButtonAndCounterFor(Episode: Episode) {
         guard let index = audioIDs.firstIndex(of: episode.audioID) else { return }
-        episode = downloadedEps[index]
+        episode = downloadedEpisodes[index]
         episodeID = episode.ID
         
-        if let likedEpisodes = User.likedEpisodes {
+        if let likedEpisodes = User.likedEpisodesIDs {
             if likedEpisodes.contains(episodeID) {
                 likedEpisode = true
                 likeButton.setImage(UIImage(named: "liked-button"), for: .normal)
@@ -360,7 +355,7 @@ class DuneAudioPlayer: UIView {
         let currentTime = audioPlayer.currentTime
         let percentagePlayed = CGFloat(currentTime / duration)
         playbackCircleView.shapeLayer.strokeEnd = percentagePlayed
-        playbackDelegate.updateProgressBarWith(percentage: percentagePlayed)
+        playbackDelegate.updateProgressBarWith(percentage: percentagePlayed, forType: .episode)
     }
      
      func playAudioFrom(url: URL) {
@@ -425,7 +420,7 @@ class DuneAudioPlayer: UIView {
     }
     
     func playNextEpisodeWith(nextIndex: Int) {
-        let nextEpisode = downloadedEps[nextIndex]
+        let nextEpisode = downloadedEpisodes[nextIndex]
         
         FileManager.getImageWith(imageID: nextEpisode.imageID) { image in
             self.getAudioWith(audioID: nextEpisode.audioID) { url in
@@ -459,7 +454,7 @@ class DuneAudioPlayer: UIView {
             FireStoreManager.updateEpisodeLikeCountWith(episodeID: episodeID, by: .increase)
             
             episode.likeCount += 1
-            downloadedEps[index] = episode
+            downloadedEpisodes[index] = episode
             
         } else {
             likedEpisode = false
@@ -469,7 +464,7 @@ class DuneAudioPlayer: UIView {
             FireStoreManager.updateEpisodeLikeCountWith(episodeID: episodeID, by: .decrease)
             
             episode.likeCount -= 1
-            downloadedEps[index] = episode
+            downloadedEpisodes[index] = episode
             
             if likeCount == 0 {
                 likeCountLabel.text = ""
@@ -543,17 +538,17 @@ extension DuneAudioPlayer: AVAudioPlayerDelegate {
         playbackCircleView.setupPlaybackCircle()
         
         print("episodeID \(episode!.audioID)")
-        guard let index = downloadedEps.firstIndex(where: { $0.audioID == episode!.audioID }) else { return }
+        guard let index = downloadedEpisodes.firstIndex(where: { $0.audioID == episode!.audioID }) else { return }
 //        let episode = downloadedEps[index]
 //        episodeID = episode.ID
         print("The index was \(index)")
-         print("The end was \(downloadedEps.endIndex - 1)")
+         print("The end was \(downloadedEpisodes.endIndex - 1)")
         FireStoreManager.updateListenCountFor(episode: episode.ID)
             
         print("NextIndex: \(index + 1)")
-        if (downloadedEps.endIndex - 1) > index {
+        if (downloadedEpisodes.endIndex - 1) > index {
             playNextEpisodeWith(nextIndex: index + 1)
-            playbackDelegate.updateActiveCell(atIndex: index + 1)
+            playbackDelegate.updateActiveCell(atIndex: index + 1, forType: .episode)
         } else {
             finishSession()
         }

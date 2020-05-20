@@ -98,7 +98,7 @@ extension FireStoreManager {
     
     // Fetch first batch of program's episodes ordered by date
     static func fetchEpisodesIDsWith(with programIDs: [String], completion: @escaping ([String]) -> ()) {
-        
+        print("Fetching episodes")
         var counter = 0
         var programSnapshots = [DocumentSnapshot]()
         

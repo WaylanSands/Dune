@@ -16,6 +16,7 @@ import MobileCoreServices
 class StudioVC: UIViewController {
    
     var programSelectionView: SettingsLauncher!
+    var recordingSession: AVAudioSession!
     lazy var tabBar = navigationController?.tabBarController?.tabBar
     var audioPlayer: AVPlayer!
     
@@ -27,11 +28,12 @@ class StudioVC: UIViewController {
     var initialLoad: Bool = true
     var selectedProgramName: String?
     
+    let notAPublisherAlert = CustomAlertView(alertType: .notAPublisher)
+    
     var customNav: CustomNavBar = {
         let nav = CustomNavBar()
         nav.backgroundColor = CustomStyle.onBoardingBlack.withAlphaComponent(0.8)
         nav.leftButton.setImage(UIImage(named: "upload-icon-white"), for: .normal)
-//        nav.rightButton.setImage(UIImage(named: "record-icon"), for: .normal)
         nav.rightButton.setTitle("Record", for: .normal)
         nav.leftButton.addTarget(self, action: #selector(selectDocument), for: .touchUpInside)
         nav.rightButton.addTarget(self, action: #selector(recordButtonPress), for: .touchUpInside)
@@ -126,9 +128,10 @@ class StudioVC: UIViewController {
     }
     
     func configureDelegates() {
+        tableView.register(DraftEpisodeCell.self, forCellReuseIdentifier: "draftEpisodeCell")
+        notAPublisherAlert.alertDelegate = self
         tableView.dataSource = self
         tableView.delegate = self
-        tableView.register(DraftEpisodeCell.self, forCellReuseIdentifier: "draftEpisodeCell")
     }
     
     func configureViews() {
@@ -156,20 +159,16 @@ class StudioVC: UIViewController {
         view.addSubview(customNav)
         customNav.pinNavBarTo(view)
         
-        if CurrentProgram.hasMultiplePrograms! {
-            
+        if User.isPublisher! && CurrentProgram.hasMultiplePrograms! {
             view.addSubview(programNameButton)
             programNameButton.translatesAutoresizingMaskIntoConstraints = false
             programNameButton.centerXAnchor.constraint(equalTo: view.centerXAnchor, constant: 0).isActive = true
             programNameButton.centerYAnchor.constraint(equalTo: customNav.centerYAnchor, constant: 22).isActive = true
             programNameButton.heightAnchor.constraint(equalToConstant: 25).isActive = true
             programNameButton.widthAnchor.constraint(lessThanOrEqualToConstant: 200).isActive = true
-            
         } else {
             customNav.titleLabel.text = "Studio"
         }
-
-
     }
     
     func getDraftEpisodeIDs() {
@@ -275,28 +274,37 @@ class StudioVC: UIViewController {
         }
     
     @objc func recordButtonPress() {
-        let recordVC = RecordBoothVC()
         
+        if User.isPublisher! {
+            recordingSession = AVAudioSession.sharedInstance()
+            do {
+                try recordingSession.setCategory(.playAndRecord, mode: .default)
+                try recordingSession.setActive(true)
+                recordingSession.requestRecordPermission() { [unowned self] allowed in
+                    DispatchQueue.main.async {
+                        if allowed {
+                            self.moveToRecordBooth()
+                        } else {
+                            // Test this here
+                            print("Refused to record")
+                        }
+                    }
+                }
+            } catch {
+                print("Unable to start recording \(error)")
+            }
+        } else {
+            UIApplication.shared.windows.last?.addSubview(notAPublisherAlert)
+        }
+    }
+    
+    func moveToRecordBooth() {
+        let recordVC = RecordBoothVC()
         if selectedProgramName != nil && selectedProgramName != CurrentProgram.name {
             recordVC.selectedProgram = CurrentProgram.subPrograms?.first(where: { $0.name == selectedProgramName })
         }
-        
         recordVC.currentScope = .episode
         navigationController?.pushViewController(recordVC, animated: false)
-    }
-    
-    @objc func uploadButtonPress() {
-//        let storage = Storage.storage()
-//
-//        let pathReference = storage.reference(withPath: "images/ep2.mp3")
-//        pathReference.downloadURL { (url, error) in
-//            if error != nil {
-//                print("there was an error")
-//            } else {
-//                self.play(url: url!)
-//                CacheControl.storeAudio(url: url!)
-//            }
-//        }
     }
     
     @objc func selectProgram() {
@@ -309,9 +317,7 @@ class StudioVC: UIViewController {
         programSelectionView = SettingsLauncher(options: options, type: .programNames)
         programSelectionView.settingsDelegate = self
         programSelectionView.showSettings()
-        
     }
-
 
     func play(url: URL) {
         let playerItem = AVPlayerItem(url: url)
@@ -323,20 +329,19 @@ class StudioVC: UIViewController {
     
     func editDraftEpisode(for row: Int) {
         let draft = downloadedDrafts[row]
-        print("The draft fileName is \(draft.fileName)")
+
         FileManager.getAudioURLFromTempDirectory(fileName: draft.fileName) { url in
             
             let editingVC = EditingBoothVC()
             editingVC.recordingURL = url
             editingVC.fileName = draft.fileName
-            print("The Filename is \(draft.fileName)")
             editingVC.startTime = draft.startTime
             editingVC.endTime = draft.endTime
             editingVC.wasTrimmed = draft.wasTrimmed
             editingVC.caption = draft.caption
             editingVC.tags = draft.tags
-            editingVC.isDraft = true
             editingVC.draftID = draft.ID
+            editingVC.isDraft = true
             
             if draft.programName != CurrentProgram.name {
                 let program = CurrentProgram.subPrograms?.first(where: {$0.name == draft.programName})
@@ -345,10 +350,8 @@ class StudioVC: UIViewController {
             self.navigationController?.pushViewController(editingVC, animated: true)
         }
     }
-
     
-    func editUploadedEpisode(url: URL) {
-        let fileName = NSUUID().uuidString
+    func editUploadedEpisode(url: URL, fileName: String) {
         
         let editingVC = EditingBoothVC()
         editingVC.recordingURL = url
@@ -358,11 +361,15 @@ class StudioVC: UIViewController {
         editingVC.wasTrimmed = false
         editingVC.caption = ""
         editingVC.tags = []
+        editingVC.isDraft = false
+        
+        if selectedProgramName != CurrentProgram.name {
+            let program = CurrentProgram.subPrograms?.first(where: {$0.name == selectedProgramName})
+            editingVC.selectedProgram = program
+        }
         
         self.navigationController?.pushViewController(editingVC, animated: true)
     }
-
-
 }
 
 extension StudioVC: UITableViewDelegate, UITableViewDataSource {
@@ -401,7 +408,6 @@ extension StudioVC: UITableViewDelegate, UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        print("Cell Selected: \(indexPath.row)")
         editDraftEpisode(for: indexPath.row)
     }
     
@@ -450,20 +456,24 @@ extension StudioVC: UITableViewDelegate, UITableViewDataSource {
 extension StudioVC: UIDocumentPickerDelegate,UINavigationControllerDelegate {
     
     func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]){
-        
-        print("The url is \(urls)")
-      
+                
         guard let url = urls.first else { return }
+        let fileExtension = ".\(url.pathExtension)"
         
-            var newURL = FileManager.getDocumentsDirectory()
-            newURL.appendPathComponent(url.lastPathComponent)
+        print("The file extension \(fileExtension)")
+        
+        let fileName = NSUUID().uuidString + fileExtension
+
+            var newURL = FileManager.getTempDirectory()
+            newURL.appendPathComponent(fileName)
             do {
 
                 if FileManager.default.fileExists(atPath: newURL.path) {
                     try FileManager.default.removeItem(atPath: newURL.path)
                 }
                 try FileManager.default.moveItem(atPath: url.path, toPath: newURL.path)
-                editUploadedEpisode(url: newURL)
+                               
+                editUploadedEpisode(url: newURL, fileName: fileName)
             } catch {
                 print(error.localizedDescription)
             }
@@ -475,19 +485,24 @@ extension StudioVC: UIDocumentPickerDelegate,UINavigationControllerDelegate {
         }
     
     @objc func selectDocument() {
-        let types = [kUTTypeAudio]
-        let importMenu = UIDocumentPickerViewController(documentTypes: types as [String], in: .import)
-
-        if #available(iOS 11.0, *) {
-            importMenu.allowsMultipleSelection = false
+        
+        if User.isPublisher! {
+            
+            let types = [kUTTypeAudio]
+            let importMenu = UIDocumentPickerViewController(documentTypes: types as [String], in: .import)
+            
+            if #available(iOS 11.0, *) {
+                importMenu.allowsMultipleSelection = false
+            }
+            
+            importMenu.delegate = self
+            importMenu.modalPresentationStyle = .fullScreen
+            
+            present(importMenu, animated: true)
+        } else {
+            UIApplication.shared.windows.last?.addSubview(notAPublisherAlert)
         }
-
-        importMenu.delegate = self
-        importMenu.modalPresentationStyle = .fullScreen
-
-        present(importMenu, animated: true)
     }
-    
 }
 
 extension StudioVC: SettingsLauncherDelegate {
@@ -498,5 +513,21 @@ extension StudioVC: SettingsLauncherDelegate {
         selectedProgramName = setting
     }
     
+}
 
+extension StudioVC: CustomAlertDelegate {
+   
+    func primaryButtonPress() {
+        if let programNameVC = UIStoryboard(name: "OnboardingPublisher", bundle: nil).instantiateViewController(withIdentifier: "programNameVC") as? ProgramNameVC {
+            programNameVC.hidesBottomBarWhenPushed = true
+            navigationController?.pushViewController(programNameVC, animated: true)
+        }
+    }
+    
+    func cancelButtonPress() {
+        //
+    }
+    
+    
+    
 }

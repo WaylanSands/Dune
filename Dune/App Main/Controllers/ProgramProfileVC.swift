@@ -52,6 +52,8 @@ class ProgramProfileVC: UIViewController {
     let programSettings = SettingsLauncher(options: SettingOptions.programSettings, type: .program)
 
     let introPlayer = DuneIntroPlayer()
+    var activeProgramCell: ProgramCell?
+    
     let audioPlayer = DuneAudioPlayer()
 
     let episodeTV = UITableView()
@@ -70,7 +72,7 @@ class ProgramProfileVC: UIViewController {
         let nav = CustomNavBar()
         nav.leftButton.isHidden = true
         nav.backgroundColor = .white
-        nav.alpha = 0.8
+        nav.alpha = 0.9
         return nav
     }()
 
@@ -264,6 +266,7 @@ class ProgramProfileVC: UIViewController {
         configureDelegates()
         styleForScreens()
         configureViews()
+        addLoadingView()
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -281,7 +284,6 @@ class ProgramProfileVC: UIViewController {
         summaryTextView.text = program.summary
         
         multipleProgramsSubLabel.text = "Programs brought to you by @\(program.username)"
-
 
         programIDs = programsIDs()
         fetchEpisodeIDsForUser()
@@ -377,6 +379,7 @@ class ProgramProfileVC: UIViewController {
     
     func setupTopBar() {
         let navBar = navigationController?.navigationBar
+        navigationController?.navigationBar.prefersLargeTitles = false
         navigationController?.navigationBar.isTranslucent = true
         navigationController?.isNavigationBarHidden = false
         navBar?.setBackgroundImage(UIImage(), for: .default)
@@ -704,7 +707,7 @@ class ProgramProfileVC: UIViewController {
                     
                     for each in orderedBatch {
                         self.downloadedEpisodes.append(each)
-                        self.audioPlayer.downloadedEps.append(each)
+                        self.audioPlayer.downloadedEpisodes.append(each)
                         self.audioPlayer.audioIDs.append(each.audioID)
                     }
                     
@@ -796,14 +799,19 @@ class ProgramProfileVC: UIViewController {
         label.textAlignment = .center
         return label
     }
+    
+    // MARK: Play Intro
 
     @objc func playIntro() {
-        
+        introPlayer.isProgramPageIntro = true
+
         if !audioPlayer.playerIsOutOfPosition {
             audioPlayer.finishSession()
         }
         
-        introPlayer.navHeight = self.tabBarController?.tabBar.frame.height
+        introPlayer.yPosition = view.frame.height - tabBarController!.tabBar.frame.height - introPlayer.frame.height
+
+        
         introPlayer.getAudioWith(audioID: program.introID!) { url in
             self.introPlayer.playOrPauseWith(url: url, name: self.program.name, image: self.program.image!)
              print("Play intro")
@@ -944,6 +952,11 @@ extension ProgramProfileVC: UITableViewDelegate, UITableViewDataSource {
 
 extension ProgramProfileVC :EpisodeCellDelegate {
     
+    func tagSelected(tag: String) {
+        let tagSelectedVC = EpisodeTagLookupVC(tag: tag)
+        navigationController?.pushViewController(tagSelectedVC, animated: true)
+    }
+    
     func updateRows() {
         //
     }
@@ -999,26 +1012,17 @@ extension ProgramProfileVC: UIScrollViewDelegate {
 
     public func scrollViewDidScroll(_ scrollView: UIScrollView) {
 
-//        let screenHeight = UIScreen.main.bounds.height
-
         let fadeTextAnimation = CATransition()
         fadeTextAnimation.duration = 0.5
         fadeTextAnimation.type = CATransitionType.fade
         
         if flexView.frame.height != 0 && flexView.frame.height <= topSectionHeightMax - 100 {
             navigationController?.navigationBar.layer.add(fadeTextAnimation, forKey: "fadeText")
-            navigationItem.title = User.username
-//            navigationController?.navigationBar.titleTextAttributes = [.foregroundColor: UIColor.white]
+            navigationItem.title = program.username
 
         } else {
             navigationItem.title = ""
         }
-        
-//        print("HERE \(flexView.frame.height)")
-//        if flexView.frame.height != 0 {
-//            let percent = flexView.frame.height / topSectionHeightMax
-//            coverView.alpha = 1 - percent
-//        }
         
         let y: CGFloat = scrollView.contentOffset.y
         let newHeaderViewHeight: CGFloat = flexHeightConstraint.constant - y
@@ -1035,12 +1039,12 @@ extension ProgramProfileVC: UIScrollViewDelegate {
 
 extension ProgramProfileVC: PlaybackBarDelegate {
    
-    func updateProgressBarWith(percentage: CGFloat) {
+    func updateProgressBarWith(percentage: CGFloat, forType: PlayBackType) {
         guard let cell = activeCell else { return }
         cell.playbackBarView.progressUpdateWith(percentage: percentage)
     }
     
-    func updateActiveCell(atIndex: Int) {
+    func updateActiveCell(atIndex: Int, forType: PlayBackType) {
         let cell = episodeTV.cellForRow(at: IndexPath(item: atIndex, section: 0)) as! EpisodeCell
         cell.playbackBarView.setupPlaybackBar()
         activeCell = cell
@@ -1061,7 +1065,23 @@ extension ProgramProfileVC: ProgramCellDelegate {
     }
    
     func playProgramIntro(cell: ProgramCell) {
-        //
+        introPlayer.isProgramPageIntro = false
+        activeProgramCell = cell
+        
+        if !audioPlayer.playerIsOutOfPosition {
+            audioPlayer.finishSession()
+        }
+        
+        let programIntro = cell.program.introID!
+        let programImage = cell.program.image!
+        let programName = cell.program.name
+        
+        introPlayer.yPosition = self.tabBarController!.tabBar.frame.height
+        introPlayer.getAudioWith(audioID: programIntro) { url in
+            self.introPlayer.playOrPauseWith(url: url, name: programName, image: programImage)
+        }
+        print("Play intro")
+
     }
  
 }

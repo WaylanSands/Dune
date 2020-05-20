@@ -24,11 +24,12 @@ struct User {
     static var programID: String?
     static var hasMultiplePrograms: Bool?
     static var programIDs: [String]?
-    static var subscriptionIDs: [String]?    // Program IDs
-    static var likedEpisodes: [String]?     // Episode IDs
-    static var savedContent: [String]?     // Episode IDs
-    static var draftEpisodeIDs: [String]?    // Episode IDs
-    static var interests: [String]?    // Categories
+    static var subscriptionIDs: [String]?
+    static var likedEpisodesIDs: [String]?
+    static var sharedEpisodes: [String]?
+    static var savedContent: [String]?
+    static var draftEpisodeIDs: [String]?
+    static var interests: [String]?
     static var completedOnBoarding: Bool?
     
     static func modelUser(data: [String: Any]) {
@@ -45,11 +46,45 @@ struct User {
         hasMultiplePrograms = data["hasMultiplePrograms"] as? Bool
         programIDs = data["programIDs"] as? [String]
         subscriptionIDs = data["subscriptionIDs"] as? [String]
-        likedEpisodes = data["likedEpisodes"] as? [String]
+        likedEpisodesIDs = data["likedEpisodesIDs"] as? [String]
+        sharedEpisodes = data["sharedEpisodes"] as? [String]
         savedContent = data["savedContent"] as? [String]
         draftEpisodeIDs = data["draftEpisodeIDs"] as? [String]
         interests = data["interests"] as? [String]
         completedOnBoarding = data["completedOnBoarding"] as? Bool
+        
+        if imageID != nil {
+            FileManager.getImageWith(imageID: imageID!) { image in
+                DispatchQueue.main.async {
+                    self.image = image
+                }
+            }
+        } else {
+            self.image = #imageLiteral(resourceName: "missing-image-large")
+        }
+    }
+    
+    static func signOutUser() {
+        ID = nil
+        username = nil
+        displayName = nil
+        imageID = nil
+        imagePath = nil
+        image = nil
+        email = nil
+        password = nil
+        birthDate = nil
+        isPublisher = nil
+        programID = nil
+        hasMultiplePrograms = nil
+        programIDs = nil
+        subscriptionIDs = nil
+        likedEpisodesIDs = nil
+        sharedEpisodes = nil
+        savedContent = nil
+        draftEpisodeIDs = nil
+        interests = nil
+        completedOnBoarding = nil
     }
     
 }

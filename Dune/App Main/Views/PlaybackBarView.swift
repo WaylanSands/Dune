@@ -9,6 +9,15 @@
 import UIKit
 import Foundation
 
+enum PlayBackType {
+    case episode
+    case program
+}
+
+protocol PlaybackBarDelegate {
+    func updateProgressBarWith(percentage: CGFloat, forType: PlayBackType)
+    func updateActiveCell(atIndex: Int, forType: PlayBackType)
+}
 
 class PlaybackBarView: UIView {
     
@@ -37,7 +46,6 @@ class PlaybackBarView: UIView {
         let percent = percentage * 100
         let width = (50 * percent) / 100
         self.progressView.frame = CGRect(x: 0, y: 0, width: width, height: 4)
-        
     }
 
 }

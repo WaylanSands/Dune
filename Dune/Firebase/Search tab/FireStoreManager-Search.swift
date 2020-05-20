@@ -53,34 +53,71 @@ extension FireStoreManager {
         }
     }
     
-    static func fetchSubProgramsWithIDs(programIDs: [String], for program: Program?) {
+    static func fetchSubProgramsWithIDs(programIDs: [String], for program: Program?, completion: @escaping () ->()) {
         
-        let programsRef = db.collection("programs").whereField("ID", in: programIDs)
-        
-        programsRef.getDocuments { snapshot, error in
+        DispatchQueue.global(qos: .userInitiated).async {
             
-            if error != nil {
-                print("Error fetching batch of programs: \(error!)")
-            } else if snapshot?.count == 0 {
-                 print("There are no programs to fetch")
-            } else {
-                guard let data = snapshot?.documents else { return }
-               
-                if program == nil {
-                    CurrentProgram.subPrograms = [Program]()
+            var programCount = 0
+            let programsRef = db.collection("programs").whereField("ID", in: programIDs)
+            
+            programsRef.getDocuments { snapshot, error in
+                
+                if error != nil {
+                    print("Error fetching batch of programs: \(error!)")
+                } else if snapshot?.count == 0 {
+                    print("There are no programs to fetch")
                 } else {
-                    program?.subPrograms = [Program]()
-                }
-               
-                for each in data {
-                    let programData = each.data()
-                    let loadedProgram = Program(data: programData)
-                   
+                    guard let data = snapshot?.documents else { return }
+                    
                     if program == nil {
-                        CurrentProgram.subPrograms!.append(loadedProgram)
+                        CurrentProgram.subPrograms = [Program]()
                     } else {
-                        program!.subPrograms!.append(loadedProgram)
+                        program?.subPrograms = [Program]()
                     }
+                    
+                    for each in data {
+                        programCount += 1
+                        let programData = each.data()
+                        let loadedProgram = Program(data: programData)
+                        
+                        if program == nil {
+                            CurrentProgram.subPrograms!.append(loadedProgram)
+                        } else {
+                            program!.subPrograms!.append(loadedProgram)
+                            print("Sub programs added \(program!.subPrograms!)")
+                        }
+                        
+                        if programCount == snapshot?.count {
+                            completion()
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    static func updatePublishedEpisodeWith(episodeID: String, caption: String, tags: [String]?, completion: @escaping (Bool) ->()) {
+        
+        DispatchQueue.global(qos: .userInitiated).async {
+            
+            var episodeTags = [String]()
+            
+            if tags != nil {
+                episodeTags = tags!
+            }
+            
+            let episodeRef = db.collection("episodes").document(episodeID)
+            
+            episodeRef.updateData([
+                "caption" : caption,
+                "tags" : episodeTags
+            ]) { error in
+                if error != nil {
+                    print("Error updating published episode")
+                    completion(false)
+                } else {
+                    print("Episode has been updated")
+                    completion(true)
                 }
             }
         }
@@ -194,6 +231,27 @@ extension FireStoreManager {
             } else {
                 guard let data = snapshot?.documents else { return }
                 completion(data)
+            }
+        }
+    }
+    
+    static func searchForProgramStartingWith(string: String, completion: @escaping ([QueryDocumentSnapshot]) -> ()) {
+        
+        let programsRef = db.collection("programs")
+        
+        programsRef.whereField("name", isGreaterThan: string).limit(to: 5).getDocuments { (snapshot, error) in
+            
+            if error != nil {
+               print("there was an error")
+            } else {
+                guard let shots = snapshot?.documents else { return }
+                completion(shots)
+                
+//                for each in shots! {
+//                    let data = each.data()
+//                    let name = data["name"]
+//                    print("The name is \(name!)")
+//                }
             }
         }
     }

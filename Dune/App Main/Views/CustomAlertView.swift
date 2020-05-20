@@ -24,8 +24,11 @@ enum alertType {
     case deleteAccount
     case deleteProgram
     case shortAudioLength
+    case audioTooLong
     case shortIntroLength
     case removeIntro
+    case notAPublisher
+    case cantFindLargeImage
 }
 
 protocol CustomAlertDelegate {
@@ -76,7 +79,7 @@ class CustomAlertView: UIView {
     
     let secondaryButton: UIButton = {
         let button = UIButton()
-        button.setTitleColor(CustomStyle.primaryBlack, for: .normal)
+        button.setTitleColor(CustomStyle.fourthShade, for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         return button
     }()
@@ -107,17 +110,16 @@ class CustomAlertView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
     
-    
     func prepareAlert() {
         switch typeOfAlert {
         case .networkIssue:
-            headingLabel.text = "this"
-            bodyTextLabel.text = "this"
+            headingLabel.text = "Network Issue"
+            bodyTextLabel.text = "It appears you have no internet connection"
             primaryButton.setTitle("Try again", for: .normal)
             primaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
         case .noUserFound:
             headingLabel.text = "Invalid login"
-            bodyTextLabel.text = "this"
+            bodyTextLabel.text = "No user found with that email, please check again."
             primaryButton.setTitle("Try again", for: .normal)
             primaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
         case .wrongPassword:
@@ -217,6 +219,31 @@ class CustomAlertView: UIView {
             primaryButton.addTarget(self, action: #selector(primaryButtonPress), for: .touchUpInside)
             secondaryButton.setTitle("Cancel", for: .normal)
             secondaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
+        case .audioTooLong:
+            headingLabel.text = "Audio too long"
+            bodyTextLabel.text = "Audio exceeds maximum duration of sixty seconds. Please trim or record another episode."
+            primaryButton.setTitle("Dismiss", for: .normal)
+            primaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
+        case .notAPublisher:
+            headingLabel.text = "Welcome to Dune Studio"
+            bodyTextLabel.text = """
+            The studio is only made available to publishers.
+            
+            If you wish to publish content, you can switch to a publisher account in a few simple steps.
+            """
+            primaryButton.setTitle("Switch account", for: .normal)
+            primaryButton.addTarget(self, action: #selector(primaryButtonPress), for: .touchUpInside)
+            secondaryButton.setTitle("Dismiss", for: .normal)
+            secondaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
+        case .cantFindLargeImage:
+            headingLabel.text = "Unsuccessful link"
+            bodyTextLabel.text = "Sorry but we were unable to dig up a large image for this link, this will be fixed shortly."
+            primaryButton.setTitle("Remove link", for: .normal)
+            primaryButton.addTarget(self, action: #selector(primaryButtonPress), for: .touchUpInside)
+            secondaryButton.setTitle("Dismiss", for: .normal)
+            secondaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
+            
+            
         }
     }
     

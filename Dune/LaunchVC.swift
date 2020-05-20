@@ -42,7 +42,7 @@ class LaunchVC: UIViewController {
         super.viewDidLoad()
         view.backgroundColor = CustomStyle.onBoardingBlack
         configureView()
-//        FileManager.clearCacheDirectory()
+
         print("IS logged in? \(loggedIn)")
         if loggedIn {
             getUserData()

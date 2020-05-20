@@ -63,6 +63,7 @@ class SubProgramProfileVC: UIViewController {
         imageView.clipsToBounds = true
         imageView.frame.size = CGSize(width: 74, height: 74)
         imageView.contentMode = .scaleAspectFill
+        imageView.backgroundColor = CustomStyle.secondShade
         return imageView
     }()
     
@@ -230,6 +231,8 @@ class SubProgramProfileVC: UIViewController {
     }
     
     override func viewDidAppear(_ animated: Bool) {
+        mainImage.image = program.image
+
         if summaryTextView.lineCount() > 3 {
             addMoreButton()
         }
@@ -269,29 +272,8 @@ class SubProgramProfileVC: UIViewController {
     
     func setupTopBar() {
         navigationController?.isNavigationBarHidden = true
-//        navBar?.setBackgroundImage(nil, for: .default)
-//        navBar?.barStyle = .default
-//        navBar?.shadowImage = UIImage()
-//        navBar?.tintColor = .black
-//
-//        navBar?.titleTextAttributes = CustomStyle.blackNavBarAttributes
-//        navigationItem.rightBarButtonItem = UIBarButtonItem(image: #imageLiteral(resourceName: "white-settings-icon"), style: .plain, target: self, action: #selector(settingsButtonPress))
-//
-//        let imgBackArrow = #imageLiteral(resourceName: "back-button-white")
-//        navBar?.backIndicatorImage = imgBackArrow
-//        navBar?.backIndicatorTransitionMaskImage = imgBackArrow
-//        navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
     }
-    
-    func addLoadingView() {
-        view.addSubview(loadingView)
-        loadingView.translatesAutoresizingMaskIntoConstraints = false
-        loadingView.topAnchor.constraint(equalTo: episodeTV.topAnchor).isActive = true
-        loadingView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-        loadingView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        loadingView.bottomAnchor.constraint(equalTo: episodeTV.bottomAnchor).isActive = true
-    }
-        
+      
     // MARK: Fetch batch of episode IDs
     func fetchEpisodeIDsForUser() {
         FireStoreManager.fetchEpisodesIDsWith(with: programIDs) { ids in
@@ -376,7 +358,7 @@ class SubProgramProfileVC: UIViewController {
                     
                     for each in orderedBatch {
                         self.downloadedEpisodes.append(each)
-                        self.audioPlayer.downloadedEps.append(each)
+                        self.audioPlayer.downloadedEpisodes.append(each)
                         self.audioPlayer.audioIDs.append(each.audioID)
                     }
                     
@@ -428,13 +410,6 @@ class SubProgramProfileVC: UIViewController {
         } else {
             playIntroButton.isHidden = true
             settingsButtonYConstraint.constant = -40
-//            playIntroButton.setImage(nil, for: .normal)
-//            playIntroButton.setTitle("Add Intro", for: .normal)
-//            playIntroButton.setTitleColor(.white, for: .normal)
-//            playIntroButton.backgroundColor = CustomStyle.primaryBlue
-//            playIntroButton.contentEdgeInsets = UIEdgeInsets(top: 0, left: 15, bottom: 0, right: 15)
-//            playIntroButton.removeTarget(self, action: #selector(playIntro), for: .touchUpInside)
-//            playIntroButton.addTarget(self, action: #selector(recordIntro), for: .touchUpInside)
         }
     }
     
@@ -472,7 +447,6 @@ class SubProgramProfileVC: UIViewController {
         settingsButton.translatesAutoresizingMaskIntoConstraints = false
         settingsButton.topAnchor.constraint(equalTo: playIntroButton.bottomAnchor, constant: 10).isActive = true
         settingsButton.trailingAnchor.constraint(equalTo: playIntroButton.trailingAnchor, constant: -5).isActive = true
-//        settingsButton.backgroundColor = .purple
         
         topView.addSubview(topMiddleStackedView)
         topMiddleStackedView.translatesAutoresizingMaskIntoConstraints = false
@@ -524,7 +498,6 @@ class SubProgramProfileVC: UIViewController {
         episodeTV.topAnchor.constraint(equalTo: buttonsStackedView.bottomAnchor, constant: 15.0).isActive = true
         episodeTV.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         episodeTV.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        //        episodeTV.heightAnchor.constraint(equalToConstant: view.frame.height).isActive = true
         episodeTV.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
         
         view.addSubview(introPlayer)
@@ -535,13 +508,28 @@ class SubProgramProfileVC: UIViewController {
         audioPlayer.addBottomSection()
     }
     
+    func addLoadingView() {
+        view.addSubview(loadingView)
+        loadingView.translatesAutoresizingMaskIntoConstraints = false
+        loadingView.topAnchor.constraint(equalTo: episodeTV.topAnchor).isActive = true
+        loadingView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        loadingView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        loadingView.bottomAnchor.constraint(equalTo: episodeTV.bottomAnchor).isActive = true
+        
+        view.bringSubviewToFront(introPlayer)
+        view.bringSubviewToFront(audioPlayer)
+    }
+    
+    // MARK: Play Intro
+    
     @objc func playIntro() {
+        introPlayer.isProgramPageIntro = true
         
         if !audioPlayer.playerIsOutOfPosition {
             audioPlayer.finishSession()
         }
         
-        introPlayer.navHeight = 100
+        introPlayer.yPosition = view.frame.height - (introPlayer.frame.height + 90)
         introPlayer.addBottomSection()
         introPlayer.getAudioWith(audioID: program.introID!) { url in
             self.introPlayer.playOrPauseWith(url: url, name: self.program.name, image: self.program.image!)
@@ -699,6 +687,16 @@ extension SubProgramProfileVC: UITableViewDataSource, UITableViewDelegate {
 
 extension SubProgramProfileVC :EpisodeCellDelegate {
     
+    func tagSelected(tag: String) {
+        let tagSelectedVC = EpisodeTagLookupVC(tag: tag)
+        navigationController?.pushViewController(tagSelectedVC, animated: true)
+    }
+    
+    func visitProfile(program: Program) {
+        //
+    }
+    
+    
     func updateRows() {
         //
     }
@@ -708,7 +706,7 @@ extension SubProgramProfileVC :EpisodeCellDelegate {
     }
     
     func playEpisode(cell: EpisodeCell) {
-        
+
         if !introPlayer.playerIsOutOfPosition {
             introPlayer.finishSession()
         }
@@ -761,7 +759,7 @@ extension SubProgramProfileVC: SettingsLauncherDelegate {
         //Delete own episode
         let episode = downloadedEpisodes[row]
         FireStorageManager.deletePublishedAudioFromStorage(audioID: episode.audioID)
-        FireStoreManager.removeEpisodeIDFromProgram(programID: episode.programID, episodeID: episode.ID)
+        FireStoreManager.removeEpisodeIDFromProgram(programID: episode.programID, episodeID: episode.ID, time: episode.timeStamp)
         FireStoreManager.deleteEpisodeDocument(ID: episode.ID)
         program.episodeIDs.removeAll { $0["ID"] as! String == episode.ID }
         
@@ -778,12 +776,12 @@ extension SubProgramProfileVC: SettingsLauncherDelegate {
 
 extension SubProgramProfileVC: PlaybackBarDelegate {
     
-    func updateProgressBarWith(percentage: CGFloat) {
+    func updateProgressBarWith(percentage: CGFloat, forType: PlayBackType) {
         guard let cell = activeCell else { return }
         cell.playbackBarView.progressUpdateWith(percentage: percentage)
     }
     
-    func updateActiveCell(atIndex: Int) {
+    func updateActiveCell(atIndex: Int, forType: PlayBackType) {
         let cell = episodeTV.cellForRow(at: IndexPath(item: atIndex, section: 0)) as! EpisodeCell
         cell.playbackBarView.setupPlaybackBar()
         activeCell = cell

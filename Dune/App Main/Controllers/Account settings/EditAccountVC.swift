@@ -51,7 +51,6 @@ class EditAccountVC: UIViewController {
     
     let profileImageView: UIImageView = {
         let imageView = UIImageView()
-        imageView.image = #imageLiteral(resourceName: "profile-image-two")
         imageView.layer.cornerRadius = 7
         imageView.clipsToBounds = true
         return imageView
@@ -313,10 +312,11 @@ class EditAccountVC: UIViewController {
     }
     
     func setProgramImage() {
-        if CurrentProgram.image != nil {
+        
+        if User.isPublisher! {
             profileImageView.image = CurrentProgram.image
         } else {
-            profileImageView.image = #imageLiteral(resourceName: "missing-image-large")
+            profileImageView.image = User.image
         }
     }
     

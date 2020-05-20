@@ -8,6 +8,7 @@
 
 import UIKit
 import Firebase
+import LinkPresentation
 
 
 class Episode {
@@ -24,6 +25,9 @@ class Episode {
     var username: String
     var caption: String
     var tags: [String]?
+    var richLink: String?
+    var linkIsSmall: Bool?
+    var linkPreview: UIView?
     var likeCount: Int
     var commentCount: Int
     var shareCount: Int
@@ -40,6 +44,8 @@ class Episode {
         
         timeSince = time
         timeStamp = data["postedAt"] as! Timestamp
+        richLink = data["richLink"] as? String
+        linkIsSmall = data["linkIsSmall"] as? Bool
         duration = data["duration"] as! String
         imageID = data["imageID"] as! String
         imagePath = data["imagePath"] as! String

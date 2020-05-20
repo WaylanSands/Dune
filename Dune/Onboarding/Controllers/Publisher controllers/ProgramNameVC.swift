@@ -153,7 +153,7 @@ class ProgramNameVC: UIViewController {
             User.ID = uid
             User.programID = programID
             CurrentProgram.ID = programID
-            User.subscriptionIDs = [programID]
+            User.subscriptionIDs!.append(programID)
             CurrentProgram.isPrimaryProgram = true
             CurrentProgram.episodeIDs = [[String:Any]]()
             CurrentProgram.subscriberCount = 0
@@ -161,17 +161,14 @@ class ProgramNameVC: UIViewController {
             CurrentProgram.hasIntro = false
             CurrentProgram.hasMultiplePrograms = false
             CurrentProgram.subscriberIDs = [String]()
-
             
             let db = Firestore.firestore()
             let userRef = db.collection("users").document(User.ID!)
             let programRef = db.collection("programs").document(User.programID!)
             
-            
-            
             userRef.updateData([
                 "programID": User.programID!,
-                "subscriptionIDs" : [User.programID!]
+                "subscriptionIDs" :  User.subscriptionIDs!
                     ])
              { (error) in
                 if let error = error {

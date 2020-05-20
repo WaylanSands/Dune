@@ -637,12 +637,16 @@ class AccountSettingsVC: UIViewController {
         navigationController?.popViewController(animated: true)
     }
     
+    // MARK: Logging out
+    
     @objc func logoutButtonPress() {
         
         do {
             try Auth.auth().signOut()
             UserDefaults.standard.set(false, forKey: "loggedIn")
             if let signupScreen = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "signUpVC") as? SignUpVC {
+                User.signOutUser()
+                CurrentProgram.signOutProgram()
                 navigationController?.pushViewController(signupScreen, animated: false)
             }
         } catch let err {

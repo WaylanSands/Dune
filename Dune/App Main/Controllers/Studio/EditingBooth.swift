@@ -61,6 +61,7 @@ class EditingBoothVC: UIViewController {
     lazy var tabBar = navigationController?.tabBarController?.tabBar
     
     let tooShortAlert = CustomAlertView(alertType: .shortAudioLength)
+    let audioTooLong = CustomAlertView(alertType: .audioTooLong)
     
     let responsiveSoundWave: ResponsiveWaveformView = {
         let view = ResponsiveWaveformView()
@@ -92,7 +93,7 @@ class EditingBoothVC: UIViewController {
         button.layer.borderColor = UIColor.white.withAlphaComponent(0.8).cgColor
         button.layer.borderWidth = 6
         button.clipsToBounds = true
-        button.addTarget(self, action: #selector(setupRecordingSession), for: .touchUpInside)
+        button.addTarget(self, action: #selector(recordButtonPress), for: .touchUpInside)
         return button
     }()
     
@@ -278,7 +279,6 @@ class EditingBoothVC: UIViewController {
     }
     
     override func viewDidAppear(_ animated: Bool) {
-        print(currentState)
         if currentState != .preview  {
             playBackBars.isHidden = true
             addEditingButtons()
@@ -530,6 +530,8 @@ class EditingBoothVC: UIViewController {
         tabBar!.items?[4].image =  UIImage(named: "account-icon")
     }
     
+    // MARK: Continue Button Press
+    
     @objc func continueButtonPress() {
         let duration: Double
         
@@ -539,7 +541,13 @@ class EditingBoothVC: UIViewController {
             duration = recordingSnapshot
         }
         
-        if duration >= 10 {
+        if duration < 10 {
+            print("Too short of a recording")
+            UIApplication.shared.windows.last?.addSubview(tooShortAlert)
+        } else if duration > 60 {
+            print("Greater than 60 seconds")
+            UIApplication.shared.windows.last?.addSubview(audioTooLong)
+        } else {
             let addEpisodeDetails = AddEpisodeDetails()
             addEpisodeDetails.episodeFileName = fileName
             addEpisodeDetails.recordingURL = recordingURL
@@ -547,9 +555,13 @@ class EditingBoothVC: UIViewController {
             addEpisodeDetails.startTime = startTime
             addEpisodeDetails.endTime = endTime
             addEpisodeDetails.duration = (recordingSnapshot - endTime)
-            addEpisodeDetails.isDraft = true
             addEpisodeDetails.draftID = draftID
-            print("Recording Duration: \((recordingSnapshot - endTime))")
+            
+            if isDraft == false {
+                addEpisodeDetails.isDraft = false
+            } else {
+                addEpisodeDetails.isDraft = true
+            }
             
             if selectedProgram != nil {
                 addEpisodeDetails.selectedProgram = selectedProgram
@@ -558,14 +570,11 @@ class EditingBoothVC: UIViewController {
             if isDraft {
                 addEpisodeDetails.caption = self.caption
                 if tags != nil {
-                   addEpisodeDetails.tagsUsed = self.tags!
+                    addEpisodeDetails.tagsUsed = self.tags!
                 }
             }
             
             navigationController?.pushViewController(addEpisodeDetails, animated: true)
-        } else {
-            print("Too short bro")
-            UIApplication.shared.windows.last?.addSubview(tooShortAlert)
         }
     }
     
@@ -582,7 +591,7 @@ class EditingBoothVC: UIViewController {
     
     
     // MARK: Record button press
-    func recordButtonPress() {
+    @objc func recordButtonPress() {
         switch currentState {
         case .ready:
             circleTimerView.animate()
@@ -615,12 +624,10 @@ class EditingBoothVC: UIViewController {
             currentState = .playing
             playBackSlider.setValue(0.0, animated: false)
             recordButton.setImage(UIImage(named: "pause-audio-icon"), for: .normal)
-            print("Triggered preview press")
             if currentOption == nil || hasMergedTracks {
                 trackAudio()
                 playDefaultRecording()
             } else if !hasMergedTracks {
-                print("Triggered background music")
                 FileManager.getMusicURLWith(audioID: currentOption!.audioID) { url in
                     self.playMerge(audio1: self.recordingURL, audio2: url)
                     self.hasMergedTracks = true
@@ -683,30 +690,28 @@ class EditingBoothVC: UIViewController {
     }
     
     // Get permission to record
-    @objc func setupRecordingSession() {
-        recordingSession = AVAudioSession.sharedInstance()
-        
-        do {
-            try recordingSession.setCategory(.playAndRecord, mode: .default)
-            try recordingSession.setActive(true)
-            recordingSession.requestRecordPermission() { [unowned self] allowed in
-                DispatchQueue.main.async {
-                    if allowed {
-                        self.recordButtonPress()
-                    } else {
-                        // Test this here
-                        print("Refused to record")
-                    }
-                }
-            }
-        } catch {
-            print("Unable to start recording \(error)")
-        }
-    }
-    
+//    @objc func setupRecordingSession() {
+//        recordingSession = AVAudioSession.sharedInstance()
+//
+//        do {
+//            try recordingSession.setCategory(.playAndRecord, mode: .default)
+//            try recordingSession.setActive(true)
+//            recordingSession.requestRecordPermission() { [unowned self] allowed in
+//                DispatchQueue.main.async {
+//                    if allowed {
+//                        self.recordButtonPress()
+//                    } else {
+//                        // Test this here
+//                        print("Refused to record")
+//                    }
+//                }
+//            }
+//        } catch {
+//            print("Unable to start recording \(error)")
+//        }
+//    }
     
     func trackAudio() {
-        print("Tracking audio")
         playbackLink = CADisplayLink(target: self, selector: #selector(trackRegularPlayback))
         playbackLink.add(to: RunLoop.current, forMode: RunLoop.Mode.common)
     }
@@ -789,9 +794,6 @@ class EditingBoothVC: UIViewController {
     }
     
     func playMerge(audio1: URL, audio2:  URL) {
-        print("audio1: \(audio1)")
-        print("audio2: \(audio2)")
-        
         voiceURL = audio1
         
         let composition = AVMutableComposition()
@@ -832,9 +834,7 @@ class EditingBoothVC: UIViewController {
         
         let timeRange1 = CMTimeRangeMake(start: CMTime(seconds: startTime, preferredTimescale: 1), duration: trueDuration1)
         let timeRange2 = CMTimeRangeMake(start: CMTime(seconds: startTime, preferredTimescale: 1), duration: trueDuration2)
-        
-        print("The Start time is \(startTime)")
-        
+                
         do {
             try compositionAudioTrack1.insertTimeRange(timeRange1, of: assetTrack1, at: CMTime.zero)
             try compositionAudioTrack2.insertTimeRange(timeRange2, of: assetTrack2, at: CMTime.zero)

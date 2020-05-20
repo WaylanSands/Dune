@@ -644,7 +644,6 @@ extension EditSubProgramVC: CustomAlertDelegate {
             let idIndex = CurrentProgram.programIDs?.firstIndex(of: program.ID)
             CurrentProgram.subPrograms?.remove(at: programIndex!)
             CurrentProgram.programIDs?.remove(at: idIndex!)
-            print("ProgramID.count = \(CurrentProgram.programIDs?.count)")
             if CurrentProgram.programIDs?.count == 0 {
                 print("Changing multiple program status")
                 CurrentProgram.hasMultiplePrograms = false

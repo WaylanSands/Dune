@@ -16,25 +16,51 @@ class AccountVC: UIViewController {
     }
     
     var topSectionHeightConstraint: NSLayoutConstraint!
-    var tableHeadeTrailingAnchor: NSLayoutConstraint!
+    var tableHeaderTrailingAnchor: NSLayoutConstraint!
+    
+    var likedTVBottomConstraint: NSLayoutConstraint!
+    var sharedTVBottomConstraint: NSLayoutConstraint!
+    var subscriptionTVBottomConstraint: NSLayoutConstraint!
+    
     var topSectionHeightMin: CGFloat = UIApplication.shared.statusBarFrame.height
     var topSectionHeightMax: CGFloat = 270
     let tableView = UITableView()
-    var programs: [CurrentProgram] = []
+//    var programs: [CurrentProgram] = []
     var tappedPrograms: [String] = []
     var userDetailsYPosition: CGFloat = 125
     var statsYPosition: CGFloat = -80.0
-    lazy var headerBarButtons: [UIButton] = [savedButton, subscriptionsButton, mentionsButton]
+    lazy var headerBarButtons: [UIButton] = [subscriptionsButton, savedButton, mentionsButton]
     
-    let topSection: UIView = {
+    var subscriptionIDs = [String]()
+    var programIDs = [String]()
+    
+    let introPlayer = DuneIntroPlayer()
+    var activeProgramCell: ProgramCell?
+    
+    let audioPlayer = DuneAudioPlayer()
+    
+    var likedEpisodes = [Episode]()
+    let likedEpisodeTV = UITableView()
+
+    var sharedEpisodes = [Episode]()
+    let sharedEpisodeTV = UITableView()
+    
+    var subscriptions = [Program]()
+    let subscriptionTV = UITableView()
+    
+    let likedTVLoadingView = TVLoadingAnimationView(topHeight: 15)
+    let sharedTVLoadingView = TVLoadingAnimationView(topHeight: 15)
+    let subscriptionTVLoadingView = TVLoadingAnimationView(topHeight: 15)
+    
+    let flexView: UIView = {
         let view = UIView()
-        view.backgroundColor = CustomStyle.darkestBlack
+        view.backgroundColor = CustomStyle.onBoardingBlack
         return view
     }()
     
     let topSectionFade: PassThoughView = {
         let view = PassThoughView()
-        view.backgroundColor = CustomStyle.darkestBlack
+        view.backgroundColor = CustomStyle.onBoardingBlack
         return view
     }()
     
@@ -46,9 +72,8 @@ class AccountVC: UIViewController {
         return view
     }()
     
-    let gestureRec = UITapGestureRecognizer(target: self, action: #selector(presentEditProfile))
-    
-    lazy var userImage: UIImageView = {
+    let userImage: UIImageView = {
+        let gestureRec = UITapGestureRecognizer(target: self, action: #selector(presentEditProfile))
         let view = UIImageView()
         view.isUserInteractionEnabled = true
         view.addGestureRecognizer(gestureRec)
@@ -56,23 +81,21 @@ class AccountVC: UIViewController {
         view.clipsToBounds = true
         view.contentMode = .scaleAspectFill
         view.frame.size = CGSize(width: 70.0, height: 70.0)
-        view.image = UIImage(imageLiteralResourceName: "user-placeholder")
         return view
     }()
     
-    let userNameLabel: UILabel = {
+    let nameLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 18, weight: .bold)
         label.textColor = .white
-        label.text = "Katyln Donavan"
         return label
     }()
     
-    let userHandelLabel: UILabel = {
+    let usernameLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 14, weight: .regular)
         label.textColor = .white
-        label.text = "@KatyDon"
+        label.alpha = 0.3
         return label
     }()
     
@@ -85,7 +108,7 @@ class AccountVC: UIViewController {
     
     let tableHeader: UIView = {
         let view = UIView()
-        view.backgroundColor = CustomStyle.darkestBlack
+        view.backgroundColor = CustomStyle.onBoardingBlack
         return view
     }()
     
@@ -134,7 +157,7 @@ class AccountVC: UIViewController {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 12, weight: .regular)
         label.textColor = CustomStyle.fourthShade
-        label.text = "Saved"
+        label.text = "Liked"
         return label
     }()
     
@@ -166,34 +189,34 @@ class AccountVC: UIViewController {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 12, weight: .regular)
         label.textColor = CustomStyle.fourthShade
-        label.text = "Mentions"
+        label.text = "Shared"
         return label
-    }()
-    
-    let savedButton: UIButton = {
-        let button = UIButton()
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
-        button.setTitle("Saved", for: .normal)
-        button.titleLabel?.textColor = .white
-        button.addTarget(self, action: #selector(headerTabPress(sender:)), for: .touchUpInside)
-        return button
     }()
     
     let subscriptionsButton: UIButton = {
         let button = UIButton()
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
         button.setTitle("Subscriptions", for: .normal)
+        button.setTitleColor(.white, for: .normal)
+        button.addTarget(self, action: #selector(tableViewTabButtonPress(sender:)), for: .touchUpInside)
+        return button
+    }()
+    
+    let savedButton: UIButton = {
+        let button = UIButton()
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
+        button.setTitle("Comments", for: .normal)
         button.setTitleColor(CustomStyle.fifthShade, for: .normal)
-        button.addTarget(self, action: #selector(headerTabPress(sender:)), for: .touchUpInside)
+        button.addTarget(self, action: #selector(tableViewTabButtonPress(sender:)), for: .touchUpInside)
         return button
     }()
     
     let mentionsButton: UIButton = {
         let button = UIButton()
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
-        button.setTitle("Mentions", for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
+        button.setTitle("Liked", for: .normal)
         button.setTitleColor(CustomStyle.fifthShade, for: .normal)
-        button.addTarget(self, action: #selector(headerTabPress(sender:)), for: .touchUpInside)
+        button.addTarget(self, action: #selector(tableViewTabButtonPress(sender:)), for: .touchUpInside)
         return button
     }()
     
@@ -205,10 +228,9 @@ class AccountVC: UIViewController {
     
     // Custom NavBar
     
-    let customNavBar: CustomNavBar = {
+    lazy var customNavBar: CustomNavBar = {
         let nav = CustomNavBar()
-        nav.leftButton.setImage(#imageLiteral(resourceName: "switch-account-icon"), for: .normal)
-        nav.leftButton.addTarget(self, action: #selector(switchAccountPress), for: .touchUpInside)
+        nav.leftButton.isHidden = true
         nav.backgroundColor = .clear
         nav.rightButton.setImage(#imageLiteral(resourceName: "white-settings-icon"), for: .normal)
         nav.rightButton.addTarget(self, action: #selector(settingsButtonPress), for: .touchUpInside)
@@ -221,12 +243,17 @@ class AccountVC: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = CustomStyle.darkestBlack
-//        programs = fetchData()
-        setTableViewDelegates()
+        view.backgroundColor = CustomStyle.onBoardingBlack
+        configureDelegates()
         styleForScreens()
-        setupTopBar()
         configureViews()
+        addSubscriptionLoadingView()
+        setupTopBar()
+
+         if User.subscriptionIDs!.count > 0 {
+              fetchSubscriptions()
+         }
+        
         tableView.register(EpisodeCell.self, forCellReuseIdentifier: Cells.regularCell)
         tableView.backgroundColor = .clear
         
@@ -236,6 +263,19 @@ class AccountVC: UIViewController {
         navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        userImage.image = User.image
+        nameLabel.text = User.displayName
+        usernameLabel.text = "@\(User.username!)"
+        
+        if User.subscriptionIDs!.count > 0 && subscriptions.count != User.subscriptionIDs!.count {
+             fetchSubscriptions()
+        }
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        tableViewTabButtonPress(sender: subscriptionsButton)
+    }
     
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         let y: CGFloat = scrollView.contentOffset.y
@@ -248,36 +288,31 @@ class AccountVC: UIViewController {
             percentage = (currentHeight - y) / headerHeight
             userStackedView.alpha = percentage
             statsStackedView.alpha = percentage
-            topSectionFade.alpha = 1.2 - percentage
+            topSectionFade.alpha = 1 - percentage
             headerTopStroke.alpha = percentage
             topSectionHeightConstraint.constant = topSectionHeightMax
         } else if newHeaderViewHeight <= topSectionHeightMin {
             topSectionHeightConstraint.constant = topSectionHeightMin
-            tableHeadeTrailingAnchor.constant = -40
+            tableHeaderTrailingAnchor.constant = -40
             percentage = (currentHeight - y) / headerHeight
             userStackedView.alpha = percentage
             statsStackedView.alpha = percentage
-            topSectionFade.alpha = 1.2 - percentage
+            topSectionFade.alpha = 1 - percentage
             headerTopStroke.alpha = percentage
             headerTopStroke.isHidden = true
             customNavBar.leftButton.alpha = 0
         } else {
             percentage = (currentHeight - y) / headerHeight
             topSectionHeightConstraint.constant = newHeaderViewHeight
-            tableHeadeTrailingAnchor.constant = 0
+            tableHeaderTrailingAnchor.constant = 0
             userStackedView.alpha = percentage
             statsStackedView.alpha = percentage
-            topSectionFade.alpha = 1.2 - percentage
+            topSectionFade.alpha = 1 - percentage
             headerTopStroke.alpha = percentage
             headerTopStroke.isHidden = false
             customNavBar.leftButton.alpha = percentage
             scrollView.contentOffset.y = 0 // block scroll view
         }
-        
-    }
-    
-    override func viewWillAppear(_ animated: Bool) {
-        navigationController?.isNavigationBarHidden = true
     }
     
     func styleForScreens() {
@@ -311,34 +346,42 @@ class AccountVC: UIViewController {
         }
     }
     
-    func setTableViewDelegates() {
-        tableView.delegate = self
-        tableView.dataSource = self
+    func configureDelegates() {
+        likedEpisodeTV.delegate = self
+        likedEpisodeTV.dataSource = self
+        likedEpisodeTV.register(EpisodeCell.self, forCellReuseIdentifier: "episodeCell")
+        
+        sharedEpisodeTV.delegate = self
+        sharedEpisodeTV.dataSource = self
+        likedEpisodeTV.register(EpisodeCell.self, forCellReuseIdentifier: "episodeCell")
+        
+        subscriptionTV.delegate = self
+        subscriptionTV.dataSource = self
+        subscriptionTV.register(ProgramCell.self, forCellReuseIdentifier: "programCell")
     }
     
     func setupTopBar() {
         self.navigationController!.isNavigationBarHidden = true
     }
     
-    
     func configureViews() {
         view.addSubview(customNavBar)
         customNavBar.pinNavBarTo(view)
         
-        view.addSubview(topSection)
-        topSection.translatesAutoresizingMaskIntoConstraints = false
-        topSection.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
-        topSection.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-        topSection.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        topSectionHeightConstraint = topSection.heightAnchor.constraint(equalToConstant: topSectionHeightMax)
+        view.addSubview(flexView)
+        flexView.translatesAutoresizingMaskIntoConstraints = false
+        flexView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+        flexView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        flexView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        topSectionHeightConstraint = flexView.heightAnchor.constraint(equalToConstant: topSectionHeightMax)
         topSectionHeightConstraint.isActive = true
         
         view.addSubview(topSectionFade)
         topSectionFade.translatesAutoresizingMaskIntoConstraints = false
-        topSectionFade.topAnchor.constraint(equalTo: topSection.topAnchor).isActive = true
-        topSectionFade.leadingAnchor.constraint(equalTo: topSection.leadingAnchor).isActive = true
-        topSectionFade.trailingAnchor.constraint(equalTo: topSection.trailingAnchor).isActive = true
-        topSectionFade.bottomAnchor.constraint(equalTo: topSection.bottomAnchor).isActive = true
+        topSectionFade.topAnchor.constraint(equalTo: flexView.topAnchor).isActive = true
+        topSectionFade.leadingAnchor.constraint(equalTo: flexView.leadingAnchor).isActive = true
+        topSectionFade.trailingAnchor.constraint(equalTo: flexView.trailingAnchor).isActive = true
+        topSectionFade.bottomAnchor.constraint(equalTo: flexView.bottomAnchor).isActive = true
         topSectionFade.alpha = 0
         
         // User details
@@ -354,12 +397,12 @@ class AccountVC: UIViewController {
         userImage.widthAnchor.constraint(equalToConstant: 70) .isActive = true
         userImage.heightAnchor.constraint(equalToConstant: 70).isActive = true
         
-        userStackedView.addArrangedSubview(userNameLabel)
-        userStackedView.addArrangedSubview(userHandelLabel)
+        userStackedView.addArrangedSubview(nameLabel)
+        userStackedView.addArrangedSubview(usernameLabel)
         
         // Stats View
         
-        topSection.addSubview(statsStackedView)
+        flexView.addSubview(statsStackedView)
         statsStackedView.translatesAutoresizingMaskIntoConstraints = false
         statsStackedView.topAnchor.constraint(equalTo: userStackedView.bottomAnchor, constant: 30 ).isActive = true
         statsStackedView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20).isActive = true
@@ -379,10 +422,10 @@ class AccountVC: UIViewController {
         
         view.addSubview(tableHeader)
         tableHeader.translatesAutoresizingMaskIntoConstraints = false
-        tableHeader.topAnchor.constraint(equalTo: topSection.bottomAnchor).isActive = true
+        tableHeader.topAnchor.constraint(equalTo: flexView.bottomAnchor).isActive = true
         tableHeader.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-        tableHeadeTrailingAnchor = tableHeader.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: 0)
-        tableHeadeTrailingAnchor.isActive = true
+        tableHeaderTrailingAnchor = tableHeader.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: 0)
+        tableHeaderTrailingAnchor.isActive = true
         tableHeader.heightAnchor.constraint(equalToConstant: 45).isActive = true
         
         tableHeader.addSubview(headerTopStroke)
@@ -392,17 +435,38 @@ class AccountVC: UIViewController {
         headerTopStroke.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         headerTopStroke.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         
-        view.addSubview(tableView)
-        tableView.translatesAutoresizingMaskIntoConstraints = false
-        tableView.topAnchor.constraint(equalTo: tableHeader.bottomAnchor).isActive = true
-        tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-        tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
-        tableView.contentInset = UIEdgeInsets(top: 1, left: 0, bottom: 0, right: 0)
+        // Table Views
+        
+        view.addSubview(sharedEpisodeTV)
+        sharedEpisodeTV.translatesAutoresizingMaskIntoConstraints = false
+        sharedEpisodeTV.topAnchor.constraint(equalTo: tableHeader.bottomAnchor).isActive = true
+        sharedEpisodeTV.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        sharedEpisodeTV.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        sharedTVBottomConstraint = sharedEpisodeTV.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        sharedTVBottomConstraint.isActive = true
+        sharedEpisodeTV.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 1, right: 0)
+        
+        view.addSubview(likedEpisodeTV)
+        likedEpisodeTV.translatesAutoresizingMaskIntoConstraints = false
+        likedEpisodeTV.topAnchor.constraint(equalTo: tableHeader.bottomAnchor).isActive = true
+        likedEpisodeTV.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        likedEpisodeTV.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        likedTVBottomConstraint = likedEpisodeTV.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        likedTVBottomConstraint.isActive = true
+        likedEpisodeTV.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 1, right: 0)
+        
+        view.addSubview(subscriptionTV)
+        subscriptionTV.translatesAutoresizingMaskIntoConstraints = false
+        subscriptionTV.topAnchor.constraint(equalTo: tableHeader.bottomAnchor).isActive = true
+        subscriptionTV.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        subscriptionTV.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        subscriptionTVBottomConstraint = subscriptionTV.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        subscriptionTVBottomConstraint.isActive = true
+        subscriptionTV.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 1, right: 0)
         
         view.addSubview(whiteBottom)
         whiteBottom.translatesAutoresizingMaskIntoConstraints = false
-        whiteBottom.topAnchor.constraint(equalTo: tableView.bottomAnchor,constant: -200).isActive = true
+        whiteBottom.topAnchor.constraint(equalTo: view.bottomAnchor,constant: -200).isActive = true
         whiteBottom.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
         whiteBottom.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         whiteBottom.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
@@ -411,17 +475,67 @@ class AccountVC: UIViewController {
         tableHeader.addSubview(headerStackedView)
         headerStackedView.translatesAutoresizingMaskIntoConstraints = false
         headerStackedView.topAnchor.constraint(equalTo: tableHeader.topAnchor).isActive = true
-        headerStackedView.leadingAnchor.constraint(equalTo: tableHeader.leadingAnchor).isActive = true
-        headerStackedView.trailingAnchor.constraint(equalTo: tableHeader.trailingAnchor).isActive = true
+        headerStackedView.leadingAnchor.constraint(equalTo: tableHeader.leadingAnchor, constant: 16).isActive = true
+        headerStackedView.trailingAnchor.constraint(equalTo: tableHeader.trailingAnchor, constant: -16).isActive = true
         headerStackedView.bottomAnchor.constraint(equalTo: tableHeader.bottomAnchor).isActive = true
         headerStackedView.backgroundColor = .purple
         
         view.bringSubviewToFront(topSectionFade)
-        headerStackedView.addArrangedSubview(savedButton)
         headerStackedView.addArrangedSubview(subscriptionsButton)
+        headerStackedView.addArrangedSubview(savedButton)
         headerStackedView.addArrangedSubview(mentionsButton)
         
         view.bringSubviewToFront(customNavBar)
+    }
+    
+    func addLikeLoadingView() {
+        view.addSubview(likedTVLoadingView)
+        likedTVLoadingView.translatesAutoresizingMaskIntoConstraints = false
+        likedTVLoadingView.topAnchor.constraint(equalTo: likedEpisodeTV.topAnchor).isActive = true
+        likedTVLoadingView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        likedTVLoadingView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        likedTVLoadingView.bottomAnchor.constraint(equalTo: likedEpisodeTV.bottomAnchor).isActive = true
+    }
+    
+    func addSubscriptionLoadingView() {
+        view.addSubview(subscriptionTVLoadingView)
+        subscriptionTVLoadingView.translatesAutoresizingMaskIntoConstraints = false
+        subscriptionTVLoadingView.topAnchor.constraint(equalTo: subscriptionTV.topAnchor).isActive = true
+        subscriptionTVLoadingView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        subscriptionTVLoadingView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        subscriptionTVLoadingView.bottomAnchor.constraint(equalTo: subscriptionTV.bottomAnchor).isActive = true
+    }
+    
+    func addSharedLoadingView() {
+        view.addSubview(sharedTVLoadingView)
+        sharedTVLoadingView.translatesAutoresizingMaskIntoConstraints = false
+        sharedTVLoadingView.topAnchor.constraint(equalTo: sharedEpisodeTV.topAnchor).isActive = true
+        sharedTVLoadingView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        sharedTVLoadingView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        sharedTVLoadingView.bottomAnchor.constraint(equalTo: sharedEpisodeTV.bottomAnchor).isActive = true
+    }
+    
+    // MARK: Fetching Data
+    
+    func fetchLikedEpisodes() {
+        FireStoreManager.fetchLikedEpisodes(UserID: User.ID!) { episodes in
+            self.likedEpisodes = episodes
+            self.likedEpisodeTV.reloadData()
+            self.likedTVLoadingView.removeFromSuperview()
+        }
+    }
+    
+    func fetchSubscriptions() {
+        print("Fetching subs")
+        FireStoreManager.fetchListenersSubscriptions { programs in
+            self.subscriptions = programs
+            self.subscriptionTV.reloadData()
+            self.subscriptionTVLoadingView.removeFromSuperview()
+        }
+    }
+    
+    func fetchSharedEpisodes() {
+        
     }
     
     @objc func settingsButtonPress() {
@@ -443,38 +557,130 @@ class AccountVC: UIViewController {
 }
 
 extension AccountVC: UITableViewDelegate, UITableViewDataSource {
+  
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        10
+        switch tableView {
+        case likedEpisodeTV:
+            return likedEpisodes.count
+        case subscriptionTV:
+            return subscriptions.count
+        case sharedEpisodeTV:
+            return sharedEpisodes.count
+        default:
+            return 0
+        }
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let regularCell = tableView.dequeueReusableCell(withIdentifier: Cells.regularCell) as! EpisodeCell
-//        let program = programs[indexPath.row]
-//        regularCell.normalSetUp(program: program)
-        regularCell.moreButton.addTarget(regularCell, action: #selector(EpisodeCell.moreUnwrap), for: .touchUpInside)
-        regularCell.cellDelegate = self
-        
-//        if tappedPrograms.contains(programs[indexPath.row].name) {
-//            regularCell.refreshSetupMoreTapTrue()
-//            return regularCell
-//        } else {
-//            regularCell.refreshSetupMoreTapFalse()
-//            return regularCell
-//        }
-        return regularCell
-
+        switch tableView {
+        case likedEpisodeTV:
+            let cell = tableView.dequeueReusableCell(withIdentifier: "episodeCell") as! EpisodeCell
+            cell.moreButton.addTarget(cell, action: #selector(EpisodeCell.moreUnwrap), for: .touchUpInside)
+            cell.programImageButton.addTarget(cell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
+            cell.episodeSettingsButton.addTarget(cell, action: #selector(EpisodeCell.showSettings), for: .touchUpInside)
+            cell.likeButton.addTarget(cell, action: #selector(EpisodeCell.likeButtonPress), for: .touchUpInside)
+            
+            let episode = likedEpisodes[indexPath.row]
+            cell.episode = episode
+            if episode.likeCount >= 10 {
+                cell.configureCellWithOptions()
+            }
+            cell.cellDelegate = self
+            cell.normalSetUp(episode: episode)
+            return cell
+        case subscriptionTV:
+            let programCell = tableView.dequeueReusableCell(withIdentifier: "programCell") as! ProgramCell
+            programCell.moreButton.addTarget(programCell, action: #selector(ProgramCell.moreUnwrap), for: .touchUpInside)
+            programCell.programImageButton.addTarget(programCell, action: #selector(ProgramCell.playProgramIntro), for: .touchUpInside)
+            programCell.programSettingsButton.addTarget(programCell, action: #selector(ProgramCell.showSettings), for: .touchUpInside)
+            programCell.usernameButton.addTarget(programCell, action: #selector(ProgramCell.visitProfile), for: .touchUpInside)
+            programCell.subscribeButton.addTarget(programCell, action: #selector(ProgramCell.subscribeButtonPress), for: .touchUpInside)
+            
+            let program = subscriptions[indexPath.row]
+            programCell.program = program
+            
+//            programCell.cellDelegate = self
+            programCell.normalSetUp(program: program)
+            return programCell
+        default:
+            return UITableViewCell()
+        }
     }
     
-    @objc func headerTabPress(sender: UIButton) {
+    // MARK: Table View Switch
+    
+    @objc func tableViewTabButtonPress(sender: UIButton) {
         sender.setTitleColor(.white, for: .normal)
-        let deselecteButtons = headerBarButtons.filter() { $0 != sender }
-        for each in deselecteButtons {
+        let deselectedButtons = headerBarButtons.filter() { $0 != sender }
+        for each in deselectedButtons {
             each.setTitleColor(CustomStyle.fifthShade, for: .normal)
         }
+        
+        switch sender.titleLabel?.text {
+        case "Liked":
+            likedEpisodeTV.isHidden = false
+            subscriptionTV.isHidden = true
+            sharedEpisodeTV.isHidden = true
+           
+            likedTVBottomConstraint.isActive = true
+            subscriptionTVBottomConstraint.isActive = false
+            sharedTVBottomConstraint.isActive = false
+            
+            likedTVLoadingView.isHidden = false
+            subscriptionTVLoadingView.isHidden = true
+            sharedTVLoadingView.isHidden = true
+
+
+            if User.likedEpisodesIDs != nil && User.likedEpisodesIDs!.count > 0 && likedEpisodes.count == 0 {
+                addLikeLoadingView()
+                fetchLikedEpisodes()
+            }
+            
+        case "Subscriptions":
+            likedEpisodeTV.isHidden = true
+            subscriptionTV.isHidden = false
+            sharedEpisodeTV.isHidden = true
+            
+            likedTVBottomConstraint.isActive = false
+            subscriptionTVBottomConstraint.isActive = true
+            sharedTVBottomConstraint.isActive = false
+            
+            likedTVLoadingView.isHidden = true
+            subscriptionTVLoadingView.isHidden = false
+            sharedTVLoadingView.isHidden = true
+            
+        case "Shared":
+            likedEpisodeTV.isHidden = true
+            subscriptionTV.isHidden = true
+            sharedEpisodeTV.isHidden = false
+
+            likedTVBottomConstraint.isActive = false
+            subscriptionTVBottomConstraint.isActive = false
+            sharedTVBottomConstraint.isActive = true
+            
+            likedTVLoadingView.isHidden = true
+            subscriptionTVLoadingView.isHidden = true
+            sharedTVLoadingView.isHidden = false
+            
+
+        default:
+            break
+        }
+        
     }
 }
 
 extension AccountVC: EpisodeCellDelegate {
+    
+    func tagSelected(tag: String) {
+        let tagSelectedVC = EpisodeTagLookupVC(tag: tag)
+        navigationController?.pushViewController(tagSelectedVC, animated: true)
+    }
+    
+    func visitProfile(program: Program) {
+        //
+    }
+    
     func updateLikeCountFor(episode: Episode, at indexPath: IndexPath) {
         //
     }

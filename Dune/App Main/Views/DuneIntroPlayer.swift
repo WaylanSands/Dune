@@ -15,9 +15,11 @@ class DuneIntroPlayer: UIView {
     var audioPlayer: AVAudioPlayer!
     var currentState: playerStatus = .ready
     let playbackCircleView = PlaybackCircleView()
+    var playbackDelegate: PlaybackBarDelegate!
+    var isProgramPageIntro: Bool?
     
     var isInPosition = false
-    var navHeight: CGFloat!
+    var yPosition: CGFloat!
     
     var playbackCircleLink: CADisplayLink!
     
@@ -130,6 +132,8 @@ class DuneIntroPlayer: UIView {
         programImageView.image = image
         programNameLabel.text = name
         
+        print(self.frame.maxY)
+        
         if isInPosition == false {
             animatePlayerIntoPosition()
         }
@@ -170,6 +174,9 @@ class DuneIntroPlayer: UIView {
         let currentTime = audioPlayer.currentTime
         let percentagePlayed = CGFloat(currentTime / duration)
         playbackCircleView.shapeLayer.strokeEnd = percentagePlayed
+        if isProgramPageIntro == false {
+            playbackDelegate.updateProgressBarWith(percentage: percentagePlayed, forType: .program)
+        }
     }
     
     func playAudioFrom(url: URL) {
@@ -217,12 +224,11 @@ class DuneIntroPlayer: UIView {
     }
     
     func animatePlayerIntoPosition() {
-        playerIsOutOfPosition = false
-        print("Animating to position")
-        let height =  UIScreen.main.bounds.height - navHeight - 70
         isInPosition = true
+        playerIsOutOfPosition = false
+        
         UIView.animateKeyframes(withDuration: 0.2, delay: 0, options: .beginFromCurrentState, animations: {
-            self.frame = CGRect(x: 0, y: height, width: self.frame.width, height: 70)
+        self.frame = CGRect(x: 0, y: self.yPosition, width: self.frame.width, height: 70)
         }, completion: nil)
     }
     

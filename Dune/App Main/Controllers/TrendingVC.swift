@@ -17,6 +17,14 @@ class TrendingVC: UIViewController {
     var lastSnapshot: DocumentSnapshot?
     var moreToLoad = true
     
+    var audioPlayer = DuneAudioPlayer()
+
+    var activeCell: EpisodeCell?
+    var selectedCellRow: Int?
+    
+    let subscriptionSettings = SettingsLauncher(options: SettingOptions.subscriptionEpisode, type: .subscriptionEpisode)
+    let ownEpisodeSettings = SettingsLauncher(options: SettingOptions.ownEpisode, type: .ownEpisode)
+    
     let tableView = UITableView()
     
     let currentDateLabel: UILabel = {
@@ -40,6 +48,14 @@ class TrendingVC: UIViewController {
         fetchTrendingEpisodes()
     }
     
+    override func viewWillDisappear(_ animated: Bool) {
+        audioPlayer.finishSession()
+        
+        FileManager.removeAudioFilesFromDocumentsDirectory() {
+            print("Audio removed")
+        }
+    }
+    
     func setupTopBar() {
         navigationItem.title = "Trending"
         navigationController?.navigationBar.prefersLargeTitles = true
@@ -51,14 +67,22 @@ class TrendingVC: UIViewController {
     }
     
     func configureDelegates() {
+        subscriptionSettings.settingsDelegate = self
+        ownEpisodeSettings.settingsDelegate = self
+        audioPlayer.playbackDelegate = self
         tableView.delegate = self
         tableView.dataSource = self
         tableView.register(EpisodeCell.self, forCellReuseIdentifier: "episodeCell")
+        tableView.register(EpisodeCellRegLink.self, forCellReuseIdentifier: "episodeCellRegLink")
+        tableView.register(EpisodeCellSmlLink.self, forCellReuseIdentifier: "EpisodeCellSmlLink")
     }
     
     func configureViews() {
         view.addSubview(tableView)
         tableView.pinEdges(to: view)
+        
+        view.addSubview(audioPlayer)
+        audioPlayer.frame = CGRect(x: 0, y: view.frame.height, width: view.frame.width, height: 70)
     }
     
     func addLoadingView() {
@@ -98,6 +122,8 @@ class TrendingVC: UIViewController {
                     let episode = Episode(data: data)
                     
                     self.downloadedEpisodes.append(episode)
+                    self.audioPlayer.downloadedEpisodes.append(episode)
+                    self.audioPlayer.audioIDs.append(episode.audioID)
                     
                     if counter == snapshot.count {
                         self.tableView.reloadData()
@@ -135,8 +161,20 @@ class TrendingVC: UIViewController {
         }
     }
     
-    
-    
+    func getAudioWith(audioID: String, completion: @escaping (URL) -> ()) {
+        
+        let tempURL = FileManager.getTempDirectory()
+        let fileURL = tempURL.appendingPathComponent(audioID)
+        
+        if FileManager.default.fileExists(atPath: fileURL.path) {
+            completion(fileURL)
+        } else {
+            FireStorageManager.downloadEpisodeAudio(audioID: audioID) { url in
+                completion(url)
+            }
+        }
+    }
+
 }
 
 extension TrendingVC: UITableViewDelegate, UITableViewDataSource {
@@ -145,14 +183,24 @@ extension TrendingVC: UITableViewDelegate, UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let episodeCell = tableView.dequeueReusableCell(withIdentifier: "episodeCell") as! EpisodeCell
+        var episodeCell: EpisodeCell
+        let episode = downloadedEpisodes[indexPath.row]
+        
+        if episode.richLink == nil {
+            episodeCell = tableView.dequeueReusableCell(withIdentifier: "episodeCell") as! EpisodeCell
+        } else if episode.linkIsSmall! {
+            episodeCell = tableView.dequeueReusableCell(withIdentifier: "EpisodeCellSmlLink") as! EpisodeCellSmlLink
+        } else {
+            episodeCell = tableView.dequeueReusableCell(withIdentifier: "episodeCellRegLink") as! EpisodeCellRegLink
+        }
+        
         episodeCell.moreButton.addTarget(episodeCell, action: #selector(EpisodeCell.moreUnwrap), for: .touchUpInside)
         episodeCell.programImageButton.addTarget(episodeCell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
         episodeCell.episodeSettingsButton.addTarget(episodeCell, action: #selector(EpisodeCell.showSettings), for: .touchUpInside)
         episodeCell.likeButton.addTarget(episodeCell, action: #selector(EpisodeCell.likeButtonPress), for: .touchUpInside)
-
-        let episode = downloadedEpisodes[indexPath.row]
+        episodeCell.usernameButton.addTarget(episodeCell, action: #selector(EpisodeCell.visitProfile), for: .touchUpInside)
         episodeCell.episode = episode
+        
         if episode.likeCount >= 10 {
             episodeCell.configureCellWithOptions()
         }
@@ -184,19 +232,105 @@ extension TrendingVC: UITableViewDelegate, UITableViewDataSource {
     }
 }
 
+extension TrendingVC: SettingsLauncherDelegate {
+    
+    func selectionOf(setting: String) {
+        switch setting {
+        case "Delete":
+            deleteOwnEpisode()
+        case "Edit":
+            let episode = downloadedEpisodes[selectedCellRow!]
+            let editEpisodeVC = EditPublishedEpisode(episode: episode)
+            editEpisodeVC.delegate = self
+            navigationController?.present(editEpisodeVC, animated: true, completion: nil)
+        default:
+            break
+        }
+    }
+}
+    
+
+extension TrendingVC: EpisodeEditorDelegate {
+    
+    func updateCell(episode: Episode) {
+//        let episodeIndex = downloadedEps.firstIndex(where: {$0.ID == episode.ID})
+//        let indexPath = IndexPath(item: selectedCellRow!, section: 0)
+//
+//        downloadedEps[episodeIndex!] = episode
+//        tableView.reloadRows(at: [indexPath], with: .fade)
+    }
+ 
+}
+
 extension TrendingVC: EpisodeCellDelegate {
+    
+    func tagSelected(tag: String) {
+        let tagSelectedVC = EpisodeTagLookupVC(tag: tag)
+        navigationController?.pushViewController(tagSelectedVC, animated: true)
+    }
+    
+    func visitProfile(program: Program) {
+        //
+    }
+    
     func updateLikeCountFor(episode: Episode, at indexPath: IndexPath) {
         //
     }
     
     func playEpisode(cell: EpisodeCell) {
-        let index = tableView.indexPath(for: cell)
-        print(index!)
+         activeCell = cell
+         if !cell.playbackBarView.playbackBarIsSetup {
+             cell.playbackBarView.setupPlaybackBar()
+         }
+       
+        audioPlayer.navHeight = self.tabBarController?.tabBar.frame.height
+        
+        guard let audioIndex = tableView.indexPath(for: cell)?.row else { return }
+        let image = cell.programImageButton.imageView?.image
+        let audioID = audioPlayer.audioIDs[audioIndex]
+             
+         getAudioWith(audioID: audioID) { url in
+             self.audioPlayer.playOrPause(episode: cell.episode, with: url, image: image!)
+         }
+    }
+    
+    func deleteOwnEpisode() {
+        guard let row = selectedCellRow else { return }
+        let episode = self.downloadedEpisodes[row]
+        FireStoreManager.removeEpisodeIDFromProgram(programID: episode.programID, episodeID: episode.ID, time: episode.timeStamp)
+        FireStorageManager.deletePublishedAudioFromStorage(audioID: episode.audioID)
+        FireStoreManager.deleteEpisodeDocument(ID: episode.ID)
+
+        if episode.programID == CurrentProgram.ID {
+            CurrentProgram.episodeIDs!.removeAll { $0["ID"] as! String == episode.ID }
+        }
+
+        let index = IndexPath(item: row, section: 0)
+//        episodeIDs.removeAll(where: { $0 == episode.ID })
+//        fetchedEpisodeIDs.removeAll(where: { $0 == episode.ID })
+        downloadedEpisodes.removeAll(where: { $0.ID == episode.ID })
+        audioPlayer.audioIDs.removeAll(where: { $0 == episode.ID })
+        audioPlayer.downloadedEpisodes.removeAll(where: { $0.ID == episode.ID })
+        tableView.deleteRows(at: [index], with: .fade)
+
+        if downloadedEpisodes.count == 0 {
+             resetTableView()
+        }
+
+        audioPlayer.transitionOutOfView()
+        
     }
     
     func showSettings(cell: EpisodeCell) {
-        let index = tableView.indexPath(for: cell)
-        print(index!)
+        print("reached")
+        selectedCellRow =  downloadedEpisodes.firstIndex(where: { $0.ID == cell.episode.ID })
+        
+        if cell.episode.username == User.username! {
+            ownEpisodeSettings.showSettings()
+        } else {
+            subscriptionSettings.showSettings()
+        }
+        
     }
     
     
@@ -210,6 +344,21 @@ extension TrendingVC: EpisodeCellDelegate {
             self.tableView.endUpdates()
         }
     }
+}
+
+extension TrendingVC: PlaybackBarDelegate {
+   
+    func updateProgressBarWith(percentage: CGFloat, forType: PlayBackType) {
+        guard let cell = activeCell else { return }
+        cell.playbackBarView.progressUpdateWith(percentage: percentage)
+    }
+    
+    func updateActiveCell(atIndex: Int, forType: PlayBackType) {
+        let cell = tableView.cellForRow(at: IndexPath(item: atIndex, section: 0)) as! EpisodeCell
+        cell.playbackBarView.setupPlaybackBar()
+        activeCell = cell
+    }
+    
 }
 
 

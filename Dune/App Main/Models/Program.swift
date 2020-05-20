@@ -53,7 +53,6 @@ class Program {
         introPath = data["introPath"] as? String
         primaryCategory = data["primaryCategory"] as? String
         
-        
         if imageID != nil {
             
             FileManager.getImageWith(imageID: imageID!) { image in
@@ -65,9 +64,11 @@ class Program {
             self.image = #imageLiteral(resourceName: "missing-image-large")
         }
         
-        if isPrimaryProgram && hasMultiplePrograms! {
-            FireStoreManager.fetchSubProgramsWithIDs(programIDs: programIDs!, for: self)
-        }
+            if isPrimaryProgram && hasMultiplePrograms! {
+                FireStoreManager.fetchSubProgramsWithIDs(programIDs: programIDs!, for: self) {
+                    print("Sub programs added")
+                }
+            }
     }
     
     func programsIDs() -> [String] {

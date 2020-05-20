@@ -41,7 +41,6 @@ class ProgramAccountVC: UIViewController {
     
     let episodeLoadingView = TVLoadingAnimationView(topHeight: 15)
     let programLoadingView = TVLoadingAnimationView(topHeight: 15)
-
     
     var initialEpisodesSnapshot = [QueryDocumentSnapshot]()
     var downloadedEpisodes = [Episode]()
@@ -51,16 +50,20 @@ class ProgramAccountVC: UIViewController {
     var lastEpisodeSnapshot: DocumentSnapshot?
     var moreEpisodesToLoad = false
     
-    var activeCell: EpisodeCell?
     var subAccounts = [Program]()
     let maxPrograms = 10
 
     let settingsLauncher = SettingsLauncher(options: SettingOptions.sharing, type: .sharing)
     let ownEpisodeSettings = SettingsLauncher(options: SettingOptions.ownEpisode, type: .ownEpisode)
     let programSettings = SettingsLauncher(options: SettingOptions.programSettings, type: .program)
+    
 
     let introPlayer = DuneIntroPlayer()
+    var activeProgramCell: ProgramCell?
+    
     let audioPlayer = DuneAudioPlayer()
+    var activeEpisodeCell: EpisodeCell?
+
 
     let episodeTV = UITableView()
     let subscriptionTV = ProgramSubscriptionTV()
@@ -337,7 +340,7 @@ class ProgramAccountVC: UIViewController {
              subscribersLabel.text = "Subscribers"
         }
 
-        if  unwrapped {
+        if unwrapped {
             summaryTextView.textContainer.maximumNumberOfLines = 3
             unwrapped = false
         }
@@ -358,6 +361,10 @@ class ProgramAccountVC: UIViewController {
         if summaryTextView.lineCount() > 3 {
             addMoreButton()
         }
+        let lines = summaryTextView.text.components(separatedBy: "\n")
+        print("LINES count is \(lines.count)")
+
+
     }
     
     func setupHeightForViews() {
@@ -412,6 +419,7 @@ class ProgramAccountVC: UIViewController {
         episodeTV.dataSource = self
         episodeTV.delegate = self
         audioPlayer.playbackDelegate = self
+        introPlayer.playbackDelegate = self
         subscriptionTV.registerCustomCell()
     }
     
@@ -656,6 +664,9 @@ class ProgramAccountVC: UIViewController {
         episodeLoadingView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         episodeLoadingView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         episodeLoadingView.bottomAnchor.constraint(equalTo: episodeTV.bottomAnchor).isActive = true
+        
+        view.bringSubviewToFront(introPlayer)
+        view.bringSubviewToFront(audioPlayer)
     }
     
     func addProgramLoadingView() {
@@ -665,9 +676,13 @@ class ProgramAccountVC: UIViewController {
         programLoadingView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         programLoadingView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         programLoadingView.bottomAnchor.constraint(equalTo: subscriptionTV.bottomAnchor).isActive = true
+        
+        view.bringSubviewToFront(introPlayer)
+        view.bringSubviewToFront(audioPlayer)
     }
     
     func resetTableView() {
+        print("Reset")
         addLoadingView()
         navigationItem.title = ""
         fetchedEpisodeIDs = [String]()
@@ -683,6 +698,7 @@ class ProgramAccountVC: UIViewController {
             
             if ids.isEmpty {
                 print("No episodes to display")
+                self.resetTableView()
                 self.episodeTV.isHidden = true
                 self.navigationItem.title = ""
             } else {
@@ -751,7 +767,7 @@ class ProgramAccountVC: UIViewController {
                     
                     for each in orderedBatch {
                         self.downloadedEpisodes.append(each)
-                        self.audioPlayer.downloadedEps.append(each)
+                        self.audioPlayer.downloadedEpisodes.append(each)
                         self.audioPlayer.audioIDs.append(each.audioID)
                     }
                     
@@ -873,6 +889,7 @@ class ProgramAccountVC: UIViewController {
 
     @objc func createProgram() {
         let createProgramVC = CreateProgramVC()
+        createProgramVC.hidesBottomBarWhenPushed = true
         navigationController?.pushViewController(createProgramVC, animated: true)
     }
 
@@ -891,14 +908,20 @@ class ProgramAccountVC: UIViewController {
         label.textAlignment = .center
         return label
     }
+    
+    // MARK: Play Intro
 
     @objc func playIntro() {
         
+        introPlayer.isProgramPageIntro = true
         if !audioPlayer.playerIsOutOfPosition {
             audioPlayer.finishSession()
         }
         
-        introPlayer.navHeight = self.tabBarController?.tabBar.frame.height
+        print("Height is \(view.frame.height - tabBarController!.tabBar.frame.height - introPlayer.frame.height)")
+        
+        introPlayer.yPosition = view.frame.height - tabBarController!.tabBar.frame.height - introPlayer.frame.height
+
         introPlayer.getAudioWith(audioID: CurrentProgram.introID!) { url in
             self.introPlayer.playOrPauseWith(url: url, name: CurrentProgram.name!, image: CurrentProgram.image!)
         }
@@ -1010,7 +1033,6 @@ class ProgramAccountVC: UIViewController {
 extension ProgramAccountVC: UITableViewDelegate, UITableViewDataSource {
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-
         switch tableView {
         case episodeTV:
             return downloadedEpisodes.count
@@ -1019,7 +1041,6 @@ extension ProgramAccountVC: UITableViewDelegate, UITableViewDataSource {
         default:
             return 0
         }
-//        return numberOfRows
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -1046,7 +1067,7 @@ extension ProgramAccountVC: UITableViewDelegate, UITableViewDataSource {
              programCell.moreButton.addTarget(programCell, action: #selector(ProgramCell.moreUnwrap), for: .touchUpInside)
              programCell.programImageButton.addTarget(programCell, action: #selector(ProgramCell.playProgramIntro), for: .touchUpInside)
              programCell.programSettingsButton.addTarget(programCell, action: #selector(ProgramCell.showSettings), for: .touchUpInside)
-            programCell.usernameButton.addTarget(programCell, action: #selector(ProgramCell.visitProfile), for: .touchUpInside)
+             programCell.usernameButton.addTarget(programCell, action: #selector(ProgramCell.visitProfile), for: .touchUpInside)
              programCell.subscribeButton.addTarget(programCell, action: #selector(ProgramCell.subscribeButtonPress), for: .touchUpInside)
             
             let program = subscriptionTV.downloadedPrograms[indexPath.row]
@@ -1078,6 +1099,11 @@ extension ProgramAccountVC: UITableViewDelegate, UITableViewDataSource {
 
 extension ProgramAccountVC :EpisodeCellDelegate {
     
+    func tagSelected(tag: String) {
+        let tagSelectedVC = EpisodeTagLookupVC(tag: tag)
+        navigationController?.pushViewController(tagSelectedVC, animated: true)
+    }
+    
     func updateRows() {
         //
     }
@@ -1092,7 +1118,7 @@ extension ProgramAccountVC :EpisodeCellDelegate {
             introPlayer.finishSession()
         }
         
-        activeCell = cell
+        activeEpisodeCell = cell
         
         if !cell.playbackBarView.playbackBarIsSetup {
             cell.playbackBarView.setupPlaybackBar()
@@ -1125,6 +1151,11 @@ extension ProgramAccountVC: SettingsLauncherDelegate {
         switch setting {
         case "Delete":
             deleteOwnEpisode()
+        case "Edit":
+            let episode = downloadedEpisodes[selectedCellRow!]
+            let editEpisodeVC = EditPublishedEpisode(episode: episode)
+            editEpisodeVC.delegate = self
+            navigationController?.present(editEpisodeVC, animated: true, completion: nil)
         default:
             break
         }
@@ -1133,10 +1164,9 @@ extension ProgramAccountVC: SettingsLauncherDelegate {
     func deleteOwnEpisode() {
         guard let row = self.selectedCellRow else { return }
         print("Downloaded eps before \(downloadedEpisodes.count)")
-        //Delete own episode
         let episode = downloadedEpisodes[row]
         FireStorageManager.deletePublishedAudioFromStorage(audioID: episode.audioID)
-        FireStoreManager.removeEpisodeIDFromProgram(programID: CurrentProgram.ID!, episodeID: episode.ID)
+        FireStoreManager.removeEpisodeIDFromProgram(programID: episode.programID, episodeID: episode.ID, time: episode.timeStamp)
         FireStoreManager.deleteEpisodeDocument(ID: episode.ID)
         CurrentProgram.episodeIDs!.removeAll { $0["ID"] as! String == episode.ID }
         
@@ -1146,16 +1176,31 @@ extension ProgramAccountVC: SettingsLauncherDelegate {
 
         episodeTV.deleteRows(at: [index], with: .fade)
         
+        if downloadedEpisodes.count == 0 {
+            resetTableView()
+        }
+        
         audioPlayer.transitionOutOfView()
         
     }
 }
 
+extension ProgramAccountVC: EpisodeEditorDelegate {
+    
+    func updateCell(episode: Episode) {
+        let episodeIndex = downloadedEpisodes.firstIndex(where: {$0.ID == episode.ID})
+        let indexPath = IndexPath(item: selectedCellRow!, section: 0)
+
+        downloadedEpisodes[episodeIndex!] = episode
+        episodeTV.reloadRows(at: [indexPath], with: .fade)
+    }
+ 
+}
+
+
 extension ProgramAccountVC: UIScrollViewDelegate {
 
     public func scrollViewDidScroll(_ scrollView: UIScrollView) {
-
-//        let screenHeight = UIScreen.main.bounds.height
 
         let fadeTextAnimation = CATransition()
         fadeTextAnimation.duration = 0.5
@@ -1167,12 +1212,6 @@ extension ProgramAccountVC: UIScrollViewDelegate {
         } else {
             navigationItem.title = ""
         }
-        
-//        print("HERE \(flexView.frame.height)")
-//        if flexView.frame.height != 0 {
-//            let percent = flexView.frame.height / topSectionHeightMax
-//            coverView.alpha = 1 - percent
-//        }
         
         let y: CGFloat = scrollView.contentOffset.y
         let newHeaderViewHeight: CGFloat = flexHeightConstraint.constant - y
@@ -1189,15 +1228,28 @@ extension ProgramAccountVC: UIScrollViewDelegate {
 
 extension ProgramAccountVC: PlaybackBarDelegate {
    
-    func updateProgressBarWith(percentage: CGFloat) {
-        guard let cell = activeCell else { return }
-        cell.playbackBarView.progressUpdateWith(percentage: percentage)
+    func updateProgressBarWith(percentage: CGFloat, forType: PlayBackType) {
+        switch forType {
+            case .episode:
+            guard let cell = activeEpisodeCell else { return }
+            cell.playbackBarView.progressUpdateWith(percentage: percentage)
+            case .program:
+            guard let cell = activeProgramCell else { return }
+            cell.playbackBarView.progressUpdateWith(percentage: percentage)
+        }
     }
     
-    func updateActiveCell(atIndex: Int) {
-        let cell = episodeTV.cellForRow(at: IndexPath(item: atIndex, section: 0)) as! EpisodeCell
-        cell.playbackBarView.setupPlaybackBar()
-        activeCell = cell
+    func updateActiveCell(atIndex: Int, forType: PlayBackType) {
+        switch forType {
+            case .episode:
+            let cell = episodeTV.cellForRow(at: IndexPath(item: atIndex, section: 0)) as! EpisodeCell
+            cell.playbackBarView.setupPlaybackBar()
+            activeEpisodeCell = cell
+            case .program:
+            let cell = episodeTV.cellForRow(at: IndexPath(item: atIndex, section: 0)) as! ProgramCell
+            cell.playbackBarView.setupPlaybackBar()
+            activeProgramCell = cell
+        }
     }
 
 }
@@ -1217,7 +1269,23 @@ extension ProgramAccountVC: ProgramCellDelegate {
     }
      
     func playProgramIntro(cell: ProgramCell) {
-        //
+        introPlayer.isProgramPageIntro = false
+        activeProgramCell = cell
+        
+        if !audioPlayer.playerIsOutOfPosition {
+            audioPlayer.finishSession()
+        }
+        
+        let programIntro = cell.program.introID!
+        let programImage = cell.program.image!
+        let programName = cell.program.name
+        
+        introPlayer.yPosition = view.frame.height - tabBarController!.tabBar.frame.height - introPlayer.frame.height
+        
+        introPlayer.getAudioWith(audioID: programIntro) { url in
+            self.introPlayer.playOrPauseWith(url: url, name: programName, image: programImage)
+        }
+        print("Play intro")
     }
     
     func showSettings(cell: ProgramCell) {
