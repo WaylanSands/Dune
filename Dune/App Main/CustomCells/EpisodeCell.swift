@@ -128,7 +128,7 @@ class EpisodeCell: UITableViewCell {
     let timeSinceReleaseLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 12, weight: .medium)
-        label.textColor = CustomStyle.thirdShade
+        label.textColor = CustomStyle.fourthShade
         return label
     }()
     
@@ -445,7 +445,7 @@ class EpisodeCell: UITableViewCell {
                 self.addSubview(self.moreButton)
                 self.moreButton.translatesAutoresizingMaskIntoConstraints = false
                 self.moreButton.bottomAnchor.constraint(equalTo: self.captionTextView.bottomAnchor).isActive = true
-                self.moreButton.trailingAnchor.constraint(equalTo: self.captionTextView.trailingAnchor, constant: -2).isActive = true
+                self.moreButton.trailingAnchor.constraint(equalTo: self.captionTextView.trailingAnchor, constant: -3).isActive = true
                 self.moreButton.heightAnchor.constraint(equalToConstant: self.captionTextView.font!.lineHeight).isActive = true
                 let rect = CGRect(x: self.captionTextView.frame.width - 40, y: self.captionTextView.frame.height - 10, width: 40, height: 10)
                 let path = UIBezierPath(rect: rect)

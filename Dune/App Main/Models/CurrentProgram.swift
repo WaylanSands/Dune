@@ -22,6 +22,7 @@ struct CurrentProgram {
     static var introID: String?
     static var introPath: String?
     static var summary: String?
+    static var webLink: String?
     static var isPrimaryProgram: Bool?
     static var primaryCategory: String?
     static var hasMultiplePrograms: Bool?
@@ -32,11 +33,11 @@ struct CurrentProgram {
     static var subscriberIDs: [String]?
     
     static func modelProgram(data: [String: Any]) {
-        print("Modelling Program Singleton")
         ID = data["ID"] as? String
         name = data["name"] as? String
         username = data["username"] as? String
         summary = data["summary"] as? String
+        webLink = data["webLink"] as? String
         ownerID = data["ownerID"] as? String
         hasIntro = data["hasIntro"] as? Bool
         imageID = data["imageID"] as? String

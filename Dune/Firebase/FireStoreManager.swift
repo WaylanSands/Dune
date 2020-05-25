@@ -889,7 +889,7 @@ struct FireStoreManager {
         }
     }
     
-    
+    // MARK: Episode Tag Lookup
     static func getEpisodesWith(tag: String, completion: @escaping ([Episode]) -> ()) {
         
         DispatchQueue.global(qos: .userInitiated).sync {
@@ -900,7 +900,7 @@ struct FireStoreManager {
             
             episodeRef.getDocuments(completion: { (snapshot, error) in
                 if error != nil {
-                    print("There was an error getting the episode")
+                    print("There was an error getting tagged episodes")
                 } else {
                     var counter = 0
                     for each in snapshot!.documents {
@@ -909,6 +909,36 @@ struct FireStoreManager {
                         let data = each.data()
                         let episode = Episode(data: data)
                         taggedEpisodes.append(episode)
+                        
+                        if counter == snapshot?.count {
+                            completion(taggedEpisodes)
+                        }
+                    }
+                }
+            })
+        }
+    }
+    
+    // MARK: Program Tag Lookup
+    static func getProgramsWith(tag: String, completion: @escaping ([Program]) -> ()) {
+        
+        DispatchQueue.global(qos: .userInitiated).sync {
+            
+            var taggedEpisodes = [Program]()
+            
+            let episodeRef = db.collection("programs").whereField("tags", arrayContains: tag)
+            
+            episodeRef.getDocuments(completion: { (snapshot, error) in
+                if error != nil {
+                    print("There was an error getting tagged programs")
+                } else {
+                    var counter = 0
+                    for each in snapshot!.documents {
+                        
+                        counter += 1
+                        let data = each.data()
+                        let program = Program(data: data)
+                        taggedEpisodes.append(program)
                         
                         if counter == snapshot?.count {
                             completion(taggedEpisodes)

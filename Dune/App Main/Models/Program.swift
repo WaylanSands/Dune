@@ -15,6 +15,7 @@ class Program {
     var username: String
     var ownerID: String
     var summary: String
+    var webLink: String?
     var isPrimaryProgram: Bool
     var tags: [String]
     var subscriberCount: Int
@@ -31,9 +32,7 @@ class Program {
     var introPath: String?
     var primaryCategory: String?
     
-    init(data: [String: Any]) {
-        print("Modelling Program")
-        
+    init(data: [String: Any]) {        
         ID = data["ID"] as! String
         name = data["name"] as! String
         username = data["username"] as! String
@@ -45,6 +44,7 @@ class Program {
         isPrimaryProgram = data["isPrimaryProgram"] as! Bool
         episodeIDs = data["episodeIDs"] as! [[String : Any]]
         subscriberIDs = data["subscriberIDs"] as! [String]
+        webLink = data["webLink"] as? String
         hasMultiplePrograms = data["hasMultiplePrograms"] as? Bool
         programIDs = data["programIDs"] as? [String]
         imageID = data["imageID"] as? String

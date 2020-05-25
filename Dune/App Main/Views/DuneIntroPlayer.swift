@@ -11,7 +11,6 @@ import AVFoundation
 
 class DuneIntroPlayer: UIView {
     
-    var playerIsOutOfPosition = true
     var audioPlayer: AVAudioPlayer!
     var currentState: playerStatus = .ready
     let playbackCircleView = PlaybackCircleView()
@@ -39,6 +38,7 @@ class DuneIntroPlayer: UIView {
         let imageView = UIImageView()
         imageView.layer.cornerRadius = 6
         imageView.clipsToBounds = true
+        imageView.isUserInteractionEnabled = false
         return imageView
     }()
     
@@ -46,6 +46,7 @@ class DuneIntroPlayer: UIView {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 16.0, weight: .bold)
         label.textColor = .white
+        label.isUserInteractionEnabled = false
         return label
     }()
     
@@ -54,6 +55,7 @@ class DuneIntroPlayer: UIView {
         label.font = UIFont.systemFont(ofSize: 14.0, weight: .medium)
         label.textColor = .white
         label.lineBreakMode = .byTruncatingTail
+         label.isUserInteractionEnabled = false
         label.text = "@\(User.username!)"
         return label
     }()
@@ -76,8 +78,9 @@ class DuneIntroPlayer: UIView {
         configureViews()
 
         slideDown.direction = .down
-        self.addGestureRecognizer(slideDown)
-        self.isUserInteractionEnabled = true
+        slideDown.delegate = self
+        playbackView.addGestureRecognizer(slideDown)
+        playbackView.isUserInteractionEnabled = true
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -125,7 +128,7 @@ class DuneIntroPlayer: UIView {
          playbackBottomView.topAnchor.constraint(equalTo: playbackView.bottomAnchor).isActive = true
          playbackBottomView.leadingAnchor.constraint(equalTo: playbackView.leadingAnchor).isActive = true
          playbackBottomView.trailingAnchor.constraint(equalTo: playbackView.trailingAnchor).isActive = true
-         playbackBottomView.heightAnchor.constraint(equalToConstant: 90).isActive = true
+         playbackBottomView.heightAnchor.constraint(equalToConstant: 70).isActive = true
      }
     
     func playOrPauseWith(url: URL, name: String, image: UIImage) {
@@ -225,24 +228,22 @@ class DuneIntroPlayer: UIView {
     
     func animatePlayerIntoPosition() {
         isInPosition = true
-        playerIsOutOfPosition = false
-        
+        print("Triggered to move to \(yPosition!)")
         UIView.animateKeyframes(withDuration: 0.2, delay: 0, options: .beginFromCurrentState, animations: {
         self.frame = CGRect(x: 0, y: self.yPosition, width: self.frame.width, height: 70)
         }, completion: nil)
     }
     
     func transitionOutOfView() {
-        playerIsOutOfPosition = true
-        let height =  UIScreen.main.bounds.height
         isInPosition = false
+        let height =  UIScreen.main.bounds.height
         UIView.animateKeyframes(withDuration: 0.2, delay: 0, options: .beginFromCurrentState, animations: {
             self.frame = CGRect(x: 0, y: height, width: self.frame.width, height: 70)
         }, completion: nil)
     }
     
     func finishSession() {
-        playerIsOutOfPosition = true
+        isInPosition = false
         transitionOutOfView()
         currentState = .ready
         if audioPlayer != nil {
@@ -251,7 +252,12 @@ class DuneIntroPlayer: UIView {
                 self.audioPlayer.volume = 1
                 self.audioPlayer.stop()
             }
-            
+        }
+    }
+    
+    func updateYPositionWith(value: CGFloat) {
+        if isInPosition {
+            self.frame.origin.y = value
         }
     }
     
@@ -264,6 +270,18 @@ class DuneIntroPlayer: UIView {
         print("Swipe")
        finishSession()
     }
+    
+    func addTouchTarget() {
+        let gestureRec = UIGestureRecognizer.init(target: self, action: #selector(touchDismiss))
+        playbackView.addGestureRecognizer(gestureRec)
+    }
+    
+    @objc func touchDismiss() {
+        print("DISMISS")
+    }
+    
+    
+    
 }
 
 
@@ -281,3 +299,9 @@ extension DuneIntroPlayer: AVAudioPlayerDelegate {
     
 }
 
+
+extension DuneIntroPlayer: UIGestureRecognizerDelegate {
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        true
+    }
+}

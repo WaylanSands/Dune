@@ -24,7 +24,7 @@ class ProgramSubscriptionTV: UITableView {
     }
     
     func fetchProgramsSubscriptions() {
-        print("Fetching User's subscriptions")
+
         FireStoreManager.fetchUsersSubscriptions() { snapshot in
             
             if snapshot.count != 0 {

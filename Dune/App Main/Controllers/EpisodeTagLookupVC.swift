@@ -16,7 +16,6 @@ class EpisodeTagLookupVC: UIViewController {
 
     let tableView = UITableView()
     var audioPlayer = DuneAudioPlayer()
-    var audioPlayerInPosition = false
 
     var audioIDs = [String]()
     var downloadedEpisodes = [Episode]()
@@ -42,10 +41,18 @@ class EpisodeTagLookupVC: UIViewController {
         super.init(nibName: nil, bundle: nil)
         self.tag = tag
         FireStoreManager.getEpisodesWith(tag: tag) { episodes in
-            self.downloadedEpisodes = episodes
-            self.loadingView.removeFromSuperview()
-            self.tableView.reloadData()
             self.configureEpisodeLabelWith(count: episodes.count)
+            self.loadingView.removeFromSuperview()
+            self.downloadedEpisodes = episodes
+            self.addEpisodesToAudioPlayer()
+            self.tableView.reloadData()
+        }
+    }
+    
+    func addEpisodesToAudioPlayer() {
+        audioPlayer.downloadedEpisodes = downloadedEpisodes
+        for eachEp in downloadedEpisodes {
+            audioPlayer.audioIDs.append(eachEp.audioID)
         }
     }
     
@@ -143,9 +150,6 @@ class EpisodeTagLookupVC: UIViewController {
         audioPlayer.frame = CGRect(x: 0, y: view.frame.height, width: view.frame.width, height: 70)
     }
 
-
-
-
     func getAudioWith(audioID: String, completion: @escaping (URL) -> ()) {
 
         let tempURL = FileManager.getTempDirectory()
@@ -159,7 +163,6 @@ class EpisodeTagLookupVC: UIViewController {
             }
         }
     }
-
 }
 
 extension EpisodeTagLookupVC: UITableViewDataSource, UITableViewDelegate {
@@ -216,7 +219,7 @@ extension EpisodeTagLookupVC: EpisodeCellDelegate {
 
     func visitProfile(program: Program) {
             if program.isPrimaryProgram && program.hasMultiplePrograms!  {
-                let programVC = ProgramProfileVC()
+                let programVC = TProgramProfileVC()
                 programVC.program = program
                 navigationController?.pushViewController(programVC, animated: true)
             } else {
@@ -230,13 +233,15 @@ extension EpisodeTagLookupVC: EpisodeCellDelegate {
        return Double(CMTimeGetSeconds(asset.duration))
    }
 
+    // MARK: Play Episode
 
     func playEpisode(cell: EpisodeCell) {
         activeCell = cell
         if !cell.playbackBarView.playbackBarIsSetup {
             cell.playbackBarView.setupPlaybackBar()
         }
-        audioPlayer.navHeight = self.tabBarController?.tabBar.frame.height
+        
+        audioPlayer.yPosition = view.frame.height - self.tabBarController!.tabBar.frame.height
 
         guard let audioIndex = tableView.indexPath(for: cell)?.row else { return }
         let image = cell.programImageButton.imageView?.image

@@ -147,7 +147,7 @@ extension AddBGMusicVC: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let cell = tableView.cellForRow(at: indexPath) as! BackgroundMusicCell
-        
+                
         for each in cells {
             if each != selectedCell {
                 each.deactivateCell()

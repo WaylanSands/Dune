@@ -132,6 +132,7 @@ class SearchVC: UIViewController {
 //        navigationItem.searchController = searchController
         navigationItem.titleView = searchController.searchBar
         navigationController?.navigationBar.isTranslucent = false
+        navigationController?.navigationBar.prefersLargeTitles = false
         navigationController?.navigationBar.barTintColor = CustomStyle.darkestBlack
         navigationController?.navigationBar.tintColor = CustomStyle.primaryBlue
         navigationController?.navigationBar.barStyle = .black
@@ -484,6 +485,12 @@ extension SearchVC: UITableViewDelegate, UITableViewDataSource {
 }
 
 extension SearchVC: ProgramCellDelegate {
+   
+    func tagSelected(tag: String) {
+        isGoingForward = true
+        let tagSelectedVC = ProgramTagLookupVC(tag: tag)
+        navigationController?.pushViewController(tagSelectedVC, animated: true)
+    }
     
     func visitProfile(program: Program) {
         
@@ -495,7 +502,7 @@ extension SearchVC: ProgramCellDelegate {
         } else {
             isGoingForward = true
             if program.isPrimaryProgram && program.hasMultiplePrograms!  {
-                let programVC = ProgramProfileVC()
+                let programVC = TProgramProfileVC()
                 programVC.program = program
                 navigationController?.pushViewController(programVC, animated: true)
             } else {
@@ -552,7 +559,6 @@ extension SearchVC: PlaybackBarDelegate {
         cell.playbackBarView.setupPlaybackBar()
         activeProgramCell = cell
     }
-    
 }
 
 extension SearchVC: UISearchResultsUpdating {

@@ -544,7 +544,7 @@ class AccountVC: UIViewController {
     }
     
     @objc func switchAccountPress() {
-        let programAccount = ProgramAccountVC()
+        let programAccount = TProgramAccountVC()
         navigationController?.pushViewController(programAccount, animated: false)
     }
     

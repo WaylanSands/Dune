@@ -27,7 +27,7 @@ class MainTabController: UITabBarController {
         let playlistController = UINavigationController(rootViewController: TrendingVC())
        
         if User.isPublisher! {
-            accountController = UINavigationController(rootViewController: ProgramAccountVC())
+            accountController = UINavigationController(rootViewController: TProgramAccountVC())
         } else {
             accountController = UINavigationController(rootViewController: AccountVC())
 

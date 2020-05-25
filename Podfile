@@ -17,8 +17,6 @@ pod 'Firebase/Storage'
 pod 'FirebaseFirestoreSwift'
 pod 'MultiSlider'
 pod 'SwiftLinkPreview', '~> 3.1.0'
-pod 'TwitterProfile'
-pod 'XLPagerTabStrip'
 
 # https://firebase.google.com/docs/ios/setup#available-pods
 

@@ -131,7 +131,7 @@ extension FireStoreManager {
                             let docADate = docAValue.dateValue()
                             let docBDate = docBValue.dateValue()
                             
-                            return docADate < docBDate
+                            return docADate > docBDate
                         }
                         
                         var sortedArray = [String]()
@@ -142,8 +142,6 @@ extension FireStoreManager {
                         }
                         completion(sortedArray)
                     }
-    
-                    
                 }
             }
         }
@@ -196,7 +194,7 @@ extension FireStoreManager {
                 ownIDs.append(CurrentProgram.ID!)
             }
         }
-        print("Own IDs \(ownIDs)")
+
         for eachSub in subscriptions {
             counter += 1
             if !ownIDs.contains(eachSub) {
@@ -216,6 +214,23 @@ extension FireStoreManager {
                             completion(querySnapshot)
                         }
                     }
+                }
+            }
+        }
+    }
+    
+    static func updateProgramsWeblinkWith(urlString: String, programID: String) {
+        DispatchQueue.global(qos: .userInitiated).async {
+            
+            let programRef = db.collection("programs").document(programID)
+            
+            programRef.updateData([
+                "webLink" : urlString
+            ]) { (error) in
+                if let error = error {
+                    print("Error updating programs's web link: \(error.localizedDescription)")
+                } else {
+                    print("Successfully updated program's web link")
                 }
             }
         }

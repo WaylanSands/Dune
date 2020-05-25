@@ -27,10 +27,10 @@ class DuneAudioPlayer: UIView {
     var playbackDelegate: PlaybackBarDelegate!
     var episode: Episode!
 
-    var playerIsOutOfPosition = true
+    var isOutOfPosition = true
     var optionsArePresented = false
     var optionsAreHidden = false
-    var navHeight: CGFloat!
+    var yPosition: CGFloat!
     
     var episodeIndex: Int!
     var episodeID: String!
@@ -57,6 +57,7 @@ class DuneAudioPlayer: UIView {
         let imageView = UIImageView()
         imageView.layer.cornerRadius = 6
         imageView.clipsToBounds = true
+        imageView.isUserInteractionEnabled = false
         return imageView
     }()
     
@@ -64,6 +65,7 @@ class DuneAudioPlayer: UIView {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 16.0, weight: .bold)
         label.textColor = .white
+        label.isUserInteractionEnabled = false
         return label
     }()
     
@@ -72,6 +74,7 @@ class DuneAudioPlayer: UIView {
         label.font = UIFont.systemFont(ofSize: 14.0, weight: .medium)
         label.textColor = .white
         label.lineBreakMode = .byTruncatingTail
+        label.isUserInteractionEnabled = false
         return label
     }()
     
@@ -79,7 +82,6 @@ class DuneAudioPlayer: UIView {
         let button = UIButton()
         button.setImage(UIImage(named: "like-button-icon"), for: .normal)
         button.addTarget(self, action: #selector(likeButtonPress), for: .touchUpInside)
-//        button.isHidden = true
         return button
     }()
     
@@ -89,14 +91,13 @@ class DuneAudioPlayer: UIView {
         label.textAlignment = .left
         label.text = ""
         label.textColor = .white
-//        label.isHidden = true
+        label.isUserInteractionEnabled = false
         return label
     }()
     
     let commentButton: UIButton = {
         let button = UIButton()
         button.setImage(UIImage(named: "comment-button-icon"), for: .normal)
-//         button.isHidden = true
         return button
     }()
     
@@ -105,7 +106,7 @@ class DuneAudioPlayer: UIView {
         label.font = UIFont.systemFont(ofSize: 12.0, weight: .medium)
         label.textAlignment = .left
         label.textColor = .white
-//        label.isHidden = true
+        label.isUserInteractionEnabled = false
         label.text = ""
         return label
     }()
@@ -113,7 +114,6 @@ class DuneAudioPlayer: UIView {
     let shareButton: UIButton = {
         let button = UIButton()
         button.setImage(UIImage(named: "share-button-icon"), for: .normal)
-//         button.isHidden = true
         return button
     }()
     
@@ -122,7 +122,7 @@ class DuneAudioPlayer: UIView {
         label.font = UIFont.systemFont(ofSize: 12.0, weight: .medium)
         label.textAlignment = .left
         label.textColor = .white
-//        label.isHidden = true
+        label.isUserInteractionEnabled = false
         label.text = ""
         return label
     }()
@@ -130,7 +130,6 @@ class DuneAudioPlayer: UIView {
     let listenIconImage: UIImageView = {
         let imageView = UIImageView()
         imageView.image = UIImage(named: "listen-icon")
-//         imageView.isHidden = true
         return imageView
     }()
 
@@ -139,7 +138,7 @@ class DuneAudioPlayer: UIView {
         label.font = UIFont.systemFont(ofSize: 12.0, weight: .medium)
         label.textAlignment = .left
         label.textColor = .white
-//        label.isHidden = true
+        label.isUserInteractionEnabled = false
         label.text = ""
         return label
     }()
@@ -161,8 +160,9 @@ class DuneAudioPlayer: UIView {
         configureViews()
         
         slideDown.direction = .down
-        self.addGestureRecognizer(slideDown)
-        self.isUserInteractionEnabled = true
+        slideDown.delegate = self
+        playbackView.addGestureRecognizer(slideDown)
+        playbackView.isUserInteractionEnabled = true
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -172,7 +172,6 @@ class DuneAudioPlayer: UIView {
     func configureViews() {
         self.addSubview(playbackView)
         playbackView.pinEdges(to: self)
-//        playbackView.isHidden = true
         
         playbackView.addSubview(programImageView)
         programImageView.translatesAutoresizingMaskIntoConstraints = false
@@ -193,13 +192,11 @@ class DuneAudioPlayer: UIView {
         playbackButton.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -20).isActive = true
         playbackButton.heightAnchor.constraint(equalToConstant: 40).isActive = true
         playbackButton.widthAnchor.constraint(equalToConstant: 40).isActive = true
-//        playbackButton.isHidden = true
         
         playbackView.addSubview(playbackCircleView)
         playbackCircleView.translatesAutoresizingMaskIntoConstraints = false
         playbackCircleView.centerYAnchor.constraint(equalTo: playbackButton.centerYAnchor, constant: 0).isActive = true
         playbackCircleView.centerXAnchor.constraint(equalTo: playbackButton.centerXAnchor, constant: 0).isActive = true
-//        playbackCircleView.isHidden = true
         
         playbackView.addSubview(captionLabel)
         captionLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -270,7 +267,7 @@ class DuneAudioPlayer: UIView {
          playbackBottomView.topAnchor.constraint(equalTo: playbackView.bottomAnchor).isActive = true
          playbackBottomView.leadingAnchor.constraint(equalTo: playbackView.leadingAnchor).isActive = true
          playbackBottomView.trailingAnchor.constraint(equalTo: playbackView.trailingAnchor).isActive = true
-         playbackBottomView.heightAnchor.constraint(equalToConstant: 90).isActive = true
+         playbackBottomView.heightAnchor.constraint(equalToConstant: 70).isActive = true
      }
     
     func configureWithoutOptions() {
@@ -396,7 +393,6 @@ class DuneAudioPlayer: UIView {
 //    }
     
     @objc func dismissView() {
-        print("Swipe")
        finishSession()
     }
     
@@ -473,39 +469,46 @@ class DuneAudioPlayer: UIView {
     }
     
     func animateAudioPlayerWithOptions() {
-        let height = UIScreen.main.bounds.height - navHeight - 100
-        playerIsOutOfPosition = false
+        isOutOfPosition = false
         optionsArePresented = true
         configureSettingOptions()
-//        isInPosition = true
         topImageConstraint.constant = 15
+        let position = yPosition - 100
         UIView.animateKeyframes(withDuration: 0.2, delay: 0, options: .beginFromCurrentState, animations: {
-            self.frame = CGRect(x: 0, y: height, width: self.frame.width, height: 100)
+            self.frame = CGRect(x: 0, y: position, width: self.frame.width, height: 100)
         }, completion: nil)
     }
     
     func animateAudioPlayerWithoutOptions() {
-        playerIsOutOfPosition = false
+        isOutOfPosition = false
         optionsArePresented = false
-        let height =  UIScreen.main.bounds.height - navHeight - 70
-        
         configureWithoutOptions()
-//        isInPosition = true
+          let position = yPosition - 70
         UIView.animateKeyframes(withDuration: 0.2, delay: 0, options: .beginFromCurrentState, animations: {
-             self.frame = CGRect(x: 0, y: height, width: self.frame.width, height: 70)
+            self.frame = CGRect(x: 0, y: position, width: self.frame.width, height: 70)
         }, completion: nil)
     }
     
     func transitionOutOfView() {
+        isOutOfPosition = true
         let height =  UIScreen.main.bounds.height
-//        isInPosition = false
         UIView.animateKeyframes(withDuration: 0.2, delay: 0, options: .beginFromCurrentState, animations: {
              self.frame = CGRect(x: 0, y: height, width: self.frame.width, height: 70)
         }, completion: nil)
     }
     
+    func updateYPositionWith(value: CGFloat) {
+        if !isOutOfPosition {
+            if optionsArePresented {
+                  self.frame.origin.y = value - 100
+            } else {
+                  self.frame.origin.y = value - 70
+            }
+        }
+    }
+    
     func finishSession() {
-        playerIsOutOfPosition = true
+        isOutOfPosition = true
         optionsArePresented = false
         optionsAreHidden = false
         transitionOutOfView()
@@ -554,4 +557,10 @@ extension DuneAudioPlayer: AVAudioPlayerDelegate {
         }
     }
     
+}
+
+extension DuneAudioPlayer: UIGestureRecognizerDelegate {
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        true
+    }
 }

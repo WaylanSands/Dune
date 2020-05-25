@@ -14,19 +14,16 @@ class MainFeedVC: UIViewController {
     
     let tableView = UITableView()
     var audioPlayer = DuneAudioPlayer()
-    var audioPlayerInPosition = false
     
     var batchLimit = 10
     var subscriptionIDs = [String]()
     var fetchedEpisodeIDs = [String]()
+    var downloadedEpisodes = [Episode]()
     var episodesToFetch = [String]()
     var episodeIDs = [String]()
     
-    var tappedPrograms = [String]()
-    var downloadedEpisodes = [Episode]()
-    //    var audioUrls = [String]()
-    //    var downloadedIndexes = [Int]()
-    var episodesToDisplay = true
+//    var tappedPrograms = [String]()
+//    var episodesToDisplay = true
     var activeCell: EpisodeCell?
     var selectedCellRow: Int?
     
@@ -40,7 +37,6 @@ class MainFeedVC: UIViewController {
     
     let currentDateLabel: UILabel = {
         let label = UILabel()
-        label.text = "23 Feb"
         label.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
         label.textColor = CustomStyle.fourthShade
         return label
@@ -59,7 +55,6 @@ class MainFeedVC: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        configureNavigation()
         configureViews()
         configureDelegates()
         addLoadingView()
@@ -71,20 +66,16 @@ class MainFeedVC: UIViewController {
     }
     
     override func viewWillAppear(_ animated: Bool) {
-        tableView.setScrollBarToTopLeft()
         configureNavigation()
         selectedCellRow = nil
-        subscriptionIDs =  User.subscriptionIDs!
+        subscriptionIDs = User.subscriptionIDs!
+      
+        fetchEpisodeIDsForUser()
+        setCurrentDate()
         
-        if User.ID == nil {
-            getUserData()
-        } else {
-            fetchEpisodeIDsForUser()
-        }
-        
-        if episodesToDisplay == false {
-            addLoadingView()
-        }
+//        if episodesToDisplay == false {
+//            addLoadingView()
+//        }
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -106,6 +97,28 @@ class MainFeedVC: UIViewController {
         tableView.delegate = self
     }
     
+    func setCurrentDate() {
+        let date = Date()
+
+        let numberFormatter = NumberFormatter()
+        numberFormatter.numberStyle = .ordinal
+        numberFormatter.locale = Locale.current
+        
+        let monthFormatter = DateFormatter()
+        monthFormatter.dateFormat = "MMM"
+        
+        let dayFormatter = DateFormatter()
+        dayFormatter.dateFormat = "dd"
+        
+        let dayString = dayFormatter.string(from: date)
+        let monthString = monthFormatter.string(from: date)
+        
+        let dayNumber = NSNumber(value: Int(dayString)!)
+        let day = numberFormatter.string(from: dayNumber)!
+        
+        currentDateLabel.text = "\(day) \(monthString)"
+    }
+    
     //    @objc func appMovedToBackground() {
     //        tableView.setScrollBarToTopLeft()
     //        audioPlayer.finishSession()
@@ -117,12 +130,16 @@ class MainFeedVC: UIViewController {
     //    }
     
     func resetTableView() {
+        print("Reset")
         addLoadingView()
         navigationItem.title = "Daily Feed"
         noEpisodesLabel.isHidden = true
+        batchLimit = 10
         fetchedEpisodeIDs = [String]()
         downloadedEpisodes = [Episode]()
+        subscriptionIDs = [String]()
         episodeIDs = [String]()
+        batch = [Episode]()
         tableView.isHidden = false
         tableView.reloadData()
     }
@@ -134,6 +151,7 @@ class MainFeedVC: UIViewController {
         navigationController?.navigationBar.isHidden = false
         navigationController?.navigationBar.setBackgroundImage(nil, for: .default)
         navigationController?.navigationBar.barStyle = .default
+        navigationController?.navigationBar.shadowImage = UIImage()
         
         let imgBackArrow = #imageLiteral(resourceName: "back-button-white")
         navigationController?.navigationBar.backIndicatorImage = imgBackArrow
@@ -183,17 +201,16 @@ class MainFeedVC: UIViewController {
     
     func fetchEpisodeIDsForUser() {
         FireStoreManager.fetchEpisodesIDsWith(with: subscriptionIDs) { ids in
-            print("Returned with \(ids) ")
+           
             if ids.isEmpty {
                 print("No episodes to display")
-                self.episodesToDisplay = false
                 self.tableView.isHidden = true
                 self.noEpisodesLabel.isHidden = false
                 self.loadingView.removeFromSuperview()
                 self.navigationItem.title = ""
             } else {
-                self.episodesToDisplay = true
-                if ids.count != self.episodeIDs.count {
+                if ids != self.episodeIDs {
+                    print("Episode IDs \(ids)")
                     self.resetTableView()
                     self.episodeIDs = ids
                     self.loadFirstBatch()
@@ -203,7 +220,6 @@ class MainFeedVC: UIViewController {
     }
     
     func loadFirstBatch() {
-        print("Loading first batch")
         var endIndex = batchLimit
         
         if episodeIDs.count < batchLimit {
@@ -215,7 +231,6 @@ class MainFeedVC: UIViewController {
         for eachID in episodesToFetch {
             downloadEpisodeWith(ID: eachID)
         }
-        print("eps to fetch \(episodesToFetch)")
     }
     
     func  loadNextBatch() {
@@ -226,9 +241,9 @@ class MainFeedVC: UIViewController {
         }
         
         let lastEp = fetchedEpisodeIDs.last!
-        let startIndex = downloadedEpisodes.firstIndex(where: { $0.ID == lastEp })
+        let startIndex = episodeIDs.firstIndex(where: { $0 == lastEp })
         endIndex += startIndex!
-        
+                
         episodesToFetch = Array(episodeIDs[startIndex!..<endIndex])
         
         for eachID in episodesToFetch {
@@ -246,12 +261,12 @@ class MainFeedVC: UIViewController {
         
         if !alreadyDownloaded {
             FireStoreManager.getEpisodeDataWith(ID: ID) { (data) in
-                print("Returning with data")
+                
                 let episode = Episode(data: data)
                 self.batch.append(episode)
                 
-                if self.batch.count == self.episodesToFetch.count{
-                    print("Inside")
+                if self.batch.count == self.episodesToFetch.count {
+
                     let orderedBatch = self.batch.sorted { (epA , epB) -> Bool in
                         let dateA = epA.timeStamp.dateValue()
                         let dateB = epB.timeStamp.dateValue()
@@ -339,9 +354,8 @@ extension MainFeedVC: UITableViewDataSource, UITableViewDelegate {
         let maximumOffset = scrollView.contentSize.height - scrollView.frame.size.height
         
         // Change 10.0 to adjust the distance from bottom
-        if maximumOffset - currentOffset <= 90.0 && fetchedEpisodeIDs != episodeIDs {
+        if maximumOffset - currentOffset <= 90.0 && fetchedEpisodeIDs.count != episodeIDs.count {
             loadNextBatch()
-            print("getting more")
         }
     }
     
@@ -357,7 +371,7 @@ extension MainFeedVC: EpisodeCellDelegate {
     func visitProfile(program: Program) {
         print("Visiting")
         if program.isPrimaryProgram && program.hasMultiplePrograms!  {
-            let programVC = ProgramProfileVC()
+            let programVC = TProgramProfileVC()
             programVC.program = program
             navigationController?.pushViewController(programVC, animated: true)
         } else {
@@ -371,13 +385,13 @@ extension MainFeedVC: EpisodeCellDelegate {
         return Double(CMTimeGetSeconds(asset.duration))
     }
     
-    
+    //MARK: Play Episode
     func playEpisode(cell: EpisodeCell) {
         activeCell = cell
         if !cell.playbackBarView.playbackBarIsSetup {
             cell.playbackBarView.setupPlaybackBar()
         }
-        audioPlayer.navHeight = self.tabBarController?.tabBar.frame.height
+        audioPlayer.yPosition = view.frame.height - self.tabBarController!.tabBar.frame.height
         
         guard let audioIndex = tableView.indexPath(for: cell)?.row else { return }
         let image = cell.programImageButton.imageView?.image
@@ -435,7 +449,7 @@ extension MainFeedVC: EpisodeCellDelegate {
     }
     
     func addTappedProgram(programName: String) {
-        tappedPrograms.append(programName)
+//        tappedPrograms.append(programName)
     }
     
     func updateRows() {

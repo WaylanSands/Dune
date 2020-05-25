@@ -29,7 +29,6 @@ class TrendingVC: UIViewController {
     
     let currentDateLabel: UILabel = {
         let label = UILabel()
-        label.text = "23 Feb"
         label.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
         label.textColor = CustomStyle.fourthShade
         return label
@@ -40,12 +39,12 @@ class TrendingVC: UIViewController {
         configureDelegates()
         configureViews()
         addLoadingView()
-        setupTopBar()
     }
     
     override func viewWillAppear(_ animated: Bool) {
-        tableView.setScrollBarToTopLeft()
         fetchTrendingEpisodes()
+        configureNavigation()
+        setCurrentDate()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -56,14 +55,19 @@ class TrendingVC: UIViewController {
         }
     }
     
-    func setupTopBar() {
+    func configureNavigation() {
+        UINavigationBar.appearance().titleTextAttributes = CustomStyle.blackNavBarAttributes
         navigationItem.title = "Trending"
         navigationController?.navigationBar.prefersLargeTitles = true
+        navigationController?.navigationBar.isHidden = false
+        navigationController?.navigationBar.setBackgroundImage(nil, for: .default)
+        navigationController?.navigationBar.barStyle = .default
+        navigationController?.navigationBar.shadowImage = UIImage()
         
-        tableView.addSubview(currentDateLabel)
-        currentDateLabel.translatesAutoresizingMaskIntoConstraints = false
-        currentDateLabel.bottomAnchor.constraint(equalTo: tableView.topAnchor, constant: -10).isActive = true
-        currentDateLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
+        let imgBackArrow = #imageLiteral(resourceName: "back-button-white")
+        navigationController?.navigationBar.backIndicatorImage = imgBackArrow
+        navigationController?.navigationBar.backIndicatorTransitionMaskImage = imgBackArrow
+        navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
     }
     
     func configureDelegates() {
@@ -77,9 +81,36 @@ class TrendingVC: UIViewController {
         tableView.register(EpisodeCellSmlLink.self, forCellReuseIdentifier: "EpisodeCellSmlLink")
     }
     
+    func setCurrentDate() {
+        let date = Date()
+
+        let numberFormatter = NumberFormatter()
+        numberFormatter.numberStyle = .ordinal
+        numberFormatter.locale = Locale.current
+        
+        let monthFormatter = DateFormatter()
+        monthFormatter.dateFormat = "MMM"
+        
+        let dayFormatter = DateFormatter()
+        dayFormatter.dateFormat = "dd"
+        
+        let dayString = dayFormatter.string(from: date)
+        let monthString = monthFormatter.string(from: date)
+        
+        let dayNumber = NSNumber(value: Int(dayString)!)
+        let day = numberFormatter.string(from: dayNumber)!
+        
+        currentDateLabel.text = "\(day) \(monthString)"
+    }
+    
     func configureViews() {
         view.addSubview(tableView)
         tableView.pinEdges(to: view)
+        
+        tableView.addSubview(currentDateLabel)
+        currentDateLabel.translatesAutoresizingMaskIntoConstraints = false
+        currentDateLabel.bottomAnchor.constraint(equalTo: tableView.topAnchor, constant: -10).isActive = true
+        currentDateLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
         
         view.addSubview(audioPlayer)
         audioPlayer.frame = CGRect(x: 0, y: view.frame.height, width: view.frame.width, height: 70)
@@ -270,7 +301,15 @@ extension TrendingVC: EpisodeCellDelegate {
     }
     
     func visitProfile(program: Program) {
-        //
+        print("Visiting")
+        if program.isPrimaryProgram && program.hasMultiplePrograms!  {
+            let programVC = TProgramProfileVC()
+            programVC.program = program
+            navigationController?.pushViewController(programVC, animated: true)
+        } else {
+            let programVC = SubProgramProfileVC(program: program)
+            navigationController?.present(programVC, animated: true, completion: nil)
+        }
     }
     
     func updateLikeCountFor(episode: Episode, at indexPath: IndexPath) {
@@ -283,7 +322,7 @@ extension TrendingVC: EpisodeCellDelegate {
              cell.playbackBarView.setupPlaybackBar()
          }
        
-        audioPlayer.navHeight = self.tabBarController?.tabBar.frame.height
+        audioPlayer.yPosition = view.frame.height - self.tabBarController!.tabBar.frame.height
         
         guard let audioIndex = tableView.indexPath(for: cell)?.row else { return }
         let image = cell.programImageButton.imageView?.image
@@ -316,9 +355,7 @@ extension TrendingVC: EpisodeCellDelegate {
         if downloadedEpisodes.count == 0 {
              resetTableView()
         }
-
         audioPlayer.transitionOutOfView()
-        
     }
     
     func showSettings(cell: EpisodeCell) {
@@ -330,9 +367,7 @@ extension TrendingVC: EpisodeCellDelegate {
         } else {
             subscriptionSettings.showSettings()
         }
-        
     }
-    
     
     func addTappedProgram(programName: String) {
         //        tappedPrograms.append(programName)

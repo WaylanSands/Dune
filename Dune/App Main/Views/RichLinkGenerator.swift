@@ -303,7 +303,7 @@ class RichLinkGenerator {
                 if let imageURL = URL(string: url) {
                     if let imageData = try? Data(contentsOf: imageURL) {
                         if let image = UIImage(data: imageData) {
-                            self.storeRichImage(url: fileName, image: image)
+                            self.storeRichImageWith(fileName: fileName, image: image)
                             completion(image)
                         }
                     }
@@ -314,11 +314,11 @@ class RichLinkGenerator {
         }
     }
     
-    func storeRichImage(url: String, image: UIImage) {
+    func storeRichImageWith(fileName: String, image: UIImage) {
 
         if let data = image.jpegData(compressionQuality: 0.5) {
               let cacheURL = FileManager.getCacheDirectory()
-              let fileURL = cacheURL.appendingPathComponent(url)
+              let fileURL = cacheURL.appendingPathComponent(fileName)
 
               do {
                 try data.write(to: fileURL, options: .atomic)

@@ -29,6 +29,7 @@ enum alertType {
     case removeIntro
     case notAPublisher
     case cantFindLargeImage
+    case invalidURL
 }
 
 protocol CustomAlertDelegate {
@@ -242,8 +243,11 @@ class CustomAlertView: UIView {
             primaryButton.addTarget(self, action: #selector(primaryButtonPress), for: .touchUpInside)
             secondaryButton.setTitle("Dismiss", for: .normal)
             secondaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
-            
-            
+        case .invalidURL:
+            headingLabel.text = "Invalid link"
+            bodyTextLabel.text = "Looks like the link you have added is not a valid URL."
+            primaryButton.setTitle("Dismiss", for: .normal)
+            primaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
         }
     }
     

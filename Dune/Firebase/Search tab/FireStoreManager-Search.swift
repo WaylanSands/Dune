@@ -84,7 +84,6 @@ extension FireStoreManager {
                             CurrentProgram.subPrograms!.append(loadedProgram)
                         } else {
                             program!.subPrograms!.append(loadedProgram)
-                            print("Sub programs added \(program!.subPrograms!)")
                         }
                         
                         if programCount == snapshot?.count {
@@ -156,7 +155,7 @@ extension FireStoreManager {
             if error != nil {
                 print("Error updating program with unsubscribe")
             } else {
-                print("Success updating program with unsubscribe")
+                print("Success updating program with Unsubscribe")
             }
         }
     }
@@ -170,9 +169,9 @@ extension FireStoreManager {
             "subscriptionIDs" : FieldValue.arrayUnion([programID]),
         ]) { error in
             if error != nil {
-                print("Error adding subscription to user")
+                print("Error subscribing user to program")
             } else {
-                print("Success adding subscription to user")
+                print("Success subscribing user to program")
             }
         }
     }
@@ -186,9 +185,9 @@ extension FireStoreManager {
             "subscriptionIDs" : FieldValue.arrayRemove([programID])
         ]) { error in
             if error != nil {
-                print("Error adding subscription to user")
+                print("Error removing subscription from user")
             } else {
-                print("Success adding subscription to user")
+                print("Success removing subscription from user")
             }
         }
     }

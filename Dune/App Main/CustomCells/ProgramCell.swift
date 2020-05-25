@@ -15,6 +15,7 @@ protocol ProgramCellDelegate {
     func playProgramIntro(cell: ProgramCell)
     func showSettings(cell: ProgramCell)
     func visitProfile(program: Program)
+    func tagSelected(tag: String)
 }
 
 
@@ -141,7 +142,7 @@ class ProgramCell: UITableViewCell {
         let button = UIButton()
         button.setTitle("more", for: .normal)
         button.titleLabel!.font = UIFont.systemFont(ofSize: 13, weight: .regular)
-        button.setTitleColor(CustomStyle.thirdShade, for: .normal)
+        button.setTitleColor(CustomStyle.linkBlue, for: .normal)
         button.addTarget(self, action: #selector(moreUnwrap), for: .touchUpInside)
         return button
     }()
@@ -400,7 +401,7 @@ class ProgramCell: UITableViewCell {
                 self.addSubview(self.moreButton)
                 self.moreButton.translatesAutoresizingMaskIntoConstraints = false
                 self.moreButton.bottomAnchor.constraint(equalTo: self.captionTextView.bottomAnchor).isActive = true
-                self.moreButton.trailingAnchor.constraint(equalTo: self.captionTextView.trailingAnchor).isActive = true
+                self.moreButton.trailingAnchor.constraint(equalTo: self.captionTextView.trailingAnchor, constant: -3).isActive = true
                 self.moreButton.heightAnchor.constraint(equalToConstant: self.captionTextView.font!.lineHeight).isActive = true
                 let rect = CGRect(x: self.captionTextView.frame.width - 40, y: self.captionTextView.frame.height - 10, width: 40, height: 10)
                 let path = UIBezierPath(rect: rect)
@@ -419,7 +420,13 @@ class ProgramCell: UITableViewCell {
     
     func tagButton(with title: String) -> TagButton {
         let button = TagButton(title: title)
+        button.addTarget(self, action: #selector(tagSelected), for: .touchUpInside)
         return button
+    }
+    
+    @objc func tagSelected(sender: UIButton) {
+        let tag = sender.titleLabel!.text!
+        cellDelegate?.tagSelected(tag: tag)
     }
     
     @objc func moreUnwrap() {
@@ -457,10 +464,8 @@ class ProgramCell: UITableViewCell {
     @objc func subscribeButtonPress() {
         if User.subscriptionIDs!.contains(program.ID) {
             setupSubscribeButton()
-            if let index = User.subscriptionIDs?.firstIndex(of: program.ID) {
-                User.subscriptionIDs?.remove(at: index)
-            }
-            FireStoreManager.subscribeUserToProgramWith(programID: program.ID)
+            User.subscriptionIDs?.removeAll(where: { $0 == program.ID })
+            FireStoreManager.updateProgramWithUnSubscribe(programID: program.ID)
             FireStoreManager.unsubscribeFromProgramWith(programID: program.ID)
         } else {
             setupUnsubscribeButton()

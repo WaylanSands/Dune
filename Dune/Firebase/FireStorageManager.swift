@@ -366,7 +366,6 @@ struct FireStorageManager {
                 if error != nil {
                     print(error!)
                 } else {
-                    print("This is the url: \(url!)")
                     completion(url!)
                 }
             }
