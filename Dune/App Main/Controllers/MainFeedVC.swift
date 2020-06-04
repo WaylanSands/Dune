@@ -16,19 +16,19 @@ class MainFeedVC: UIViewController {
     var audioPlayer = DuneAudioPlayer()
     
     var batchLimit = 10
+    var pushingComment = false
     var subscriptionIDs = [String]()
     var fetchedEpisodeIDs = [String]()
     var downloadedEpisodes = [Episode]()
     var episodesToFetch = [String]()
     var episodeIDs = [String]()
     
-//    var tappedPrograms = [String]()
-//    var episodesToDisplay = true
     var activeCell: EpisodeCell?
     var selectedCellRow: Int?
     
-    //    var audioIDs = [String]()
-    //    var downloadedAudioIDs = [String]()
+    var lastProgress: CGFloat = 0
+    var lastPlayedID: String?
+    var listenCountUpdated = false
     
     let loadingView = TVLoadingAnimationView(topHeight: 150)
     
@@ -55,31 +55,26 @@ class MainFeedVC: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        configureViews()
         configureDelegates()
+        configureViews()
         addLoadingView()
-        
-        
-        //        let notificationCenter = NotificationCenter.default
-        //        notificationCenter.addObserver(self, selector: #selector(appMovedToBackground), name: UIApplication.willResignActiveNotification, object: nil)
-        //        notificationCenter.addObserver(self, selector: #selector(appMovedForward), name: UIApplication.willEnterForegroundNotification, object: nil)
     }
     
     override func viewWillAppear(_ animated: Bool) {
+        subscriptionIDs = User.subscriptionIDs!
+        setupModalCommentObserver()
+        fetchEpisodeIDsForUser()
+        pushingComment = false
         configureNavigation()
         selectedCellRow = nil
-        subscriptionIDs = User.subscriptionIDs!
-      
-        fetchEpisodeIDsForUser()
         setCurrentDate()
-        
-//        if episodesToDisplay == false {
-//            addLoadingView()
-//        }
     }
     
     override func viewWillDisappear(_ animated: Bool) {
-        audioPlayer.finishSession()
+        removeModalCommentObserver()
+        if !pushingComment {
+            audioPlayer.finishSession()
+        }
         
         FileManager.removeAudioFilesFromDocumentsDirectory() {
             print("Audio removed")
@@ -92,14 +87,28 @@ class MainFeedVC: UIViewController {
         tableView.register(EpisodeCell.self, forCellReuseIdentifier: "episodeCell")
         tableView.register(EpisodeCellRegLink.self, forCellReuseIdentifier: "episodeCellRegLink")
         tableView.register(EpisodeCellSmlLink.self, forCellReuseIdentifier: "EpisodeCellSmlLink")
-        audioPlayer.playbackDelegate = self
+        audioPlayer.audioPlayerDelegate = self
         tableView.dataSource = self
         tableView.delegate = self
     }
     
+    func setupModalCommentObserver() {
+        NotificationCenter.default.addObserver(self, selector: #selector(self.showCommentFromModal), name: NSNotification.Name(rawValue: "modalCommentPush"), object: nil)
+    }
+    
+    @objc func showCommentFromModal(_ notification: Notification) {
+        let episodeID = notification.userInfo?["ID"] as! String
+        guard let episode = downloadedEpisodes.first(where: {$0.ID == episodeID}) else { return }
+        showCommentsFor(episode: episode)
+    }
+    
+    func removeModalCommentObserver() {
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: "modalCommentPush"), object: nil)
+    }
+    
     func setCurrentDate() {
         let date = Date()
-
+        
         let numberFormatter = NumberFormatter()
         numberFormatter.numberStyle = .ordinal
         numberFormatter.locale = Locale.current
@@ -119,18 +128,7 @@ class MainFeedVC: UIViewController {
         currentDateLabel.text = "\(day) \(monthString)"
     }
     
-    //    @objc func appMovedToBackground() {
-    //        tableView.setScrollBarToTopLeft()
-    //        audioPlayer.finishSession()
-    //    }
-    //
-    //    @objc func appMovedForward() {
-    //        tableView.setScrollBarToTopLeft()
-    //        getUserData()
-    //    }
-    
     func resetTableView() {
-        print("Reset")
         addLoadingView()
         navigationItem.title = "Daily Feed"
         noEpisodesLabel.isHidden = true
@@ -148,6 +146,7 @@ class MainFeedVC: UIViewController {
         UINavigationBar.appearance().titleTextAttributes = CustomStyle.blackNavBarAttributes
         navigationItem.title = "Daily Feed"
         navigationController?.navigationBar.prefersLargeTitles = true
+        navigationItem.largeTitleDisplayMode = .always
         navigationController?.navigationBar.isHidden = false
         navigationController?.navigationBar.setBackgroundImage(nil, for: .default)
         navigationController?.navigationBar.barStyle = .default
@@ -191,17 +190,10 @@ class MainFeedVC: UIViewController {
         audioPlayer.frame = CGRect(x: 0, y: view.frame.height, width: view.frame.width, height: 70)
     }
     
-    func getUserData() {
-        print("getting user data")
-        FireStoreManager.getUserData() {
-            self.resetTableView()
-            self.fetchEpisodeIDsForUser()
-        }
-    }
     
     func fetchEpisodeIDsForUser() {
         FireStoreManager.fetchEpisodesIDsWith(with: subscriptionIDs) { ids in
-           
+            
             if ids.isEmpty {
                 print("No episodes to display")
                 self.tableView.isHidden = true
@@ -210,7 +202,6 @@ class MainFeedVC: UIViewController {
                 self.navigationItem.title = ""
             } else {
                 if ids != self.episodeIDs {
-                    print("Episode IDs \(ids)")
                     self.resetTableView()
                     self.episodeIDs = ids
                     self.loadFirstBatch()
@@ -243,7 +234,7 @@ class MainFeedVC: UIViewController {
         let lastEp = fetchedEpisodeIDs.last!
         let startIndex = episodeIDs.firstIndex(where: { $0 == lastEp })
         endIndex += startIndex!
-                
+        
         episodesToFetch = Array(episodeIDs[startIndex!..<endIndex])
         
         for eachID in episodesToFetch {
@@ -266,7 +257,7 @@ class MainFeedVC: UIViewController {
                 self.batch.append(episode)
                 
                 if self.batch.count == self.episodesToFetch.count {
-
+                    
                     let orderedBatch = self.batch.sorted { (epA , epB) -> Bool in
                         let dateA = epA.timeStamp.dateValue()
                         let dateB = epB.timeStamp.dateValue()
@@ -276,7 +267,7 @@ class MainFeedVC: UIViewController {
                     for each in orderedBatch {
                         self.downloadedEpisodes.append(each)
                         self.audioPlayer.downloadedEpisodes.append(each)
-                        self.audioPlayer.audioIDs.append(each.audioID)
+                        //                        self.audioPlayer.audioIDs.append(each.audioID)
                     }
                     
                     self.fetchedEpisodeIDs += self.episodesToFetch
@@ -323,18 +314,30 @@ extension MainFeedVC: UITableViewDataSource, UITableViewDelegate {
             episodeCell = tableView.dequeueReusableCell(withIdentifier: "episodeCellRegLink") as! EpisodeCellRegLink
         }
         
+        episodeCell.episode = episode
         episodeCell.moreButton.addTarget(episodeCell, action: #selector(EpisodeCell.moreUnwrap), for: .touchUpInside)
         episodeCell.programImageButton.addTarget(episodeCell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
         episodeCell.episodeSettingsButton.addTarget(episodeCell, action: #selector(EpisodeCell.showSettings), for: .touchUpInside)
         episodeCell.likeButton.addTarget(episodeCell, action: #selector(EpisodeCell.likeButtonPress), for: .touchUpInside)
         episodeCell.usernameButton.addTarget(episodeCell, action: #selector(EpisodeCell.visitProfile), for: .touchUpInside)
-        episodeCell.episode = episode
-        
-        if episode.likeCount >= 10 {
-            episodeCell.configureCellWithOptions()
-        }
-        episodeCell.cellDelegate = self
+        episodeCell.commentButton.addTarget(episodeCell, action: #selector(EpisodeCell.showComments), for: .touchUpInside)
         episodeCell.normalSetUp(episode: episode)
+        episodeCell.cellDelegate = self
+        
+        if episode.likeCount >= 10 && episodeCell.optionsConfigured == false {
+            episodeCell.configureCellWithOptions()
+            episodeCell.optionsConfigured = true
+        } else if episode.likeCount < 10 && episodeCell.optionsConfigured {
+            episodeCell.configureWithoutOptions()
+            episodeCell.optionsConfigured = false
+        }
+        
+        if let playerEpisode = audioPlayer.episode  {
+            if episode.ID == playerEpisode.ID {
+                activeCell = episodeCell
+            }
+        }
+        
         return episodeCell
     }
     
@@ -349,11 +352,9 @@ extension MainFeedVC: UITableViewDataSource, UITableViewDelegate {
     
     func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
         
-        // UITableView only moves in one direction, y axis
         let currentOffset = scrollView.contentOffset.y
         let maximumOffset = scrollView.contentSize.height - scrollView.frame.size.height
         
-        // Change 10.0 to adjust the distance from bottom
         if maximumOffset - currentOffset <= 90.0 && fetchedEpisodeIDs.count != episodeIDs.count {
             loadNextBatch()
         }
@@ -369,9 +370,8 @@ extension MainFeedVC: EpisodeCellDelegate {
     }
     
     func visitProfile(program: Program) {
-        print("Visiting")
         if program.isPrimaryProgram && program.hasMultiplePrograms!  {
-            let programVC = TProgramProfileVC()
+            let programVC = ProgramProfileVC()
             programVC.program = program
             navigationController?.pushViewController(programVC, animated: true)
         } else {
@@ -388,14 +388,15 @@ extension MainFeedVC: EpisodeCellDelegate {
     //MARK: Play Episode
     func playEpisode(cell: EpisodeCell) {
         activeCell = cell
+        
         if !cell.playbackBarView.playbackBarIsSetup {
             cell.playbackBarView.setupPlaybackBar()
         }
+        
         audioPlayer.yPosition = view.frame.height - self.tabBarController!.tabBar.frame.height
         
-        guard let audioIndex = tableView.indexPath(for: cell)?.row else { return }
         let image = cell.programImageButton.imageView?.image
-        let audioID = audioPlayer.audioIDs[audioIndex]
+        let audioID = cell.episode.audioID
         
         getAudioWith(audioID: audioID) { url in
             self.audioPlayer.playOrPause(episode: cell.episode, with: url, image: image!)
@@ -420,8 +421,6 @@ extension MainFeedVC: EpisodeCellDelegate {
     
     func deleteOwnEpisode() {
         guard let row = selectedCellRow else { return }
-        print("ROW \(row)")
-        // Delete own episode
         let episode = self.downloadedEpisodes[row]
         FireStorageManager.deletePublishedAudioFromStorage(audioID: episode.audioID)
         FireStoreManager.removeEpisodeIDFromProgram(programID: episode.programID, episodeID: episode.ID, time: episode.timeStamp)
@@ -435,7 +434,6 @@ extension MainFeedVC: EpisodeCellDelegate {
         episodeIDs.removeAll(where: { $0 == episode.ID })
         fetchedEpisodeIDs.removeAll(where: { $0 == episode.ID })
         downloadedEpisodes.removeAll(where: { $0.ID == episode.ID })
-        audioPlayer.audioIDs.removeAll(where: { $0 == episode.ID })
         audioPlayer.downloadedEpisodes.removeAll(where: { $0.ID == episode.ID })
         tableView.deleteRows(at: [index], with: .fade)
         
@@ -445,11 +443,10 @@ extension MainFeedVC: EpisodeCellDelegate {
         }
         
         audioPlayer.transitionOutOfView()
-        
     }
     
     func addTappedProgram(programName: String) {
-//        tappedPrograms.append(programName)
+        //
     }
     
     func updateRows() {
@@ -490,17 +487,58 @@ extension MainFeedVC: EpisodeEditorDelegate {
     
 }
 
-extension MainFeedVC: PlaybackBarDelegate {
+extension MainFeedVC: DuneAudioPlayerDelegate {
     
-    func updateProgressBarWith(percentage: CGFloat, forType: PlayBackType) {
+    func showCommentsFor(episode: Episode) {
+        pushingComment = true
+        audioPlayer.pauseSession()
+        let commentVC = CommentThreadVC(episode: episode)
+        commentVC.hidesBottomBarWhenPushed = true
+        navigationController?.pushViewController(commentVC, animated: true)
+    }
+    
+    func playedEpisode(episode: Episode) {
+        episode.hasBeenPlayed = true
+        guard let index = downloadedEpisodes.firstIndex(where: { $0.ID == episode.ID }) else { return }
+        downloadedEpisodes[index] = episode
+    }
+    
+    func updateProgressBarWith(percentage: CGFloat, forType: PlayBackType, episodeID: String) {
+        if lastPlayedID != episodeID {
+            updatePastEpisodeProgress()
+            listenCountUpdated = false
+        }
+        
+        lastPlayedID = episodeID
         guard let cell = activeCell else { return }
-        cell.playbackBarView.progressUpdateWith(percentage: percentage)
+        if percentage > 0.0 {
+            cell.playbackBarView.progressUpdateWith(percentage: percentage)
+            lastProgress = percentage
+            
+            if percentage > 0.90 && !listenCountUpdated && cell.episode.listenCount < 1000 {
+                let listenCount = Int(cell.listenCountLabel.text!)
+                if let count = listenCount {
+                    cell.listenCountLabel.text = String(count + 1)
+                    listenCountUpdated = true
+                }
+            }
+        }
     }
     
     func updateActiveCell(atIndex: Int, forType: PlayBackType) {
-        let cell = tableView.cellForRow(at: IndexPath(item: atIndex, section: 0)) as! EpisodeCell
-        cell.playbackBarView.setupPlaybackBar()
-        activeCell = cell
+        let indexPath = IndexPath(item: atIndex, section: 0)
+        if tableView.indexPathsForVisibleRows!.contains(indexPath) {
+            let cell = tableView.cellForRow(at: IndexPath(item: atIndex, section: 0)) as! EpisodeCell
+            cell.playbackBarView.setupPlaybackBar()
+            activeCell = cell
+        }
+    }
+    
+    func updatePastEpisodeProgress() {
+        guard let index = downloadedEpisodes.firstIndex(where: { $0.ID == lastPlayedID }) else { return }
+        let episode = downloadedEpisodes[index]
+        episode.playBackProgress = lastProgress
+        downloadedEpisodes[index] = episode
     }
     
 }

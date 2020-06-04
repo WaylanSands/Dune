@@ -1,14 +1,15 @@
 //
-//  BottomViewController.swift
-//  profileScroll
+//  ListenerAccountBottomVC.swift
+//  Dune
 //
-//  Created by Waylan Sands on 21/5/20.
+//  Created by Waylan Sands on 3/6/20.
 //  Copyright © 2020 Waylan Sands. All rights reserved.
 //
 
+
 import UIKit
 
-class ProgramAccountBottomVC: UIViewController {
+class ListenerAccountBottomVC: UIViewController {
     
     lazy var activeTV: UITableView = episodeTV
     lazy var vFrame = view.frame
@@ -17,6 +18,7 @@ class ProgramAccountBottomVC: UIViewController {
     var unwrapDifference: CGFloat = 0
     var scrollContentDelegate: updateProgramAccountScrollDelegate!
 
+    var pushingComment = true
     let episodeTV = UITableView()
     let subscriptionTV = ProgramSubscriptionTV()
         
@@ -27,12 +29,16 @@ class ProgramAccountBottomVC: UIViewController {
     var episodeIDs = [String]()
     var selectedCellRow: Int?
     
+    var lastProgress: CGFloat = 0
+    var lastPlayedID: String?
+    var listenCountUpdated = false
+    
     let episodeLoadingView = TVLoadingAnimationView(topHeight: 15)
     let programLoadingView = TVLoadingAnimationView(topHeight: 15)
     var downloadedEpisodes = [Episode]()
     
     let ownEpisodeSettings = SettingsLauncher(options: SettingOptions.ownEpisode, type: .ownEpisode)
-    let programSettings = SettingsLauncher(options: SettingOptions.programSettings, type: .program)
+    let programSettings = SettingsLauncher(options: SettingOptions.nonFavouriteProgramSettings, type: .program)
     
     let introPlayer = DuneIntroPlayer()
     var activeProgramCell: ProgramCell?
@@ -50,15 +56,19 @@ class ProgramAccountBottomVC: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         subscriptionTV.setScrollBarToTopLeft()
         episodeTV.setScrollBarToTopLeft()
+        setupModalCommentObserver()
         
         subscriptionTV.isHidden = true
-        programIDs = programsIDs()
-        fetchEpisodeIDsForUser()
+        pushingComment = false
+
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         subscriptionTV.downloadedPrograms.removeAll()
-        audioPlayer.finishSession()
+        removeModalCommentObserver()
+        if !pushingComment {
+            audioPlayer.finishSession()
+        }
         introPlayer.finishSession()
     }
     
@@ -66,12 +76,34 @@ class ProgramAccountBottomVC: UIViewController {
         subscriptionTV.delegate = self
         subscriptionTV.dataSource = self
         episodeTV.register(EpisodeCell.self, forCellReuseIdentifier: "episodeCell")
+        episodeTV.register(EpisodeCellRegLink.self, forCellReuseIdentifier: "episodeCellRegLink")
+        episodeTV.register(EpisodeCellSmlLink.self, forCellReuseIdentifier: "EpisodeCellSmlLink")
         ownEpisodeSettings.settingsDelegate = self
         episodeTV.dataSource = self
         episodeTV.delegate = self
-        audioPlayer.playbackDelegate = self
+        audioPlayer.audioPlayerDelegate = self
         introPlayer.playbackDelegate = self
         subscriptionTV.registerCustomCell()
+    }
+    
+    func setupModalCommentObserver() {
+        NotificationCenter.default.addObserver(self, selector: #selector(self.showCommentFromModal), name: NSNotification.Name(rawValue: "modalCommentPush"), object: nil)
+    }
+    
+    @objc func showCommentFromModal(_ notification: Notification) {
+        let episodeID = notification.userInfo?["ID"] as! String
+        let episode = downloadedEpisodes.first(where: {$0.ID == episodeID})
+        if episode != nil {
+             showCommentsFor(episode: episode!)
+        } else {
+            FireStoreManager.getEpisodeWith(episodeID: episodeID) { episode in
+                self.showCommentsFor(episode: episode)
+            }
+        }
+    }
+    
+    func removeModalCommentObserver() {
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: "modalCommentPush"), object: nil)
     }
     
     func configureViews() {
@@ -86,16 +118,6 @@ class ProgramAccountBottomVC: UIViewController {
         
         view.addSubview(audioPlayer)
         audioPlayer.frame = CGRect(x: 0, y: vFrame.height, width: vFrame.width, height: 70)
-    }
-    
-    func programsIDs() -> [String] {
-        if CurrentProgram.hasMultiplePrograms! {
-            var ids = CurrentProgram.programIDs!
-            ids.append(CurrentProgram.ID!)
-            return ids
-        } else {
-            return [CurrentProgram.ID!]
-        }
     }
     
     func resetTableView() {
@@ -210,7 +232,7 @@ class ProgramAccountBottomVC: UIViewController {
                     for each in orderedBatch {
                         self.downloadedEpisodes.append(each)
                         self.audioPlayer.downloadedEpisodes.append(each)
-                        self.audioPlayer.audioIDs.append(each.audioID)
+//                        self.audioPlayer.audioIDs.append(each.audioID)
                     }
             
                     self.fetchedEpisodeIDs += self.episodesToFetch
@@ -240,8 +262,8 @@ class ProgramAccountBottomVC: UIViewController {
             if subscriptionTV.downloadedPrograms.isEmpty {
             addProgramLoadingView()
             }
-         if User.subscriptionIDs?.count != subscriptionTV.downloadedPrograms.count - programsIDs().count {
-         subscriptionTV.fetchProgramsSubscriptions()
+         if User.subscriptionIDs?.count != subscriptionTV.downloadedPrograms.count {
+         subscriptionTV.fetchUserSubscriptions()
          }
         default:
             break
@@ -254,22 +276,22 @@ class ProgramAccountBottomVC: UIViewController {
     
     // MARK: Play Program's Intro
     @objc func playIntro() {
-        
-        introPlayer.isProgramPageIntro = true
-        if !audioPlayer.isOutOfPosition {
-            audioPlayer.finishSession()
-        }
-        
-        introPlayer.getAudioWith(audioID: CurrentProgram.introID!) { url in
-            self.introPlayer.playOrPauseWith(url: url, name: CurrentProgram.name!, image: CurrentProgram.image!)
-        }
-        print("Play intro")
+//
+//        introPlayer.isProgramPageIntro = true
+//        if !audioPlayer.isOutOfPosition {
+//            audioPlayer.finishSession()
+//        }
+//
+//        introPlayer.getAudioWith(audioID: CurrentProgram.introID!) { url in
+//            self.introPlayer.playOrPauseWith(url: url, name: CurrentProgram.name!, image: CurrentProgram.image!)
+//        }
+//        print("Play intro")
     }
 }
 
 
 // MARK: Settings Launcher
-extension ProgramAccountBottomVC: UITableViewDelegate, UITableViewDataSource {
+extension ListenerAccountBottomVC: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         switch tableView {
@@ -286,20 +308,42 @@ extension ProgramAccountBottomVC: UITableViewDelegate, UITableViewDataSource {
 
         switch tableView {
         case episodeTV:
-            let cell = tableView.dequeueReusableCell(withIdentifier: "episodeCell") as! EpisodeCell
-            cell.moreButton.addTarget(cell, action: #selector(EpisodeCell.moreUnwrap), for: .touchUpInside)
-            cell.programImageButton.addTarget(cell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
-            cell.episodeSettingsButton.addTarget(cell, action: #selector(EpisodeCell.showSettings), for: .touchUpInside)
-            cell.likeButton.addTarget(cell, action: #selector(EpisodeCell.likeButtonPress), for: .touchUpInside)
-            
+            var episodeCell: EpisodeCell
             let episode = downloadedEpisodes[indexPath.row]
-            cell.episode = episode
-            if episode.likeCount >= 10 {
-                cell.configureCellWithOptions()
+            
+            if episode.richLink == nil {
+                episodeCell = tableView.dequeueReusableCell(withIdentifier: "episodeCell") as! EpisodeCell
+            } else if episode.linkIsSmall! {
+                episodeCell = tableView.dequeueReusableCell(withIdentifier: "EpisodeCellSmlLink") as! EpisodeCellSmlLink
+            } else {
+                episodeCell = tableView.dequeueReusableCell(withIdentifier: "episodeCellRegLink") as! EpisodeCellRegLink
             }
-            cell.cellDelegate = self
-            cell.normalSetUp(episode: episode)
-            return cell
+
+            episodeCell.episode = episode
+            episodeCell.episodeSettingsButton.addTarget(episodeCell, action: #selector(EpisodeCell.showSettings), for: .touchUpInside)
+            episodeCell.programImageButton.addTarget(episodeCell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
+            episodeCell.usernameButton.addTarget(episodeCell, action: #selector(EpisodeCell.visitProfile), for: .touchUpInside)
+            episodeCell.commentButton.addTarget(episodeCell, action: #selector(EpisodeCell.showComments), for: .touchUpInside)
+            episodeCell.likeButton.addTarget(episodeCell, action: #selector(EpisodeCell.likeButtonPress), for: .touchUpInside)
+            episodeCell.moreButton.addTarget(episodeCell, action: #selector(EpisodeCell.moreUnwrap), for: .touchUpInside)
+            episodeCell.normalSetUp(episode: episode)
+            episodeCell.cellDelegate = self
+
+            if episode.likeCount >= 10 && episodeCell.optionsConfigured == false {
+                episodeCell.configureCellWithOptions()
+                episodeCell.optionsConfigured = true
+            } else if episode.likeCount < 10 && episodeCell.optionsConfigured {
+                episodeCell.configureWithoutOptions()
+                episodeCell.optionsConfigured = false
+            }
+            
+            if let playerEpisode = audioPlayer.episode  {
+                if episode.ID == playerEpisode.ID {
+                    activeEpisodeCell = episodeCell
+                }
+            }
+            return episodeCell
+            
         case subscriptionTV:
             programLoadingView.removeFromSuperview()
             let programCell = tableView.dequeueReusableCell(withIdentifier: "programCell") as! ProgramCell
@@ -348,12 +392,10 @@ extension ProgramAccountBottomVC: UITableViewDelegate, UITableViewDataSource {
 }
 
 // MARK: Settings Launcher Delegate
-extension ProgramAccountBottomVC: SettingsLauncherDelegate {
+extension ListenerAccountBottomVC: SettingsLauncherDelegate {
     
     func selectionOf(setting: String) {
         switch setting {
-        case "Delete":
-            deleteOwnEpisode()
         case "Edit":
             let episode = downloadedEpisodes[selectedCellRow!]
             let editEpisodeVC = EditPublishedEpisode(episode: episode)
@@ -363,33 +405,11 @@ extension ProgramAccountBottomVC: SettingsLauncherDelegate {
             break
         }
     }
-    
-    func deleteOwnEpisode() {
-        guard let row = self.selectedCellRow else { return }
-        print("Downloaded eps before \(downloadedEpisodes.count)")
-        let episode = downloadedEpisodes[row]
-        FireStorageManager.deletePublishedAudioFromStorage(audioID: episode.audioID)
-        FireStoreManager.removeEpisodeIDFromProgram(programID: episode.programID, episodeID: episode.ID, time: episode.timeStamp)
-        FireStoreManager.deleteEpisodeDocument(ID: episode.ID)
-        CurrentProgram.episodeIDs!.removeAll { $0["ID"] as! String == episode.ID }
-        
-        let index = IndexPath(item: row, section: 0)
-        downloadedEpisodes.remove(at: row)
-        print("Downloaded eps after \(downloadedEpisodes.count)")
-        
-        episodeTV.deleteRows(at: [index], with: .fade)
-        
-        if downloadedEpisodes.count == 0 {
-            resetTableView()
-        }
-        
-        audioPlayer.transitionOutOfView()
-        
-    }
+
 }
 
 // MARK: Episode Editor Delegate
-extension ProgramAccountBottomVC: EpisodeEditorDelegate {
+extension ListenerAccountBottomVC: EpisodeEditorDelegate {
     
     func updateCell(episode: Episode) {
         let episodeIndex = downloadedEpisodes.firstIndex(where: {$0.ID == episode.ID})
@@ -402,41 +422,87 @@ extension ProgramAccountBottomVC: EpisodeEditorDelegate {
 }
 
 // MARK: PlaybackBar Delegate
-extension ProgramAccountBottomVC: PlaybackBarDelegate {
+extension ListenerAccountBottomVC: DuneAudioPlayerDelegate {
     
-    func updateProgressBarWith(percentage: CGFloat, forType: PlayBackType) {
-        switch forType {
-        case .episode:
+    func showCommentsFor(episode: Episode) {
+        pushingComment = true
+        audioPlayer.pauseSession()
+        let commentVC = CommentThreadVC(episode: episode)
+        commentVC.hidesBottomBarWhenPushed = true
+        navigationController?.pushViewController(commentVC, animated: true)
+    }
+   
+    func playedEpisode(episode: Episode) {
+        episode.hasBeenPlayed = true
+        guard let index = downloadedEpisodes.firstIndex(where: { $0.ID == episode.ID }) else { return }
+        downloadedEpisodes[index] = episode
+    }
+    
+    func updateProgressBarWith(percentage: CGFloat, forType: PlayBackType, episodeID: String) {
+        
+        if lastPlayedID != episodeID {
+            updatePastEpisodeProgress()
+            listenCountUpdated = false
+        }
+        lastPlayedID = episodeID
+        
+        if forType == .episode {
             guard let cell = activeEpisodeCell else { return }
-            cell.playbackBarView.progressUpdateWith(percentage: percentage)
-        case .program:
+            if percentage > 0.0 {
+                cell.playbackBarView.progressUpdateWith(percentage: percentage)
+                lastProgress = percentage
+                
+                if percentage > 0.90 && !listenCountUpdated && cell.episode.listenCount < 1000 {
+                    let listenCount = Int(cell.listenCountLabel.text!)
+                    if let count = listenCount {
+                        cell.listenCountLabel.text = String(count + 1)
+                        listenCountUpdated = true
+                    }
+                }
+            }
+        } else {
             guard let cell = activeProgramCell else { return }
-            cell.playbackBarView.progressUpdateWith(percentage: percentage)
+            if percentage > 0.0 {
+                cell.playbackBarView.progressUpdateWith(percentage: percentage)
+                lastProgress = percentage
+            }
         }
     }
     
     func updateActiveCell(atIndex: Int, forType: PlayBackType) {
+        let indexPath = IndexPath(item: atIndex, section: 0)
+
         switch forType {
         case .episode:
-            let cell = episodeTV.cellForRow(at: IndexPath(item: atIndex, section: 0)) as! EpisodeCell
-            cell.playbackBarView.setupPlaybackBar()
-            activeEpisodeCell = cell
+            if episodeTV.indexPathsForVisibleRows!.contains(indexPath) {
+                let cell = episodeTV.cellForRow(at: IndexPath(item: atIndex, section: 0)) as! EpisodeCell
+                cell.playbackBarView.setupPlaybackBar()
+                activeEpisodeCell = cell
+            }
         case .program:
-            let cell = episodeTV.cellForRow(at: IndexPath(item: atIndex, section: 0)) as! ProgramCell
-            cell.playbackBarView.setupPlaybackBar()
-            activeProgramCell = cell
+            if subscriptionTV.indexPathsForVisibleRows!.contains(indexPath) {
+                let cell = subscriptionTV.cellForRow(at: IndexPath(item: atIndex, section: 0)) as! ProgramCell
+                cell.playbackBarView.setupPlaybackBar()
+                activeProgramCell = cell
+            }
         }
+    }
+    
+    func updatePastEpisodeProgress() {
+        guard let index = downloadedEpisodes.firstIndex(where: { $0.ID == lastPlayedID }) else { return }
+        let episode = downloadedEpisodes[index]
+        episode.playBackProgress = lastProgress
+        downloadedEpisodes[index] = episode
     }
     
 }
 
 // MARK: ProgramCell Delegate
-extension ProgramAccountBottomVC: ProgramCellDelegate {
+extension ListenerAccountBottomVC: ProgramCellDelegate {
     
     func visitProfile(program: Program) {
-        print("This was hit")
         if program.isPrimaryProgram && program.hasMultiplePrograms!  {
-            let programVC = TProgramProfileVC()
+            let programVC = ProgramProfileVC()
             programVC.program = program
             navigationController?.pushViewController(programVC, animated: true)
         } else {
@@ -476,7 +542,7 @@ extension ProgramAccountBottomVC: ProgramCellDelegate {
 }
 
 // MARK: EpisodeCell Delegate
-extension ProgramAccountBottomVC :EpisodeCellDelegate {
+extension ListenerAccountBottomVC :EpisodeCellDelegate {
     
     func tagSelected(tag: String) {
         let tagSelectedVC = EpisodeTagLookupVC(tag: tag)

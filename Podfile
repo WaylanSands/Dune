@@ -5,7 +5,7 @@ target 'Dune' do
   # Comment the next line if you don't want to use dynamic frameworks
   use_frameworks!
 
-  # Pods for Dune
+# Pods for Dune
 # add the Firebase pod for Google Analytics
 pod 'Firebase/Analytics'
 
@@ -16,8 +16,7 @@ pod 'Firebase/Functions'
 pod 'Firebase/Storage'
 pod 'FirebaseFirestoreSwift'
 pod 'MultiSlider'
-pod 'SwiftLinkPreview', '~> 3.1.0'
-
-# https://firebase.google.com/docs/ios/setup#available-pods
+pod 'SwiftLinkPreview'
+pod 'ActiveLabel'
 
 end

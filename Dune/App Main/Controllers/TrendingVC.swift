@@ -7,7 +7,7 @@
 //
 
 import UIKit
-import Firebase
+import FirebaseFirestore
 
 class TrendingVC: UIViewController {
     
@@ -18,9 +18,13 @@ class TrendingVC: UIViewController {
     var moreToLoad = true
     
     var audioPlayer = DuneAudioPlayer()
-
+    
     var activeCell: EpisodeCell?
     var selectedCellRow: Int?
+    
+    var lastProgress: CGFloat = 0
+    var lastPlayedID: String?
+    var listenCountUpdated = false
     
     let subscriptionSettings = SettingsLauncher(options: SettingOptions.subscriptionEpisode, type: .subscriptionEpisode)
     let ownEpisodeSettings = SettingsLauncher(options: SettingOptions.ownEpisode, type: .ownEpisode)
@@ -73,7 +77,7 @@ class TrendingVC: UIViewController {
     func configureDelegates() {
         subscriptionSettings.settingsDelegate = self
         ownEpisodeSettings.settingsDelegate = self
-        audioPlayer.playbackDelegate = self
+        audioPlayer.audioPlayerDelegate = self
         tableView.delegate = self
         tableView.dataSource = self
         tableView.register(EpisodeCell.self, forCellReuseIdentifier: "episodeCell")
@@ -154,7 +158,7 @@ class TrendingVC: UIViewController {
                     
                     self.downloadedEpisodes.append(episode)
                     self.audioPlayer.downloadedEpisodes.append(episode)
-                    self.audioPlayer.audioIDs.append(episode.audioID)
+//                    self.audioPlayer.audioIDs.append(episode.audioID)
                     
                     if counter == snapshot.count {
                         self.tableView.reloadData()
@@ -225,18 +229,29 @@ extension TrendingVC: UITableViewDelegate, UITableViewDataSource {
             episodeCell = tableView.dequeueReusableCell(withIdentifier: "episodeCellRegLink") as! EpisodeCellRegLink
         }
         
+        episodeCell.episode = episode
         episodeCell.moreButton.addTarget(episodeCell, action: #selector(EpisodeCell.moreUnwrap), for: .touchUpInside)
         episodeCell.programImageButton.addTarget(episodeCell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
         episodeCell.episodeSettingsButton.addTarget(episodeCell, action: #selector(EpisodeCell.showSettings), for: .touchUpInside)
         episodeCell.likeButton.addTarget(episodeCell, action: #selector(EpisodeCell.likeButtonPress), for: .touchUpInside)
         episodeCell.usernameButton.addTarget(episodeCell, action: #selector(EpisodeCell.visitProfile), for: .touchUpInside)
-        episodeCell.episode = episode
-        
-        if episode.likeCount >= 10 {
-            episodeCell.configureCellWithOptions()
-        }
-        episodeCell.cellDelegate = self
         episodeCell.normalSetUp(episode: episode)
+        episodeCell.cellDelegate = self
+        
+        if episode.likeCount >= 10 && episodeCell.optionsConfigured == false {
+            episodeCell.configureCellWithOptions()
+            episodeCell.optionsConfigured = true
+        } else if episode.likeCount < 10 && episodeCell.optionsConfigured {
+            episodeCell.configureWithoutOptions()
+            episodeCell.optionsConfigured = false
+        }
+        
+        if let playerEpisode = audioPlayer.episode  {
+            if episode.ID == playerEpisode.ID {
+                activeCell = episodeCell
+            }
+        }
+        
         return episodeCell
     }
     
@@ -295,15 +310,26 @@ extension TrendingVC: EpisodeEditorDelegate {
 
 extension TrendingVC: EpisodeCellDelegate {
     
+    func showCommentsFor(episode: Episode) {
+        let commentVC = CommentThreadVC(episode: episode)
+        commentVC.hidesBottomBarWhenPushed = true
+        navigationController?.pushViewController(commentVC, animated: true)
+    }
+    
+    func pushCommentsFor(episode: Episode) {
+        let commentVC = CommentThreadVC(episode: episode)
+        commentVC.hidesBottomBarWhenPushed = true
+        navigationController?.pushViewController(commentVC, animated: true)
+    }
+    
     func tagSelected(tag: String) {
         let tagSelectedVC = EpisodeTagLookupVC(tag: tag)
         navigationController?.pushViewController(tagSelectedVC, animated: true)
     }
     
     func visitProfile(program: Program) {
-        print("Visiting")
         if program.isPrimaryProgram && program.hasMultiplePrograms!  {
-            let programVC = TProgramProfileVC()
+            let programVC = ProgramProfileVC()
             programVC.program = program
             navigationController?.pushViewController(programVC, animated: true)
         } else {
@@ -324,9 +350,8 @@ extension TrendingVC: EpisodeCellDelegate {
        
         audioPlayer.yPosition = view.frame.height - self.tabBarController!.tabBar.frame.height
         
-        guard let audioIndex = tableView.indexPath(for: cell)?.row else { return }
         let image = cell.programImageButton.imageView?.image
-        let audioID = audioPlayer.audioIDs[audioIndex]
+        let audioID = cell.episode.audioID
              
          getAudioWith(audioID: audioID) { url in
              self.audioPlayer.playOrPause(episode: cell.episode, with: url, image: image!)
@@ -345,10 +370,7 @@ extension TrendingVC: EpisodeCellDelegate {
         }
 
         let index = IndexPath(item: row, section: 0)
-//        episodeIDs.removeAll(where: { $0 == episode.ID })
-//        fetchedEpisodeIDs.removeAll(where: { $0 == episode.ID })
         downloadedEpisodes.removeAll(where: { $0.ID == episode.ID })
-        audioPlayer.audioIDs.removeAll(where: { $0 == episode.ID })
         audioPlayer.downloadedEpisodes.removeAll(where: { $0.ID == episode.ID })
         tableView.deleteRows(at: [index], with: .fade)
 
@@ -370,7 +392,7 @@ extension TrendingVC: EpisodeCellDelegate {
     }
     
     func addTappedProgram(programName: String) {
-        //        tappedPrograms.append(programName)
+        // 
     }
     
     func updateRows() {
@@ -381,17 +403,50 @@ extension TrendingVC: EpisodeCellDelegate {
     }
 }
 
-extension TrendingVC: PlaybackBarDelegate {
+extension TrendingVC: DuneAudioPlayerDelegate {
    
-    func updateProgressBarWith(percentage: CGFloat, forType: PlayBackType) {
+    func playedEpisode(episode: Episode) {
+        episode.hasBeenPlayed = true
+        guard let index = downloadedEpisodes.firstIndex(where: { $0.ID == episode.ID }) else { return }
+        downloadedEpisodes[index] = episode
+    }
+   
+    func updateProgressBarWith(percentage: CGFloat, forType: PlayBackType, episodeID: String) {
+        if lastPlayedID != episodeID {
+            updatePastEpisodeProgress()
+            listenCountUpdated = false
+        }
+        
+        lastPlayedID = episodeID
         guard let cell = activeCell else { return }
-        cell.playbackBarView.progressUpdateWith(percentage: percentage)
+        if percentage > 0.0 {
+            cell.playbackBarView.progressUpdateWith(percentage: percentage)
+            lastProgress = percentage
+            
+            if percentage > 0.90 && !listenCountUpdated && cell.episode.listenCount < 1000 {
+                let listenCount = Int(cell.listenCountLabel.text!)
+                if let count = listenCount {
+                    cell.listenCountLabel.text = String(count + 1)
+                    listenCountUpdated = true
+                }
+            }
+        }
     }
     
     func updateActiveCell(atIndex: Int, forType: PlayBackType) {
-        let cell = tableView.cellForRow(at: IndexPath(item: atIndex, section: 0)) as! EpisodeCell
-        cell.playbackBarView.setupPlaybackBar()
-        activeCell = cell
+        let indexPath = IndexPath(item: atIndex, section: 0)
+        if tableView.indexPathsForVisibleRows!.contains(indexPath) {
+            let cell = tableView.cellForRow(at: IndexPath(item: atIndex, section: 0)) as! EpisodeCell
+            cell.playbackBarView.setupPlaybackBar()
+            activeCell = cell
+        }
+    }
+    
+    func updatePastEpisodeProgress() {
+        guard let index = downloadedEpisodes.firstIndex(where: { $0.ID == lastPlayedID }) else { return }
+        let episode = downloadedEpisodes[index]
+        episode.playBackProgress = lastProgress
+        downloadedEpisodes[index] = episode
     }
     
 }

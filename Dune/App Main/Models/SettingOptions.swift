@@ -77,8 +77,26 @@ class SettingOptions {
         Setting(name: "Cancel", imageName: "cancel-icon"),
     ]
     
-    static let programSettings: [Setting] = [
+    static let publisherProgramSettings: [Setting] = [
         Setting(name: "Report", imageName: nil),
+        Setting(name: "Share via...", imageName: "native-share-icon"),
+        Setting(name: "Share on Facebook", imageName: "facebook-friend-icon"),
+        Setting(name: "Share on Twitter", imageName: "twitter-friend-icon"),
+        Setting(name: "Cancel", imageName: "cancel-icon"),
+    ]
+    
+    static let nonFavouriteProgramSettings: [Setting] = [
+        Setting(name: "Report", imageName: nil),
+        Setting(name: "Favourite", imageName: nil),
+        Setting(name: "Share via...", imageName: "native-share-icon"),
+        Setting(name: "Share on Facebook", imageName: "facebook-friend-icon"),
+        Setting(name: "Share on Twitter", imageName: "twitter-friend-icon"),
+        Setting(name: "Cancel", imageName: "cancel-icon"),
+    ]
+    
+    static let favouriteProgramSettings: [Setting] = [
+        Setting(name: "Report", imageName: nil),
+        Setting(name: "Unfavourite", imageName: nil),
         Setting(name: "Share via...", imageName: "native-share-icon"),
         Setting(name: "Share on Facebook", imageName: "facebook-friend-icon"),
         Setting(name: "Share on Twitter", imageName: "twitter-friend-icon"),

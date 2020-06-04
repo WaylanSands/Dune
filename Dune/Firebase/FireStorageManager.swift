@@ -76,19 +76,20 @@ struct FireStorageManager {
 //        }
 //    }
     
-    static func storeUserImage(selectedImage: UIImage) {
+    static func storeUserImage(image: UIImage) {
         
         // If user does not have an image assign one
         if  User.imageID == nil {
             let imageID = NSUUID().uuidString
             User.imageID = imageID
         }
+        User.image = image
         
         DispatchQueue.global(qos: .userInitiated).async {
             
             let storageRef = Storage.storage().reference().child("images/\(User.imageID!)")
             
-            if let uploadData = selectedImage.jpegData(compressionQuality: 0.5) {
+            if let uploadData = image.jpegData(compressionQuality: 0.5) {
                 
                 storageRef.putData(uploadData, metadata: nil, completion: { (metadata, error) in
                     
@@ -345,7 +346,6 @@ struct FireStorageManager {
                 if error != nil {
                     print(error!)
                 } else {
-                    print("This is the url: \(url!)")
                     completion(url!)
                 }
             }
@@ -386,7 +386,6 @@ struct FireStorageManager {
                 if error != nil {
                     print(error!)
                 } else {
-                    print("This is the url: \(url!)")
                     completion(url!)
                 }
             }
@@ -415,7 +414,7 @@ struct FireStorageManager {
     }
     
     // Download image and store in cache directory
-    static func downloadProgramImage(imageID: String, completion: @escaping (UIImage) -> ()) {
+    static func downloadAccountImage(imageID: String, completion: @escaping (UIImage) -> ()) {
         
         DispatchQueue.global(qos: .userInitiated).async {
             
@@ -458,7 +457,6 @@ struct FireStorageManager {
                             if error != nil {
                                 print("Error getting image url")
                             } else {
-//                                CurrentProgram.imagePath = url!.absoluteString
                                 FireStoreManager.addImagePathToProgram(with: programID, imagePath: url!.path, imageID: ID)
                             }
                         }

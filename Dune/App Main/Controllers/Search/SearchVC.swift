@@ -7,7 +7,7 @@
 //
 
 import UIKit
-import Firebase
+import FirebaseFirestore
 
 class SearchVC: UIViewController {
     
@@ -17,6 +17,7 @@ class SearchVC: UIViewController {
         case episode
     }
     
+    let appDelegate = UIApplication.shared.delegate as! AppDelegate
     let searchController = UISearchController(searchResultsController: nil)
     let tableView = UITableView()
     var searchContentWidth: CGFloat = 0
@@ -35,10 +36,12 @@ class SearchVC: UIViewController {
     var isGoingForward = false
     
     let subscriptionSettings = SettingsLauncher(options: SettingOptions.subscriptionEpisode, type: .subscriptionEpisode)
-    let programSettings = SettingsLauncher(options: SettingOptions.programSettings, type: .program)
+    let programSettings = SettingsLauncher(options: SettingOptions.nonFavouriteProgramSettings, type: .program)
     
     let introPlayer = DuneIntroPlayer()
-    var activeProgramCell: ProgramCell?
+    var activeProgram: Program?
+    var lastPlayedID: String?
+    var lastProgress: CGFloat = 0
     
 //    lazy var tabButtons = [programButton]
     
@@ -108,12 +111,14 @@ class SearchVC: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         searchScrollView.setScrollBarToTopLeft()
         tableView.setScrollBarToTopLeft()
+        setupModalCommentObserver()
         setupSearchController()
         isGoingForward = false
         fetchTopPrograms()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
+        removeModalCommentObserver()
         introPlayer.finishSession()
         if isGoingForward {
             pillsHeightConstraint.constant = 15
@@ -121,6 +126,21 @@ class SearchVC: UIViewController {
             pillsHeightConstraint.constant = 0
         }
         searchController.isActive = false
+    }
+    
+    func setupModalCommentObserver() {
+        NotificationCenter.default.addObserver(self, selector: #selector(self.showCommentFromModal), name: NSNotification.Name(rawValue: "modalCommentPush"), object: nil)
+    }
+    
+    @objc func showCommentFromModal(_ notification: Notification) {
+        let episodeID = notification.userInfo?["ID"] as! String
+        FireStoreManager.getEpisodeWith(episodeID: episodeID) { episode in
+            self.showCommentsFor(episode: episode)
+        }
+    }
+    
+    func removeModalCommentObserver() {
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: "modalCommentPush"), object: nil)
     }
     
     func setupSearchController() {
@@ -178,7 +198,6 @@ class SearchVC: UIViewController {
       
       tableView.reloadData()
     }
-
     
     func resetTableView() {
         addLoadingView()
@@ -204,7 +223,6 @@ class SearchVC: UIViewController {
                     counter += 1
                     
                     let data = eachDocument.data()
-                    //                    let documentID = eachDocument.documentID
                     let imageID = data["imageID"] as? String
                     
                     if imageID != nil {
@@ -432,11 +450,6 @@ extension SearchVC: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let programCell = tableView.dequeueReusableCell(withIdentifier: "programCell") as! ProgramCell
-        programCell.moreButton.addTarget(programCell, action: #selector(ProgramCell.moreUnwrap), for: .touchUpInside)
-        programCell.programImageButton.addTarget(programCell, action: #selector(ProgramCell.playProgramIntro), for: .touchUpInside)
-        programCell.programSettingsButton.addTarget(programCell, action: #selector(ProgramCell.showSettings), for: .touchUpInside)
-        programCell.subscribeButton.addTarget(programCell, action: #selector(ProgramCell.subscribeButtonPress), for: .touchUpInside)
-        programCell.usernameButton.addTarget(programCell, action: #selector(ProgramCell.visitProfile), for: .touchUpInside)
         
         var program: Program
         if isFiltering {
@@ -446,8 +459,22 @@ extension SearchVC: UITableViewDelegate, UITableViewDataSource {
         }
         
         programCell.program = program
-        programCell.cellDelegate = self
+        programCell.moreButton.addTarget(programCell, action: #selector(ProgramCell.moreUnwrap), for: .touchUpInside)
+        programCell.programImageButton.addTarget(programCell, action: #selector(ProgramCell.playProgramIntro), for: .touchUpInside)
+        programCell.programSettingsButton.addTarget(programCell, action: #selector(ProgramCell.showSettings), for: .touchUpInside)
+        programCell.subscribeButton.addTarget(programCell, action: #selector(ProgramCell.subscribeButtonPress), for: .touchUpInside)
+        programCell.usernameButton.addTarget(programCell, action: #selector(ProgramCell.visitProfile), for: .touchUpInside)
         programCell.normalSetUp(program: program)
+        programCell.cellDelegate = self
+        
+        if lastPlayedID == program.ID {
+            activeProgram = program
+        }
+        
+        if program.ID == lastPlayedID {
+            programCell.playbackBarView.setProgressWith(percentage: lastProgress)
+        }
+            
         return programCell
     }
     
@@ -497,12 +524,18 @@ extension SearchVC: ProgramCellDelegate {
         if User.isPublisher! && CurrentProgram.programsIDs().contains(program.ID) {
             let tabBar = MainTabController()
             tabBar.selectedIndex = 4
-            let appDelegate = UIApplication.shared.delegate as! AppDelegate
-            appDelegate.window?.rootViewController = tabBar
+                        
+            if #available(iOS 13.0, *) {
+                let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
+                 sceneDelegate.window?.rootViewController = tabBar
+            } else {
+                 appDelegate.window?.rootViewController = tabBar
+            }
+            
         } else {
             isGoingForward = true
             if program.isPrimaryProgram && program.hasMultiplePrograms!  {
-                let programVC = TProgramProfileVC()
+                let programVC = ProgramProfileVC()
                 programVC.program = program
                 navigationController?.pushViewController(programVC, animated: true)
             } else {
@@ -514,7 +547,15 @@ extension SearchVC: ProgramCellDelegate {
     
     func playProgramIntro(cell: ProgramCell) {
         introPlayer.isProgramPageIntro = false
-        activeProgramCell = cell
+        activeProgram = cell.program
+        
+        cell.program.hasBeenPlayed = true
+        guard let index = downloadedPrograms.firstIndex(where: { $0.ID == cell.program.ID }) else { return }
+        downloadedPrograms[index] = cell.program
+        
+        if cell.program.ID != lastPlayedID {
+            updatePastEpisodeProgress()
+        }
 
         let programIntro = cell.program.introID!
         let programImage = cell.program.image!
@@ -524,7 +565,8 @@ extension SearchVC: ProgramCellDelegate {
         print("Screen height \(view.frame.height)")
         
         introPlayer.yPosition = view.frame.height - tabBarController!.tabBar.frame.height - introPlayer.frame.height
-        
+        introPlayer.program = cell.program
+
         introPlayer.getAudioWith(audioID: programIntro) { url in
             self.introPlayer.playOrPauseWith(url: url, name: programName, image: programImage)
         }
@@ -547,17 +589,44 @@ extension SearchVC: ProgramCellDelegate {
     }
 }
 
-extension SearchVC: PlaybackBarDelegate {
-   
-    func updateProgressBarWith(percentage: CGFloat, forType: PlayBackType) {
-        guard let cell = activeProgramCell else { return }
-        cell.playbackBarView.progressUpdateWith(percentage: percentage)
+extension SearchVC: DuneAudioPlayerDelegate {
+    
+    func showCommentsFor(episode: Episode) {
+        let commentVC = CommentThreadVC(episode: episode)
+        commentVC.hidesBottomBarWhenPushed = true
+        navigationController?.pushViewController(commentVC, animated: true)
+    }
+    
+    func playedEpisode(episode: Episode) {
+        //
+    }
+    
+    func updateProgressBarWith(percentage: CGFloat, forType: PlayBackType, episodeID: String) {
+        if lastPlayedID != episodeID {
+            updatePastEpisodeProgress()
+        }
+        
+        lastPlayedID = episodeID
+        guard let index = downloadedPrograms.firstIndex(where: {$0.ID == episodeID }) else { return }
+        let indexPath = IndexPath(item: index, section: 0)
+        if tableView.indexPathsForVisibleRows!.contains(indexPath) {
+            let cell = tableView.cellForRow(at: indexPath) as! ProgramCell
+            if percentage > 0.0 {
+                cell.playbackBarView.progressUpdateWith(percentage: percentage)
+                lastProgress = percentage
+            }
+        }
     }
     
     func updateActiveCell(atIndex: Int, forType: PlayBackType) {
-        let cell = tableView.cellForRow(at: IndexPath(item: atIndex, section: 0)) as! ProgramCell
-        cell.playbackBarView.setupPlaybackBar()
-        activeProgramCell = cell
+        //
+    }
+    
+    func updatePastEpisodeProgress() {
+        guard let index = downloadedPrograms.firstIndex(where: { $0.ID == lastPlayedID }) else { return }
+        let program = downloadedPrograms[index]
+        program.playBackProgress = lastProgress
+        downloadedPrograms[index] = program
     }
 }
 
@@ -566,19 +635,17 @@ extension SearchVC: UISearchResultsUpdating {
     func updateSearchResults(for searchController: UISearchController) {
         let searchBar = searchController.searchBar
         self.filterContentForSearchText(searchBar.text!)
-        
-//        if isFiltering && !isSearchBarEmpty {
-//            searchButtons.isHidden = false
-//            searchScrollView.isHidden = true
-//        }
+        tableView.setScrollBarToTopLeft()
 
         FireStoreManager.searchForProgramStartingWith(string: searchBar.text!) { results in
 
             if results.count != 0 {
                 for each in results {
                     let data = each.data()
+                    let imageID = data["imageID"] as? String
                     let program = Program(data: data)
-                    if !self.downloadedPrograms.contains(where: { $0.ID == program.ID }) {
+                        
+                    if !self.downloadedPrograms.contains(where: { $0.ID == program.ID }) && imageID != nil {
                          self.downloadedPrograms.append(program)
                     }
                 }

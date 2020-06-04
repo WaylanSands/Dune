@@ -7,9 +7,8 @@
 //
 
 import UIKit
-import Firebase
+import FirebaseFirestore
 import LinkPresentation
-
 
 class Episode {
     
@@ -34,6 +33,10 @@ class Episode {
     var listenCount: Int
     var programID: String
     var ownerID: String
+    var hasBeenPlayed = false
+    var playBackProgress: CGFloat = 0
+    var commentsRef: CollectionReference?
+    
 
     init(data: [String: Any]) {
          ID = data["ID"] as! String
@@ -61,6 +64,7 @@ class Episode {
         tags = data["tags"] as! [String]?
         programID = data["programID"] as! String
         ownerID = data["ownerID"] as! String
+        commentsRef = data["commentsRef"] as? CollectionReference
     }
 }
 

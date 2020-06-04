@@ -19,13 +19,18 @@ class ProgramProfileBottomVC: UIViewController {
     
     let episodeTV = UITableView()
     let program: Program!
-    
+   
+    var pushingComment = false
     var batchLimit = 10
     var programIDs = [String]()
     var fetchedEpisodeIDs = [String]()
     var episodesToFetch = [String]()
     var episodeIDs = [String]()
     var selectedCellRow: Int?
+    
+    var lastProgress: CGFloat = 0
+    var lastPlayedID: String?
+    var listenCountUpdated = false
     
     let episodeLoadingView = TVLoadingAnimationView(topHeight: 15)
     var downloadedEpisodes = [Episode]()
@@ -55,12 +60,17 @@ class ProgramProfileBottomVC: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         episodeTV.setScrollBarToTopLeft()
+        setupModalCommentObserver()
         programIDs = programsIDs()
         fetchEpisodeIDsForUser()
+        pushingComment = false
     }
     
     override func viewWillDisappear(_ animated: Bool) {
-        audioPlayer.finishSession()
+         removeModalCommentObserver()
+        if !pushingComment {
+           audioPlayer.finishSession()
+        }
     }
     
     func configureDelegates() {
@@ -70,7 +80,27 @@ class ProgramProfileBottomVC: UIViewController {
         subscriptionSettings.settingsDelegate = self
         episodeTV.dataSource = self
         episodeTV.delegate = self
-        audioPlayer.playbackDelegate = self
+        audioPlayer.audioPlayerDelegate = self
+    }
+    
+    func setupModalCommentObserver() {
+        NotificationCenter.default.addObserver(self, selector: #selector(self.showCommentFromModal), name: NSNotification.Name(rawValue: "modalCommentPush"), object: nil)
+    }
+    
+    @objc func showCommentFromModal(_ notification: Notification) {
+        let episodeID = notification.userInfo?["ID"] as! String
+        let episode = downloadedEpisodes.first(where: {$0.ID == episodeID})
+        if episode != nil {
+             showCommentsFor(episode: episode!)
+        } else {
+            FireStoreManager.getEpisodeWith(episodeID: episodeID) { episode in
+                self.showCommentsFor(episode: episode)
+            }
+        }
+    }
+    
+    func removeModalCommentObserver() {
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: "modalCommentPush"), object: nil)
     }
     
     func configureViews() {
@@ -193,7 +223,7 @@ class ProgramProfileBottomVC: UIViewController {
                     for each in orderedBatch {
                         self.downloadedEpisodes.append(each)
                         self.audioPlayer.downloadedEpisodes.append(each)
-                        self.audioPlayer.audioIDs.append(each.audioID)
+//                        self.audioPlayer.audioIDs.append(each.audioID)
                     }
                     
                     self.fetchedEpisodeIDs += self.episodesToFetch
@@ -240,18 +270,30 @@ extension ProgramProfileBottomVC: UITableViewDelegate, UITableViewDataSource {
             episodeCell = tableView.dequeueReusableCell(withIdentifier: "episodeCellRegLink") as! EpisodeCellRegLink
         }
         
-        episodeCell.moreButton.addTarget(episodeCell, action: #selector(EpisodeCell.moreUnwrap), for: .touchUpInside)
-        episodeCell.programImageButton.addTarget(episodeCell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
-        episodeCell.episodeSettingsButton.addTarget(episodeCell, action: #selector(EpisodeCell.showSettings), for: .touchUpInside)
-        episodeCell.likeButton.addTarget(episodeCell, action: #selector(EpisodeCell.likeButtonPress), for: .touchUpInside)
-        episodeCell.usernameButton.addTarget(episodeCell, action: #selector(EpisodeCell.visitProfile), for: .touchUpInside)
         episodeCell.episode = episode
-        
-        if episode.likeCount >= 10 {
-            episodeCell.configureCellWithOptions()
-        }
-        episodeCell.cellDelegate = self
+        episodeCell.episodeSettingsButton.addTarget(episodeCell, action: #selector(EpisodeCell.showSettings), for: .touchUpInside)
+        episodeCell.programImageButton.addTarget(episodeCell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
+        episodeCell.usernameButton.addTarget(episodeCell, action: #selector(EpisodeCell.visitProfile), for: .touchUpInside)
+        episodeCell.commentButton.addTarget(episodeCell, action: #selector(EpisodeCell.showComments), for: .touchUpInside)
+        episodeCell.likeButton.addTarget(episodeCell, action: #selector(EpisodeCell.likeButtonPress), for: .touchUpInside)
+        episodeCell.moreButton.addTarget(episodeCell, action: #selector(EpisodeCell.moreUnwrap), for: .touchUpInside)
         episodeCell.normalSetUp(episode: episode)
+        episodeCell.cellDelegate = self
+        
+        if episode.likeCount >= 10 && episodeCell.optionsConfigured == false {
+            episodeCell.configureCellWithOptions()
+            episodeCell.optionsConfigured = true
+        } else if episode.likeCount < 10 && episodeCell.optionsConfigured {
+            episodeCell.configureWithoutOptions()
+            episodeCell.optionsConfigured = false
+        }
+        
+        if let playerEpisode = audioPlayer.episode  {
+            if episode.ID == playerEpisode.ID {
+                activeCell = episodeCell
+            }
+        }
+        
         return episodeCell
     }
     
@@ -304,17 +346,60 @@ extension ProgramProfileBottomVC: EpisodeEditorDelegate {
 }
 
 // MARK: PlaybackBar Delegate
-extension ProgramProfileBottomVC: PlaybackBarDelegate {
+extension ProgramProfileBottomVC: DuneAudioPlayerDelegate {
+    
+    func showCommentsFor(episode: Episode) {
+        pushingComment = true
+        audioPlayer.pauseSession()
+        let commentVC = CommentThreadVC(episode: episode)
+        commentVC.hidesBottomBarWhenPushed = true
+        navigationController?.pushViewController(commentVC, animated: true)
+    }
+ 
+    func playedEpisode(episode: Episode) {
+        episode.hasBeenPlayed = true
+        guard let index = downloadedEpisodes.firstIndex(where: { $0.ID == episode.ID }) else { return }
+        downloadedEpisodes[index] = episode
+    }
+    
    
-    func updateProgressBarWith(percentage: CGFloat, forType: PlayBackType) {
+    func updateProgressBarWith(percentage: CGFloat, forType: PlayBackType, episodeID: String) {
+        
+        if lastPlayedID != episodeID {
+            updatePastEpisodeProgress()
+            listenCountUpdated = false
+        }
+        
+        lastPlayedID = episodeID
         guard let cell = activeCell else { return }
-        cell.playbackBarView.progressUpdateWith(percentage: percentage)
+        if percentage > 0.0 {
+            cell.playbackBarView.progressUpdateWith(percentage: percentage)
+            lastProgress = percentage
+            
+            if percentage > 0.90 && !listenCountUpdated && cell.episode.listenCount < 1000 {
+                let listenCount = Int(cell.listenCountLabel.text!)
+                if let count = listenCount {
+                    cell.listenCountLabel.text = String(count + 1)
+                    listenCountUpdated = true
+                }
+            }
+        }
     }
     
     func updateActiveCell(atIndex: Int, forType: PlayBackType) {
-        let cell = episodeTV.cellForRow(at: IndexPath(item: atIndex, section: 0)) as! EpisodeCell
-        cell.playbackBarView.setupPlaybackBar()
-        activeCell = cell
+        let indexPath = IndexPath(item: atIndex, section: 0)
+        if episodeTV.indexPathsForVisibleRows!.contains(indexPath) {
+            let cell = episodeTV.cellForRow(at: IndexPath(item: atIndex, section: 0)) as! EpisodeCell
+            cell.playbackBarView.setupPlaybackBar()
+            activeCell = cell
+        }
+    }
+    
+    func updatePastEpisodeProgress() {
+        guard let index = downloadedEpisodes.firstIndex(where: { $0.ID == lastPlayedID }) else { return }
+        let episode = downloadedEpisodes[index]
+        episode.playBackProgress = lastProgress
+        downloadedEpisodes[index] = episode
     }
 }
 

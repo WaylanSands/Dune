@@ -184,13 +184,6 @@ class ProgramCell: UITableViewCell {
     // MARK: Setup Cell
     func normalSetUp(program: Program) {
         
-        if program.hasIntro {
-            playbackBarView.setupPlaybackBar()
-            playbackBarView.isHidden = false
-        } else {
-            playbackBarView.isHidden = true
-        }
-        
         FileManager.getImageWith(imageID: program.imageID!) { image in
             DispatchQueue.main.async {
                 self.programImageButton.setImage(image, for: .normal)
@@ -218,6 +211,7 @@ class ProgramCell: UITableViewCell {
         programTags = program.tags
         
         configureStats()
+        setupProgressBar()
         createTagButtons()
         
         DispatchQueue.main.async {
@@ -226,6 +220,19 @@ class ProgramCell: UITableViewCell {
                 self.addMoreButton()
             }
         }
+    }
+    
+    func setupProgressBar() {
+        if program.hasIntro {
+            playbackBarView.isHidden = false
+            playbackBarView.setupPlaybackBar()
+            if program.hasBeenPlayed {
+                playbackBarView.setProgressWith(percentage: program.playBackProgress)
+                print(program.playBackProgress)
+            }
+         } else {
+             playbackBarView.isHidden = true
+         }
     }
     
     func configureStats() {
@@ -465,6 +472,7 @@ class ProgramCell: UITableViewCell {
         if User.subscriptionIDs!.contains(program.ID) {
             setupSubscribeButton()
             User.subscriptionIDs?.removeAll(where: { $0 == program.ID })
+            FireStoreManager.removeFavouriteWith(programID: program.ID)
             FireStoreManager.updateProgramWithUnSubscribe(programID: program.ID)
             FireStoreManager.unsubscribeFromProgramWith(programID: program.ID)
         } else {
@@ -472,6 +480,9 @@ class ProgramCell: UITableViewCell {
             User.subscriptionIDs?.append(program.ID)
             FireStoreManager.updateProgramWithSubscription(programID: program.ID)
             FireStoreManager.subscribeUserToProgramWith(programID: program.ID)
+            if User.favouriteIDs!.count < 10 {
+                FireStoreManager.addFavouriteWith(programID: program.ID)
+            }
         }
     }
     

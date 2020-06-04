@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import Firebase
+import FirebaseFirestore
 
 
 extension FireStoreManager {
@@ -99,9 +99,13 @@ extension FireStoreManager {
     // Fetch first batch of program's episodes ordered by date
     static func fetchEpisodesIDsWith(with programIDs: [String], completion: @escaping ([String]) -> ()) {
         print("Fetching episodes")
-        var counter = 0
         var programSnapshots = [DocumentSnapshot]()
+        var counter = 0
         
+        if programIDs.count == 0 {
+            completion([])
+        }
+
         for eachID in programIDs {
             
             counter += 1
@@ -231,6 +235,23 @@ extension FireStoreManager {
                     print("Error updating programs's web link: \(error.localizedDescription)")
                 } else {
                     print("Successfully updated program's web link")
+                }
+            }
+        }
+    }
+    
+    static func updateUsersWeblinkWith(urlString: String) {
+        DispatchQueue.global(qos: .userInitiated).async {
+            
+            let userRef = db.collection("users").document(User.ID!)
+            
+            userRef.updateData([
+                "webLink" : urlString
+            ]) { (error) in
+                if let error = error {
+                    print("Error updating user's web link: \(error.localizedDescription)")
+                } else {
+                    print("Success updating user's web link")
                 }
             }
         }

@@ -39,6 +39,7 @@ class ProgramNameVC: UIViewController {
         button.isEnabled = true
         button.backgroundColor = CustomStyle.primaryBlue
         button.setTitle("Continue", for: .normal)
+        button.setTitleColor(UIColor.white.withAlphaComponent(0.4), for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16.0, weight: .semibold)
         button.addTarget(self, action: #selector(continueButtonPress), for: .touchUpInside)
         button.isEnabled = false
@@ -54,6 +55,7 @@ class ProgramNameVC: UIViewController {
         styleForScreens()
         configureViews()
         styleTextField(textField: nameTextField, placeholder: "")
+        nameTextField.text = User.displayName ?? ""
         nameTextField.addTarget(self, action: #selector(textFieldDidChange(_:)), for: UIControl.Event.editingChanged)
         setHeadline()
         setupKeyboardTracking()
@@ -62,10 +64,11 @@ class ProgramNameVC: UIViewController {
     
     override func viewDidAppear(_ animated: Bool) {
         nameTextField.becomeFirstResponder()
-
+        checkIfOkToContinue()
     }
     
     func configureNavBar() {
+        navigationController?.isNavigationBarHidden = true
         view.addSubview(customNavBar)
         customNavBar.pinNavBarTo(view)
     }
@@ -151,9 +154,8 @@ class ProgramNameVC: UIViewController {
             guard let uid = Auth.auth().currentUser?.uid else { return }
             
             User.ID = uid
-            User.programID = programID
-            CurrentProgram.ID = programID
-            User.subscriptionIDs!.append(programID)
+            User.programID = CurrentProgram.ID ?? programID
+            CurrentProgram.ID = CurrentProgram.ID ?? programID
             CurrentProgram.isPrimaryProgram = true
             CurrentProgram.episodeIDs = [[String:Any]]()
             CurrentProgram.subscriberCount = 0
@@ -161,6 +163,19 @@ class ProgramNameVC: UIViewController {
             CurrentProgram.hasIntro = false
             CurrentProgram.hasMultiplePrograms = false
             CurrentProgram.subscriberIDs = [String]()
+            
+            if !User.isPublisher! {
+                User.programID = User.ID
+                CurrentProgram.ID =  User.ID
+                CurrentProgram.subscriberCount = User.subscriberCount
+                CurrentProgram.subscriberIDs = User.subscriberIDs
+            }
+            
+            if User.subscriptionIDs!.count == 0 {
+                User.subscriptionIDs! = [CurrentProgram.ID ?? programID]
+            } else {
+                User.subscriptionIDs!.append(User.ID!)
+            }
             
             let db = Firestore.firestore()
             let userRef = db.collection("users").document(User.ID!)
@@ -182,6 +197,8 @@ class ProgramNameVC: UIViewController {
                         "ownerID" : User.ID!,
                         "username" : User.username!,
                         "isPrimaryProgram" : true,
+                        "summary": CurrentProgram.summary ?? "",
+                        "tags": [],
                         "episodeIDs" : [],
                         "subscriberCount" : 0,
                         "hasIntro" : false,
@@ -206,8 +223,26 @@ class ProgramNameVC: UIViewController {
     }
     
     func presentNextVC() {
-        if let imageController = UIStoryboard(name: "OnboardingPublisher", bundle: nil).instantiateViewController(withIdentifier: "ImageController") as? publisherImageVC {
-            navigationController?.pushViewController(imageController, animated: true)
+        
+        if CurrentProgram.image != nil {
+            if let categoriesController = UIStoryboard(name: "OnboardingPublisher", bundle: nil).instantiateViewController(withIdentifier: "categoriesController") as? publisherCategoriesVC {
+                navigationController?.pushViewController(categoriesController, animated: true)
+            }
+        } else {
+            if let imageController = UIStoryboard(name: "OnboardingPublisher", bundle: nil).instantiateViewController(withIdentifier: "ImageController") as? publisherImageVC {
+                navigationController?.pushViewController(imageController, animated: true)
+            }
+        }
+    }
+    
+    func checkIfOkToContinue() {
+       
+        if !nameTextField.text!.isEmpty {
+            continueButton.isEnabled = true
+            continueButton.setTitleColor(UIColor.white, for: .normal)
+        } else {
+            continueButton.isEnabled = false
+            continueButton.setTitleColor(UIColor.white.withAlphaComponent(0.4), for: .normal)
         }
     }
     
@@ -216,11 +251,7 @@ class ProgramNameVC: UIViewController {
 extension ProgramNameVC: UITextFieldDelegate {
    
     @objc func textFieldDidChange(_ textField: UITextField) {
-        if textField.text?.isEmpty == false {
-            continueButton.isEnabled = true
-        } else {
-            continueButton.isEnabled = false
-        }
+       checkIfOkToContinue()
     }
     
     @objc func keyboardWillChange(notification : Notification) {

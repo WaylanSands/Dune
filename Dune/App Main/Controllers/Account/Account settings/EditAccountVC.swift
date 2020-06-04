@@ -607,7 +607,7 @@ extension EditAccountVC: UIImagePickerControllerDelegate, UINavigationController
             if User.isPublisher! {
                   FileManager.storeSelectedProgramImage(image: selectedImage, imageID: CurrentProgram.imageID, programID: CurrentProgram.ID!)
             } else {
-                FireStorageManager.storeUserImage(selectedImage: selectedImage)
+                FireStorageManager.storeUserImage(image: selectedImage)
             }
             dismiss(animated: true, completion: nil)
         }

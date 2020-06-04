@@ -9,9 +9,7 @@
 import Foundation
 
 import Foundation
-import Firebase
-
-
+import FirebaseFirestore
 
 extension FireStoreManager {
     
@@ -92,6 +90,66 @@ extension FireStoreManager {
                     }
                 }
             }
+        }
+    }
+    
+    static func fetchFavouriteProgramsWithIDs(programIDs: [String], for listener: Listener?, completion: @escaping () ->()) {
+         
+         DispatchQueue.global(qos: .userInitiated).async {
+             
+             var programCount = 0
+             let programsRef = db.collection("programs").whereField("ID", in: programIDs)
+             
+             programsRef.getDocuments { snapshot, error in
+                 
+                 if error != nil {
+                     print("Error fetching batch of programs: \(error!)")
+                 } else if snapshot?.count == 0 {
+                     print("There are no programs to fetch")
+                 } else {
+                     guard let data = snapshot?.documents else { return }
+                    
+                    if listener == nil {
+                        User.favouritePrograms = [Program]()
+                    } else {
+                        listener?.favouritePrograms = [Program]()
+                    }
+                     
+                     for each in data {
+                         programCount += 1
+                         let programData = each.data()
+                         let loadedProgram = Program(data: programData)
+                        
+                        if listener == nil {
+                            User.favouritePrograms!.append(loadedProgram)
+                        } else {
+                            listener!.favouritePrograms!.append(loadedProgram)
+                        }
+                         
+                         if programCount == snapshot?.count {
+                             completion()
+                         }
+                     }
+                 }
+             }
+         }
+     }
+    
+    static func appendFavouriteProgramsWith(programIDs: String) {
+        
+        DispatchQueue.global(qos: .userInitiated).async {
+            
+            let programRef = db.collection("programs").document(programIDs)
+            
+            programRef.getDocument(completion: { snapshot, error in
+                if error != nil {
+                    print("Error appending favourite programs: \(error!)")
+                } else {
+                    guard let data = snapshot!.data() else { return }
+                    print("Success appending favourite")
+                    User.favouritePrograms?.append(Program(data: data))
+                }
+            })
         }
     }
     
@@ -180,7 +238,7 @@ extension FireStoreManager {
     static func unsubscribeFromProgramWith(programID: String) {
         
         let userRef = db.collection("users").document(User.ID!)
-                
+        
         userRef.updateData([
             "subscriptionIDs" : FieldValue.arrayRemove([programID])
         ]) { error in
@@ -246,13 +304,52 @@ extension FireStoreManager {
                 guard let shots = snapshot?.documents else { return }
                 completion(shots)
                 
-//                for each in shots! {
-//                    let data = each.data()
-//                    let name = data["name"]
-//                    print("The name is \(name!)")
-//                }
             }
         }
     }
+    
+    static func addFavouriteWith(programID: String) {
+        
+        let userRef = db.collection("users").document(User.ID!)
+        User.favouriteIDs?.append(programID)
+        
+        DispatchQueue.global(qos: .userInitiated).async {
+            userRef.updateData([
+                "favouriteIDs" : FieldValue.arrayUnion([programID])
+            ]) { error in
+                if error != nil {
+                    print("Error adding favouriteID")
+                } else {
+                    print("Success adding favouriteID")
+                    appendFavouriteProgramsWith(programIDs: programID)
+                    NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateFavourites"), object: nil)
+                }
+            }
+        }
+    }
+    
+    static func removeFavouriteWith(programID: String) {
+        
+        if User.favouriteIDs != nil && User.favouriteIDs!.contains(programID) {
+            
+            User.favouriteIDs?.removeAll(where: { $0 == programID })
+            User.favouritePrograms?.removeAll(where: { $0.ID == programID })
+            let userRef = db.collection("users").document(User.ID!)
+            
+            DispatchQueue.global(qos: .userInitiated).async {
+                userRef.updateData([
+                    "favouriteIDs" : FieldValue.arrayRemove([programID])
+                ]) { error in
+                    if error != nil {
+                        print("Error removing favouriteID")
+                    } else {
+                        print("Success removing favouriteID")
+                        NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateFavourites"), object: nil)
+                    }
+                }
+            }
+        }
+    }
+    
     
 }

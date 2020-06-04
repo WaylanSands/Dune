@@ -32,7 +32,6 @@ class EditProgramVC: UIViewController {
         let view = UIScrollView()
         view.showsVerticalScrollIndicator = false
         view.contentInsetAdjustmentBehavior = .never
-        
         return view
     }()
     

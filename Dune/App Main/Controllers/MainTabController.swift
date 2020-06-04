@@ -18,7 +18,6 @@ class MainTabController: UITabBarController {
     
     func setupTabBar() {
         
-//        let isPublisher = UserDefaults.standard.bool(forKey: "isPublisher")
         var accountController: UINavigationController
         
         let mainFeedController = UINavigationController(rootViewController: MainFeedVC())
@@ -27,10 +26,9 @@ class MainTabController: UITabBarController {
         let playlistController = UINavigationController(rootViewController: TrendingVC())
        
         if User.isPublisher! {
-            accountController = UINavigationController(rootViewController: TProgramAccountVC())
+            accountController = UINavigationController(rootViewController: ProgramAccountVC())
         } else {
-            accountController = UINavigationController(rootViewController: AccountVC())
-
+            accountController = UINavigationController(rootViewController: ListenerAccountVC())
         }
         
         mainFeedController.tabBarItem.image = UIImage(imageLiteralResourceName: "feed-icon")

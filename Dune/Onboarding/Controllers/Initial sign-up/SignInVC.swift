@@ -7,8 +7,10 @@
 //
 
 import UIKit
+import CryptoKit
 import FirebaseAuth
 import FirebaseFirestore
+import AuthenticationServices
 
 class SignInVC: UIViewController, UITextFieldDelegate {
     
@@ -18,8 +20,23 @@ class SignInVC: UIViewController, UITextFieldDelegate {
     @IBOutlet weak var passwordTextField: UITextField!
     @IBOutlet weak var forgotPasswordLabel: UILabel!
     @IBOutlet weak var clickHereLabel: UIButton!
-    @IBOutlet weak var textFieldsTopAnchor: NSLayoutConstraint!
-    @IBOutlet weak var forgotPasswordTopAnchor: NSLayoutConstraint!
+    @IBOutlet weak var emailLabelTopAnchor: NSLayoutConstraint!
+    @IBOutlet weak var socialSignInYConstraint: NSLayoutConstraint!
+    
+    var provider = OAuthProvider(providerID: "twitter.com")
+    let networkingIndicator = NetworkingProgress()
+    var twitterAuthResult: AuthDataResult?
+    
+    var socialSignup: Bool = false {
+        didSet {
+            if socialSignup == false {
+                networkingIndicator.removeFromSuperview()
+            }
+        }
+    }
+    
+    // Unhashed nonce.
+    fileprivate var currentNonce: String?
     
     let customNavBar = CustomNavBar()
     let device = UIDevice()
@@ -31,6 +48,8 @@ class SignInVC: UIViewController, UITextFieldDelegate {
     let wrongPasswordAlert = CustomAlertView(alertType: .wrongPassword)
     let noUserAlert = CustomAlertView(alertType: .noUserFound)
     let invalidEmailAlert = CustomAlertView(alertType: .invalidEmail)
+    let socialAccountNotFoundAlert = CustomAlertView(alertType: .socialAccountNotFound)
+    let featureUnavailableAlert = CustomAlertView(alertType: .iOS13Needed)
     
     let appDelegate = UIApplication.shared.delegate as! AppDelegate
     var rootVC : UIViewController?
@@ -75,8 +94,22 @@ class SignInVC: UIViewController, UITextFieldDelegate {
     }
     
     override func viewDidAppear(_ animated: Bool) {
-        emailTextField.keyboardType = .emailAddress
-        emailTextField.becomeFirstResponder()
+      
+        if socialSignup {
+            print("Adding indicator")
+            self.networkingIndicator.taskLabel.text = "Signing in using Twitter"
+            UIApplication.shared.keyWindow!.addSubview(self.networkingIndicator)
+            self.signInButton.isHidden = true
+        } else {
+            emailTextField.becomeFirstResponder()
+            emailTextField.keyboardType = .emailAddress
+        }
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        networkingIndicator.removeFromSuperview()
+        passwordTextField.resignFirstResponder()
+        emailTextField.resignFirstResponder()
     }
     
     deinit {
@@ -91,12 +124,13 @@ class SignInVC: UIViewController, UITextFieldDelegate {
         guard let keyboardRect = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue else {
             return
         }
-        signInButton.frame.origin.y = view.frame.height - keyboardRect.height - 50
+        signInButton.frame.origin.y = view.frame.height - keyboardRect.height - 45
     }
     
     func configureDelegates() {
         emailTextField.delegate = self
         passwordTextField.delegate = self
+        socialAccountNotFoundAlert.alertDelegate = self
     }
     
     func configureViews() {
@@ -117,7 +151,7 @@ class SignInVC: UIViewController, UITextFieldDelegate {
         signInButton.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
         signInButton.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         signInButton.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        signInButton.heightAnchor.constraint(equalToConstant: 50.0).isActive = true
+        signInButton.heightAnchor.constraint(equalToConstant: 45.0).isActive = true
         
         view.addSubview(customNavBar)
         customNavBar.bringSubviewToFront(customNavBar)
@@ -145,27 +179,25 @@ class SignInVC: UIViewController, UITextFieldDelegate {
         case .iPhone4S:
             break
         case .iPhoneSE:
-            textFieldsTopAnchor.constant = 50
+            emailLabelTopAnchor.constant = 50
             emailLabel.font = UIFont.systemFont(ofSize: 20.0, weight: .semibold)
             passwordLabel.font = UIFont.systemFont(ofSize: 20.0, weight: .semibold)
         case .iPhone8:
-            textFieldsTopAnchor.constant = 80
+            emailLabelTopAnchor.constant = 80
         case .iPhone8Plus:
             break
         case .iPhone11:
-            textFieldsTopAnchor.constant = 140
+            emailLabelTopAnchor.constant = 140
         case .iPhone11Pro:
-            break
+            emailLabelTopAnchor.constant = 90
         case .iPhone11ProMax:
-            textFieldsTopAnchor.constant = 140
+            emailLabelTopAnchor.constant = 140
         case .unknown:
             break
         }
     }
     
     @objc func backButtonPress() {
-        emailTextField.resignFirstResponder()
-        passwordTextField.resignFirstResponder()
         navigationController?.popViewController(animated: true)
     }
     
@@ -230,6 +262,9 @@ class SignInVC: UIViewController, UITextFieldDelegate {
             if error != nil {
                 print("There was an error getting users document: \(error!)")
             } else {
+                
+                if snapshot!.exists {
+                
                 UserDefaults.standard.set(true, forKey: "loggedIn")
                 guard let data = snapshot?.data() else { return }
                 User.modelUser(data: data)
@@ -253,6 +288,10 @@ class SignInVC: UIViewController, UITextFieldDelegate {
                         self.sendToAccountType()
                     }
                 }
+                } else {
+                    UIApplication.shared.keyWindow!.addSubview(self.socialAccountNotFoundAlert)
+                    self.signInButton.isHidden = false
+                }
             }
         }
     }
@@ -261,12 +300,23 @@ class SignInVC: UIViewController, UITextFieldDelegate {
         rootVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "accountTypeController") as! AccountTypeVC
         let navController = UINavigationController()
         navController.viewControllers = [rootVC!]
-        appDelegate.window?.rootViewController = navController
+        
+        if #available(iOS 13.0, *) {
+            let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
+             sceneDelegate.window?.rootViewController = navController
+        } else {
+             appDelegate.window?.rootViewController = navController
+        }
     }
     
     func sendToMainFeed() {
         rootVC = MainTabController()
-        appDelegate.window?.rootViewController = rootVC
+        if #available(iOS 13.0, *) {
+            let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
+             sceneDelegate.window?.rootViewController = rootVC
+        } else {
+             appDelegate.window?.rootViewController = rootVC
+        }
     }
     
     func resignTextBoard() {
@@ -284,6 +334,184 @@ class SignInVC: UIViewController, UITextFieldDelegate {
         }
     }
     
+    @IBAction func useTwitterPress() {
+         self.socialSignup = true
+        
+        provider.getCredentialWith(nil) { credential, error in
+            if error != nil {
+                print("Error attempting to sign in using Twitter: \(error!.localizedDescription)")
+                self.socialSignup = false
+            } else {
+                Auth.auth().signIn (with: credential!) { authResult, error in
+                    if error != nil {
+                        print("Error attempting Twitter sign in \(error!.localizedDescription)")
+                        self.socialSignup = false
+                    } else {
+                        print("Successful sign in using Twitter")
+                        self.signInButton.isHidden = true
+                        self.twitterAuthResult = authResult
+                        self.signInUser()
+                    }
+                }
+            }
+        }
+    }
     
+    @IBAction func UseApplePress() {
+        if #available(iOS 13, *) {
+            startSignInWithAppleFlow()
+        } else {
+            UIApplication.shared.keyWindow!.addSubview(self.featureUnavailableAlert)
+        }
+    }
+
+    @available(iOS 13, *)
+    func startSignInWithAppleFlow() {
+      let nonce = randomNonceString()
+      currentNonce = nonce
+      let appleIDProvider = ASAuthorizationAppleIDProvider()
+      let request = appleIDProvider.createRequest()
+      request.requestedScopes = [.fullName, .email]
+      request.nonce = sha256(nonce)
+
+      let authorizationController = ASAuthorizationController(authorizationRequests: [request])
+      authorizationController.delegate = self
+      authorizationController.presentationContextProvider = self
+      authorizationController.performRequests()
+    }
+
+    @available(iOS 13, *)
+    private func sha256(_ input: String) -> String {
+      let inputData = Data(input.utf8)
+      let hashedData = SHA256.hash(data: inputData)
+      let hashString = hashedData.compactMap {
+        return String(format: "%02x", $0)
+      }.joined()
+
+      return hashString
+    }
+    
+    private func randomNonceString(length: Int = 32) -> String {
+      precondition(length > 0)
+      let charset: Array<Character> =
+          Array("0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._")
+      var result = ""
+      var remainingLength = length
+
+      while remainingLength > 0 {
+        let randoms: [UInt8] = (0 ..< 16).map { _ in
+          var random: UInt8 = 0
+          let errorCode = SecRandomCopyBytes(kSecRandomDefault, 1, &random)
+          if errorCode != errSecSuccess {
+            fatalError("Unable to generate nonce. SecRandomCopyBytes failed with OSStatus \(errorCode)")
+          }
+          return random
+        }
+
+        randoms.forEach { random in
+          if remainingLength == 0 {
+            return
+          }
+
+          if random < charset.count {
+            result.append(charset[Int(random)])
+            remainingLength -= 1
+          }
+        }
+      }
+
+      return result
+    }
+    
+    func moveToAccountTypeVC() {
+        let info = twitterAuthResult!.additionalUserInfo?.profile
+        let profileImage = info!["profile_image_url_https"] as? String
+        let imagePath = profileImage?.replacingOccurrences(of: "_normal", with: "")
+        let username = info!["screen_name"] as? String
+        let summary = info!["description"] as? String
+        let name = info!["name"] as? String
+        
+        User.displayName = name
+        User.username = username
+        User.imagePath = imagePath
+        User.socialSignUp = true
+        User.ID = twitterAuthResult!.user.uid
+        
+        CurrentProgram.name = name
+        CurrentProgram.summary = summary
+        CurrentProgram.username = username
+        CurrentProgram.imagePath = imagePath
+        CurrentProgram.ID = twitterAuthResult!.user.uid
+        
+        if let accountTypeVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "accountTypeController") as? AccountTypeVC {
+            self.navigationController?.pushViewController(accountTypeVC, animated: true)
+        }
+    }
 }
 
+extension SignInVC: CustomAlertDelegate {
+    
+    func primaryButtonPress() {
+        moveToAccountTypeVC()
+        print("alert")
+    }
+    
+    func cancelButtonPress() {
+        emailTextField.becomeFirstResponder()
+        signInButton.setTitle("Sign in", for: .normal)
+    }
+}
+
+
+@available(iOS 13.0, *)
+extension SignInVC: ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding {
+  
+    func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
+        ASPresentationAnchor()
+    }
+   
+    func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
+      if let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential {
+        guard let nonce = currentNonce else {
+          fatalError("Invalid state: A login callback was received, but no login request was sent.")
+        }
+        guard let appleIDToken = appleIDCredential.identityToken else {
+            print("Unable to fetch identity token")
+            socialSignup = false
+            return
+        }
+        guard let idTokenString = String(data: appleIDToken, encoding: .utf8) else {
+            print("Unable to serialize token string from data: \(appleIDToken.debugDescription)")
+            socialSignup = false
+            return
+        }
+        
+        print("Adding indicator")
+        self.networkingIndicator.taskLabel.text = "Signing in with Apple"
+        UIApplication.shared.keyWindow!.addSubview(self.networkingIndicator)
+
+        let credential = OAuthProvider.credential(withProviderID: "apple.com", idToken: idTokenString, rawNonce: nonce)
+
+        // Sign in with Firebase.
+        Auth.auth().signIn(with: credential) { (authResult, error) in
+            if error != nil {
+                self.socialSignup = false
+                print(error!.localizedDescription)
+                return
+          }
+          // User is signed in to Firebase with Apple.
+          print("User signed in with Apple ID")
+          User.ID = authResult!.user.uid
+          CurrentProgram.ID = authResult!.user.uid
+          self.signInButton.isHidden = true
+          self.signInUser()
+        }
+      }
+    }
+
+    func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
+      // Handle error.
+      print("Sign in with Apple errored: \(error)")
+    }
+    
+}

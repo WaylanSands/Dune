@@ -175,14 +175,12 @@ extension AddBGMusicVC: UITableViewDelegate, UITableViewDataSource {
         if currentState == .playing {
             currentState = .paused
             playbackLink.isPaused = true
-            print("Now paused")
             activeCell!.deactivateCell()
             audioPlayer.pause()
         } else if currentState == .paused || currentState == .ready {
             FileManager.getMusicURLWith(audioID: audioID) { url in
                 self.playMusicWith(url: url, for: cell)
             }
-            print("Now play")
         }
     }
     

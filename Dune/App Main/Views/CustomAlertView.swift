@@ -30,6 +30,9 @@ enum alertType {
     case notAPublisher
     case cantFindLargeImage
     case invalidURL
+    case socialAccountNotFound
+    case appleNameFail
+    case iOS13Needed
 }
 
 protocol CustomAlertDelegate {
@@ -246,6 +249,23 @@ class CustomAlertView: UIView {
         case .invalidURL:
             headingLabel.text = "Invalid link"
             bodyTextLabel.text = "Looks like the link you have added is not a valid URL."
+            primaryButton.setTitle("Dismiss", for: .normal)
+            primaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
+        case .socialAccountNotFound:
+            headingLabel.text = "Account not found"
+            bodyTextLabel.text = "A Dune account with those details does not exist. Would you like to create an account or try again?"
+            primaryButton.setTitle("Create account", for: .normal)
+            primaryButton.addTarget(self, action: #selector(primaryButtonPress), for: .touchUpInside)
+            secondaryButton.setTitle("Try again", for: .normal)
+            secondaryButton.addTarget(self, action: #selector(cancelPress), for: .touchUpInside)
+        case .appleNameFail:
+            headingLabel.text = "Apple ID issue"
+            bodyTextLabel.text = "We are unable to attain your username from Apple. Please signup with your email."
+            primaryButton.setTitle("Dismiss", for: .normal)
+            primaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
+        case .iOS13Needed:
+            headingLabel.text = "Feature unavailable"
+            bodyTextLabel.text = "We apologise, this feature is only available for devices on iOS 13 "
             primaryButton.setTitle("Dismiss", for: .normal)
             primaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
         }

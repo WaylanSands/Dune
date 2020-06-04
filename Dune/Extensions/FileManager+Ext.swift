@@ -300,21 +300,21 @@ extension FileManager {
         }
     }
     
-    static func storeSelectedListener(image: UIImage) {
-  
-        if let data = image.jpegData(compressionQuality: 0.5) {
-            let documentsURL = getDocumentsDirectory()
-            let folderURL = documentsURL.appendingPathComponent("user/image", isDirectory: true)
-            let url = folderURL.appendingPathComponent(User.imageID!)
-            
-            do {
-                try data.write(to: url)
-            }
-            catch {
-                print("Unable to Write Data to Disk (\(error))")
-            }
-        }
-    }
+//    static func storeSelectedListener(image: UIImage) {
+//
+//        if let data = image.jpegData(compressionQuality: 0.5) {
+//            let documentsURL = getDocumentsDirectory()
+//            let folderURL = documentsURL.appendingPathComponent("user/image", isDirectory: true)
+//            let url = folderURL.appendingPathComponent(User.imageID!)
+//
+//            do {
+//                try data.write(to: url)
+//            }
+//            catch {
+//                print("Unable to Write Data to Disk (\(error))")
+//            }
+//        }
+//    }
     
     static func checkTempDirectoryForAudioFileWith(audioID: String, completion: (URL?) -> ()) {
         let tempDirectory = FileManager.default.temporaryDirectory
@@ -391,6 +391,38 @@ extension FileManager {
         }
     }
     
+    static func storeSelectedUserImage(image: UIImage, imageID: String?) {
+        
+        let fileManager = FileManager.default
+        
+        let imageID = imageID ?? NSUUID().uuidString
+        
+        if let data = image.jpegData(compressionQuality: 0.5) {
+           
+            let cacheURL = getCacheDirectory()
+            let fileURL = cacheURL.appendingPathComponent(imageID)
+            
+            if fileManager.fileExists(atPath: fileURL.path) {
+                do {
+                    try fileManager.removeItem(at: fileURL)
+                } catch {
+                    print("Unable to remove file from cache \(error)")
+                }
+            } else {
+                print("There is no data with that fileName")
+            }
+
+            do {
+                try data.write(to: fileURL)
+                print("Adding image to cache")
+                FireStorageManager.storeUserImage(image: image)
+            }
+            catch {
+                print("Unable to add Image to cache: (\(error))")
+            }
+        }
+    }
+    
     static func storeInitialProgramImage(image: UIImage, programID: String) {
         
         let fileManager = FileManager.default
@@ -441,7 +473,7 @@ extension FileManager {
                 }
             } else {
                 print("Fetching image from Firebase Storage")
-                FireStorageManager.downloadProgramImage(imageID: imageID) { image in
+                FireStorageManager.downloadAccountImage(imageID: imageID) { image in
                     completion(image)
                 }
             }
@@ -465,6 +497,32 @@ extension FileManager {
                 }
             }
         }
+    }
+    
+   static func fetchImageFrom(url: String, completion: @escaping (UIImage?) ->()) {
+        DispatchQueue.global(qos: .userInitiated).async {
+            guard let imageURL = URL(string: url), let imageData = try? Data(contentsOf: imageURL) else {
+                completion(nil)
+                return
+            }
+            completion(UIImage(data: imageData))
+        }
+    }
+
+   static func storeImageWith(fileName: String, image: UIImage) {
+        if let data = image.jpegData(compressionQuality: 0.5) {
+            // Using our extension here
+            let documentsURL = FileManager.getDocumentsDirectory()
+            let fileURL = documentsURL.appendingPathComponent(fileName)
+
+             do {
+                try data.write(to: fileURL, options: .atomic)
+                print("Storing image")
+              }
+              catch {
+               print("Unable to Write Data to Disk (\(error.localizedDescription))")
+              }
+          }
     }
 
     

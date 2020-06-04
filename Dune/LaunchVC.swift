@@ -12,6 +12,7 @@ class LaunchVC: UIViewController {
     
     let loggedIn = UserDefaults.standard.bool(forKey: "loggedIn")
     let appDelegate = UIApplication.shared.delegate as! AppDelegate
+    var style:UIStatusBarStyle = .lightContent
     var rootVC : UIViewController?
     
     let logoStackView: UIStackView = {
@@ -35,7 +36,7 @@ class LaunchVC: UIViewController {
     }()
     
     override var preferredStatusBarStyle: UIStatusBarStyle {
-        return .lightContent
+        return self.style
     }
     
     override func viewDidLoad() {
@@ -49,6 +50,11 @@ class LaunchVC: UIViewController {
         } else {
             sendToSignUp()
         }
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        style = .default
+        setNeedsStatusBarAppearanceUpdate()
     }
     
     func configureView() {
@@ -75,17 +81,35 @@ class LaunchVC: UIViewController {
     func determineFirstScreen() {
         if User.completedOnBoarding! {
             rootVC = MainTabController()
-            appDelegate.window?.rootViewController = rootVC
+            if #available(iOS 13.0, *) {
+                let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
+                 sceneDelegate.window?.rootViewController = rootVC
+            } else {
+                 appDelegate.window?.rootViewController = rootVC
+            }
         } else {
             rootVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "accountTypeController") as! AccountTypeVC
             let navController = UINavigationController()
             navController.viewControllers = [rootVC!]
-            appDelegate.window?.rootViewController = navController
+            
+            if #available(iOS 13.0, *) {
+                let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
+                 sceneDelegate.window?.rootViewController = navController
+            } else {
+                 appDelegate.window?.rootViewController = navController
+            }
         }
     }
     
     func sendToSignUp() {
+        print("Sending to signup")
         rootVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "mainNavController") as! UINavigationController
-        appDelegate.window?.rootViewController = rootVC
+        
+        if #available(iOS 13.0, *) {
+            let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
+             sceneDelegate.window?.rootViewController = rootVC
+        } else {
+             appDelegate.window?.rootViewController = rootVC
+        }
     }
 }

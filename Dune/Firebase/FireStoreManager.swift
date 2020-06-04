@@ -6,7 +6,8 @@
 //  Copyright © 2020 Waylan Sands. All rights reserved.
 //
 
-import Firebase
+import FirebaseAuth
+import FirebaseFirestore
 
 struct FireStoreManager {
     
@@ -192,6 +193,24 @@ struct FireStoreManager {
         }
     }
     
+    static func updateUser(summary: String, tags: [String]) {
+        DispatchQueue.global(qos: .userInitiated).async {
+            
+            let userRef = db.collection("users").document(User.ID!)
+            
+            userRef.updateData([
+                "summary" :  summary,
+                "tags" :     tags
+            ]) { (error) in
+                if let error = error {
+                    print("Error updating user's details: \(error.localizedDescription)")
+                } else {
+                    print("Success updating user's details")
+                }
+            }
+        }
+    }
+    
     static func updateUserEmail() {
         DispatchQueue.global(qos: .userInitiated).async {
             
@@ -216,12 +235,12 @@ struct FireStoreManager {
         DispatchQueue.global(qos: .userInitiated).async {
             let usersRef =  db.collection("users")
             
-            usersRef.whereField("username", isEqualTo: name).getDocuments { (snapshot, err) in
+            usersRef.whereField("username", isEqualTo: name).getDocuments { (snapshot, error) in
                 
                 FirebaseStatus.isChecking = false
                 
-                if let err = err {
-                    print("Error getting document: \(err)")
+                if error != nil {
+                    print("Error getting document: \(error!.localizedDescription)")
                 }
                 
                 if snapshot!.isEmpty {
@@ -232,6 +251,29 @@ struct FireStoreManager {
             }
         }
     }
+    
+    static func checkIfUserExists(ID: String, completion: @escaping (Bool)->()) {
+        
+        DispatchQueue.global(qos: .userInitiated).async {
+            
+            let usersRef =  db.collection("users").document(ID)
+            
+            usersRef.getDocument(completion: { (snapshot, error) in
+                if error != nil {
+                    print("Error getting document: \(error!.localizedDescription)")
+                } else {
+                    
+                    if snapshot!.exists {
+                        completion(true)
+                    } else {
+                        completion(false)
+                    }
+                }
+            })
+            
+        }
+    }
+
     
     static func getProgramData(completion: @escaping (Bool) -> ()) {
         print("Fetching program details")
@@ -308,6 +350,21 @@ struct FireStoreManager {
                 } else {
                     guard let data = snapshot?.data() else { return }
                     completion(data)
+                }
+            }
+        }
+    }
+    
+    static func getEpisodeWith(episodeID: String, completion: @escaping (Episode) -> ()) {
+        DispatchQueue.global(qos: .userInitiated).sync {
+            
+            let episodeRef = db.collection("episodes").document(episodeID)
+            episodeRef.getDocument { (snapshot, error) in
+                if error != nil {
+                    print("Error fetching episode")
+                } else {
+                    guard let data = snapshot?.data() else { return }
+                    completion(Episode(data: data))
                 }
             }
         }
@@ -400,6 +457,7 @@ struct FireStoreManager {
             
             let episodeRef = db.collection("episodes").document()
             let ID = episodeRef.documentID
+            
             let currentTime = Timestamp()
             
             episodeRef.setData([
@@ -440,7 +498,6 @@ struct FireStoreManager {
                             completion(true)
                         }
                     }
-                    
                 }
             }
         }
@@ -457,7 +514,6 @@ struct FireStoreManager {
                 if error != nil {
                     print("There was an error fetching the program \(error!)")
                 } else {
-                    print("Success fetching program")
                     guard let data = snapshot?.data() else { return }
                     let program = Program(data: data)
                     completion(program)
@@ -830,7 +886,7 @@ struct FireStoreManager {
         userRef.updateData([
             "likedEpisodes" : FieldValue.arrayUnion([episodeID])
         ])
-        User.likedEpisodesIDs?.append(episodeID)
+        User.likedEpisodes?.append(episodeID)
     }
     
     
@@ -840,8 +896,8 @@ struct FireStoreManager {
         userRef.updateData([
             "likedEpisodes" : FieldValue.arrayRemove([episodeID])
         ])
-        if let index = User.likedEpisodesIDs?.firstIndex(of: episodeID) {
-            User.likedEpisodesIDs?.remove(at: index)
+        if let index = User.likedEpisodes?.firstIndex(of: episodeID) {
+            User.likedEpisodes?.remove(at: index)
         }
     }
     
@@ -851,7 +907,7 @@ struct FireStoreManager {
         
         let episodeRef = db.collection("episodes").document(ID)
         
-        DispatchQueue.global(qos: .userInitiated).async {
+        DispatchQueue.global(qos: .default).async {
             
             episodeRef.updateData([
                 "listenCount" : FieldValue.increment(listen)
@@ -948,6 +1004,5 @@ struct FireStoreManager {
             })
         }
     }
-    
 }
 

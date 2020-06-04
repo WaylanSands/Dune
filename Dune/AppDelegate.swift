@@ -15,32 +15,26 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        
-        //        Override point for customization after application launch.
-                
-//        let startingController = MainTabController()
-//        startingController.selectedIndex = 4
-
-//        let navigation = UINavigationController(rootViewController: startingController)
+      
+//        let launchScreen = LaunchVC()
 //
 //        let frame = UIScreen.main.bounds
 //        window = UIWindow(frame: frame)
 //
-//        window!.rootViewController = startingController
+//        window!.rootViewController = launchScreen
 //        window!.makeKeyAndVisible()
-//
-        FirebaseApp.configure()
-        let launchScreen = LaunchVC()
-//        let navigation = UINavigationController(rootViewController: launchScreen)
         
-        let frame = UIScreen.main.bounds
-        window = UIWindow(frame: frame)
-        
-        window!.rootViewController = launchScreen
-        window!.makeKeyAndVisible()
-        
-//      LaunchControllerSwitch.updateRootVC()
+        if #available(iOS 13.0, *) { } else {
+            let launchScreen = LaunchVC()
+            self.window = UIWindow(frame: UIScreen.main.bounds)
+            self.window!.rootViewController = launchScreen
+            self.window!.makeKeyAndVisible()
+        }
         return true
+    }
+    
+    override init() {
+        FirebaseApp.configure()
     }
     
     func applicationWillResignActive(_ application: UIApplication) {

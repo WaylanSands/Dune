@@ -293,7 +293,6 @@ class RichLinkGenerator {
            
             if FileManager.default.fileExists(atPath: fileURL.path) {
                 if let image = UIImage(contentsOfFile: fileURL.path) {
-                    print("Found image in cache")
                     completion(image)
                 } else {
                     print("Failed to turn file into an Image")

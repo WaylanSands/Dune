@@ -7,14 +7,15 @@
 //
 
 import UIKit
-import Firebase
+import FirebaseAuth
+import FirebaseFirestore
 
 class AccountTypeVC: UIViewController {
     
     @IBOutlet weak var listenerButton: UIButton!
     @IBOutlet weak var publisherButton: UIButton!
     @IBOutlet weak var headingLabel: UILabel!
-    @IBOutlet weak var subheadlingBottomAnchor: NSLayoutConstraint!
+    @IBOutlet weak var subHeadingBottomAnchor: NSLayoutConstraint!
     
     let db = Firestore.firestore()
     let customNavBar = CustomNavBar()
@@ -59,7 +60,7 @@ class AccountTypeVC: UIViewController {
             break
         case .iPhoneSE:
             headingLabel.font = UIFont.systemFont(ofSize: 26, weight: .bold)
-            subheadlingBottomAnchor.constant = 50.0
+            subHeadingBottomAnchor.constant = 50.0
         case .iPhone8:
             break
         case .iPhone8Plus:
@@ -75,33 +76,59 @@ class AccountTypeVC: UIViewController {
         }
     }
     
-    @IBAction func accountTypebuttonPress(_ sender: UIButton) {
-        
-        // If is already logged in they are returning to finish onboarding
-        let loggedIn = UserDefaults.standard.bool(forKey: "loggedIn")
-        
-        if loggedIn {
-            updateReturningUser()
-        } else {
-            createNewUser()
-        }
+    @IBAction func accountTypeButtonPress(_ sender: UIButton) {
         
         if sender.titleLabel?.text == "Publisher" {
             print("hit publisher")
             User.isPublisher = true
-           
+            attemptToStoreProgramImage()
             if let programNameVC = UIStoryboard(name: "OnboardingPublisher", bundle: nil).instantiateViewController(withIdentifier: "programNameVC") as? ProgramNameVC {
                 navigationController?.pushViewController(programNameVC, animated: true)
                 print("publisher push")
             }
         } else if sender.titleLabel?.text == "Listener" {
             User.isPublisher = false
-
-            if let listenerImageVC = UIStoryboard(name: "OnboardingListener", bundle: nil).instantiateViewController(withIdentifier: "listenerImageVC") as? ListenerImageVC {
-                navigationController?.pushViewController(listenerImageVC, animated: true)
+            attemptToStoreUserImage()
+            if let listenerNameVC = UIStoryboard(name: "OnboardingListener", bundle: nil).instantiateViewController(withIdentifier: "listenerDisplayNameVC") as? ListenerNameVC {
+                navigationController?.pushViewController(listenerNameVC, animated: true)
+            }
+        }
+        
+        // If is already logged in they are returning to finish on-boarding
+        let loggedIn = UserDefaults.standard.bool(forKey: "loggedIn")
+        
+        if loggedIn {
+            updateReturningUser()
+        } else if User.socialSignUp == true {
+            signUpSocialUser()
+        } else {
+           createNewUser()
+        }
+    }
+   
+    func attemptToStoreProgramImage() {
+        let programID = NSUUID().uuidString
+        CurrentProgram.ID = programID
+        User.programID = programID
+        
+        if User.imagePath != nil && User.imagePath != ""  {
+            FileManager.fetchImageFrom(url: User.imagePath!) { image in
+                if image != nil {
+                    FileManager.storeInitialProgramImage(image: image!, programID: CurrentProgram.ID!)
+                }
             }
         }
     }
+    
+    func attemptToStoreUserImage() {
+         if User.imagePath != nil && User.imagePath != ""  {
+             FileManager.fetchImageFrom(url: User.imagePath!) { image in
+                 if image != nil {
+                    FireStorageManager.storeUserImage(image: image!)
+                 }
+             }
+         }
+     }
     
     // Ceate new user and add details
     func createNewUser() {
@@ -118,16 +145,23 @@ class AccountTypeVC: UIViewController {
                     
                     guard let uid = result?.user.uid else { return }
                     User.ID = uid
+                    User.subscriberCount = 0
+                    User.favouriteIDs = [String]()
+                    User.subscriberIDs = [String]()
                     User.subscriptionIDs = [String]()
+                    User.favouritePrograms = [Program]()
                     
                     self.db.collection("users").document(uid).setData([
                         "ID" : User.ID!,
-                        "username": User.username!,
+                        "favouriteIDs" : [],
+                        "subscriberIDs" : [],
                         "email": User.email!,
+                        "subscriberCount" : 0,
+                        "username": User.username!,
                         "birthDate": User.birthDate!,
-                        "isPublisher": User.isPublisher!,
                         "completedOnBoarding" : false,
-                        "subscriptionIDs" : User.subscriptionIDs!
+                        "isPublisher": User.isPublisher!,
+                        "subscriptionIDs" : User.subscriptionIDs!,
                     ]) { err in
                         if let err = err {
                             print("Error creating new user document: \(err)")
@@ -182,6 +216,39 @@ class AccountTypeVC: UIViewController {
                             print("Document successfully removed!")
                         }
                     }
+                }
+            }
+        }
+    }
+    
+    func signUpSocialUser() {
+        DispatchQueue.global(qos: .userInitiated).sync {
+            
+            User.subscriberCount = 0
+            User.favouriteIDs = [String]()
+            User.subscriberIDs = [String]()
+            User.favouritePrograms = [Program]()
+            User.subscriptionIDs = [String]()
+            
+            let userRef = db.collection("users").document(User.ID!)
+            
+            userRef.setData([
+                "ID" : User.ID!,
+                "favouriteIDs" : [],
+                "subscriberIDs" : [],
+                "subscriberCount" : 0,
+                "username" : User.username!,
+                "completedOnBoarding" : false,
+                "displayName" : User.displayName!,
+                "isPublisher" : User.isPublisher!,
+                "imagePath" : User.imagePath ?? "",
+                "subscriptionIDs" : User.subscriptionIDs!,
+                ]) { error in
+                if error != nil {
+                    print("Error attempting to signup Twitter user: \(error!.localizedDescription)")
+                } else {
+                    print("Success signing up Twitter user")
+                    UserDefaults.standard.set(true, forKey: "loggedIn")
                 }
             }
         }

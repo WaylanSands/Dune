@@ -8,8 +8,8 @@
 //
 
 import UIKit
-import Firebase
-import FirebaseStorage
+import FirebaseFirestore
+//import FirebaseStorage
 import AVFoundation
 import MobileCoreServices
 
@@ -18,7 +18,7 @@ class StudioVC: UIViewController {
     var programSelectionView: SettingsLauncher!
     var recordingSession: AVAudioSession!
     lazy var tabBar = navigationController?.tabBarController?.tabBar
-    var audioPlayer: AVPlayer!
+//    var audioPlayer: AVPlayer!
     
     let tableView = UITableView()
     var firstBatchAmount = 10
@@ -319,13 +319,13 @@ class StudioVC: UIViewController {
         programSelectionView.showSettings()
     }
 
-    func play(url: URL) {
-        let playerItem = AVPlayerItem(url: url)
-        self.audioPlayer = AVPlayer(playerItem:playerItem)
-        audioPlayer!.volume = 1.0
-        audioPlayer!.play()
-        print("playing")
-    }
+//    func play(url: URL) {
+//        let playerItem = AVPlayerItem(url: url)
+//        self.audioPlayer = AVPlayer(playerItem:playerItem)
+//        audioPlayer!.volume = 1.0
+//        audioPlayer!.play()
+//        print("playing")
+//    }
     
     func editDraftEpisode(for row: Int) {
         let draft = downloadedDrafts[row]

@@ -17,29 +17,11 @@ extension UITextField {
         self.leftView = paddingView
         self.leftViewMode = .always
     }
+    
     func setRightPadding(_ amount:CGFloat) {
         let paddingView = UIView(frame: CGRect(x: 0, y: 0, width: amount, height: self.frame.size.height))
         self.rightView = paddingView
         self.rightViewMode = .always
-    }
-    
-    func checkUsername(db: Firestore, field: String, completion: @escaping (Bool) -> Void) {
-  
-        let usersRef =  db.collection("users")
-      
-        usersRef.whereField("username", isEqualTo: field).getDocuments { (snapshot, err) in
-            if let err = err {
-                print("Error getting document: \(err)")
-            } else if (snapshot?.isEmpty)! {
-                completion(true)
-            } else {
-                for document in (snapshot?.documents)! {
-                    if document.data()["username"] != nil {
-                        completion(false)
-                    }
-                }
-            }
-        }
     }
     
     func checkEmail(db: Firestore, field: String, completion: @escaping (Bool) -> Void) {

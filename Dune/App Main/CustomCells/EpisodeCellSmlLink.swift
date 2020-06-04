@@ -100,7 +100,7 @@ class EpisodeCellSmlLink: EpisodeCell {
     
     override func normalSetUp(episode: Episode) {
         includeRichLink()
-        setupLikeButtonAndCounterFor(Episode: episode)
+        setupLikeButtonAndCounterFor(episode: episode)
         
         FileManager.getImageWith(imageID: episode.imageID) { image in
             DispatchQueue.main.async {
@@ -119,6 +119,7 @@ class EpisodeCellSmlLink: EpisodeCell {
         }
         
         createTagButtons()
+        setupProgressBar()
         
         DispatchQueue.main.async {
             self.addGradient()
@@ -127,6 +128,7 @@ class EpisodeCellSmlLink: EpisodeCell {
             }
         }
     }
+    
     
     // MARK: Rich Link
     func includeRichLink() {
@@ -211,8 +213,14 @@ class EpisodeCellSmlLink: EpisodeCell {
         if User.isPublisher! && CurrentProgram.programsIDs().contains(episode.programID) {
             let tabBar = MainTabController()
             tabBar.selectedIndex = 4
-            let appDelegate = UIApplication.shared.delegate as! AppDelegate
-            appDelegate.window?.rootViewController = tabBar
+            
+            if #available(iOS 13.0, *) {
+                let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
+                 sceneDelegate.window?.rootViewController = tabBar
+            } else {
+                 appDelegate.window?.rootViewController = tabBar
+            }
+            
         } else {
             FireStoreManager.fetchAndCreateProgramWith(programID: episode.programID) { program in
                 if program.isPrimaryProgram && program.hasMultiplePrograms! {

@@ -17,11 +17,13 @@ protocol EpisodeCellDelegate {
     func showSettings(cell: EpisodeCell )
     func updateLikeCountFor(episode: Episode, at indexPath: IndexPath)
     func visitProfile(program: Program)
+    func showCommentsFor(episode: Episode)
     func tagSelected(tag: String)
 }
 
 class EpisodeCell: UITableViewCell {
     
+    let appDelegate = UIApplication.shared.delegate as! AppDelegate
     var cellDelegate: EpisodeCellDelegate?
     var episode: Episode!
     var link: String?
@@ -42,6 +44,7 @@ class EpisodeCell: UITableViewCell {
     
     // Used for modifying space when adding/removing options
     var tagContentBottomConstraint: NSLayoutConstraint!
+    var optionsConfigured = false
     
     var summaryViewHeight: NSLayoutConstraint!
     lazy var tagscrollViewWidth = tagScrollView.frame.width
@@ -153,7 +156,7 @@ class EpisodeCell: UITableViewCell {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 12.0, weight: .medium)
         label.textAlignment = .left
-        label.text = "\(episode.likeCount)"
+        label.text = "\(episode.likeCount.roundedWithAbbreviations)"
         label.textColor = CustomStyle.thirdShade
         return label
     }()
@@ -169,7 +172,7 @@ class EpisodeCell: UITableViewCell {
         label.font = UIFont.systemFont(ofSize: 12.0, weight: .medium)
         label.textAlignment = .left
         label.textColor = CustomStyle.thirdShade
-        label.text = "\(episode.commentCount)"
+        label.text = "\(episode.commentCount.roundedWithAbbreviations)"
         return label
     }()
     
@@ -184,7 +187,7 @@ class EpisodeCell: UITableViewCell {
         label.font = UIFont.systemFont(ofSize: 12.0, weight: .medium)
         label.textAlignment = .left
         label.textColor = CustomStyle.thirdShade
-        label.text = "\(episode.shareCount)"
+        label.text = "\(episode.shareCount.roundedWithAbbreviations)"
         return label
     }()
     
@@ -199,7 +202,7 @@ class EpisodeCell: UITableViewCell {
         label.font = UIFont.systemFont(ofSize: 12.0, weight: .medium)
         label.textAlignment = .left
         label.textColor = CustomStyle.thirdShade
-        label.text = "\(episode.listenCount)"
+        label.text = "\(episode.listenCount.roundedWithAbbreviations)"
         return label
     }()
     
@@ -215,13 +218,14 @@ class EpisodeCell: UITableViewCell {
     }
     
     override func prepareForReuse() {
+        playbackBarView.resetPlaybackBar()
         moreButton.removeFromSuperview()
     }
     
     // MARK: Cell setup
     
     func normalSetUp(episode: Episode) {
-        setupLikeButtonAndCounterFor(Episode: episode)
+        setupLikeButtonAndCounterFor(episode: episode)
         
         FileManager.getImageWith(imageID: episode.imageID) { image in
             DispatchQueue.main.async {
@@ -235,17 +239,31 @@ class EpisodeCell: UITableViewCell {
         captionTextView.text = episode.caption
         episodeTags = episode.tags!
         
-        if episodeTags.count == 0 && episode.likeCount > 10 {
-            tagScrollViewHeightConstraint.constant = 0
-        }
+//        if episodeTags.count == 0 && episode.likeCount > 10 {
+//            tagScrollViewHeightConstraint.constant = 0
+//        } else if episodeTags.count > 0 {
+//            tagScrollViewHeightConstraint.constant = 22
+//        }
         
         createTagButtons()
+        setupProgressBar()
         
         DispatchQueue.main.async {
             self.addGradient()
             if self.captionTextView.lineCount() > 3 {
                 self.addMoreButton()
             }
+        }
+    }
+    
+    func setupProgressBar() {
+        if episode.hasBeenPlayed {
+            playbackBarView.setupPlaybackBar()
+            playbackBarView.setProgressWith(percentage: episode.playBackProgress)
+        }
+        
+        if episode.hasBeenPlayed == false && playbackBarView.playbackBarIsSetup  {
+            playbackBarView.resetPlaybackBar()
         }
     }
     
@@ -257,7 +275,7 @@ class EpisodeCell: UITableViewCell {
     }
 
     func configureWithoutOptions() {
-        tagContentBottomConstraint.constant = 15
+        tagContentBottomConstraint.constant = -15
         likeButton.removeFromSuperview()
         likeCountLabel.removeFromSuperview()
         commentButton.removeFromSuperview()
@@ -381,7 +399,7 @@ class EpisodeCell: UITableViewCell {
         likeCountLabel.translatesAutoresizingMaskIntoConstraints = false
         likeCountLabel.centerYAnchor.constraint(equalTo: likeButton.centerYAnchor).isActive = true
         likeCountLabel.leadingAnchor.constraint(equalTo: likeButton.trailingAnchor, constant: 5).isActive = true
-        likeCountLabel.widthAnchor.constraint(equalToConstant: 22).isActive = true
+        likeCountLabel.widthAnchor.constraint(equalToConstant: 29).isActive = true
         
         self.addSubview(commentButton)
         commentButton.translatesAutoresizingMaskIntoConstraints = false
@@ -394,7 +412,7 @@ class EpisodeCell: UITableViewCell {
         commentCountLabel.translatesAutoresizingMaskIntoConstraints = false
         commentCountLabel.centerYAnchor.constraint(equalTo: likeButton.centerYAnchor).isActive = true
         commentCountLabel.leadingAnchor.constraint(equalTo: commentButton.trailingAnchor, constant: 5).isActive = true
-        commentCountLabel.widthAnchor.constraint(equalToConstant: 22).isActive = true
+        commentCountLabel.widthAnchor.constraint(equalToConstant: 24).isActive = true
         
         self.addSubview(shareButton)
         shareButton.translatesAutoresizingMaskIntoConstraints = false
@@ -407,12 +425,12 @@ class EpisodeCell: UITableViewCell {
         shareCountLabel.translatesAutoresizingMaskIntoConstraints = false
         shareCountLabel.centerYAnchor.constraint(equalTo: likeButton.centerYAnchor).isActive = true
         shareCountLabel.leadingAnchor.constraint(equalTo: shareButton.trailingAnchor, constant: 5).isActive = true
-        shareCountLabel.widthAnchor.constraint(equalToConstant: 22).isActive = true
+        shareCountLabel.widthAnchor.constraint(equalToConstant: 24).isActive = true
         
         self.addSubview(listenIconImage)
         listenIconImage.translatesAutoresizingMaskIntoConstraints = false
         listenIconImage.topAnchor.constraint(equalTo: tagScrollView.bottomAnchor, constant: 10).isActive = true
-        listenIconImage.leadingAnchor.constraint(equalTo: shareCountLabel.trailingAnchor, constant: 10).isActive = true
+        listenIconImage.leadingAnchor.constraint(equalTo: shareCountLabel.trailingAnchor, constant: 7).isActive = true
         listenIconImage.widthAnchor.constraint(equalToConstant: 18).isActive = true
         listenIconImage.heightAnchor.constraint(equalToConstant: 18).isActive = true
         
@@ -490,9 +508,9 @@ class EpisodeCell: UITableViewCell {
         }
     }
     
-    func setupLikeButtonAndCounterFor(Episode: Episode) {
+    func setupLikeButtonAndCounterFor(episode: Episode) {
         
-        if let likedEpisodes = User.likedEpisodesIDs {
+        if let likedEpisodes = User.likedEpisodes {
             if likedEpisodes.contains(episode.ID) {
                 likedEpisode = true
                 likeButton.setImage(UIImage(named: "cell-liked-button"), for: .normal)
@@ -508,7 +526,7 @@ class EpisodeCell: UITableViewCell {
             likeCountLabel.text = ""
             likedEpisode = false
         } else {
-            likeCountLabel.text = String(episode.likeCount)
+            likeCountLabel.text = String(episode.likeCount.roundedWithAbbreviations)
         }
     }
     
@@ -545,6 +563,10 @@ class EpisodeCell: UITableViewCell {
         }
     }
     
+    @objc func showComments() {
+        cellDelegate?.showCommentsFor(episode: episode)
+    }
+    
     @objc func playEpisode() {
         cellDelegate?.playEpisode(cell: self )
     }
@@ -558,8 +580,14 @@ class EpisodeCell: UITableViewCell {
         if User.isPublisher! && CurrentProgram.programsIDs().contains(episode.programID) {
             let tabBar = MainTabController()
             tabBar.selectedIndex = 4
-            let appDelegate = UIApplication.shared.delegate as! AppDelegate
-            appDelegate.window?.rootViewController = tabBar
+            
+            if #available(iOS 13.0, *) {
+                let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
+                 sceneDelegate.window?.rootViewController = tabBar
+            } else {
+                 appDelegate.window?.rootViewController = tabBar
+            }
+            
         } else {
             FireStoreManager.fetchAndCreateProgramWith(programID: episode.programID) { program in
                 if program.isPrimaryProgram && program.hasMultiplePrograms! {
@@ -572,7 +600,6 @@ class EpisodeCell: UITableViewCell {
             }
         }
     }
-    
     
     // Helper functions
     

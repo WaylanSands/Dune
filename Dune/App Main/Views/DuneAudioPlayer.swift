@@ -15,16 +15,21 @@ enum playerStatus {
     case ready
 }
 
+protocol DuneAudioPlayerDelegate {
+    func updateProgressBarWith(percentage: CGFloat, forType: PlayBackType,  episodeID: String)
+    func updateActiveCell(atIndex: Int, forType: PlayBackType)
+    func showCommentsFor(episode: Episode)
+    func playedEpisode(episode: Episode)
+}
+
 class DuneAudioPlayer: UIView {
        
-    var audioIDs = [String]()
     var downloadedEpisodes = [Episode]()
-    var currentAudioID: String!
     var audioPlayer: AVAudioPlayer!
     var currentState: playerStatus = .ready
     var topImageConstraint: NSLayoutConstraint!
     let playbackCircleView = PlaybackCircleView()
-    var playbackDelegate: PlaybackBarDelegate!
+    var audioPlayerDelegate: DuneAudioPlayerDelegate!
     var episode: Episode!
 
     var isOutOfPosition = true
@@ -89,7 +94,6 @@ class DuneAudioPlayer: UIView {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 12.0, weight: .medium)
         label.textAlignment = .left
-        label.text = ""
         label.textColor = .white
         label.isUserInteractionEnabled = false
         return label
@@ -98,6 +102,7 @@ class DuneAudioPlayer: UIView {
     let commentButton: UIButton = {
         let button = UIButton()
         button.setImage(UIImage(named: "comment-button-icon"), for: .normal)
+        button.addTarget(self, action: #selector(commentButtonPress), for: .touchUpInside)
         return button
     }()
     
@@ -139,7 +144,6 @@ class DuneAudioPlayer: UIView {
         label.textAlignment = .left
         label.textColor = .white
         label.isUserInteractionEnabled = false
-        label.text = ""
         return label
     }()
 
@@ -281,41 +285,17 @@ class DuneAudioPlayer: UIView {
         listenIconImage.removeFromSuperview()
         listenCountLabel.removeFromSuperview()
     }
-    
-    func setupLikeButtonAndCounterFor(Episode: Episode) {
-        guard let index = audioIDs.firstIndex(of: episode.audioID) else { return }
-        episode = downloadedEpisodes[index]
-        episodeID = episode.ID
-        
-        if let likedEpisodes = User.likedEpisodesIDs {
-            if likedEpisodes.contains(episodeID) {
-                likedEpisode = true
-                likeButton.setImage(UIImage(named: "liked-button"), for: .normal)
-            } else {
-                likedEpisode = false
-                likeButton.setImage(UIImage(named: "like-button-icon"), for: .normal)
-            }
-        }
-    
-        if episode.likeCount == 0 {
-            likeCount = 0
-            likeCountLabel.text = ""
-            likedEpisode = false
-        } else {
-            likeCount = episode.likeCount
-            likeCountLabel.text = String(likeCount)
-        }
-    }
         
     func playOrPause(episode: Episode, with url: URL, image: UIImage) {
         
-        print("The Duration is \(duration(for: url.path))")
-        self.episode = episode
-        setupLikeButtonAndCounterFor(Episode: episode)
-        programImageView.image = image
+        FireStoreManager.updateListenCountFor(episode: episode.ID)
+        audioPlayerDelegate.playedEpisode(episode: episode)
+        setupLikeButtonAndCounterFor(episode: episode)
         programNameLabel.text = episode.programName
         captionLabel.text = episode.caption
-        
+        programImageView.image = image
+        self.episode = episode
+
         switch currentState {
         case .ready:
             playAudioFrom(url: url)
@@ -326,7 +306,6 @@ class DuneAudioPlayer: UIView {
                 audioPlayer.pause()
                 playbackCircleLink.isPaused = true
                 currentState = .paused
-                print("Now paused")
             }
         case .paused:
             if audioPlayer.url == url {
@@ -335,11 +314,48 @@ class DuneAudioPlayer: UIView {
                 currentState = .playing
                 trackEpisodePlayback()
                 audioPlayer.play()
-            print("You selected to resume")
             } else {
                 playAudioFrom(url: url)
             }
         }
+    }
+    
+    func episodeHadBeenPlayed() {
+        audioPlayerDelegate.showCommentsFor(episode: episode)
+    }
+    
+        func setupLikeButtonAndCounterFor(episode: Episode) {
+
+            episodeID = episode.ID
+            
+            if let likedEpisodes = User.likedEpisodes {
+                if likedEpisodes.contains(episode.ID) {
+                    likedEpisode = true
+                    likeButton.setImage(UIImage(named: "liked-button"), for: .normal)
+                } else {
+                    likedEpisode = false
+                    likeButton.setImage(UIImage(named: "like-button-icon"), for: .normal)
+                }
+            }
+        
+            if episode.likeCount == 0 {
+                likeCount = 0
+                likeCountLabel.text = ""
+                likedEpisode = false
+            } else {
+                likeCount = episode.likeCount
+                likeCountLabel.text = String(likeCount)
+            }
+            
+            if episode.listenCount != 0 {
+                listenCountLabel.text = String(episode.listenCount)
+            }
+        }
+    
+    func updateListenCount() {
+        guard let episode = downloadedEpisodes.first(where: { $0.ID == self.episode.ID }) else { return }
+        episode.listenCount += 1
+        listenCountLabel.text = String(episode.listenCount)
     }
     
     func trackEpisodePlayback() {
@@ -352,12 +368,11 @@ class DuneAudioPlayer: UIView {
         let currentTime = audioPlayer.currentTime
         let percentagePlayed = CGFloat(currentTime / duration)
         playbackCircleView.shapeLayer.strokeEnd = percentagePlayed
-        playbackDelegate.updateProgressBarWith(percentage: percentagePlayed, forType: .episode)
+        audioPlayerDelegate.updateProgressBarWith(percentage: percentagePlayed, forType: .episode, episodeID: episode.ID)
     }
      
      func playAudioFrom(url: URL) {
          checkIfOptionsNeedToBePresented()
-//         unhidePlayBarOptions()
          playbackButton.setImage(UIImage(named: "pause-episode-icon"), for: .normal)
          playbackButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
          audioPlayer = try! AVAudioPlayer(contentsOf: url)
@@ -366,44 +381,27 @@ class DuneAudioPlayer: UIView {
          currentState = .playing
          trackEpisodePlayback()
          audioPlayer.play()
-         print("Now playing")
      }
     
     func checkIfOptionsNeedToBePresented() {
         
-        if episode.likeCount >= 10 && optionsArePresented {
+        if episode.likeCount >= 10 && (optionsArePresented || isOutOfPosition) {
             animateAudioPlayerWithoutOptions()
-        } else if episode.likeCount < 10 && !optionsArePresented {
+        } else if episode.likeCount < 10 && (!optionsArePresented || isOutOfPosition) {
             animateAudioPlayerWithOptions()
         }
     }
-    
-//    func unhidePlayBarOptions() {
-//        playbackView.isHidden = false
-//        likeButton.isHidden = false
-//        likeCountLabel.isHidden = false
-//        commentButton.isHidden = false
-//        commentCountLabel.isHidden = false
-//        shareButton.isHidden = false
-//        shareCountLabel.isHidden = false
-//        listenIconImage.isHidden = false
-//        listenCountLabel.isHidden = false
-//        playbackCircleView.isHidden = false
-//        playbackButton.isHidden = false
-//    }
     
     @objc func dismissView() {
        finishSession()
     }
     
     @objc func playbackButtonPress() {
-        
         if currentState == .playing {
             playbackButton.setImage(UIImage(named: "play-episode-icon"), for: .normal)
             playbackButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: 3, bottom: 0, right: 0)
             playbackCircleLink.isPaused = true
             currentState = .paused
-            print("Now paused")
             audioPlayer.pause()
         } else if currentState == .paused || currentState == .ready {
             playbackButton.setImage(UIImage(named: "pause-episode-icon"), for: .normal)
@@ -411,7 +409,6 @@ class DuneAudioPlayer: UIView {
             currentState = .playing
             trackEpisodePlayback()
             audioPlayer.play()
-            print("Now play")
         }
     }
     
@@ -440,7 +437,7 @@ class DuneAudioPlayer: UIView {
     }
     
     @objc func likeButtonPress() {
-        guard let index = audioIDs.firstIndex(of: episode.audioID) else { return }
+        guard let index = downloadedEpisodes.firstIndex(where: { $0.ID == episode.ID } ) else { return }
         
         if likedEpisode == false {
             likedEpisode = true
@@ -483,7 +480,7 @@ class DuneAudioPlayer: UIView {
         isOutOfPosition = false
         optionsArePresented = false
         configureWithoutOptions()
-          let position = yPosition - 70
+        let position = yPosition - 70
         UIView.animateKeyframes(withDuration: 0.2, delay: 0, options: .beginFromCurrentState, animations: {
             self.frame = CGRect(x: 0, y: position, width: self.frame.width, height: 70)
         }, completion: nil)
@@ -498,11 +495,12 @@ class DuneAudioPlayer: UIView {
     }
     
     func updateYPositionWith(value: CGFloat) {
+        yPosition = value
         if !isOutOfPosition {
             if optionsArePresented {
-                  self.frame.origin.y = value - 100
+                self.frame.origin.y = value - 100
             } else {
-                  self.frame.origin.y = value - 70
+                self.frame.origin.y = value - 70
             }
         }
     }
@@ -522,9 +520,27 @@ class DuneAudioPlayer: UIView {
         }
     }
     
+    func pauseSession() {
+        currentState = .paused
+        if audioPlayer != nil {
+            audioPlayer.setVolume(0, fadeDuration: 1)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                self.playbackButton.setImage(UIImage(named: "play-episode-icon"), for: .normal)
+                self.playbackButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: 3, bottom: 0, right: 0)
+                self.playbackCircleLink.isPaused = true
+                self.audioPlayer.volume = 1
+                self.audioPlayer.pause()
+            }
+        }
+    }
+    
     func duration(for resource: String) -> Double {
         let asset = AVURLAsset(url: URL(fileURLWithPath: resource))
         return Double(CMTimeGetSeconds(asset.duration))
+    }
+    
+    @objc func commentButtonPress() {
+        audioPlayerDelegate.showCommentsFor(episode: episode)
     }
     
 }
@@ -533,25 +549,18 @@ class DuneAudioPlayer: UIView {
 extension DuneAudioPlayer: AVAudioPlayerDelegate {
     
     func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
-        print("Finished playing episode")
         currentState = .ready
         playbackCircleLink.isPaused = true
         playbackButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: 3, bottom: 0, right: 0)
         playbackButton.setImage(UIImage(named: "play-episode-icon"), for: .normal)
         playbackCircleView.setupPlaybackCircle()
         
-        print("episodeID \(episode!.audioID)")
-        guard let index = downloadedEpisodes.firstIndex(where: { $0.audioID == episode!.audioID }) else { return }
-//        let episode = downloadedEps[index]
-//        episodeID = episode.ID
-        print("The index was \(index)")
-         print("The end was \(downloadedEpisodes.endIndex - 1)")
-        FireStoreManager.updateListenCountFor(episode: episode.ID)
-            
-        print("NextIndex: \(index + 1)")
-        if (downloadedEpisodes.endIndex - 1) > index {
+        guard let index = downloadedEpisodes.firstIndex(where: { $0.ID == episode!.ID }) else { return }
+        updateListenCount()
+
+        if (downloadedEpisodes.count - 1) > index {
             playNextEpisodeWith(nextIndex: index + 1)
-            playbackDelegate.updateActiveCell(atIndex: index + 1, forType: .episode)
+            audioPlayerDelegate.updateActiveCell(atIndex: index + 1, forType: .episode)
         } else {
             finishSession()
         }

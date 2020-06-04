@@ -17,6 +17,8 @@ class ProgramTagLookupVC: UIViewController {
     let tableView = UITableView()
     var introPlayer = DuneIntroPlayer()
     var audioPlayerInPosition = false
+    
+    let appDelegate = UIApplication.shared.delegate as! AppDelegate
 
     var audioIDs = [String]()
     var downloadedPrograms = [Program]()
@@ -27,7 +29,7 @@ class ProgramTagLookupVC: UIViewController {
     let loadingView = TVLoadingAnimationView(topHeight: UIDevice.current.navBarHeight() + 20)
 
     let subscriptionSettings = SettingsLauncher(options: SettingOptions.subscriptionEpisode, type: .subscriptionEpisode)
-    let programSettings = SettingsLauncher(options: SettingOptions.programSettings, type: .program)
+    let programSettings = SettingsLauncher(options: SettingOptions.nonFavouriteProgramSettings, type: .program)
     
     let customNavBar: CustomNavBar = {
         let nav = CustomNavBar()
@@ -217,11 +219,17 @@ extension ProgramTagLookupVC: ProgramCellDelegate {
         if User.isPublisher! && CurrentProgram.programsIDs().contains(program.ID) {
             let tabBar = MainTabController()
             tabBar.selectedIndex = 4
-            let appDelegate = UIApplication.shared.delegate as! AppDelegate
-            appDelegate.window?.rootViewController = tabBar
+            
+            if #available(iOS 13.0, *) {
+                let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
+                 sceneDelegate.window?.rootViewController = tabBar
+            } else {
+                 appDelegate.window?.rootViewController = tabBar
+            }
+            
         } else {
             if program.isPrimaryProgram && program.hasMultiplePrograms!  {
-                let programVC = TProgramProfileVC()
+                let programVC = ProgramProfileVC()
                 programVC.program = program
                 navigationController?.pushViewController(programVC, animated: true)
             } else {
@@ -266,9 +274,20 @@ extension ProgramTagLookupVC: ProgramCellDelegate {
     }
 }
 
-extension ProgramTagLookupVC: PlaybackBarDelegate {
+extension ProgramTagLookupVC: DuneAudioPlayerDelegate {
+    
+    func showCommentsFor(episode: Episode) {
+        let commentVC = CommentThreadVC(episode: episode)
+        commentVC.hidesBottomBarWhenPushed = true
+        navigationController?.pushViewController(commentVC, animated: true)
+    }
+    
+    func playedEpisode(episode: Episode) {
+        //
+    }
+    
    
-    func updateProgressBarWith(percentage: CGFloat, forType: PlayBackType) {
+    func updateProgressBarWith(percentage: CGFloat, forType: PlayBackType, episodeID: String) {
         guard let cell = activeCell else { return }
         cell.playbackBarView.progressUpdateWith(percentage: percentage)
     }

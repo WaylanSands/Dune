@@ -14,11 +14,12 @@ class DuneIntroPlayer: UIView {
     var audioPlayer: AVAudioPlayer!
     var currentState: playerStatus = .ready
     let playbackCircleView = PlaybackCircleView()
-    var playbackDelegate: PlaybackBarDelegate!
+    var playbackDelegate: DuneAudioPlayerDelegate!
     var isProgramPageIntro: Bool?
     
     var isInPosition = false
     var yPosition: CGFloat!
+    var program: Program?
     
     var playbackCircleLink: CADisplayLink!
     
@@ -135,8 +136,6 @@ class DuneIntroPlayer: UIView {
         programImageView.image = image
         programNameLabel.text = name
         
-        print(self.frame.maxY)
-        
         if isInPosition == false {
             animatePlayerIntoPosition()
         }
@@ -151,7 +150,6 @@ class DuneIntroPlayer: UIView {
                 audioPlayer.pause()
                 playbackCircleLink.isPaused = true
                 currentState = .paused
-                print("Now paused")
             }
         case .paused:
             if audioPlayer.url == url {
@@ -160,7 +158,6 @@ class DuneIntroPlayer: UIView {
                 currentState = .playing
                 trackIntroPlayback()
                 audioPlayer.play()
-                print("You selected to resume")
             } else {
                 playAudioFrom(url: url)
             }
@@ -178,7 +175,7 @@ class DuneIntroPlayer: UIView {
         let percentagePlayed = CGFloat(currentTime / duration)
         playbackCircleView.shapeLayer.strokeEnd = percentagePlayed
         if isProgramPageIntro == false {
-            playbackDelegate.updateProgressBarWith(percentage: percentagePlayed, forType: .program)
+            playbackDelegate.updateProgressBarWith(percentage: percentagePlayed, forType: .program, episodeID: program!.ID)
         }
     }
     
@@ -191,7 +188,6 @@ class DuneIntroPlayer: UIView {
         currentState = .playing
         trackIntroPlayback()
         audioPlayer.play()
-        print("Now playing")
     }
     
     @objc func playbackButtonPress() {
@@ -200,7 +196,6 @@ class DuneIntroPlayer: UIView {
             playbackButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: 3, bottom: 0, right: 0)
             playbackCircleLink.isPaused = true
             currentState = .paused
-            print("Now paused")
             audioPlayer.pause()
         } else if currentState == .paused || currentState == .ready {
             playbackButton.setImage(UIImage(named: "pause-episode-icon"), for: .normal)
@@ -208,7 +203,6 @@ class DuneIntroPlayer: UIView {
             currentState = .playing
             trackIntroPlayback()
             audioPlayer.play()
-            print("Now play")
         }
     }
     
@@ -288,7 +282,6 @@ class DuneIntroPlayer: UIView {
 extension DuneIntroPlayer: AVAudioPlayerDelegate {
     
     func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
-        print("Finished playing episode")
         currentState = .ready
         playbackCircleLink.isPaused = true
         playbackButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: 3, bottom: 0, right: 0)

@@ -66,7 +66,6 @@ struct CurrentProgram {
         
         if hasMultiplePrograms! {
             FireStoreManager.fetchSubProgramsWithIDs(programIDs: programIDs!, for: nil) {
-                print("Sub programs added")
             }
         }  
     }
@@ -88,6 +87,7 @@ struct CurrentProgram {
         ownerID = nil
         image = nil
         imageID = nil
+        webLink = nil
         imagePath = nil
         hasIntro = nil
         introID = nil

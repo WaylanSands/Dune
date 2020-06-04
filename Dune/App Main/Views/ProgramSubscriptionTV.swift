@@ -49,6 +49,32 @@ class ProgramSubscriptionTV: UITableView {
         }
     }
     
+    func fetchUserSubscriptions() {
+
+        FireStoreManager.fetchUsersSubscriptions() { snapshot in
+            
+            if snapshot.count != 0 {
+                
+                var counter = 0
+                
+                for eachDocument in snapshot {
+                    counter += 1
+                    
+                    let data = eachDocument.data()
+                    let newProgram = Program(data: data)
+                    
+                    if !self.downloadedPrograms.contains(where: { $0.ID  == newProgram.ID}) {
+                        self.downloadedPrograms.append(newProgram)
+                    }
+                    
+                    if counter == User.subscriptionIDs!.count{
+                        self.reloadData()
+                    }
+                }
+            }
+        }
+    }
+    
     func programsIDs() -> [String] {
         if CurrentProgram.hasMultiplePrograms! {
             var ids = CurrentProgram.programIDs!

@@ -16,7 +16,8 @@ class EpisodeTagLookupVC: UIViewController {
 
     let tableView = UITableView()
     var audioPlayer = DuneAudioPlayer()
-
+   
+    var pushingComment = false
     var audioIDs = [String]()
     var downloadedEpisodes = [Episode]()
 
@@ -51,9 +52,6 @@ class EpisodeTagLookupVC: UIViewController {
     
     func addEpisodesToAudioPlayer() {
         audioPlayer.downloadedEpisodes = downloadedEpisodes
-        for eachEp in downloadedEpisodes {
-            audioPlayer.audioIDs.append(eachEp.audioID)
-        }
     }
     
     func configureEpisodeLabelWith(count: Int) {
@@ -80,10 +78,13 @@ class EpisodeTagLookupVC: UIViewController {
 
     override func viewWillAppear(_ animated: Bool) {
         selectedCellRow = nil
+        pushingComment = false
     }
 
     override func viewWillDisappear(_ animated: Bool) {
-        audioPlayer.finishSession()
+        if !pushingComment {
+            audioPlayer.finishSession()
+        }
         
         if pushedForward == false {
             navigationController?.popToRootViewController(animated: true)
@@ -98,7 +99,7 @@ class EpisodeTagLookupVC: UIViewController {
         subscriptionSettings.settingsDelegate = self
         ownEpisodeSettings.settingsDelegate = self
         tableView.register(EpisodeCell.self, forCellReuseIdentifier: "episodeCell")
-        audioPlayer.playbackDelegate = self
+        audioPlayer.audioPlayerDelegate = self
         tableView.dataSource = self
         tableView.delegate = self
     }
@@ -219,7 +220,7 @@ extension EpisodeTagLookupVC: EpisodeCellDelegate {
 
     func visitProfile(program: Program) {
             if program.isPrimaryProgram && program.hasMultiplePrograms!  {
-                let programVC = TProgramProfileVC()
+                let programVC = ProgramProfileVC()
                 programVC.program = program
                 navigationController?.pushViewController(programVC, animated: true)
             } else {
@@ -243,9 +244,9 @@ extension EpisodeTagLookupVC: EpisodeCellDelegate {
         
         audioPlayer.yPosition = view.frame.height - self.tabBarController!.tabBar.frame.height
 
-        guard let audioIndex = tableView.indexPath(for: cell)?.row else { return }
+//        guard let audioIndex = tableView.indexPath(for: cell)?.row else { return }
         let image = cell.programImageButton.imageView?.image
-        let audioID = audioPlayer.audioIDs[audioIndex]
+        let audioID = cell.episode.audioID
 
         getAudioWith(audioID: audioID) { url in
             self.audioPlayer.playOrPause(episode: cell.episode, with: url, image: image!)
@@ -269,8 +270,6 @@ extension EpisodeTagLookupVC: EpisodeCellDelegate {
 
     func deleteOwnEpisode() {
         guard let row = selectedCellRow else { return }
-        print("ROW \(row)")
-        // Delete own episode
         let episode = self.downloadedEpisodes[row]
         FireStorageManager.deletePublishedAudioFromStorage(audioID: episode.audioID)
         FireStoreManager.removeEpisodeIDFromProgram(programID: episode.programID, episodeID: episode.ID, time: episode.timeStamp)
@@ -282,7 +281,6 @@ extension EpisodeTagLookupVC: EpisodeCellDelegate {
 
         let index = IndexPath(item: row, section: 0)
         downloadedEpisodes.removeAll(where: { $0.ID == episode.ID })
-        audioPlayer.audioIDs.removeAll(where: { $0 == episode.ID })
         audioPlayer.downloadedEpisodes.removeAll(where: { $0.ID == episode.ID })
         tableView.deleteRows(at: [index], with: .fade)
 
@@ -334,9 +332,21 @@ extension EpisodeTagLookupVC: EpisodeEditorDelegate {
     }
 }
 
-extension EpisodeTagLookupVC: PlaybackBarDelegate {
+extension EpisodeTagLookupVC: DuneAudioPlayerDelegate {
+    
+    func showCommentsFor(episode: Episode) {
+        pushingComment = true
+        audioPlayer.pauseSession()
+        let commentVC = CommentThreadVC(episode: episode)
+        commentVC.hidesBottomBarWhenPushed = true
+        navigationController?.pushViewController(commentVC, animated: true)
+    }
+   
+    func playedEpisode(episode: Episode) {
+        //
+    }
 
-    func updateProgressBarWith(percentage: CGFloat, forType: PlayBackType) {
+    func updateProgressBarWith(percentage: CGFloat, forType: PlayBackType, episodeID: String) {
         guard let cell = activeCell else { return }
         cell.playbackBarView.progressUpdateWith(percentage: percentage)
     }

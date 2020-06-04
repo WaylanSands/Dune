@@ -24,6 +24,10 @@ class SubProgramAccountVC: UIViewController {
     let loadingView = TVLoadingAnimationView(topHeight: 15)
     var selectedCellRow: Int?
     
+    var lastProgress: CGFloat = 0
+    var lastPlayedID: String?
+    var listenCountUpdated = false
+    
     var downloadedEpisodes = [Episode]()
     var batchLimit = 10
     var programIDs = [String]()
@@ -275,9 +279,11 @@ class SubProgramAccountVC: UIViewController {
     
     func configureDelegates() {
         episodeTV.register(EpisodeCell.self, forCellReuseIdentifier: "episodeCell")
+        episodeTV.register(EpisodeCellRegLink.self, forCellReuseIdentifier: "episodeCellRegLink")
+        episodeTV.register(EpisodeCellSmlLink.self, forCellReuseIdentifier: "EpisodeCellSmlLink")
         ownEpisodeSettings.settingsDelegate = self
         settingsLauncher.settingsDelegate = self
-        audioPlayer.playbackDelegate = self
+        audioPlayer.audioPlayerDelegate = self
         episodeTV.dataSource = self
         episodeTV.delegate = self
     }
@@ -372,7 +378,6 @@ class SubProgramAccountVC: UIViewController {
                 let episode = Episode(data: data)
                 self.batch.append(episode)
                 
-                print("Batch count \(self.batch.count) eps to fetch count \(self.episodesToFetch.count)")
                 if self.batch.count == self.episodesToFetch.count{
                    
                     let orderedBatch = self.batch.sorted { (epA , epB) -> Bool in
@@ -384,10 +389,8 @@ class SubProgramAccountVC: UIViewController {
                     for each in orderedBatch {
                         self.downloadedEpisodes.append(each)
                         self.audioPlayer.downloadedEpisodes.append(each)
-                        self.audioPlayer.audioIDs.append(each.audioID)
                     }
                     
-                    print("Im here")
                     self.fetchedEpisodeIDs += self.episodesToFetch
                     self.loadingView.removeFromSuperview()
                     self.episodesToFetch.removeAll()
@@ -643,11 +646,6 @@ extension SubProgramAccountVC: UIScrollViewDelegate {
         } else {
             navigationItem.title = ""
         }
-        
-        //        if scrollView == scrollView {
-        //            let offset = scrollView.contentOffset.y
-        //        }
-        
     }
     
     func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
@@ -667,25 +665,46 @@ extension SubProgramAccountVC: UIScrollViewDelegate {
 }
 
 extension SubProgramAccountVC: UITableViewDataSource, UITableViewDelegate {
+    
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return downloadedEpisodes.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "episodeCell") as! EpisodeCell
-        cell.moreButton.addTarget(cell, action: #selector(EpisodeCell.moreUnwrap), for: .touchUpInside)
-        cell.programImageButton.addTarget(cell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
-        cell.episodeSettingsButton.addTarget(cell, action: #selector(EpisodeCell.showSettings), for: .touchUpInside)
-        cell.likeButton.addTarget(cell, action: #selector(EpisodeCell.likeButtonPress), for: .touchUpInside)
-        
+        var episodeCell: EpisodeCell
         let episode = downloadedEpisodes[indexPath.row]
-        cell.episode = episode
-        if episode.likeCount >= 10 {
-            cell.configureCellWithOptions()
+        
+        if episode.richLink == nil {
+            episodeCell = tableView.dequeueReusableCell(withIdentifier: "episodeCell") as! EpisodeCell
+        } else if episode.linkIsSmall! {
+            episodeCell = tableView.dequeueReusableCell(withIdentifier: "EpisodeCellSmlLink") as! EpisodeCellSmlLink
+        } else {
+            episodeCell = tableView.dequeueReusableCell(withIdentifier: "episodeCellRegLink") as! EpisodeCellRegLink
         }
-        cell.cellDelegate = self
-        cell.normalSetUp(episode: episode)
-        return cell
+        
+        episodeCell.episode = episode
+        episodeCell.episodeSettingsButton.addTarget(episodeCell, action: #selector(EpisodeCell.showSettings), for: .touchUpInside)
+        episodeCell.programImageButton.addTarget(episodeCell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
+        episodeCell.commentButton.addTarget(episodeCell, action: #selector(EpisodeCell.showComments), for: .touchUpInside)
+        episodeCell.likeButton.addTarget(episodeCell, action: #selector(EpisodeCell.likeButtonPress), for: .touchUpInside)
+        episodeCell.moreButton.addTarget(episodeCell, action: #selector(EpisodeCell.moreUnwrap), for: .touchUpInside)
+        episodeCell.normalSetUp(episode: episode)
+        episodeCell.cellDelegate = self
+        
+        if episode.likeCount >= 10 && episodeCell.optionsConfigured == false {
+            episodeCell.configureCellWithOptions()
+            episodeCell.optionsConfigured = true
+        } else if episode.likeCount < 10 && episodeCell.optionsConfigured {
+            episodeCell.configureWithoutOptions()
+            episodeCell.optionsConfigured = false
+        }
+        
+        if let playerEpisode = audioPlayer.episode  {
+            if episode.ID == playerEpisode.ID {
+                activeCell = episodeCell
+            }
+        }
+        return episodeCell
     }
 }
 
@@ -794,17 +813,55 @@ extension SubProgramAccountVC: SettingsLauncherDelegate {
     }
 }
 
-extension SubProgramAccountVC: PlaybackBarDelegate {
+extension SubProgramAccountVC: DuneAudioPlayerDelegate {
     
-    func updateProgressBarWith(percentage: CGFloat, forType: PlayBackType) {
+    func showCommentsFor(episode: Episode) {
+        dismiss(animated: true) {
+            NotificationCenter.default.post(name: NSNotification.Name(rawValue: "modalCommentPush"), object: nil, userInfo: ["ID": episode.ID])
+        }
+    }
+   
+    func playedEpisode(episode: Episode) {
+        //
+    }
+    
+    func updateProgressBarWith(percentage: CGFloat, forType: PlayBackType, episodeID: String) {
+        
+        if lastPlayedID != episodeID {
+            updatePastEpisodeProgress()
+            listenCountUpdated = false
+        }
+        
+        lastPlayedID = episodeID
         guard let cell = activeCell else { return }
-        cell.playbackBarView.progressUpdateWith(percentage: percentage)
+        if percentage > 0.0 {
+            cell.playbackBarView.progressUpdateWith(percentage: percentage)
+            lastProgress = percentage
+            
+            if percentage > 0.90 && !listenCountUpdated && cell.episode.listenCount < 1000 {
+                let listenCount = Int(cell.listenCountLabel.text!)
+                if let count = listenCount {
+                    cell.listenCountLabel.text = String(count + 1)
+                    listenCountUpdated = true
+                }
+            }
+        }
     }
     
     func updateActiveCell(atIndex: Int, forType: PlayBackType) {
-        let cell = episodeTV.cellForRow(at: IndexPath(item: atIndex, section: 0)) as! EpisodeCell
-        cell.playbackBarView.setupPlaybackBar()
-        activeCell = cell
+        let indexPath = IndexPath(item: atIndex, section: 0)
+        if episodeTV.indexPathsForVisibleRows!.contains(indexPath) {
+            let cell = episodeTV.cellForRow(at: IndexPath(item: atIndex, section: 0)) as! EpisodeCell
+            cell.playbackBarView.setupPlaybackBar()
+            activeCell = cell
+        }
+    }
+    
+    func updatePastEpisodeProgress() {
+        guard let index = downloadedEpisodes.firstIndex(where: { $0.ID == lastPlayedID }) else { return }
+        let episode = downloadedEpisodes[index]
+        episode.playBackProgress = lastProgress
+        downloadedEpisodes[index] = episode
     }
     
 }

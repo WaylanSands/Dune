@@ -31,6 +31,8 @@ class Program {
     var introID: String?
     var introPath: String?
     var primaryCategory: String?
+    var hasBeenPlayed = false
+    var playBackProgress: CGFloat = 0
     
     init(data: [String: Any]) {        
         ID = data["ID"] as! String
@@ -54,7 +56,6 @@ class Program {
         primaryCategory = data["primaryCategory"] as? String
         
         if imageID != nil {
-            
             FileManager.getImageWith(imageID: imageID!) { image in
                 DispatchQueue.main.async {
                     self.image = image
@@ -64,11 +65,11 @@ class Program {
             self.image = #imageLiteral(resourceName: "missing-image-large")
         }
         
-            if isPrimaryProgram && hasMultiplePrograms! {
-                FireStoreManager.fetchSubProgramsWithIDs(programIDs: programIDs!, for: self) {
-                    print("Sub programs added")
-                }
+        if isPrimaryProgram && hasMultiplePrograms! {
+            FireStoreManager.fetchSubProgramsWithIDs(programIDs: programIDs!, for: self) {
+                print("Programs added")
             }
+        }
     }
     
     func programsIDs() -> [String] {
@@ -80,5 +81,5 @@ class Program {
             return [CurrentProgram.ID!]
         }
     }
-
+    
 }

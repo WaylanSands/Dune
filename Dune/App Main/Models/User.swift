@@ -14,29 +14,45 @@ struct User {
     static var ID: String?
     static var username: String?
     static var displayName: String?
+    static var summary: String?
+    static var tags: [String]?
     static var imageID: String?
     static var imagePath: String?
     static var image: UIImage?
     static var email: String?
+    static var socialSignUp: Bool?
+    static var subscriberCount: Int?
+    static var webLink: String?
+    static var subscriberIDs: [String]?
     static var password: String?
     static var birthDate: String?
     static var isPublisher: Bool?
     static var programID: String?
     static var hasMultiplePrograms: Bool?
+    static var favouriteIDs: [String]?
+    static var favouritePrograms: [Program]?
     static var programIDs: [String]?
     static var subscriptionIDs: [String]?
-    static var likedEpisodesIDs: [String]?
+    static var likedEpisodes: [String]?
     static var sharedEpisodes: [String]?
     static var savedContent: [String]?
     static var draftEpisodeIDs: [String]?
     static var interests: [String]?
     static var completedOnBoarding: Bool?
+    static var upVotedComments: [String]?
+    static var downVotedComments: [String]?
     
     static func modelUser(data: [String: Any]) {
-        print("Modelling User Singleton")
+        print("Modelling User")
         ID = data["ID"] as? String
+        webLink = data["webLink"] as? String
+        summary = data["summary"] as? String
+        tags = data["tags"] as? [String]
         username = data["username"] as? String
+        subscriberCount = data["subscriberCount"] as? Int
+        subscriberIDs = data["subscriberIDs "] as? [String]
         displayName = data["displayName"] as? String
+        favouriteIDs = data["favouriteIDs"] as? [String]
         imageID = data["imageID"] as? String
         imagePath = data["imagePath"] as? String
         email = data["email"] as? String
@@ -46,12 +62,14 @@ struct User {
         hasMultiplePrograms = data["hasMultiplePrograms"] as? Bool
         programIDs = data["programIDs"] as? [String]
         subscriptionIDs = data["subscriptionIDs"] as? [String]
-        likedEpisodesIDs = data["likedEpisodesIDs"] as? [String]
+        likedEpisodes = data["likedEpisodes"] as? [String]
         sharedEpisodes = data["sharedEpisodes"] as? [String]
         savedContent = data["savedContent"] as? [String]
         draftEpisodeIDs = data["draftEpisodeIDs"] as? [String]
         interests = data["interests"] as? [String]
         completedOnBoarding = data["completedOnBoarding"] as? Bool
+        upVotedComments = data["upVotedComments"] as? [String]
+        downVotedComments = data["downVotedComments"] as? [String]
         
         if imageID != nil {
             FileManager.getImageWith(imageID: imageID!) { image in
@@ -62,12 +80,23 @@ struct User {
         } else {
             self.image = #imageLiteral(resourceName: "missing-image-large")
         }
+        
+        if !isPublisher! && favouriteIDs?.count != 0 {
+            FireStoreManager.fetchFavouriteProgramsWithIDs(programIDs: favouriteIDs!, for: nil) {
+            }
+        }
     }
     
     static func signOutUser() {
         ID = nil
         username = nil
+        tags = nil
         displayName = nil
+        favouriteIDs = nil
+        subscriberIDs = nil
+        subscriberCount = nil
+        webLink = nil
+        summary = nil
         imageID = nil
         imagePath = nil
         image = nil
@@ -79,7 +108,7 @@ struct User {
         hasMultiplePrograms = nil
         programIDs = nil
         subscriptionIDs = nil
-        likedEpisodesIDs = nil
+        likedEpisodes = nil
         sharedEpisodes = nil
         savedContent = nil
         draftEpisodeIDs = nil
@@ -89,47 +118,3 @@ struct User {
     
 }
 
-
-//class CurrentUser {
-//
-//    var ID: String
-//    var username: String
-//    var displayName: String
-//    var imageID: String?
-//    var imagePath: String?
-//    var image: UIImage?
-//    var email: String
-//    var password: String
-//    var birthDate: String
-//    var isPublisher: Bool
-//    var programID: String?
-//    var hasMultiplePrograms: Bool?
-//    var programIDs: [String]?
-//    var subscriptionIDs: [String]?
-//    var likedEpisodes: [String]?
-//    var savedContent: [String]?
-//    var draftEpisodeIDs: [String]?
-//    var interests: [String]?
-//
-//
-//    init(userSnapshot: DocumentSnapshot) {
-//        guard let data = userSnapshot.data() else { return }
-//        self.ID = data["ID"] as! String
-//        self.username = data["username"] as! String
-//        self.displayName = data["displayName"] as! String
-//        imageID = data["imageID"] as? String
-//        imagePath = data["imagePath"] as? String
-//        email = data["email"] as! String
-//        self.birthDate = data["birthDate"] as! String
-//        self.isPublisher = data["isPublisher"] as! Bool
-//        programID = data["programID"] as? String
-//        hasMultiplePrograms = data["hasMultiplePrograms"] as? Bool
-//        programIDs = data["programIDs"] as? [String]
-//        subscriptionIDs = data["subscriptionIDs"] as? [String]
-//        likedEpisodes = data["likedEpisodes"] as? [String]
-//        savedContent = data["savedContent"] as? [String]
-//        draftEpisodeIDs = data["draftEpisodeIDs"] as? [String]
-//        interests = data["interests"] as? [String]
-//    }
-    
-//}

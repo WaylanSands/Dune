@@ -1,19 +1,9 @@
-//
-//  ViewController.swift
-//  TwitterProfile
-//
-//  Created by OfTheWolf on 08/18/2019.
-//  Copyright (c) 2019 OfTheWolf. All rights reserved.
-//
+
 
 import UIKit
 import Firebase
 
-protocol updateProgramAccountScrollDelegate {
-    func updateScrollContent()
-}
-
-class TProgramAccountVC : UIViewController {
+class ListenerAccountVC : UIViewController {
         
     let minHeight = UIDevice.current.navBarHeight() + 40
     let navHeight = UIDevice.current.navBarHeight()
@@ -31,17 +21,11 @@ class TProgramAccountVC : UIViewController {
     var tableViews: [Int: UIView] = [:]
     var currentIndex: Int = 0
 
-    let accountBottomVC = ProgramAccountBottomVC()
+    let accountBottomVC = ListenerAccountBottomVC()
    
     let settingsLauncher = SettingsLauncher(options: SettingOptions.sharing, type: .sharing)
     
-    lazy var headerBarButtons: [UIButton] = [episodesButton, subscriptionsButton]
-    
-//    let introPlayer = DuneIntroPlayer()
-//    var activeProgramCell: ProgramCell?
-//
-//    let audioPlayer = DuneAudioPlayer()
-//    var activeEpisodeCell: EpisodeCell?
+    lazy var headerBarButtons: [UIButton] = [activityButton, subscriptionsButton]
     
     let scrollView: UIScrollView = {
         let view = UIScrollView()
@@ -78,7 +62,7 @@ class TProgramAccountVC : UIViewController {
     
     lazy var mainImage: UIImageView = {
         let imageView = UIImageView()
-        imageView.layer.cornerRadius = 7
+        imageView.layer.cornerRadius = largeImageSize / 2
         imageView.clipsToBounds = true
         imageView.frame.size = CGSize(width: 74, height: 74)
         imageView.contentMode = .scaleAspectFill
@@ -115,11 +99,15 @@ class TProgramAccountVC : UIViewController {
         return label
     }()
     
-    // Intro button
-    let playIntroButton: UIButton = {
+    let createProgramButton: UIButton = {
         let button = UIButton()
         button.layer.cornerRadius = 13
+        button.setTitle("Create program", for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
+        button.backgroundColor = CustomStyle.secondShade
+        button.setTitleColor(CustomStyle.linkBlue, for: .normal)
+        button.contentEdgeInsets = UIEdgeInsets(top: 2, left: 15, bottom: 2, right: 15)
+        button.addTarget(self, action: #selector(switchToProgramAccount), for: .touchUpInside)
         return button
     }()
     
@@ -142,7 +130,7 @@ class TProgramAccountVC : UIViewController {
         button.setTitle("more", for: .normal)
         button.titleLabel!.font = UIFont.systemFont(ofSize: 14, weight: .regular)
         button.setTitleColor(CustomStyle.linkBlue, for: .normal)
-                    button.addTarget(self, action: #selector(moreUnwrap), for: .touchUpInside)
+        button.addTarget(self, action: #selector(moreUnwrap), for: .touchUpInside)
         return button
     }()
     
@@ -153,7 +141,7 @@ class TProgramAccountVC : UIViewController {
         button.setTitleColor(CustomStyle.primaryBlue, for: .normal)
         button.titleLabel?.textAlignment = .left
         button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 15, bottom: 0, right: 0)
-        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: -5, bottom: 0, right: 15)
+        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: -10, bottom: 0, right: 15)
         button.addTarget(self, action: #selector(websiteButtonPress), for: .touchUpInside)
         return button
     }()
@@ -162,6 +150,8 @@ class TProgramAccountVC : UIViewController {
         let view = UIStackView()
         view.axis = .vertical
         view.spacing = 20
+        view.layoutMargins = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 20)
+        view.isLayoutMarginsRelativeArrangement = true
         return view
     }()
     
@@ -174,7 +164,7 @@ class TProgramAccountVC : UIViewController {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
         label.textColor = CustomStyle.sixthShade
-        label.text = "\(CurrentProgram.subscriberCount!.roundedWithAbbreviations)"
+        label.text = "\(User.subscriberCount!.roundedWithAbbreviations)"
         return label
     }()
     
@@ -185,15 +175,15 @@ class TProgramAccountVC : UIViewController {
         return label
     }()
     
-    lazy var episodeCountLabel: UILabel = {
+    lazy var subscriptionsCountLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
         label.textColor = CustomStyle.sixthShade
-        label.text = "\(CurrentProgram.episodeIDs!.count)"
+        label.text = "\(User.subscriptionIDs!.count)"
         return label
     }()
     
-    let episodesLabel: UILabel = {
+    let subscriptionsLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
         label.textColor = CustomStyle.fourthShade
@@ -207,41 +197,41 @@ class TProgramAccountVC : UIViewController {
         return view
     }()
     
-    let editProgramButton: AccountButton = {
+    let editAccountButton: AccountButton = {
         let button = AccountButton()
         button.setImage(UIImage(named: "edit-account-icon"), for: .normal)
-        button.setTitle("Edit Program", for: .normal)
+        button.setTitle("Edit Account", for: .normal)
         button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 0)
-                    button.addTarget(self, action: #selector(editProgramButtonPress), for: .touchUpInside)
+        button.addTarget(self, action: #selector(editAccountPress), for: .touchUpInside)
         return button
     }()
     
-    let shareProgramButton: AccountButton = {
+    let shareAccountButton: AccountButton = {
         let button = AccountButton()
         button.setImage(UIImage(named: "share-account-icon"), for: .normal)
-                    button.addTarget(self, action: #selector(shareButtonPress), for: .touchUpInside)
-        button.setTitle("Share Program", for: .normal)
+        button.addTarget(self, action: #selector(shareButtonPress), for: .touchUpInside)
+        button.setTitle("Share Account", for: .normal)
         return button
     }()
     
-    let multipleProgramsLabelView: UIView = {
+    let FavouriteProgramsLabelView: UIView = {
         let view = UIView()
         return view
     }()
     
-    let multipleProgramsLabel: UILabel = {
+    let FavouriteProgramsLabel: UILabel = {
         let label = UILabel()
         label.textColor = CustomStyle.primaryBlack
         label.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
-        label.text = "Multiple programs"
+        label.text = "Promoted programs"
         return label
     }()
     
-    let multipleProgramsSubLabel: UILabel = {
+    let FavouriteProgramsSubLabel: UILabel = {
         let label = UILabel()
         label.textColor = CustomStyle.primaryBlack
         label.font = UIFont.systemFont(ofSize: 12, weight: .regular)
-        label.text = "Create multiple programs for @\(User.username!)"
+        label.text = "Programs favourited by @\(User.username!)"
         return label
     }()
     
@@ -257,21 +247,6 @@ class TProgramAccountVC : UIViewController {
         return view
     }()
     
-    let addIconView: UIImageView = {
-        let view = UIImageView()
-        view.image = UIImage(named: "add-program-icon")
-        return view
-    }()
-    
-    let createLabel: UILabel = {
-        let label = UILabel()
-        label.textColor = CustomStyle.primaryBlack
-        label.font = UIFont.systemFont(ofSize: 12, weight: .regular)
-        label.text = "Create"
-        label.textAlignment = .center
-        return label
-    }()
-    
     let tableViewButtons: UIView = {
         let view = UIView()
         return view
@@ -283,9 +258,9 @@ class TProgramAccountVC : UIViewController {
         return view
     }()
     
-    let episodesButton: UIButton = {
+    let activityButton: UIButton = {
         let button = UIButton()
-        button.setTitle("Episodes", for: .normal)
+        button.setTitle("Activity", for: .normal)
         button.setTitleColor(CustomStyle.primaryBlack, for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
         button.addTarget(self, action: #selector(tableViewTabButtonPress(sender:)), for: .touchUpInside)
@@ -309,25 +284,26 @@ class TProgramAccountVC : UIViewController {
     }
     
     override func viewWillAppear(_ animated: Bool) {
+        programsScrollView.setScrollBarToTopLeft()
         overlayScrollView.setScrollBarToTopLeft()
-        configureSubAccounts()
-        configureIntroButton()
+        configureFavouritePrograms()
+        setupFavouriteObserver()
         setupTopBar()
         addWebLink()
 
-        mainImage.image = CurrentProgram.image!
-        nameLabel.text = CurrentProgram.name
+        mainImage.image = User.image!
+        nameLabel.text = User.displayName
         usernameLabel.text = "@\(User.username!)"
-        categoryLabel.text = CurrentProgram.primaryCategory
-        summaryTextView.text = CurrentProgram.summary
+        categoryLabel.text = "Listener"
+        summaryTextView.text = User.summary
                 
-        let episodes = CurrentProgram.episodeIDs
-        let subscribers = CurrentProgram.subscriberCount
+        let subscriptions = User.subscriptionIDs
+        let subscribers = User.subscriberCount
 
-        if episodes!.count == 1 {
-            episodesLabel.text = "Episode"
+        if subscriptions!.count == 1 {
+            subscriptionsLabel.text = "Subscription"
         } else {
-            episodesLabel.text = "Episodes"
+            subscriptionsLabel.text = "Subscriptions"
         }
 
         if subscribers == 1 {
@@ -342,7 +318,6 @@ class TProgramAccountVC : UIViewController {
         }
     }
     
-    
     override func viewDidAppear(_ animated: Bool) {
         headerHeight = (minHeight)...headerHeightCalculated()
         prepareSetup()
@@ -353,27 +328,33 @@ class TProgramAccountVC : UIViewController {
     }
     
     override func viewWillDisappear(_ animated: Bool) {
-        tableViewTabButtonPress(sender: episodesButton)
-        websiteLinkButton.removeConstraints(websiteLinkButton.constraints)
-        websiteLinkButton.removeFromSuperview()
+        removeFavouriteObserver()
     }
     
     override func viewDidDisappear(_ animated: Bool) {
-        createLabel.removeFromSuperview()
-        addIconView.removeFromSuperview()
-
+        tableViewTabButtonPress(sender: activityButton)
+        websiteLinkButton.removeConstraints(websiteLinkButton.constraints)
+        websiteLinkButton.removeFromSuperview()
+        
         for each in programsScrollView.subviews {
             if each is UILabel {
                 each.removeFromSuperview()
             }
         }
-
+        
         let buttons = programsStackView.subviews as! [UIButton]
-            for each in buttons {
-                each.setImage(UIImage(), for: .normal)
-                each.removeTarget(self, action: #selector(programSelection(sender:)), for: .touchUpInside)
-                each.removeTarget(self, action: #selector(createProgram), for: .touchUpInside)
-            }
+        for each in buttons {
+            each.setImage(UIImage(), for: .normal)
+            each.removeTarget(self, action: #selector(programSelection(sender:)), for: .touchUpInside)
+        }
+    }
+    
+    func setupFavouriteObserver() {
+        NotificationCenter.default.addObserver(self, selector: #selector(self.updatePromotedPrograms), name: NSNotification.Name(rawValue: "updateFavourites"), object: nil)
+    }
+    
+    func removeFavouriteObserver() {
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: "updateFavourites"), object: nil)
     }
     
     func prepareSetup() {
@@ -403,13 +384,17 @@ class TProgramAccountVC : UIViewController {
     }
 
     func headerHeightCalculated() -> CGFloat {
-        var height: CGFloat = 120 + navHeight
+        var height: CGFloat = 110 + navHeight
         
         for each in headerView.subviews {
             height += each.frame.height
         }
+        
+        if headerView.subviews.contains(moreButton) {
+            height -= moreButton.frame.height
+        }
+            
         accountBottomVC.headerHeight = height
-        print("Height \(height)")
         return height
     }
     
@@ -434,17 +419,17 @@ class TProgramAccountVC : UIViewController {
         mainImage.widthAnchor.constraint(equalToConstant: largeImageSize).isActive = true
         mainImage.heightAnchor.constraint(equalToConstant: largeImageSize).isActive = true
         
-        topDetailsView.addSubview(playIntroButton)
-        playIntroButton.translatesAutoresizingMaskIntoConstraints = false
-        playIntroButton.topAnchor.constraint(equalTo: topDetailsView.topAnchor).isActive = true
-        playIntroButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
-        playIntroButton.heightAnchor.constraint(equalToConstant: 26).isActive = true
+        topDetailsView.addSubview(createProgramButton)
+        createProgramButton.translatesAutoresizingMaskIntoConstraints = false
+        createProgramButton.topAnchor.constraint(equalTo: topDetailsView.topAnchor).isActive = true
+        createProgramButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
+        createProgramButton.heightAnchor.constraint(equalToConstant: 26).isActive = true
         
         topDetailsView.addSubview(topMiddleStackedView)
         topMiddleStackedView.translatesAutoresizingMaskIntoConstraints = false
-        topMiddleStackedView.topAnchor.constraint(equalTo: topDetailsView.topAnchor).isActive = true
+        topMiddleStackedView.topAnchor.constraint(equalTo: topDetailsView.topAnchor, constant: 10).isActive = true
         topMiddleStackedView.leadingAnchor.constraint(equalTo: mainImage.trailingAnchor, constant: 10).isActive = true
-        topMiddleStackedView.trailingAnchor.constraint(lessThanOrEqualTo: playIntroButton.leadingAnchor, constant: -20).isActive = true
+        topMiddleStackedView.trailingAnchor.constraint(lessThanOrEqualTo: createProgramButton.leadingAnchor, constant: -20).isActive = true
         topMiddleStackedView.addArrangedSubview(nameLabel)
         topMiddleStackedView.addArrangedSubview(usernameLabel)
         topMiddleStackedView.addArrangedSubview(categoryLabel)
@@ -458,8 +443,6 @@ class TProgramAccountVC : UIViewController {
         headerView.addSubview(linkAndStatsStackedView)
         linkAndStatsStackedView.translatesAutoresizingMaskIntoConstraints = false
         linkAndStatsStackedView.topAnchor.constraint(equalTo: summaryTextView.bottomAnchor, constant: 15).isActive = true
-        linkAndStatsStackedView.trailingAnchor.constraint(lessThanOrEqualTo: view.leadingAnchor, constant: -20).isActive = true
-        linkAndStatsStackedView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
         
         linkAndStatsStackedView.addArrangedSubview(statsView)
         statsView.heightAnchor.constraint(equalToConstant: 15).isActive = true
@@ -467,22 +450,21 @@ class TProgramAccountVC : UIViewController {
         statsView.addSubview(subscriberCountLabel)
         subscriberCountLabel.translatesAutoresizingMaskIntoConstraints = false
         subscriberCountLabel.centerYAnchor.constraint(equalTo: statsView.centerYAnchor).isActive = true
-        subscriberCountLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
         
         statsView.addSubview(subscribersLabel)
         subscribersLabel.translatesAutoresizingMaskIntoConstraints = false
         subscribersLabel.centerYAnchor.constraint(equalTo: statsView.centerYAnchor).isActive = true
         subscribersLabel.leadingAnchor.constraint(equalTo: subscriberCountLabel.trailingAnchor, constant: 5).isActive = true
         
-        statsView.addSubview(episodeCountLabel)
-        episodeCountLabel.translatesAutoresizingMaskIntoConstraints = false
-        episodeCountLabel.centerYAnchor.constraint(equalTo: statsView.centerYAnchor).isActive = true
-        episodeCountLabel.leadingAnchor.constraint(equalTo: subscribersLabel.trailingAnchor, constant: 15).isActive = true
+        statsView.addSubview(subscriptionsCountLabel)
+        subscriptionsCountLabel.translatesAutoresizingMaskIntoConstraints = false
+        subscriptionsCountLabel.centerYAnchor.constraint(equalTo: statsView.centerYAnchor).isActive = true
+        subscriptionsCountLabel.leadingAnchor.constraint(equalTo: subscribersLabel.trailingAnchor, constant: 15).isActive = true
         
-        statsView.addSubview(episodesLabel)
-        episodesLabel.translatesAutoresizingMaskIntoConstraints = false
-        episodesLabel.centerYAnchor.constraint(equalTo: statsView.centerYAnchor).isActive = true
-        episodesLabel.leadingAnchor.constraint(equalTo: episodeCountLabel.trailingAnchor, constant: 5).isActive = true
+        statsView.addSubview(subscriptionsLabel)
+        subscriptionsLabel.translatesAutoresizingMaskIntoConstraints = false
+        subscriptionsLabel.centerYAnchor.constraint(equalTo: statsView.centerYAnchor).isActive = true
+        subscriptionsLabel.leadingAnchor.constraint(equalTo: subscriptionsCountLabel.trailingAnchor, constant: 5).isActive = true
         
         headerView.addSubview(buttonsStackedView)
         buttonsStackedView.translatesAutoresizingMaskIntoConstraints = false
@@ -491,29 +473,29 @@ class TProgramAccountVC : UIViewController {
         buttonsStackedView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
         buttonsStackedView.heightAnchor.constraint(equalToConstant: 32.0).isActive = true
         
-        buttonsStackedView.addArrangedSubview(editProgramButton)
-        buttonsStackedView.addArrangedSubview(shareProgramButton)
+        buttonsStackedView.addArrangedSubview(editAccountButton)
+        buttonsStackedView.addArrangedSubview(shareAccountButton)
         
-        headerView.addSubview(multipleProgramsLabelView)
-        multipleProgramsLabelView.translatesAutoresizingMaskIntoConstraints = false
-        multipleProgramsLabelView.topAnchor.constraint(equalTo: buttonsStackedView.bottomAnchor, constant: 20).isActive = true
-        multipleProgramsLabelView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
-        multipleProgramsLabelView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
-        multipleProgramsLabelView.heightAnchor.constraint(equalToConstant: 40).isActive = true
+        headerView.addSubview(FavouriteProgramsLabelView)
+        FavouriteProgramsLabelView.translatesAutoresizingMaskIntoConstraints = false
+        FavouriteProgramsLabelView.topAnchor.constraint(equalTo: buttonsStackedView.bottomAnchor, constant: 20).isActive = true
+        FavouriteProgramsLabelView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
+        FavouriteProgramsLabelView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
+        FavouriteProgramsLabelView.heightAnchor.constraint(equalToConstant: 40).isActive = true
         
-        multipleProgramsLabelView.addSubview(multipleProgramsLabel)
-        multipleProgramsLabel.translatesAutoresizingMaskIntoConstraints = false
-        multipleProgramsLabel.topAnchor.constraint(equalTo: multipleProgramsLabelView.topAnchor, constant: 5).isActive = true
-        multipleProgramsLabel.leadingAnchor.constraint(equalTo: multipleProgramsLabelView.leadingAnchor).isActive = true
+        FavouriteProgramsLabelView.addSubview(FavouriteProgramsLabel)
+        FavouriteProgramsLabel.translatesAutoresizingMaskIntoConstraints = false
+        FavouriteProgramsLabel.topAnchor.constraint(equalTo: FavouriteProgramsLabelView.topAnchor, constant: 5).isActive = true
+        FavouriteProgramsLabel.leadingAnchor.constraint(equalTo: FavouriteProgramsLabelView.leadingAnchor).isActive = true
         
-        multipleProgramsLabelView.addSubview(multipleProgramsSubLabel)
-        multipleProgramsSubLabel.translatesAutoresizingMaskIntoConstraints = false
-        multipleProgramsSubLabel.topAnchor.constraint(equalTo: multipleProgramsLabel.bottomAnchor, constant: 5).isActive = true
-        multipleProgramsSubLabel.leadingAnchor.constraint(equalTo: multipleProgramsLabelView.leadingAnchor).isActive = true
+        FavouriteProgramsLabelView.addSubview(FavouriteProgramsSubLabel)
+        FavouriteProgramsSubLabel.translatesAutoresizingMaskIntoConstraints = false
+        FavouriteProgramsSubLabel.topAnchor.constraint(equalTo: FavouriteProgramsLabel.bottomAnchor, constant: 5).isActive = true
+        FavouriteProgramsSubLabel.leadingAnchor.constraint(equalTo: FavouriteProgramsLabelView.leadingAnchor).isActive = true
         
         headerView.addSubview(programsScrollView)
         programsScrollView.translatesAutoresizingMaskIntoConstraints = false
-        programsScrollView.topAnchor.constraint(equalTo: multipleProgramsLabelView.bottomAnchor, constant: 20).isActive = true
+        programsScrollView.topAnchor.constraint(equalTo: FavouriteProgramsLabelView.bottomAnchor, constant: 20).isActive = true
         programsScrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         programsScrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         programsScrollView.heightAnchor.constraint(equalToConstant: 85).isActive = true
@@ -527,11 +509,10 @@ class TProgramAccountVC : UIViewController {
         
         headerView.addSubview(tableViewButtons)
         tableViewButtons.translatesAutoresizingMaskIntoConstraints = false
-        tableViewButtons.topAnchor.constraint(equalTo: programsStackView.bottomAnchor, constant: 40).isActive = true
+        tableViewButtons.topAnchor.constraint(equalTo: programsStackView.bottomAnchor, constant: 30).isActive = true
         tableViewButtons.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         tableViewButtons.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         tableViewButtons.heightAnchor.constraint(equalToConstant: 40).isActive = true
-//        tableViewButtons.backgroundColor = .gray
         
         tableViewButtons.addSubview(tableViewButtonsLine)
         tableViewButtonsLine.translatesAutoresizingMaskIntoConstraints = false
@@ -540,23 +521,23 @@ class TProgramAccountVC : UIViewController {
         tableViewButtonsLine.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         tableViewButtonsLine.heightAnchor.constraint(equalToConstant: 1).isActive = true
         
-        tableViewButtons.addSubview(episodesButton)
-        episodesButton.translatesAutoresizingMaskIntoConstraints = false
-        episodesButton.centerYAnchor.constraint(equalTo: tableViewButtons.centerYAnchor, constant: -4).isActive = true
-        episodesButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
+        tableViewButtons.addSubview(activityButton)
+        activityButton.translatesAutoresizingMaskIntoConstraints = false
+        activityButton.centerYAnchor.constraint(equalTo: tableViewButtons.centerYAnchor, constant: -5).isActive = true
+        activityButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
         
         tableViewButtons.addSubview(subscriptionsButton)
         subscriptionsButton.translatesAutoresizingMaskIntoConstraints = false
-        subscriptionsButton.centerYAnchor.constraint(equalTo: tableViewButtons.centerYAnchor, constant: -4).isActive = true
-        subscriptionsButton.leadingAnchor.constraint(equalTo: episodesButton.trailingAnchor, constant: 20).isActive = true
+        subscriptionsButton.centerYAnchor.constraint(equalTo: tableViewButtons.centerYAnchor, constant: -5).isActive = true
+        subscriptionsButton.leadingAnchor.constraint(equalTo: activityButton.trailingAnchor, constant: 20).isActive = true
             
         createProgramButtons()
     }
     
     func addWebLink() {
-        if CurrentProgram.webLink != nil && CurrentProgram.webLink != "" {
+        if User.webLink != nil && User.webLink != "" {
         linkAndStatsStackedView.insertArrangedSubview(websiteLinkButton, at: 0)
-        websiteLinkButton.setTitle(CurrentProgram.webLink?.lowercased(), for: .normal)
+        websiteLinkButton.setTitle(User.webLink?.lowercased(), for: .normal)
         websiteLinkButton.widthAnchor.constraint(equalToConstant: websiteLinkButton.intrinsicContentSize.width + 15).isActive = true
         websiteLinkButton.heightAnchor.constraint(equalToConstant: 15).isActive = true
         }
@@ -575,7 +556,6 @@ class TProgramAccountVC : UIViewController {
             self.summaryTextView.textContainer.exclusionPaths = [path]
         }
     }
-    
     
     func setupTopBar() {
         let navBar = navigationController?.navigationBar
@@ -616,34 +596,12 @@ class TProgramAccountVC : UIViewController {
             break
         }
     }
-
-    func configureIntroButton() {
-        if CurrentProgram.hasIntro == true {
-            playIntroButton.setTitle("Play Intro", for: .normal)
-            playIntroButton.backgroundColor = CustomStyle.primaryYellow
-            playIntroButton.setTitleColor(CustomStyle.darkestBlack, for: .normal)
-            playIntroButton.setImage(UIImage(named: "small-play-icon"), for: .normal)
-            playIntroButton.contentEdgeInsets = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 15)
-            playIntroButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: -10, bottom: 0, right: 0)
-            playIntroButton.removeTarget(self, action:  #selector(recordIntro), for: .touchUpInside)
-            playIntroButton.addTarget(self, action: #selector(playIntro), for: .touchUpInside)
-        } else {
-            playIntroButton.setImage(nil, for: .normal)
-            playIntroButton.setTitle("Add Intro", for: .normal)
-            playIntroButton.setTitleColor(.white, for: .normal)
-            playIntroButton.backgroundColor = CustomStyle.primaryBlue
-            playIntroButton.contentEdgeInsets = UIEdgeInsets(top: 0, left: 15, bottom: 0, right: 15)
-            playIntroButton.removeTarget(self, action: #selector(playIntro), for: .touchUpInside)
-            playIntroButton.addTarget(self, action: #selector(recordIntro), for: .touchUpInside)
-        }
-    }
     
-    func configureSubAccounts() {
+    func configureFavouritePrograms() {
         let buttons = programsStackView.subviews as! [UIButton]
         
-        if CurrentProgram.hasMultiplePrograms! && CurrentProgram.programIDs!.count == maxPrograms {
-            
-            for (index, item) in CurrentProgram.subPrograms!.enumerated() {
+        if User.favouriteIDs!.count != 0 {
+            for (index, item) in User.favouritePrograms!.enumerated() {
                 if item.image == nil {
                     FileManager.getImageWith(imageID: item.imageID!) { image in
                         DispatchQueue.main.async {
@@ -655,58 +613,43 @@ class TProgramAccountVC : UIViewController {
                 }
                 buttons[index].addTarget(self, action: #selector(programSelection(sender:)), for: .touchUpInside)
             }
-            
             createProgramLabels()
-        } else if CurrentProgram.hasMultiplePrograms! && CurrentProgram.programIDs!.count < maxPrograms {
-            configureCreationButton()
-            
-            for (index, item) in CurrentProgram.subPrograms!.enumerated() {
-                if item.image == nil {
-                    FileManager.getImageWith(imageID: item.imageID!) { image in
-                        DispatchQueue.main.async {
-                            buttons[index + 1].setImage(image, for: .normal)
-                        }
-                    }
-                } else {
-                    buttons[index + 1].setImage(item.image, for: .normal)
-                }
-                buttons[index + 1].addTarget(self, action: #selector(programSelection(sender:)), for: .touchUpInside)
-            }
-            createProgramLabels()
-        } else {
-            configureCreationButton()
         }
+    }
+    
+    @objc func updatePromotedPrograms() {
+        for each in programsScrollView.subviews {
+            if each is UILabel {
+                each.removeFromSuperview()
+            }
+        }
+        
+        let buttons = programsStackView.subviews as! [UIButton]
+        for each in buttons {
+            each.setImage(UIImage(), for: .normal)
+            each.removeTarget(self, action: #selector(programSelection(sender:)), for: .touchUpInside)
+        }
+        configureFavouritePrograms()
     }
     
     @objc func programSelection(sender: UIButton) {
         let buttons = programsStackView.subviews as! [UIButton]
-        let programs = CurrentProgram.subPrograms!
-        var index = buttons.firstIndex(of: sender)!
-        
-        print("Current program count \(CurrentProgram.programIDs!.count)")
-        if CurrentProgram.programIDs!.count != maxPrograms {
-            index -= 1
-        }
-        
+        let programs = User.favouritePrograms!
+        let index = buttons.firstIndex(of: sender)!
         let program = programs[index]
         
-        let subProgramVC = SubProgramAccountVC(program: program)
-        navigationController?.pushViewController(subProgramVC, animated: true)
-    }
-    
-    func configureCreationButton() {
-        let firstView = programsStackView.arrangedSubviews[0] as! UIButton
-        firstView.addTarget(self, action: #selector(createProgram), for: .touchUpInside)
-        firstView.addSubview(addIconView)
-        addIconView.translatesAutoresizingMaskIntoConstraints = false
-        addIconView.centerYAnchor.constraint(equalTo: firstView.centerYAnchor).isActive = true
-        addIconView.centerXAnchor.constraint(equalTo: firstView.centerXAnchor).isActive = true
+        if program.isPrimaryProgram && program.hasMultiplePrograms!  {
+            let programVC = ProgramProfileVC()
+            programVC.program = program
+            navigationController?.pushViewController(programVC, animated: true)
+        } else {
+            let programVC = SubProgramProfileVC(program: program)
+            programVC.pushedFromListener = true
+            navigationController?.present(programVC, animated: true, completion: nil)
+        }
         
-        programsScrollView.addSubview(createLabel)
-        createLabel.translatesAutoresizingMaskIntoConstraints = false
-        createLabel.topAnchor.constraint(equalTo: firstView.bottomAnchor, constant: 5).isActive = true
-        createLabel.centerXAnchor.constraint(equalTo: firstView.centerXAnchor).isActive = true
-        createLabel.widthAnchor.constraint(equalTo: firstView.widthAnchor).isActive = true
+//        let subProgramVC = SubProgramAccountVC(program: program)
+//        navigationController?.pushViewController(subProgramVC, animated: true)
     }
     
     func createProgramButtons() {
@@ -720,17 +663,11 @@ class TProgramAccountVC : UIViewController {
     }
     
     func createProgramLabels() {
-        for (index, item) in CurrentProgram.subPrograms!.enumerated() {
+        for (index, item) in User.favouritePrograms!.enumerated() {
             let label = programLabel()
             label.text = item.name
-            
-            if CurrentProgram.subPrograms!.count == 10 {
-                let button = programsStackView.arrangedSubviews[index]
-                addConstraintsToProgram(label: label, with: button)
-            } else {
-                let button = programsStackView.arrangedSubviews[index + 1]
-                addConstraintsToProgram(label: label, with: button)
-            }
+            let button = programsStackView.arrangedSubviews[index]
+            addConstraintsToProgram(label: label, with: button)
         }
     }
     
@@ -740,12 +677,6 @@ class TProgramAccountVC : UIViewController {
         label.topAnchor.constraint(equalTo: button.bottomAnchor, constant: 5).isActive = true
         label.centerXAnchor.constraint(equalTo: button.centerXAnchor).isActive = true
         label.widthAnchor.constraint(equalTo: button.widthAnchor).isActive = true
-    }
-    
-    @objc func createProgram() {
-        let createProgramVC = CreateProgramVC()
-        createProgramVC.hidesBottomBarWhenPushed = true
-        navigationController?.pushViewController(createProgramVC, animated: true)
     }
     
     func program() -> UIButton {
@@ -758,25 +689,17 @@ class TProgramAccountVC : UIViewController {
     
     func programLabel() -> UILabel {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 10, weight: .regular)
+        label.font = UIFont.systemFont(ofSize: 10, weight: .medium)
         label.textColor = CustomStyle.fifthShade
         label.textAlignment = .center
         return label
     }
     
-    // MARK: Play Intro
-    
-    @objc func playIntro() {
-        accountBottomVC.playIntro()
-       
-        let offset = self.scrollView.contentOffset.y + unwrapDifference
-        let difference = UIScreen.main.bounds.height - headerHeight.upperBound
-        let position = (difference - tabBarController!.tabBar.frame.height - 70) + offset
-       
-        if !accountBottomVC.introPlayer.isInPosition {
-            accountBottomVC.introPlayer.yPosition = position
-        } else {
-            accountBottomVC.introPlayer.updateYPositionWith(value: position)
+    @objc func switchToProgramAccount() {
+        if let programNameVC = UIStoryboard(name: "OnboardingPublisher", bundle: nil).instantiateViewController(withIdentifier: "programNameVC") as? ProgramNameVC {
+            programNameVC.navigationController?.isNavigationBarHidden = true
+            programNameVC.hidesBottomBarWhenPushed = true
+            navigationController?.pushViewController(programNameVC, animated: true)
         }
     }
     
@@ -807,7 +730,7 @@ class TProgramAccountVC : UIViewController {
     }
     
     @objc func websiteButtonPress() {
-        let link = linkWithPrefix(urlString: CurrentProgram.webLink!)
+        let link = linkWithPrefix(urlString: User.webLink!)
     
         if let url = URL(string: link) {
             UIApplication.shared.open(url, options: [:])
@@ -858,7 +781,6 @@ class TProgramAccountVC : UIViewController {
     
     @objc func moreUnwrap() {
         let heightBefore = summaryTextView.frame.height
-        print("Height before : \(heightBefore)")
         unwrapped = true
         summaryTextView.textContainer.maximumNumberOfLines = 0
         summaryTextView.text = "\(CurrentProgram.summary!) "
@@ -871,7 +793,6 @@ class TProgramAccountVC : UIViewController {
         view.layoutIfNeeded()
         
         let heighAfter = summaryTextView.frame.height
-        print("Height after : \(heighAfter)")
         unwrapDifference = heighAfter - heightBefore
         accountBottomVC.unwrapDifference = unwrapDifference
         updateHeaderHeight()
@@ -883,10 +804,10 @@ class TProgramAccountVC : UIViewController {
         updateScrollContent()
     }
     
-    @objc func editProgramButtonPress() {
-        let editProgramVC = EditProgramVC()
-        editProgramVC.hidesBottomBarWhenPushed = true
-        navigationController?.pushViewController(editProgramVC, animated: true)
+    @objc func editAccountPress() {
+        let editAccountVC = EditListenerAccountVC()
+        editAccountVC.hidesBottomBarWhenPushed = true
+        navigationController?.pushViewController(editAccountVC, animated: true)
     }
     
     @objc func shareButtonPress() {
@@ -895,15 +816,7 @@ class TProgramAccountVC : UIViewController {
     
 }
 
-public extension UIScrollView{
-    func doNotAdjustContentInset(){
-        if #available(iOS 11.0, *) {
-            self.contentInsetAdjustmentBehavior = .never
-        }
-    }
-}
-
-extension TProgramAccountVC: UIScrollViewDelegate {
+extension ListenerAccountVC: UIScrollViewDelegate {
    
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
                 
@@ -953,6 +866,7 @@ extension TProgramAccountVC: UIScrollViewDelegate {
         }
     }
 }
+
 
 
 

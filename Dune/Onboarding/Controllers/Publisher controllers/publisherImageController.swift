@@ -15,6 +15,7 @@ class publisherImageVC: UIViewController {
     
     @IBOutlet weak var headingLabel: UILabel!
     @IBOutlet weak var uploadImageButton: UIButton!
+    @IBOutlet weak var addLaterButton: UIButton!
     @IBOutlet weak var headingLabelTopAnchor: NSLayoutConstraint!
     @IBOutlet weak var addLaterBottomAnchor: NSLayoutConstraint!
     @IBOutlet weak var continueButtonBottomAnchor: NSLayoutConstraint!
@@ -49,6 +50,15 @@ class publisherImageVC: UIViewController {
         view.addSubview(customNavBar)
         customNavBar.pinNavBarTo(view)
         skipAddingImageAlert.alertDelegate = self
+        configureAddLaterButton()
+    }
+    
+    func configureAddLaterButton() {
+        if User.image != nil {
+            addLaterButton.setTitle("Use current", for: .normal)
+            addLaterButton.removeTarget(self, action: #selector( addLaterButtonPress), for: .touchUpInside)
+            addLaterButton.addTarget(self, action: #selector(userCurrentImagePress), for: .touchUpInside)
+        }
     }
     
     func addRoundedCorners() {
@@ -84,6 +94,14 @@ class publisherImageVC: UIViewController {
     
     @IBAction func addLaterButtonPress(_ sender: UIButton) {
         view.addSubview(self.skipAddingImageAlert)
+    }
+    
+    @objc func userCurrentImagePress() {
+        CurrentProgram.image = User.image
+        CurrentProgram.imagePath = User.imagePath
+        CurrentProgram.imageID = User.imageID
+        FileManager.storeInitialProgramImage(image: CurrentProgram.image!, programID: CurrentProgram.ID!)
+        presentNextVC()
     }
     
     @objc func backButtonPress() {

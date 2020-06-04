@@ -7,12 +7,14 @@
 //
 
 import UIKit
+import WebKit
+import LinkPresentation
 
 
 class EpisodeCellRegLink: EpisodeCell {
     
-     let regularPreview = DuneLinkPreview()
-        
+    let regularPreview = DuneLinkPreview()
+    
     let linkStackView: UIStackView = {
         let view = UIStackView()
         view.contentMode = .scaleToFill
@@ -107,7 +109,7 @@ class EpisodeCellRegLink: EpisodeCell {
     
     override func normalSetUp(episode: Episode) {
         includeRichLink()
-        setupLikeButtonAndCounterFor(Episode: episode)
+        setupLikeButtonAndCounterFor(episode: episode)
         
         FileManager.getImageWith(imageID: episode.imageID) { image in
             DispatchQueue.main.async {
@@ -126,6 +128,7 @@ class EpisodeCellRegLink: EpisodeCell {
         }
         
         createTagButtons()
+        setupProgressBar()
         
         DispatchQueue.main.async {
             self.addGradient()
@@ -135,11 +138,12 @@ class EpisodeCellRegLink: EpisodeCell {
         }
     }
     
+    
     // MARK: Rich Link
     func includeRichLink() {
         configureRegularPreview { (result) in
             DispatchQueue.main.async {
-                if result == true {
+                if result == true && self.richLinkGenerator != nil {
                     self.regularPreview.imageButton.setImage(self.richLinkGenerator.largeImage, for: .normal)
                     self.regularPreview.imageButton.addTarget(self, action: #selector(self.linkTouched), for: .touchUpInside)
                     self.regularPreview.backgroundButton.addTarget(self, action: #selector(self.linkTouched), for: .touchUpInside)
@@ -149,6 +153,7 @@ class EpisodeCellRegLink: EpisodeCell {
             }
         }
     }
+    
 
     func configureRegularPreview(completion: @escaping (Bool) -> ()) {
         swiftLinkPreview.preview(episode.richLink!, onSuccess: { result in
@@ -163,6 +168,32 @@ class EpisodeCellRegLink: EpisodeCell {
             completion(false)
         })
     }
+    
+    //    @available(iOS 13.0, *)
+    //    func useLPLinkPreview() {
+    //        var provider = LPMetadataProvider()
+    //        var linkView = LPLinkView()
+    //
+    //        provider = LPMetadataProvider()
+    //
+    //        linkView.removeFromSuperview()
+    //
+    //        guard let url = URL(string: episode.richLink!) else { return }
+    //
+    //        linkView = LPLinkView(url: url)
+    //
+    //        provider.startFetchingMetadata(for: url) { metadata, error in
+    //            guard
+    //                let metadata = metadata,
+    //                error == nil
+    //                else { return }
+    //
+    //            DispatchQueue.main.async {
+    //                linkView.metadata = metadata
+    //                self.linkStackView.insertArrangedSubview(linkView, at: 0)
+    //            }
+    //        }
+    //    }
     
     @objc override func linkTouched() {
         print("link touched")
@@ -218,8 +249,14 @@ class EpisodeCellRegLink: EpisodeCell {
         if User.isPublisher! && CurrentProgram.programsIDs().contains(episode.programID) {
             let tabBar = MainTabController()
             tabBar.selectedIndex = 4
-            let appDelegate = UIApplication.shared.delegate as! AppDelegate
-            appDelegate.window?.rootViewController = tabBar
+            
+            if #available(iOS 13.0, *) {
+                let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
+                 sceneDelegate.window?.rootViewController = tabBar
+            } else {
+                 appDelegate.window?.rootViewController = tabBar
+            }
+            
         } else {
             FireStoreManager.fetchAndCreateProgramWith(programID: episode.programID) { program in
                 if program.isPrimaryProgram && program.hasMultiplePrograms! {

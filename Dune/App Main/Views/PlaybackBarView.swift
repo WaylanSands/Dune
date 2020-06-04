@@ -14,11 +14,6 @@ enum PlayBackType {
     case program
 }
 
-protocol PlaybackBarDelegate {
-    func updateProgressBarWith(percentage: CGFloat, forType: PlayBackType)
-    func updateActiveCell(atIndex: Int, forType: PlayBackType)
-}
-
 class PlaybackBarView: UIView {
     
     var playbackBarIsSetup = false
@@ -47,6 +42,20 @@ class PlaybackBarView: UIView {
         let width = (50 * percent) / 100
         self.progressView.frame = CGRect(x: 0, y: 0, width: width, height: 4)
     }
+    
+    func setProgressWith(percentage: CGFloat) {
+        let percent = percentage * 100
+        let width = (50 * percent) / 100
+        self.progressView.frame = CGRect(x: 0, y: 0, width: width, height: 4)
+    }
+    
+    func resetPlaybackBar() {
+        trackView.backgroundColor = .clear
+        progressView.backgroundColor = .clear
+        progressView.frame = startSize
+        playbackBarIsSetup = false
+    }
+    
 
 }
 

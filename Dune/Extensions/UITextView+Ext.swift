@@ -24,25 +24,4 @@ extension UITextView {
         return self.font!.lineHeight * CGFloat(self.lineCount())
     }
     
-//    func getStringWidth( ) -> CGFloat {
-//
-//        var fontWeight: UIFont.Weight
-//
-//        switch self.font?.fontName {
-//        case ".SFUI-Black": fontWeight = UIFont.Weight.black
-//        case ".SFUI-Bold": fontWeight = UIFont.Weight.bold
-//        case ".SFUI-Heavy": fontWeight = UIFont.Weight.heavy
-//        case ".SFUI-Light": fontWeight = UIFont.Weight.light
-//        case ".SFUI-Medium": fontWeight = UIFont.Weight.medium
-//        case ".SFUI-Regular": fontWeight = UIFont.Weight.regular
-//        case ".SFUI-Semibold": fontWeight = UIFont.Weight.semibold
-//        case ".SFUI-Thin": fontWeight = UIFont.Weight.thin
-//        case ".SFUI-UltraLight": fontWeight = UIFont.Weight.ultraLight
-//        default: fatalError("Font weight of \(String(describing: self.font?.familyName)) is unknown")
-//        }
-//
-//        let labelSize: CGSize = self.text!.size(withAttributes: [.font: UIFont.systemFont(ofSize: self.font!.pointSize, weight: fontWeight)])
-//        return labelSize.width
-//    }
-    
 }

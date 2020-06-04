@@ -12,6 +12,7 @@ import SwiftLinkPreview
 
 class AddEpisodeDetails: UIViewController {
     
+    let appDelegate = UIApplication.shared.delegate as! AppDelegate
     let imageViewSize:CGFloat = 65.0
     let maxCaptionCharacters = 240
     let maxTagCharacters = 45
@@ -924,8 +925,14 @@ class AddEpisodeDetails: UIViewController {
         networkingIndicator.removeFromSuperview()
         let tabBar = MainTabController()
         tabBar.selectedIndex = 2
-        let appDelegate = UIApplication.shared.delegate as! AppDelegate
-        appDelegate.window?.rootViewController = tabBar
+        
+        if #available(iOS 13.0, *) {
+            let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
+             sceneDelegate.window?.rootViewController = tabBar
+        } else {
+             appDelegate.window?.rootViewController = tabBar
+        }
+        
     }
     
     @objc func publishButtonPress() {
@@ -944,8 +951,13 @@ class AddEpisodeDetails: UIViewController {
         networkingIndicator.removeFromSuperview()
         let tabBar = MainTabController()
         tabBar.selectedIndex = 0
-        let appDelegate = UIApplication.shared.delegate as! AppDelegate
-        appDelegate.window?.rootViewController = tabBar
+        
+        if #available(iOS 13.0, *) {
+            let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
+             sceneDelegate.window?.rootViewController = tabBar
+        } else {
+             appDelegate.window?.rootViewController = tabBar
+        }
     }
     
     func trimThanStoreEpisodeOnFirebase() {
