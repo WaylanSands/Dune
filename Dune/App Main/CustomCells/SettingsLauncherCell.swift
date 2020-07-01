@@ -15,14 +15,15 @@ class SettingsLauncherCell: UICollectionViewCell {
             nameLabel.text = setting?.name
             
             if setting?.name == "Cancel" {
-//                nameLabel.font = UIFont.systemFont(ofSize: 18, weight: .medium)
-//                nameLabel.textColor = CustomStyle.linkBlue
                 borderLineView.isHidden = true
+                nameLabel.removeFromSuperview()
+                iconImageView.removeFromSuperview()
+                borderLineView.removeFromSuperview()
             }
             
             if let imageName = setting?.imageName {
                 iconImageView.image = UIImage(named: imageName)
-                 configureCellWithImage()
+                configureCellWithImage()
             } else {
                 configureCellWithoutImage()
             }
@@ -38,6 +39,7 @@ class SettingsLauncherCell: UICollectionViewCell {
     let nameLabel: UILabel = {
        let label = UILabel()
         label.text = "Settings"
+        label.font = UIFont.systemFont(ofSize: 15, weight: .regular)
         return label
     }()
     

@@ -21,6 +21,7 @@ class TrendingVC: UIViewController {
     
     var activeCell: EpisodeCell?
     var selectedCellRow: Int?
+    var episodeItems = [EpisodeItem]()
     
     var lastProgress: CGFloat = 0
     var lastPlayedID: String?
@@ -28,6 +29,7 @@ class TrendingVC: UIViewController {
     
     let subscriptionSettings = SettingsLauncher(options: SettingOptions.subscriptionEpisode, type: .subscriptionEpisode)
     let ownEpisodeSettings = SettingsLauncher(options: SettingOptions.ownEpisode, type: .ownEpisode)
+    let reportProgramAlert = CustomAlertView(alertType: .reportProgram)
     
     let tableView = UITableView()
     
@@ -77,12 +79,14 @@ class TrendingVC: UIViewController {
     func configureDelegates() {
         subscriptionSettings.settingsDelegate = self
         ownEpisodeSettings.settingsDelegate = self
+        reportProgramAlert.alertDelegate = self
         audioPlayer.audioPlayerDelegate = self
         tableView.delegate = self
         tableView.dataSource = self
         tableView.register(EpisodeCell.self, forCellReuseIdentifier: "episodeCell")
         tableView.register(EpisodeCellRegLink.self, forCellReuseIdentifier: "episodeCellRegLink")
         tableView.register(EpisodeCellSmlLink.self, forCellReuseIdentifier: "EpisodeCellSmlLink")
+        tableView.showsVerticalScrollIndicator = false
     }
     
     func setCurrentDate() {
@@ -158,7 +162,6 @@ class TrendingVC: UIViewController {
                     
                     self.downloadedEpisodes.append(episode)
                     self.audioPlayer.downloadedEpisodes.append(episode)
-//                    self.audioPlayer.audioIDs.append(episode.audioID)
                     
                     if counter == snapshot.count {
                         self.tableView.reloadData()
@@ -170,7 +173,6 @@ class TrendingVC: UIViewController {
     }
     
     func  fetchAnotherBatch() {
-        print("Fetching another batch")
         FireStoreManager.fetchTrendingEpisodesFrom(lastSnapshot: lastSnapshot!, limit: 10) { snapshots in
             
             if snapshots.count == 0 {
@@ -187,6 +189,7 @@ class TrendingVC: UIViewController {
                     let episode = Episode(data: data)
                     
                     self.downloadedEpisodes.append(episode)
+                    self.audioPlayer.downloadedEpisodes.append(episode)
                     
                     if counter == snapshots.count {
                         self.tableView.reloadData()
@@ -230,20 +233,26 @@ extension TrendingVC: UITableViewDelegate, UITableViewDataSource {
         }
         
         episodeCell.episode = episode
-        episodeCell.moreButton.addTarget(episodeCell, action: #selector(EpisodeCell.moreUnwrap), for: .touchUpInside)
-        episodeCell.programImageButton.addTarget(episodeCell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
         episodeCell.episodeSettingsButton.addTarget(episodeCell, action: #selector(EpisodeCell.showSettings), for: .touchUpInside)
-        episodeCell.likeButton.addTarget(episodeCell, action: #selector(EpisodeCell.likeButtonPress), for: .touchUpInside)
+        episodeCell.programImageButton.addTarget(episodeCell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
+        episodeCell.playEpisodeButton.addTarget(episodeCell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
         episodeCell.usernameButton.addTarget(episodeCell, action: #selector(EpisodeCell.visitProfile), for: .touchUpInside)
+        episodeCell.likeButton.addTarget(episodeCell, action: #selector(EpisodeCell.likeButtonPress), for: .touchUpInside)
+        episodeCell.moreButton.addTarget(episodeCell, action: #selector(EpisodeCell.moreUnwrap), for: .touchUpInside)
         episodeCell.normalSetUp(episode: episode)
         episodeCell.cellDelegate = self
         
-        if episode.likeCount >= 10 && episodeCell.optionsConfigured == false {
-            episodeCell.configureCellWithOptions()
-            episodeCell.optionsConfigured = true
-        } else if episode.likeCount < 10 && episodeCell.optionsConfigured {
-            episodeCell.configureWithoutOptions()
-            episodeCell.optionsConfigured = false
+        let gestureRec = UITapGestureRecognizer(target: episodeCell, action: #selector(EpisodeCell.captionPress))
+        if (episodeCell.captionTextView.gestureRecognizers?.count == 0 || episodeCell.captionTextView.gestureRecognizers?.count == nil)  && !episode.caption.contains("@") {
+            episodeCell.captionTextView.addGestureRecognizer(gestureRec)
+        } else if episode.caption.contains("@") {
+            if let recognisers = episodeCell.captionTextView.gestureRecognizers {
+                for gesture in recognisers  {
+                    if let recogniser = gesture as? UITapGestureRecognizer {
+                        episodeCell.captionTextView.removeGestureRecognizer(recogniser)
+                    }
+                }
+            }
         }
         
         if let playerEpisode = audioPlayer.episode  {
@@ -288,22 +297,38 @@ extension TrendingVC: SettingsLauncherDelegate {
             let episode = downloadedEpisodes[selectedCellRow!]
             let editEpisodeVC = EditPublishedEpisode(episode: episode)
             editEpisodeVC.delegate = self
-            navigationController?.present(editEpisodeVC, animated: true, completion: nil)
+            editEpisodeVC.hidesBottomBarWhenPushed = true
+            navigationController?.pushViewController(editEpisodeVC, animated: true)
+        case "Report":
+            UIApplication.shared.windows.last?.addSubview(reportProgramAlert)
         default:
             break
         }
     }
 }
+
+extension TrendingVC: CustomAlertDelegate {
     
+    func primaryButtonPress() {
+        if let row = selectedCellRow {
+            let episode = downloadedEpisodes[row]
+            FireStoreManager.reportEpisodeWith(episodeID: episode.ID)
+        }
+    }
+    
+    func cancelButtonPress() {
+        //
+    }
+
+}
 
 extension TrendingVC: EpisodeEditorDelegate {
     
     func updateCell(episode: Episode) {
-//        let episodeIndex = downloadedEps.firstIndex(where: {$0.ID == episode.ID})
-//        let indexPath = IndexPath(item: selectedCellRow!, section: 0)
-//
-//        downloadedEps[episodeIndex!] = episode
-//        tableView.reloadRows(at: [indexPath], with: .fade)
+        let episodeIndex = downloadedEpisodes.firstIndex(where: {$0.ID == episode.ID})
+        let indexPath = IndexPath(item: selectedCellRow!, section: 0)
+        downloadedEpisodes[episodeIndex!] = episode
+        tableView.reloadRows(at: [indexPath], with: .fade)
     }
  
 }
@@ -322,20 +347,32 @@ extension TrendingVC: EpisodeCellDelegate {
         navigationController?.pushViewController(commentVC, animated: true)
     }
     
-    func tagSelected(tag: String) {
+    func episodeTagSelected(tag: String) {
         let tagSelectedVC = EpisodeTagLookupVC(tag: tag)
         navigationController?.pushViewController(tagSelectedVC, animated: true)
     }
     
     func visitProfile(program: Program) {
-        if program.isPrimaryProgram && program.hasMultiplePrograms!  {
-            let programVC = ProgramProfileVC()
-            programVC.program = program
-            navigationController?.pushViewController(programVC, animated: true)
-        } else {
-            let programVC = SubProgramProfileVC(program: program)
-            navigationController?.present(programVC, animated: true, completion: nil)
-        }
+        if User.isPublisher! && CurrentProgram.programsIDs().contains(program.ID) {
+             let tabBar = MainTabController()
+             tabBar.selectedIndex = 4
+             if #available(iOS 13.0, *) {
+                 let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
+                  sceneDelegate.window?.rootViewController = tabBar
+             } else {
+                let appDelegate = UIApplication.shared.delegate as! AppDelegate
+                  appDelegate.window?.rootViewController = tabBar
+             }
+         } else {
+             if program.isPrimaryProgram && !program.programIDs!.isEmpty  {
+                 let programVC = ProgramProfileVC()
+                 programVC.program = program
+                 navigationController?.pushViewController(programVC, animated: true)
+             } else {
+                 let programVC = SingleProgramProfileVC(program: program)
+                 navigationController?.pushViewController(programVC, animated: true)
+             }
+         }
     }
     
     func updateLikeCountFor(episode: Episode, at indexPath: IndexPath) {
@@ -344,24 +381,26 @@ extension TrendingVC: EpisodeCellDelegate {
     
     func playEpisode(cell: EpisodeCell) {
          activeCell = cell
+         
          if !cell.playbackBarView.playbackBarIsSetup {
              cell.playbackBarView.setupPlaybackBar()
          }
-       
-        audioPlayer.yPosition = view.frame.height - self.tabBarController!.tabBar.frame.height
-        
-        let image = cell.programImageButton.imageView?.image
-        let audioID = cell.episode.audioID
-             
-         getAudioWith(audioID: audioID) { url in
-             self.audioPlayer.playOrPause(episode: cell.episode, with: url, image: image!)
-         }
+         
+         audioPlayer.yPosition = view.frame.height - self.tabBarController!.tabBar.frame.height
+         
+         let image = cell.programImageButton.imageView?.image
+         let audioID = cell.episode.audioID
+         
+         self.audioPlayer.setEpisodeDetailsWith(episode: cell.episode, image: image!)
+         self.audioPlayer.animateToPositionIfNeeded()
+         self.audioPlayer.playOrPauseEpisodeWith(audioID: audioID)
     }
     
     func deleteOwnEpisode() {
         guard let row = selectedCellRow else { return }
         let episode = self.downloadedEpisodes[row]
-        FireStoreManager.removeEpisodeIDFromProgram(programID: episode.programID, episodeID: episode.ID, time: episode.timeStamp)
+        guard let item = episodeItems.first(where: { $0.id == episode.ID }) else { return }
+        FireStoreManager.removeEpisodeIDFromProgram(programID: episode.programID, episodeID: episode.ID, time: episode.timeStamp, category: item.category)
         FireStorageManager.deletePublishedAudioFromStorage(audioID: episode.audioID)
         FireStoreManager.deleteEpisodeDocument(ID: episode.ID)
 
@@ -381,7 +420,6 @@ extension TrendingVC: EpisodeCellDelegate {
     }
     
     func showSettings(cell: EpisodeCell) {
-        print("reached")
         selectedCellRow =  downloadedEpisodes.firstIndex(where: { $0.ID == cell.episode.ID })
         
         if cell.episode.username == User.username! {
@@ -419,7 +457,7 @@ extension TrendingVC: DuneAudioPlayerDelegate {
         
         lastPlayedID = episodeID
         guard let cell = activeCell else { return }
-        if percentage > 0.0 {
+        if percentage > 0.01 {
             cell.playbackBarView.progressUpdateWith(percentage: percentage)
             lastProgress = percentage
             
@@ -437,6 +475,7 @@ extension TrendingVC: DuneAudioPlayerDelegate {
         let indexPath = IndexPath(item: atIndex, section: 0)
         if tableView.indexPathsForVisibleRows!.contains(indexPath) {
             let cell = tableView.cellForRow(at: IndexPath(item: atIndex, section: 0)) as! EpisodeCell
+            cell.playEpisodeButton.setImage(nil, for: .normal)
             cell.playbackBarView.setupPlaybackBar()
             activeCell = cell
         }

@@ -48,7 +48,6 @@ class NetworkingProgress: UIView {
     }
 
     func animate() {
-        
         let xPosition = downloadProgressBackground.frame.minX
         let yPosition = downloadProgressBackground.frame.minY
         let width = downloadProgressBackground.frame.width
@@ -63,9 +62,6 @@ class NetworkingProgress: UIView {
                                    self.downloadProgressBar.frame = CGRect(x: xPosition, y: yPosition, width: width, height: height)
 
         }, completion: { (finished: Bool) -> Void in
-            
-//           self.downloadProgressBar.frame = CGRect(x: xPosition, y: yPosition, width: 0, height: height)
-
         })
     }
     
@@ -99,11 +95,5 @@ class NetworkingProgress: UIView {
         containerView.addSubview(downloadProgressBar)
        
     }
-
-//      taskLabel.text = "Fetching episodes"
-//      taskLabel.text = "Saving audio"
-//      taskLabel.text = "Publishing episode"
-//      taskLabel.text = "Saving episode details"
-//      taskLabel.text = "Task progress"
 
 }

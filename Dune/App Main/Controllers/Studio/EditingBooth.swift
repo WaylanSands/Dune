@@ -54,11 +54,18 @@ class EditingBoothVC: UIViewController {
     var endTime: Double = 0
     var wasTrimmed = false
     
+    // For various screens
+    var imageTopConstant: CGFloat = 120
+    var recordButtonBottomConstant: CGFloat = -60
+    var soundWaveCenterConstant: CGFloat = 200
+    
     var maxValue: Float = Float(UIScreen.main.bounds.width) - Float(60)
     
     var networkingIndicator = NetworkingProgress()
 
     lazy var tabBar = navigationController?.tabBarController?.tabBar
+   
+    let nextVersionAlert = CustomAlertView(alertType: .nextVersion)
     
     let tooShortAlert = CustomAlertView(alertType: .shortAudioLength)
     let audioTooLong = CustomAlertView(alertType: .audioTooLong)
@@ -197,7 +204,7 @@ class EditingBoothVC: UIViewController {
         let button = UIButton()
         button.layer.cornerRadius = 24
         button.clipsToBounds = true
-        button.setImage(UIImage(named: "filter-audio-icon"), for: .normal)
+        button.setImage(UIImage(named: "audio-to-video"), for: .normal)
         button.addTarget(self, action: #selector(addFilterButtonPress), for: .touchUpInside)
         return button
     }()
@@ -243,6 +250,7 @@ class EditingBoothVC: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         addGradient()
+        styleForScreens()
         configureViews()
         addEditingButtons()
         
@@ -332,7 +340,6 @@ class EditingBoothVC: UIViewController {
         if audioPlayer != nil {
             audioPlayer.stop()
         }
-        
     }
     
     @objc func resetViews() {
@@ -388,6 +395,34 @@ class EditingBoothVC: UIViewController {
         }
     }
     
+    func styleForScreens() {
+        switch UIDevice.current.deviceType {
+        case .iPhone4S:
+            break
+        case .iPhoneSE:
+            episodeLabel.isHidden = true
+            duneLogoImageView.isHidden = true
+            imageTopConstant = 80
+            recordButtonBottomConstant = -20
+            soundWaveCenterConstant = 150
+        case .iPhone8:
+            recordButtonBottomConstant = -25
+        case .iPhone8Plus:
+            recordButtonBottomConstant = -25
+            soundWaveCenterConstant = 210
+        case .iPhone11:
+            soundWaveCenterConstant = 210
+            imageTopConstant = 180
+        case .iPhone11Pro:
+            imageTopConstant = 170
+        case .iPhone11ProMax:
+            soundWaveCenterConstant = 230
+            imageTopConstant = 190
+        case .unknown:
+            break
+        }
+    }
+    
     func configureViews() {
         view.addSubview(usernameLabel)
         usernameLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -397,7 +432,7 @@ class EditingBoothVC: UIViewController {
         
         view.addSubview(recordButton)
         recordButton.translatesAutoresizingMaskIntoConstraints = false
-        recordButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -60).isActive = true
+        recordButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: recordButtonBottomConstant).isActive = true
         recordButton.centerXAnchor.constraint(equalTo:view.centerXAnchor).isActive = true
         recordButton.heightAnchor.constraint(equalToConstant: 64).isActive = true
         recordButton.widthAnchor.constraint(equalToConstant: 64).isActive = true
@@ -406,7 +441,7 @@ class EditingBoothVC: UIViewController {
         circleTimerView.translatesAutoresizingMaskIntoConstraints = false
         circleTimerView.centerYAnchor.constraint(equalTo: recordButton.centerYAnchor).isActive = true
         circleTimerView.centerXAnchor.constraint(equalTo:view.centerXAnchor).isActive = true
-        circleTimerView.setupLoadingAnimation()
+        circleTimerView.configureLoadingView()
         
         circleTimerView.addSubview(stopButtonView)
         stopButtonView.translatesAutoresizingMaskIntoConstraints = false
@@ -417,11 +452,10 @@ class EditingBoothVC: UIViewController {
         
         view.addSubview(programImageView)
         programImageView.translatesAutoresizingMaskIntoConstraints = false
-        programImageView.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -70).isActive = true
+        programImageView.topAnchor.constraint(equalTo: view.topAnchor, constant: imageTopConstant).isActive = true
         programImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
         programImageView.widthAnchor.constraint(equalToConstant: view.frame.width - 60).isActive = true
         programImageView.heightAnchor.constraint(equalToConstant: view.frame.width - 60).isActive = true
-        programImageView.backgroundColor = .green
         
         view.addSubview(musicView)
         musicView.translatesAutoresizingMaskIntoConstraints = false
@@ -446,10 +480,10 @@ class EditingBoothVC: UIViewController {
         timerLabel.translatesAutoresizingMaskIntoConstraints = false
         timerLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
         timerLabel.topAnchor.constraint(equalTo: programImageView.bottomAnchor, constant: 30).isActive = true
-        
+                
         view.addSubview(responsiveSoundWave)
         responsiveSoundWave.translatesAutoresizingMaskIntoConstraints = false
-        responsiveSoundWave.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: 200).isActive = true
+        responsiveSoundWave.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: soundWaveCenterConstant).isActive = true
         responsiveSoundWave.heightAnchor.constraint(equalToConstant: 1200).isActive = true
         responsiveSoundWave.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         responsiveSoundWave.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
@@ -543,10 +577,10 @@ class EditingBoothVC: UIViewController {
         
         if duration < 10 {
             print("Too short of a recording")
-            UIApplication.shared.windows.last?.addSubview(tooShortAlert)
+            view.addSubview(tooShortAlert)
         } else if duration > 60 {
             print("Greater than 60 seconds")
-            UIApplication.shared.windows.last?.addSubview(audioTooLong)
+            view.addSubview(audioTooLong)
         } else {
             let addEpisodeDetails = AddEpisodeDetails()
             addEpisodeDetails.episodeFileName = fileName
@@ -689,28 +723,6 @@ class EditingBoothVC: UIViewController {
         CustomAnimation.transitionRedo(button: redoButton, to: recordButton)
     }
     
-    // Get permission to record
-//    @objc func setupRecordingSession() {
-//        recordingSession = AVAudioSession.sharedInstance()
-//
-//        do {
-//            try recordingSession.setCategory(.playAndRecord, mode: .default)
-//            try recordingSession.setActive(true)
-//            recordingSession.requestRecordPermission() { [unowned self] allowed in
-//                DispatchQueue.main.async {
-//                    if allowed {
-//                        self.recordButtonPress()
-//                    } else {
-//                        // Test this here
-//                        print("Refused to record")
-//                    }
-//                }
-//            }
-//        } catch {
-//            print("Unable to start recording \(error)")
-//        }
-//    }
-    
     func trackAudio() {
         playbackLink = CADisplayLink(target: self, selector: #selector(trackRegularPlayback))
         playbackLink.add(to: RunLoop.current, forMode: RunLoop.Mode.common)
@@ -763,8 +775,7 @@ class EditingBoothVC: UIViewController {
     
     @objc func addFilterButtonPress() {
         resetEditingModes()
-        addFilterButton.backgroundColor = .white
-        addFilterButton.setImage(UIImage(named: "filter-audio-selected"), for: .normal)
+        view.addSubview(nextVersionAlert)
     }
     
     // MARK: BackGround music
@@ -939,7 +950,6 @@ extension EditingBoothVC: AVAudioRecorderDelegate, AVAudioPlayerDelegate {
         if success {
             print("Success recording")
             playBackBars.setupPlaybackBars(url: recordingURL, snapshot: recordingSnapshot)
-//           playBackBars.resetPrimaryWave()
         } else {
             print("Recording failed")
         }

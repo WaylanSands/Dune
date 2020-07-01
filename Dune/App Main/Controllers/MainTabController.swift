@@ -18,18 +18,11 @@ class MainTabController: UITabBarController {
     
     func setupTabBar() {
         
-        var accountController: UINavigationController
-        
+        let accountController = UINavigationController(rootViewController: ProgramAccountVC())
         let mainFeedController = UINavigationController(rootViewController: MainFeedVC())
+        let playlistController = UINavigationController(rootViewController: TrendingVC())
         let searchController = UINavigationController(rootViewController: SearchVC())
         let studioController = UINavigationController(rootViewController: StudioVC())
-        let playlistController = UINavigationController(rootViewController: TrendingVC())
-       
-        if User.isPublisher! {
-            accountController = UINavigationController(rootViewController: ProgramAccountVC())
-        } else {
-            accountController = UINavigationController(rootViewController: ListenerAccountVC())
-        }
         
         mainFeedController.tabBarItem.image = UIImage(imageLiteralResourceName: "feed-icon")
         mainFeedController.tabBarItem.selectedImage = UIImage(imageLiteralResourceName: "feed-icon-selected")

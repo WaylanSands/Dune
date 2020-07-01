@@ -20,6 +20,7 @@ class EpisodeTagLookupVC: UIViewController {
     var pushingComment = false
     var audioIDs = [String]()
     var downloadedEpisodes = [Episode]()
+    var episodeItems = [EpisodeItem]()
 
     var activeCell: EpisodeCell?
     var selectedCellRow: Int?
@@ -28,6 +29,7 @@ class EpisodeTagLookupVC: UIViewController {
 
     let subscriptionSettings = SettingsLauncher(options: SettingOptions.subscriptionEpisode, type: .subscriptionEpisode)
     let ownEpisodeSettings = SettingsLauncher(options: SettingOptions.ownEpisode, type: .ownEpisode)
+    let reportEpisodeAlert = CustomAlertView(alertType: .reportEpisode)
 
     let episodeNumberLabel: UILabel = {
         let label = UILabel()
@@ -86,9 +88,9 @@ class EpisodeTagLookupVC: UIViewController {
             audioPlayer.finishSession()
         }
         
-        if pushedForward == false {
-            navigationController?.popToRootViewController(animated: true)
-        }
+//        if pushedForward == false {
+//            navigationController?.popToRootViewController(animated: true)
+//        }
 
         FileManager.removeAudioFilesFromDocumentsDirectory() {
             print("Audio removed")
@@ -99,6 +101,7 @@ class EpisodeTagLookupVC: UIViewController {
         subscriptionSettings.settingsDelegate = self
         ownEpisodeSettings.settingsDelegate = self
         tableView.register(EpisodeCell.self, forCellReuseIdentifier: "episodeCell")
+        reportEpisodeAlert.alertDelegate = self
         audioPlayer.audioPlayerDelegate = self
         tableView.dataSource = self
         tableView.delegate = self
@@ -113,7 +116,7 @@ class EpisodeTagLookupVC: UIViewController {
     func configureNavigation() {
         UINavigationBar.appearance().titleTextAttributes = CustomStyle.blackNavBarAttributes
         navigationItem.title = tag
-        navigationController?.navigationBar.prefersLargeTitles = true
+        navigationController?.navigationBar.prefersLargeTitles = false
         navigationController?.navigationBar.isHidden = false
         navigationController?.navigationBar.setBackgroundImage(nil, for: .default)
         navigationController?.navigationBar.barStyle = .default
@@ -139,6 +142,7 @@ class EpisodeTagLookupVC: UIViewController {
 
         view.addSubview(tableView)
         view.sendSubviewToBack(tableView)
+        tableView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 64, right: 0)
         tableView.pinEdges(to: view)
         tableView.backgroundColor = .white
 
@@ -150,20 +154,7 @@ class EpisodeTagLookupVC: UIViewController {
         view.addSubview(audioPlayer)
         audioPlayer.frame = CGRect(x: 0, y: view.frame.height, width: view.frame.width, height: 70)
     }
-
-    func getAudioWith(audioID: String, completion: @escaping (URL) -> ()) {
-
-        let tempURL = FileManager.getTempDirectory()
-        let fileURL = tempURL.appendingPathComponent(audioID)
-
-        if FileManager.default.fileExists(atPath: fileURL.path) {
-            completion(fileURL)
-        } else {
-            FireStorageManager.downloadEpisodeAudio(audioID: audioID) { url in
-                completion(url)
-            }
-        }
-    }
+    
 }
 
 extension EpisodeTagLookupVC: UITableViewDataSource, UITableViewDelegate {
@@ -175,20 +166,28 @@ extension EpisodeTagLookupVC: UITableViewDataSource, UITableViewDelegate {
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let episodeCell = tableView.dequeueReusableCell(withIdentifier: "episodeCell") as! EpisodeCell
         episodeCell.moreButton.addTarget(episodeCell, action: #selector(EpisodeCell.moreUnwrap), for: .touchUpInside)
+        episodeCell.playEpisodeButton.addTarget(episodeCell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
         episodeCell.programImageButton.addTarget(episodeCell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
         episodeCell.episodeSettingsButton.addTarget(episodeCell, action: #selector(EpisodeCell.showSettings), for: .touchUpInside)
         episodeCell.likeButton.addTarget(episodeCell, action: #selector(EpisodeCell.likeButtonPress), for: .touchUpInside)
         episodeCell.usernameButton.addTarget(episodeCell, action: #selector(EpisodeCell.visitProfile), for: .touchUpInside)
-//        episodeCell.configureCellWithOptions()
-//        episodeCell.row = indexPath.row
-        // Set up the cell with the downloaded ep data
 
         let episode = downloadedEpisodes[indexPath.row]
         episodeCell.episode = episode
-
-        if episode.likeCount >= 10 {
-            episodeCell.configureCellWithOptions()
+        
+        let gestureRec = UITapGestureRecognizer(target: episodeCell, action: #selector(EpisodeCell.captionPress))
+        if (episodeCell.captionTextView.gestureRecognizers?.count == 0 || episodeCell.captionTextView.gestureRecognizers?.count == nil)  && !episode.caption.contains("@") {
+            episodeCell.captionTextView.addGestureRecognizer(gestureRec)
+        } else if episode.caption.contains("@") {
+            if let recognisers = episodeCell.captionTextView.gestureRecognizers {
+                for gesture in recognisers  {
+                    if let recogniser = gesture as? UITapGestureRecognizer {
+                        episodeCell.captionTextView.removeGestureRecognizer(recogniser)
+                    }
+                }
+            }
         }
+        
         episodeCell.cellDelegate = self
         episodeCell.normalSetUp(episode: episode)
         return episodeCell
@@ -211,7 +210,7 @@ extension EpisodeTagLookupVC: UITableViewDataSource, UITableViewDelegate {
 
 extension EpisodeTagLookupVC: EpisodeCellDelegate {
     
-    func tagSelected(tag: String) {
+    func episodeTagSelected(tag: String) {
         let tagSelectedVC = EpisodeTagLookupVC(tag: tag)
         pushedForward = true
         navigationController?.pushViewController(tagSelectedVC, animated: true)
@@ -219,13 +218,13 @@ extension EpisodeTagLookupVC: EpisodeCellDelegate {
 
 
     func visitProfile(program: Program) {
-            if program.isPrimaryProgram && program.hasMultiplePrograms!  {
+            if program.isPrimaryProgram && !program.programIDs!.isEmpty  {
                 let programVC = ProgramProfileVC()
                 programVC.program = program
                 navigationController?.pushViewController(programVC, animated: true)
             } else {
-                let programVC = SubProgramProfileVC(program: program)
-                navigationController?.present(programVC, animated: true, completion: nil)
+                let programVC = SingleProgramProfileVC(program: program)
+                navigationController?.pushViewController(programVC, animated: true)
             }
     }
 
@@ -238,19 +237,19 @@ extension EpisodeTagLookupVC: EpisodeCellDelegate {
 
     func playEpisode(cell: EpisodeCell) {
         activeCell = cell
+        
         if !cell.playbackBarView.playbackBarIsSetup {
             cell.playbackBarView.setupPlaybackBar()
         }
         
         audioPlayer.yPosition = view.frame.height - self.tabBarController!.tabBar.frame.height
-
-//        guard let audioIndex = tableView.indexPath(for: cell)?.row else { return }
+        
         let image = cell.programImageButton.imageView?.image
         let audioID = cell.episode.audioID
-
-        getAudioWith(audioID: audioID) { url in
-            self.audioPlayer.playOrPause(episode: cell.episode, with: url, image: image!)
-        }
+        
+        self.audioPlayer.setEpisodeDetailsWith(episode: cell.episode, image: image!)
+        self.audioPlayer.animateToPositionIfNeeded()
+        self.audioPlayer.playOrPauseEpisodeWith(audioID: audioID)
     }
 
     func updateLikeCountFor(episode: Episode, at indexPath: IndexPath) {
@@ -272,7 +271,9 @@ extension EpisodeTagLookupVC: EpisodeCellDelegate {
         guard let row = selectedCellRow else { return }
         let episode = self.downloadedEpisodes[row]
         FireStorageManager.deletePublishedAudioFromStorage(audioID: episode.audioID)
-        FireStoreManager.removeEpisodeIDFromProgram(programID: episode.programID, episodeID: episode.ID, time: episode.timeStamp)
+        guard let item = episodeItems.first(where: { $0.id == episode.ID }) else { return }
+        FireStoreManager.removeEpisodeIDFromProgram(programID: episode.programID, episodeID: episode.ID, time: episode.timeStamp, category: item.category)
+        FireStoreManager.updateProgramRep(programID: CurrentProgram.ID!, repMethod: episode.ID, rep: -7)
         FireStoreManager.deleteEpisodeDocument(ID: episode.ID)
 
         if episode.programID == CurrentProgram.ID {
@@ -293,7 +294,7 @@ extension EpisodeTagLookupVC: EpisodeCellDelegate {
     }
 
     func addTappedProgram(programName: String) {
-//        tappedPrograms.append(programName)
+        //
     }
 
     func updateRows() {
@@ -314,7 +315,10 @@ extension EpisodeTagLookupVC: SettingsLauncherDelegate {
             let episode = downloadedEpisodes[selectedCellRow!]
             let editEpisodeVC = EditPublishedEpisode(episode: episode)
             editEpisodeVC.delegate = self
-            navigationController?.present(editEpisodeVC, animated: true, completion: nil)
+            editEpisodeVC.hidesBottomBarWhenPushed = true
+            navigationController?.pushViewController(editEpisodeVC, animated: true)
+        case "Report":
+            UIApplication.shared.windows.last?.addSubview(reportEpisodeAlert)
         default:
             break
         }
@@ -336,7 +340,9 @@ extension EpisodeTagLookupVC: DuneAudioPlayerDelegate {
     
     func showCommentsFor(episode: Episode) {
         pushingComment = true
-        audioPlayer.pauseSession()
+        if audioPlayer.audioPlayer != nil {
+            audioPlayer.pauseSession()
+        }
         let commentVC = CommentThreadVC(episode: episode)
         commentVC.hidesBottomBarWhenPushed = true
         navigationController?.pushViewController(commentVC, animated: true)
@@ -353,8 +359,24 @@ extension EpisodeTagLookupVC: DuneAudioPlayerDelegate {
 
     func updateActiveCell(atIndex: Int, forType: PlayBackType) {
         let cell = tableView.cellForRow(at: IndexPath(item: atIndex, section: 0)) as! EpisodeCell
+        cell.playEpisodeButton.setImage(nil, for: .normal)
         cell.playbackBarView.setupPlaybackBar()
         activeCell = cell
+    }
+
+}
+
+extension EpisodeTagLookupVC: CustomAlertDelegate {
+    
+    func primaryButtonPress() {
+        if let row = selectedCellRow {
+            let episode = downloadedEpisodes[row]
+            FireStoreManager.reportEpisodeWith(episodeID: episode.ID)
+        }
+    }
+    
+    func cancelButtonPress() {
+        //
     }
 
 }

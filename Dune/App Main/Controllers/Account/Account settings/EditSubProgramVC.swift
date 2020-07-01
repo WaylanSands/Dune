@@ -724,18 +724,13 @@ extension EditSubProgramVC: CustomAlertDelegate {
         recordIntroButton.titleLabel?.text = "Record"
         removeIntroButton.removeFromSuperview()
         } else if deleteProgramPress {
-            FireStoreManager.deleteProgram(with: program.ID, introID: program.introID, imageID: program.ID, isSubProgram: true)
+            FireStoreManager.deleteProgram(with: program.ID, introID: program.introID, imageID: program.imageID)
             let programIndex = CurrentProgram.subPrograms?.firstIndex(where: { program in
                 program.ID == self.program.ID
             })
             let idIndex = CurrentProgram.programIDs?.firstIndex(of: program.ID)
             CurrentProgram.subPrograms?.remove(at: programIndex!)
             CurrentProgram.programIDs?.remove(at: idIndex!)
-            if CurrentProgram.programIDs?.count == 0 {
-                print("Changing multiple program status")
-                CurrentProgram.hasMultiplePrograms = false
-                FireStoreManager.removeMultipleProgramsStatus()
-            }
             navigationController?.popToRootViewController(animated: true)
         }
     }

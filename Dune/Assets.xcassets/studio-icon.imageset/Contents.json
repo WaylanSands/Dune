@@ -2,7 +2,7 @@
   "images" : [
     {
       "idiom" : "universal",
-      "filename" : "studio-icon.png",
+      "filename" : "studio-icon@1x.png",
       "scale" : "1x"
     },
     {

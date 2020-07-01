@@ -18,7 +18,7 @@ class LoadingCircleView: PassThoughView {
 
     lazy var viewCenter = CGPoint(x:35, y: 35)
     
-    func setupLoadingAnimation() {
+    func configureLoadingView() {
         let circularPath = UIBezierPath(arcCenter: viewCenter, radius: 35, startAngle:0 , endAngle: CGFloat.pi * 2, clockwise: true)
         let trackPath = UIBezierPath(arcCenter: viewCenter, radius: 38, startAngle:0 , endAngle: CGFloat.pi * 2, clockwise: true)
         self.isHidden = true

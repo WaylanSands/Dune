@@ -120,7 +120,7 @@ extension SettingsLauncher: UICollectionViewDelegateFlowLayout, UICollectionView
         cell.setting = options[indexPath.item]
         return cell
     }
-    
+
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         return CGSize(width: collectionView.frame.width, height: cellHeight)
     }
@@ -142,7 +142,7 @@ extension SettingsLauncher: UICollectionViewDelegateFlowLayout, UICollectionView
             case .sharing:
                 break
             case .subscriptionEpisode:
-                break
+                self.settingsDelegate!.selectionOf(setting: setting.name)
             case .ownEpisode:
                 self.settingsDelegate!.selectionOf(setting: setting.name)
             case .programNames:

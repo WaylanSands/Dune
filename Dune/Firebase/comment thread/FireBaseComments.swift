@@ -14,18 +14,17 @@ struct FireBaseComments {
     static let db = Firestore.firestore()
     
     static func fetchCommentsOrderedByVotesFrom(ID: String, completion: @escaping ([Comment]?) -> ()) {
-        
-        var comments = [Comment]()
-        let commentsRef = db.collection("episodes").document(ID).collection("comments").order(by: "voteCount", descending: true)
-        
         DispatchQueue.global(qos: .userInitiated).async {
+            
+            var comments = [Comment]()
+            let commentsRef = db.collection("episodes").document(ID).collection("comments").order(by: "voteCount", descending: true)
+            
             commentsRef.getDocuments { snapshot, error in
-                
                 if error != nil {
                     print("Error fetching episodes comments \(error!.localizedDescription)")
                     completion(nil)
                 } else {
-                    
+        
                     if snapshot!.isEmpty {
                         completion([])
                         return
@@ -66,16 +65,81 @@ struct FireBaseComments {
         }
     }
     
+    static func addMentionToProgramWith(usernames: [String], caption: String, contentID: String, primaryEpisodeID: String?, mentionType: MentionType) {
+        
+        let limit: Int = 10
+        var users = [String]()
+        
+        if usernames.count > limit {
+            users = Array(usernames [0..<limit])
+        } else {
+            users = usernames
+        }
+                
+        DispatchQueue.global(qos: .userInitiated).async {
+            let userRef = db.collection("users").whereField("username", in: users)
+                        
+            userRef.getDocuments { snapshot, error in
+                if error != nil {
+                    print("Error adding mention to program")
+                    return
+                }
+                
+                if snapshot!.isEmpty {
+                    print("No user with that username")
+                    return
+                }
+                
+                guard let documents = snapshot?.documents else { return }
+                print("User exists")
+                
+                for each in documents {
+                    let data = each.data()
+                    let programID = data["programID"] as! String
+                    
+                    let type = mentionType.rawValue
+                    addMentionToProgram(programID: programID, caption: caption, contentID: contentID, primaryEpisodeID: primaryEpisodeID,  mentionType: type)
+                }
+            }
+        }
+    }
+    
+    static func addMentionToProgram(programID: String, caption: String, contentID: String, primaryEpisodeID: String?, mentionType: String) {
+               
+        let mentionRef = db.collection("programs").document(programID).collection("mentions").document()
+        db.collection("programs").document(programID).updateData(["hasMentions" : true])
+        
+        mentionRef.setData([
+            "publisherID" : CurrentProgram.ID!,
+            "primaryEpisodeID" : (primaryEpisodeID ?? ""),
+            "publisherUsername" : User.username!,
+            "imageID" : CurrentProgram.imageID!,
+            "ID" : mentionRef.documentID,
+            "postedDate" : Timestamp(),
+            "contentID" : contentID,
+            "taggedID" : programID,
+            "type" : mentionType,
+            "caption" : caption,
+        ]) { error in
+            if error != nil {
+                print("Error adding mention to program")
+                return
+            }
+            print("Success adding mention to program")
+        }
+    }
     
     static func postCommentForEpisode(ID: String, comment: String, completion: @escaping (Comment) ->()) {
-        
+
         let commentsRef = db.collection("episodes").document(ID).collection("comments").document()
+        db.collection("episodes").document(ID).updateData(["commentCount" : FieldValue.increment(Double(1))])
         let commentID = commentsRef.documentID
+        FireStoreManager.updateProgramMethodsUsed(programID: CurrentProgram.ID!, repMethod: commentID)
+        CurrentProgram.repMethods?.append(commentID)
         
         commentsRef.setData([
-            "profileImageID" : (CurrentProgram.imageID ?? User.imageID)!,
-            "ownerID" : (CurrentProgram.ID ?? User.ID)!,
-            "isPublisher" : User.isPublisher!,
+            "profileImageID" : CurrentProgram.imageID!,
+            "programID" : CurrentProgram.ID!,
             "username": User.username!,
             "postedDate": Timestamp(),
             "isSubComment": false,
@@ -90,9 +154,8 @@ struct FireBaseComments {
                 return
             }
             let data: [String: Any] = [
-                "profileImageID" : (CurrentProgram.imageID ?? User.imageID)!,
-                "ownerID" : (CurrentProgram.ID ?? User.ID)!,
-                "isPublisher" : User.isPublisher!,
+                "profileImageID" : CurrentProgram.imageID!,
+                "programID" : CurrentProgram.ID!,
                 "username": User.username!,
                 "postedDate": Timestamp(),
                 "isSubComment": false,
@@ -102,21 +165,40 @@ struct FireBaseComments {
                 "voteCount": 0,
                 "ID" : commentID
             ]
-            completion(Comment(data: data))
             print("Success publishing comment")
+            let usernames = checkIfUserWasTagged(comment: comment)
+            if !usernames.isEmpty {
+                addMentionToProgramWith(usernames: usernames, caption: comment, contentID: commentID, primaryEpisodeID: ID, mentionType: .commentTag)
+            }
+            completion(Comment(data: data))
         }
+    }
+    
+   static func checkIfUserWasTagged(comment: String) -> [String] {
+        let words = comment.components(separatedBy: " ")
+        var taggedUsers = [String]()
+        for word in words{
+            if word.hasPrefix("@"){
+                let user = word.dropFirst()
+                taggedUsers.append(String(user))
+            }
+        }
+        print("Tagged users are \(taggedUsers)")
+        return(taggedUsers)
     }
     
     static func postCommentReplyForEpisode(ID: String, primaryID: String, comment: String, completion: @escaping (Comment) ->()) {
         
         let commentRef = db.collection("episodes").document(ID).collection("comments").document(primaryID).collection("subComments").document()
         db.collection("episodes").document(ID).collection("comments").document(primaryID).updateData(["subCommentCount" : FieldValue.increment(Double(1))])
+        db.collection("episodes").document(ID).updateData(["commentCount" : FieldValue.increment(Double(1))])
         let subCommentID = commentRef.documentID
+        FireStoreManager.updateProgramMethodsUsed(programID: CurrentProgram.ID!, repMethod: subCommentID)
+        CurrentProgram.repMethods?.append(subCommentID)
         
         commentRef.setData([
-            "profileImageID" : (CurrentProgram.imageID ?? User.imageID)!,
-            "ownerID" : (CurrentProgram.ID ?? User.ID)!,
-            "isPublisher" : User.isPublisher!,
+            "profileImageID" : CurrentProgram.imageID!,
+            "programID" : CurrentProgram.ID!,
             "username": User.username!,
             "postedDate": Timestamp(),
             "subCommentCount": 0,
@@ -132,9 +214,8 @@ struct FireBaseComments {
                 return
             }
             let data: [String: Any] = [
-                "profileImageID" : (CurrentProgram.imageID ?? User.imageID)!,
-                "ownerID" : (CurrentProgram.ID ?? User.ID)!,
-                "isPublisher" : User.isPublisher!,
+                "profileImageID" : CurrentProgram.imageID!,
+                "programID" : CurrentProgram.ID!,
                 "username": User.username!,
                 "postedDate": Timestamp(),
                 "primaryID": primaryID,
@@ -145,6 +226,12 @@ struct FireBaseComments {
                 "episodeID": ID,
                 "voteCount": 0,
             ]
+            
+            let usernames = checkIfUserWasTagged(comment: comment)
+            if !usernames.isEmpty {
+                addMentionToProgramWith(usernames: usernames, caption: comment, contentID: subCommentID, primaryEpisodeID: ID, mentionType: .commentReply)
+            }
+            
             completion(Comment(data: data))
             print("Success publishing sub-comment")
         }
@@ -152,6 +239,7 @@ struct FireBaseComments {
     
     static func deleteCommentForEpisode(ID: String, commentID: String) {
         let commentRef = db.collection("episodes").document(ID).collection("comments").document(commentID)
+        db.collection("episodes").document(ID).updateData(["commentCount" : FieldValue.increment(Double(-1))])
         
         commentRef.delete { error in
             if error != nil {
@@ -164,7 +252,7 @@ struct FireBaseComments {
     
     static func deleteSubCommentForEpisode(ID: String, primaryID: String, commentID: String) {
         let commentRef = db.collection("episodes").document(ID).collection("comments").document(primaryID).collection("subComments").document(commentID)
-        
+            db.collection("episodes").document(ID).updateData(["commentCount" : FieldValue.increment(Double(-1))])
             db.collection("episodes").document(ID).collection("comments").document(primaryID).updateData(["subCommentCount" : FieldValue.increment(Double(-1))])
         
         commentRef.delete { error in
@@ -179,6 +267,7 @@ struct FireBaseComments {
     static func deleteSubCommentsForEpisode(ID: String, commentID: String) {
         
         let subCommentsRef = db.collection("episodes").document(ID).collection("comments").document(commentID).collection("subComments")
+        db.collection("episodes").document(ID).updateData(["commentCount" : FieldValue.increment(Double(-1))])
         
         subCommentsRef.getDocuments { snapshot, error in
             if error != nil {
@@ -195,11 +284,9 @@ struct FireBaseComments {
                         .document(docID)
                         .delete()
                 }
-                
             }
         }
     }
-
     
     static func upVote(comment: Comment, by votes: Int) {
         let vote = Double(votes)
@@ -316,45 +403,6 @@ struct FireBaseComments {
                 return
             }
             print("Success removing downvote for user")
-        }
-    }
-    
-    
-    static func fetchProfileWith(ownerID: String, isPublisher: Bool, completion: @escaping (Program?, Listener?) ->()) {
-        
-        DispatchQueue.global(qos: .userInteractive).async {
-            if isPublisher {
-                let programRef = db.collection("programs").document(ownerID)
-                
-                programRef.getDocument { snapshot, error in
-                    if error != nil {
-                        print("Error fetching program's profile")
-                        return
-                    }
-                    guard let data = snapshot?.data() else { return }
-                    let program = Program(data: data)
-                   
-                    if program.isPrimaryProgram && program.hasMultiplePrograms! {
-                        FireStoreManager.fetchSubProgramsWithIDs(programIDs: program.programIDs!, for: program) {
-                            completion(program, nil)
-                        }
-                    } else {
-                        completion(program, nil)
-                    }
-                }
-            } else {
-                let userRef = db.collection("users").document(ownerID)
-                
-                userRef.getDocument { snapshot, error in
-                    if error != nil {
-                        print("Error fetching user's profile")
-                        return
-                    }
-                    guard let data = snapshot?.data() else { return }
-                    let listener = Listener(data: data)
-                    completion(nil, listener)
-                }
-            }
         }
     }
     

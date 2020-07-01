@@ -55,7 +55,7 @@ class ProgramNameVC: UIViewController {
         styleForScreens()
         configureViews()
         styleTextField(textField: nameTextField, placeholder: "")
-        nameTextField.text = User.displayName ?? ""
+        
         nameTextField.addTarget(self, action: #selector(textFieldDidChange(_:)), for: UIControl.Event.editingChanged)
         setHeadline()
         setupKeyboardTracking()
@@ -147,6 +147,7 @@ class ProgramNameVC: UIViewController {
         
         guard let name = self.nameTextField.text else { return }
         CurrentProgram.name = name
+        CurrentProgram.subscriptionIDs = [String]()
 
         DispatchQueue.global(qos: .userInitiated).async {
             
@@ -154,28 +155,20 @@ class ProgramNameVC: UIViewController {
             guard let uid = Auth.auth().currentUser?.uid else { return }
             
             User.ID = uid
-            User.programID = CurrentProgram.ID ?? programID
+            CurrentProgram.rep = 0
+            CurrentProgram.hasMentions = false
+            CurrentProgram.repMethods = [String]()
+            CurrentProgram.username = User.username
+            CurrentProgram.subscriptionIDs!.append(CurrentProgram.ID ?? programID)
             CurrentProgram.ID = CurrentProgram.ID ?? programID
+            User.programID = CurrentProgram.ID ?? programID
+            CurrentProgram.episodeIDs = [[String : Any]]()
+            CurrentProgram.subscriberIDs = [String]()
+            CurrentProgram.programIDs = [String]()
             CurrentProgram.isPrimaryProgram = true
-            CurrentProgram.episodeIDs = [[String:Any]]()
             CurrentProgram.subscriberCount = 0
             CurrentProgram.hasIntro = false
-            CurrentProgram.hasIntro = false
-            CurrentProgram.hasMultiplePrograms = false
-            CurrentProgram.subscriberIDs = [String]()
-            
-            if !User.isPublisher! {
-                User.programID = User.ID
-                CurrentProgram.ID =  User.ID
-                CurrentProgram.subscriberCount = User.subscriberCount
-                CurrentProgram.subscriberIDs = User.subscriberIDs
-            }
-            
-            if User.subscriptionIDs!.count == 0 {
-                User.subscriptionIDs! = [CurrentProgram.ID ?? programID]
-            } else {
-                User.subscriptionIDs!.append(User.ID!)
-            }
+            CurrentProgram.subPrograms = [Program]()
             
             let db = Firestore.firestore()
             let userRef = db.collection("users").document(User.ID!)
@@ -183,7 +176,6 @@ class ProgramNameVC: UIViewController {
             
             userRef.updateData([
                 "programID": User.programID!,
-                "subscriptionIDs" :  User.subscriptionIDs!
                     ])
              { (error) in
                 if let error = error {
@@ -192,18 +184,22 @@ class ProgramNameVC: UIViewController {
                     print("Successfully added channel ID")
                     
                     programRef.setData([
+                        "subscriptionIDs" :  CurrentProgram.subscriptionIDs!,
+                        "episodeIDs" : CurrentProgram.episodeIDs!,
+                        "summary": CurrentProgram.summary ?? "",
+                        "rep" : 0,
+                        "repMethods" : [],
+                        "hasMentions" : false,
                         "ID" : CurrentProgram.ID!,
                         "name" : name,
-                        "ownerID" : User.ID!,
                         "username" : User.username!,
                         "isPrimaryProgram" : true,
-                        "summary": CurrentProgram.summary ?? "",
-                        "tags": [],
-                        "episodeIDs" : [],
                         "subscriberCount" : 0,
-                        "hasIntro" : false,
-                        "hasMultiplePrograms" : false,
+                        "ownerID" : User.ID!,
                         "subscriberIDs": [],
+                        "programIDs" : [],
+                        "hasIntro" : false,
+                        "tags": [],
                     ]) { (error) in
                         if let error = error {
                             print("There has been an error adding the program: \(error.localizedDescription)")

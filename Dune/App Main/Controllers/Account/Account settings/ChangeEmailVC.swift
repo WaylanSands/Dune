@@ -32,7 +32,7 @@ class ChangeEmailVC: UIViewController {
     let textFieldToggle: UIButton =  {
         let button = UIButton()
         button.setTitle("Show", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .regular)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .medium)
         button.setTitleColor(CustomStyle.linkBlue, for: .normal)
         button.addTarget(self, action:#selector(toggleButtonPress), for: .touchUpInside)
         return button
@@ -364,7 +364,7 @@ extension ChangeEmailVC: UITextFieldDelegate {
     
     func checkEmailAvailability() {
         
-        emailTextField.checkEmail(db: db, field: emailTextField.text!) { success in
+        emailTextField.checkEmail(db: db, field: emailTextField.text!) { success, email in
             if success {
                 // Email is taken
                 self.saveButton(isEnabled: false)

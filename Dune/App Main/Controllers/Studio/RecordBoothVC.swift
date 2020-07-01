@@ -30,10 +30,10 @@ class RecordBoothVC: UIViewController {
     var recordingWaveFeedbackLink: CADisplayLink!
     var playbackLink: CADisplayLink!
     
-//    var recordingSession: AVAudioSession!
+    var audioSession = AVAudioSession.sharedInstance()
     var audioRecorder: AVAudioRecorder!
     var audioPlayer: AVAudioPlayer!
-    
+
     var currentScope: recordingScope!
     
     let mergedFileName = NSUUID().uuidString
@@ -43,7 +43,7 @@ class RecordBoothVC: UIViewController {
     
     var currentState = recordState.ready
     var maxRecordingTime: Double = 60
-    var minRecordingTime: Double = 1
+    var minRecordingTime: Double = 10
     var recordingSnapshot: Double = 0
     var normalizedTime: CGFloat?
     var scrubbedTime: Double = 0
@@ -57,9 +57,16 @@ class RecordBoothVC: UIViewController {
     var endTime: Double = 0
     var wasTrimmed = false
     
+    // For various screens
+    var imageTopConstant: CGFloat = 120
+    var recordButtonBottomConstant: CGFloat = -60
+    var soundWaveCenterConstant: CGFloat = 200
+
     var maxValue: Float = Float(UIScreen.main.bounds.width) - Float(60)
     
     var networkingIndicator = NetworkingProgress()
+    
+    let nextVersionAlert = CustomAlertView(alertType: .nextVersion)
 
     lazy var tabBar = navigationController?.tabBarController?.tabBar
     
@@ -200,7 +207,7 @@ class RecordBoothVC: UIViewController {
         let button = UIButton()
         button.layer.cornerRadius = 24
         button.clipsToBounds = true
-        button.setImage(UIImage(named: "filter-audio-icon"), for: .normal)
+        button.setImage(UIImage(named: "audio-to-video"), for: .normal)
         button.addTarget(self, action: #selector(addFilterButtonPress), for: .touchUpInside)
         return button
     }()
@@ -216,7 +223,7 @@ class RecordBoothVC: UIViewController {
     
     let redoButton: UIButton = {
         let button = UIButton()
-        button.setImage(UIImage(named: "switch-account-icon"), for: .normal)
+        button.setImage(UIImage(named: "redo-icon"), for: .normal)
         button.layer.cornerRadius = 24
         button.clipsToBounds = true
         button.addTarget(self, action: #selector(recordAgainButtonPress), for: .touchUpInside)
@@ -242,15 +249,16 @@ class RecordBoothVC: UIViewController {
     }
     
     // MARK: View did load
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         addGradient()
+        styleForScreens()
         configureViews()
     }
     
     override func viewWillAppear(_ animated: Bool) {
         navigationController?.interactivePopGestureRecognizer?.isEnabled = false
+        configureAudioSessionCategory()
         setupNavigationBar()
         resetEditingModes()
         setProgramImage()
@@ -315,6 +323,15 @@ class RecordBoothVC: UIViewController {
         }
     }
     
+    func configureAudioSessionCategory() {
+      do {
+          try audioSession.setCategory(AVAudioSession.Category.playAndRecord, mode: .spokenAudio, options: .defaultToSpeaker)
+          try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+      } catch {
+          print("error.")
+      }
+    }
+    
     @objc func resetViews() {
             self.currentOption = nil
             self.hasMergedTracks = false
@@ -368,6 +385,34 @@ class RecordBoothVC: UIViewController {
         }
     }
     
+    func styleForScreens() {
+        switch UIDevice.current.deviceType {
+        case .iPhone4S:
+            break
+        case .iPhoneSE:
+            episodeLabel.isHidden = true
+            duneLogoImageView.isHidden = true
+            imageTopConstant = 80
+            recordButtonBottomConstant = -20
+            soundWaveCenterConstant = 150
+        case .iPhone8:
+            recordButtonBottomConstant = -25
+        case .iPhone8Plus:
+            recordButtonBottomConstant = -25
+            soundWaveCenterConstant = 210
+        case .iPhone11:
+            soundWaveCenterConstant = 210
+            imageTopConstant = 180
+        case .iPhone11Pro:
+            imageTopConstant = 170
+        case .iPhone11ProMax:
+            soundWaveCenterConstant = 230
+            imageTopConstant = 190
+        case .unknown:
+            break
+        }
+    }
+    
     func configureViews() {
         view.addSubview(usernameLabel)
         usernameLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -377,7 +422,7 @@ class RecordBoothVC: UIViewController {
         
         view.addSubview(recordButton)
         recordButton.translatesAutoresizingMaskIntoConstraints = false
-        recordButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -60).isActive = true
+        recordButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: recordButtonBottomConstant).isActive = true
         recordButton.centerXAnchor.constraint(equalTo:view.centerXAnchor).isActive = true
         recordButton.heightAnchor.constraint(equalToConstant: 64).isActive = true
         recordButton.widthAnchor.constraint(equalToConstant: 64).isActive = true
@@ -386,7 +431,7 @@ class RecordBoothVC: UIViewController {
         circleTimerView.translatesAutoresizingMaskIntoConstraints = false
         circleTimerView.centerYAnchor.constraint(equalTo: recordButton.centerYAnchor).isActive = true
         circleTimerView.centerXAnchor.constraint(equalTo:view.centerXAnchor).isActive = true
-        circleTimerView.setupLoadingAnimation()
+        circleTimerView.configureLoadingView()
         
         circleTimerView.addSubview(stopButtonView)
         stopButtonView.translatesAutoresizingMaskIntoConstraints = false
@@ -397,7 +442,7 @@ class RecordBoothVC: UIViewController {
         
         view.addSubview(programImageView)
         programImageView.translatesAutoresizingMaskIntoConstraints = false
-        programImageView.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -70).isActive = true
+        programImageView.topAnchor.constraint(equalTo: view.topAnchor, constant: imageTopConstant).isActive = true
         programImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
         programImageView.widthAnchor.constraint(equalToConstant: view.frame.width - 60).isActive = true
         programImageView.heightAnchor.constraint(equalToConstant: view.frame.width - 60).isActive = true
@@ -429,7 +474,7 @@ class RecordBoothVC: UIViewController {
         
         view.addSubview(responsiveSoundWave)
         responsiveSoundWave.translatesAutoresizingMaskIntoConstraints = false
-        responsiveSoundWave.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: 200).isActive = true
+        responsiveSoundWave.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: soundWaveCenterConstant).isActive = true
         responsiveSoundWave.heightAnchor.constraint(equalToConstant: 1200).isActive = true
         responsiveSoundWave.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         responsiveSoundWave.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
@@ -502,7 +547,7 @@ class RecordBoothVC: UIViewController {
     @objc func saveIntroAndReturnToProfile() {
         
         if recordingSnapshot >= 10 {
-            UIApplication.shared.windows.last?.addSubview(networkingIndicator)
+            view.addSubview(networkingIndicator)
             networkingIndicator.taskLabel.text = "Uploading Intro"
             
             print("Storing episode on Firebase")
@@ -510,13 +555,20 @@ class RecordBoothVC: UIViewController {
             let audioTrack = FileManager.getAudioFileFromTempDirectory(fileName: fileName, fileExtension: fileExtension)
             
             guard let episode = audioTrack else { return }
-            
+
             FireStorageManager.storeIntroAudio(fileName: fileName + fileExtension, data: episode) { url in
                 
                 if self.selectedProgram == nil {
-                    CurrentProgram.introID = self.fileName + fileExtension
-                    CurrentProgram.introPath = url.path
                     CurrentProgram.hasIntro = true
+                    CurrentProgram.introPath = url.path
+                    CurrentProgram.introID = self.fileName + fileExtension
+                    
+                    if !CurrentProgram.repMethods!.contains("intro") {
+                        FireStoreManager.updateProgramRep(programID: CurrentProgram.ID!, repMethod: "intro", rep: 10)
+                        CurrentProgram.repMethods?.append("intro")
+                        CurrentProgram.rep! += 10
+                    }
+                    
                     DispatchQueue.global(qos: .userInitiated).async {
                         FireStoreManager.addIntroToProgram(programID: CurrentProgram.ID!, introID: self.fileName + fileExtension, introPath: url.path)
                     }
@@ -528,6 +580,13 @@ class RecordBoothVC: UIViewController {
                     DispatchQueue.global(qos: .userInitiated).async {
                         FireStoreManager.addIntroToProgram(programID: program.ID, introID: self.fileName + fileExtension, introPath: url.path)
                     }
+                    if !program.repMethods.contains("intro") {
+                        FireStoreManager.updateProgramRep(programID: program.ID, repMethod: "intro", rep: 10)
+                        FireStoreManager.updateProgramMethodsUsed(programID: program.ID, repMethod: "intro")
+                        program.rep += 10
+                        guard let index = CurrentProgram.subPrograms?.firstIndex(where: { $0.ID == program.ID }) else { return }
+                        CurrentProgram.subPrograms![index] = program
+                    }
                 }
                 
                 self.networkingIndicator.removeFromSuperview()
@@ -535,7 +594,7 @@ class RecordBoothVC: UIViewController {
                 self.navigationController?.popToRootViewController(animated: true)
             }
         } else {
-            UIApplication.shared.windows.last?.addSubview(introTooShortAlert)
+            view.addSubview(introTooShortAlert)
         }
     }
     
@@ -543,7 +602,6 @@ class RecordBoothVC: UIViewController {
         let program = CurrentProgram.subPrograms?.first(where: { $0.ID == selectedProgram?.ID })
         return program!
     }
-
     
     func resetTabBar() {
         tabBar?.barStyle = .default
@@ -583,7 +641,7 @@ class RecordBoothVC: UIViewController {
             navigationController?.pushViewController(addEpisodeDetails, animated: true)
         } else {
             print("Too short of a recording")
-            UIApplication.shared.windows.last?.addSubview(tooShortAlert)
+            view.addSubview(tooShortAlert)
         }
     }
     
@@ -594,7 +652,6 @@ class RecordBoothVC: UIViewController {
     
     func animateToRecordingState() {
         UIView.animate(withDuration: 4, delay: 0, options: .curveEaseInOut, animations: {
-//            self.recordButton.frame.size = CGSize(width: 10, height: 10)
         }, completion: nil)
     }
     
@@ -659,7 +716,6 @@ class RecordBoothVC: UIViewController {
         }
     }
     
-    // Make another Recording
     @objc func recordAgainButtonPress() {
         
         if audioPlayer != nil {
@@ -703,29 +759,6 @@ class RecordBoothVC: UIViewController {
         CustomAnimation.transitionTrim(button: trimButton, to: recordButton)
         CustomAnimation.transitionRedo(button: redoButton, to: recordButton)
     }
-    
-    // Get permission to record
-//    @objc func setupRecordingSession() {
-//        recordingSession = AVAudioSession.sharedInstance()
-//
-//        do {
-//            try recordingSession.setCategory(.playAndRecord, mode: .default)
-//            try recordingSession.setActive(true)
-//            recordingSession.requestRecordPermission() { [unowned self] allowed in
-//                DispatchQueue.main.async {
-//                    if allowed {
-//                        self.recordButtonPress()
-//                    } else {
-//                        // Test this here
-//                        print("Refused to record")
-//                    }
-//                }
-//            }
-//        } catch {
-//            print("Unable to start recording \(error)")
-//        }
-//    }
-    
     
     func trackAudio() {
         playbackLink = CADisplayLink(target: self, selector: #selector(trackRegularPlayback))
@@ -780,12 +813,10 @@ class RecordBoothVC: UIViewController {
     
     @objc func addFilterButtonPress() {
         resetEditingModes()
-        addFilterButton.backgroundColor = .white
-        addFilterButton.setImage(UIImage(named: "filter-audio-selected"), for: .normal)
+        view.addSubview(nextVersionAlert)
     }
     
     // MARK: BackGround music
-    
     @objc func addBGMusicButtonPress() {
         resetEditingModes()
         let musicVC = AddBGMusicVC()
@@ -803,7 +834,6 @@ class RecordBoothVC: UIViewController {
         programImageView.isHidden = false
         gradientOverlayView.isHidden = false
         playBackBars.isHidden = true
-//        playBackBars.resetPrimaryWave()
     }
     
     func timeString(time:TimeInterval) -> String {
@@ -939,12 +969,9 @@ extension RecordBoothVC: AVAudioRecorderDelegate, AVAudioPlayerDelegate {
     
     @objc func updateMeters() {
         audioRecorder.updateMeters()
-
         let normalizedValue = pow(10, audioRecorder.averagePower(forChannel: 0) / 20)
         responsiveSoundWave.updateWithLevel(CGFloat(normalizedValue))
-        
         timerLabel.text = timeString(time: audioRecorder.currentTime)
-        
         if audioRecorder.currentTime >= maxRecordingTime {
             recordButtonPress()
         }
@@ -958,7 +985,6 @@ extension RecordBoothVC: AVAudioRecorderDelegate, AVAudioPlayerDelegate {
         if success {
             print("Success recording")
             playBackBars.setupPlaybackBars(url: recordingURL, snapshot: recordingSnapshot)
-//            playBackBars.resetPrimaryWave()
         } else {
             print("Recording failed")
         }
@@ -1001,9 +1027,7 @@ extension RecordBoothVC: AVAudioRecorderDelegate, AVAudioPlayerDelegate {
     }
     
     func resumeRegularPlayback() {
-        
         playSafeRegularPlaybackLink()
-        
         if scrubbed == true {
             audioPlayer = try! AVAudioPlayer(contentsOf: recordingURL)
             audioPlayer.prepareToPlay()
@@ -1024,7 +1048,6 @@ extension RecordBoothVC: AVAudioRecorderDelegate, AVAudioPlayerDelegate {
         pauseSafeRegularPlaybackLink()
         currentState = .paused
         recordButton.setImage(UIImage(named: "play-audio-icon"), for: .normal)
-//        playBackBars.playbackCoverLeading.constant = CGFloat(playBackSlider.value)
         
         let leftTime = timeIn()
         let rightTime = timeToGo()

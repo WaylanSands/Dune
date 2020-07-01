@@ -8,9 +8,8 @@
 //
 
 import UIKit
-import FirebaseFirestore
-//import FirebaseStorage
 import AVFoundation
+import FirebaseFirestore
 import MobileCoreServices
 
 class StudioVC: UIViewController {
@@ -18,7 +17,6 @@ class StudioVC: UIViewController {
     var programSelectionView: SettingsLauncher!
     var recordingSession: AVAudioSession!
     lazy var tabBar = navigationController?.tabBarController?.tabBar
-//    var audioPlayer: AVPlayer!
     
     let tableView = UITableView()
     var firstBatchAmount = 10
@@ -51,13 +49,14 @@ class StudioVC: UIViewController {
         button.clipsToBounds = true
         button.titleLabel!.lineBreakMode = .byTruncatingTail
         button.addTarget(self, action: #selector(selectProgram), for: .touchUpInside)
+        button.isHidden = true
         return button
     }()
     
     let noDraftEpisodesLabel: UILabel = {
         let label = UILabel()
-        label.text = "Unpublished episodes will display here"
-        label.font = UIFont.systemFont(ofSize: 18, weight: .medium)
+        label.text = "All of your unpublished episodes will display here"
+        label.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         label.textAlignment = .center
         label.textColor = CustomStyle.fifthShade
         label.numberOfLines = 0
@@ -84,6 +83,7 @@ class StudioVC: UIViewController {
     }
     
     override func viewWillAppear(_ animated: Bool) {
+        configureProgramToggle()
         setupNavigationBar()
         firstBatchAmount = 10
         draftEpisodeIDs = [String]()
@@ -98,6 +98,7 @@ class StudioVC: UIViewController {
         tabBar?.isHidden = false
         tabBar?.isTranslucent = true
         tabBar!.backgroundImage =  UIImage()
+        tabBar!.backgroundColor = .clear
 
         tabBar!.items?[0].image = UIImage(named: "feed-icon-selected")
         tabBar!.items?[1].image =  UIImage(named: "search-icon-selected")
@@ -112,6 +113,7 @@ class StudioVC: UIViewController {
     override func viewWillDisappear(_ animated: Bool) {
         tabBar?.barStyle = .default
         tabBar!.backgroundImage = .none
+        tabBar!.backgroundColor = hexStringToUIColor(hex: "F4F7FB")
         tabBar!.items?[0].image = UIImage(named: "feed-icon")
         tabBar!.items?[1].image =  UIImage(named: "search-icon")
         tabBar!.items?[2].image =  UIImage(named: "studio-icon")
@@ -159,20 +161,25 @@ class StudioVC: UIViewController {
         view.addSubview(customNav)
         customNav.pinNavBarTo(view)
         
-        if User.isPublisher! && CurrentProgram.hasMultiplePrograms! {
-            view.addSubview(programNameButton)
-            programNameButton.translatesAutoresizingMaskIntoConstraints = false
-            programNameButton.centerXAnchor.constraint(equalTo: view.centerXAnchor, constant: 0).isActive = true
-            programNameButton.centerYAnchor.constraint(equalTo: customNav.centerYAnchor, constant: 22).isActive = true
-            programNameButton.heightAnchor.constraint(equalToConstant: 25).isActive = true
-            programNameButton.widthAnchor.constraint(lessThanOrEqualToConstant: 200).isActive = true
+        view.addSubview(programNameButton)
+        programNameButton.translatesAutoresizingMaskIntoConstraints = false
+        programNameButton.centerXAnchor.constraint(equalTo: view.centerXAnchor, constant: 0).isActive = true
+        programNameButton.centerYAnchor.constraint(equalTo: customNav.centerYAnchor, constant: 22).isActive = true
+        programNameButton.heightAnchor.constraint(equalToConstant: 25).isActive = true
+        programNameButton.widthAnchor.constraint(lessThanOrEqualToConstant: 200).isActive = true
+    }
+    
+    func configureProgramToggle() {
+        if User.isPublisher! && !CurrentProgram.programIDs!.isEmpty {
+            programNameButton.isHidden = false
+            customNav.titleLabel.text = ""
         } else {
             customNav.titleLabel.text = "Studio"
+            programNameButton.isHidden = true
         }
     }
     
     func getDraftEpisodeIDs() {
-       
         if User.draftEpisodeIDs != nil && User.draftEpisodeIDs?.count != 0 {
             noDraftEpisodesLabel.isHidden = true
             tableView.isHidden = false
@@ -243,10 +250,6 @@ class StudioVC: UIViewController {
                     let programID = data["programID"] as! String
                     let ownerID = data["ownerID"] as! String
                     
-                    // Audio saved to Tableview array
-    //                let audioUrl = data["audioUrl"] as! String
-    //                self.audioUrls.append(audioUrl)
-                    
                     let newEp = DraftEpisode(
                         id: id,
                         addedAt: time,
@@ -275,7 +278,7 @@ class StudioVC: UIViewController {
     
     @objc func recordButtonPress() {
         
-        if User.isPublisher! {
+        if User.isPublisher! && CurrentProgram.imageID != nil {
             recordingSession = AVAudioSession.sharedInstance()
             do {
                 try recordingSession.setCategory(.playAndRecord, mode: .default)
@@ -294,7 +297,7 @@ class StudioVC: UIViewController {
                 print("Unable to start recording \(error)")
             }
         } else {
-            UIApplication.shared.windows.last?.addSubview(notAPublisherAlert)
+            view.addSubview(notAPublisherAlert)
         }
     }
     
@@ -314,18 +317,12 @@ class StudioVC: UIViewController {
             options.append(Setting(name: each.name, imageName: nil))
         }
         
+        options.append(Setting(name:CurrentProgram.name!, imageName: nil))
+        
         programSelectionView = SettingsLauncher(options: options, type: .programNames)
         programSelectionView.settingsDelegate = self
         programSelectionView.showSettings()
     }
-
-//    func play(url: URL) {
-//        let playerItem = AVPlayerItem(url: url)
-//        self.audioPlayer = AVPlayer(playerItem:playerItem)
-//        audioPlayer!.volume = 1.0
-//        audioPlayer!.play()
-//        print("playing")
-//    }
     
     func editDraftEpisode(for row: Int) {
         let draft = downloadedDrafts[row]
@@ -486,7 +483,7 @@ extension StudioVC: UIDocumentPickerDelegate,UINavigationControllerDelegate {
     
     @objc func selectDocument() {
         
-        if User.isPublisher! {
+        if User.isPublisher! && CurrentProgram.imageID != nil {
             
             let types = [kUTTypeAudio]
             let importMenu = UIDocumentPickerViewController(documentTypes: types as [String], in: .import)
@@ -500,7 +497,7 @@ extension StudioVC: UIDocumentPickerDelegate,UINavigationControllerDelegate {
             
             present(importMenu, animated: true)
         } else {
-            UIApplication.shared.windows.last?.addSubview(notAPublisherAlert)
+            view.addSubview(notAPublisherAlert)
         }
     }
 }
@@ -518,10 +515,9 @@ extension StudioVC: SettingsLauncherDelegate {
 extension StudioVC: CustomAlertDelegate {
    
     func primaryButtonPress() {
-        if let programNameVC = UIStoryboard(name: "OnboardingPublisher", bundle: nil).instantiateViewController(withIdentifier: "programNameVC") as? ProgramNameVC {
-            programNameVC.hidesBottomBarWhenPushed = true
-            navigationController?.pushViewController(programNameVC, animated: true)
-        }
+        let editProgramVC = EditProgramVC()
+        editProgramVC.hidesBottomBarWhenPushed = true
+        navigationController?.pushViewController(editProgramVC, animated: true)
     }
     
     func cancelButtonPress() {

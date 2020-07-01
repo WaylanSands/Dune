@@ -12,17 +12,21 @@ import UIKit
 class DuneLinkPreview: UIView {
     
     let imageButton: UIButton = {
-        let view = UIButton()
-        view.backgroundColor = .white
-        view.imageView!.contentMode = .scaleAspectFill
-        return view
+        let button = UIButton()
+        button.backgroundColor = .white
+        button.imageView!.contentMode = .scaleAspectFill
+        button.isOpaque = true
+        return button
     }()
       
-      let backgroundButton: UIButton = {
-          let view = UIButton()
-          view.backgroundColor = CustomStyle.secondShade
-          return view
-      }()
+    let backgroundButton: UIButton = {
+        let button = UIButton()
+        button.backgroundColor = CustomStyle.white
+        button.layer.borderWidth = 0.5
+        button.layer.borderColor = CustomStyle.fourthShade.cgColor
+        button.isOpaque = true
+        return button
+    }()
       
       let mainLabel: UILabel = {
           let label = UILabel()
@@ -43,12 +47,12 @@ class DuneLinkPreview: UIView {
     
     override init(frame: CGRect) {
         super.init(frame: frame)
-        self.layer.shadowColor = UIColor.black.cgColor
-        self.layer.shadowOpacity = 0.05
-        self.layer.shadowOffset = .zero
-        self.layer.shadowRadius = 10
-        self.layer.rasterizationScale = UIScreen.main.scale
-        self.layer.shouldRasterize = true
+//        self.layer.shadowColor = UIColor.black.cgColor
+//        self.layer.shadowOpacity = 0.05
+//        self.layer.shadowOffset = .zero
+//        self.layer.shadowRadius = 10
+//        self.layer.rasterizationScale = UIScreen.main.scale
+//        self.layer.shouldRasterize = true
         configureViews()
     }
     

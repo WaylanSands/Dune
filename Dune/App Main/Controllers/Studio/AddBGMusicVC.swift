@@ -44,7 +44,12 @@ class AddBGMusicVC: UIViewController {
     
     func setupNavigationBar() {
         navigationItem.title = "Add Music"
+        navigationController?.navigationBar.backgroundColor = CustomStyle.darkestBlack.withAlphaComponent(0.9)
         navigationController?.navigationBar.prefersLargeTitles = true
+        navigationController?.navigationBar.setBackgroundImage(nil, for: .default)
+        navigationController?.navigationBar.isHidden = false
+        navigationController?.isNavigationBarHidden = false
+        navigationController?.navigationBar.tintColor = .white
         UINavigationBar.appearance().titleTextAttributes = CustomStyle.barButtonAttributes
     }
     

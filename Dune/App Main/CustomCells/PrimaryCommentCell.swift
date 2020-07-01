@@ -28,7 +28,6 @@ class PrimaryCommentCell: CommentCell {
                 self.profileImageButton.setImage(image, for: .normal)
             }
         }
-        setupImageRadius()
         checkVoteParticipation()
         configureIfCommentHeading()
         configureViewRepliesText()

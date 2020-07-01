@@ -10,7 +10,7 @@ import UIKit
 
 
 class EpisodeCellSmlLink: EpisodeCell {
-        
+    
     let linkStackView: UIStackView = {
         let view = UIStackView()
         view.contentMode = .scaleToFill
@@ -18,26 +18,63 @@ class EpisodeCellSmlLink: EpisodeCell {
     }()
     
     let squarePreview = DuneSquareLinkPreview()
-   
+    
+    let imageButton: UIButton = {
+        let view = UIButton()
+        view.backgroundColor = .white
+        view.imageView!.contentMode = .scaleAspectFill
+        return view
+    }()
+    
+    let backgroundButton: UIButton = {
+        let view = UIButton()
+        view.backgroundColor = CustomStyle.secondShade
+        return view
+    }()
+    
+    let squareLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = CustomStyle.primaryBlack
+        label.font = UIFont.systemFont(ofSize: 13, weight: .bold)
+        label.lineBreakMode = .byWordWrapping
+        label.numberOfLines = 2
+        label.text = "Fetching"
+        return label
+    }()
+    
+    let urlLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = CustomStyle.fourthShade
+        label.font = UIFont.systemFont(ofSize: 12, weight: .medium)
+        label.text = "Fetching"
+        return label
+    }()
     
     override func configureViews() {
         self.addSubview(programImageButton)
         programImageButton.translatesAutoresizingMaskIntoConstraints = false
         programImageButton.topAnchor.constraint(equalTo: self.topAnchor, constant: 15).isActive = true
         programImageButton.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 16).isActive = true
-        programImageButton.heightAnchor.constraint(equalToConstant: programImageSize).isActive = true
-        programImageButton.widthAnchor.constraint(equalToConstant: programImageSize).isActive = true
+        programImageButton.heightAnchor.constraint(equalToConstant: imageSize).isActive = true
+        programImageButton.widthAnchor.constraint(equalToConstant: imageSize).isActive = true
         
         self.addSubview(playbackBarView)
         playbackBarView.translatesAutoresizingMaskIntoConstraints = false
         playbackBarView.centerXAnchor.constraint(equalTo: programImageButton.centerXAnchor).isActive = true
         playbackBarView.topAnchor.constraint(equalTo: programImageButton.bottomAnchor, constant: 10).isActive = true
         playbackBarView.heightAnchor.constraint(equalToConstant: 5).isActive = true
-        playbackBarView.widthAnchor.constraint(equalToConstant: 50).isActive = true
+        playbackBarView.widthAnchor.constraint(equalToConstant: playBarWidth).isActive = true
+        
+        self.addSubview(playEpisodeButton)
+        playEpisodeButton.translatesAutoresizingMaskIntoConstraints = false
+        playEpisodeButton.centerXAnchor.constraint(equalTo: programImageButton.centerXAnchor).isActive = true
+        playEpisodeButton.topAnchor.constraint(equalTo: programImageButton.bottomAnchor, constant: 3).isActive = true
+        playEpisodeButton.widthAnchor.constraint(equalTo: programImageButton.widthAnchor).isActive = true
+        playEpisodeButton.heightAnchor.constraint(equalToConstant: 20).isActive = true
         
         self.addSubview(programNameStackedView)
         programNameStackedView.translatesAutoresizingMaskIntoConstraints = false
-        programNameStackedView.topAnchor.constraint(equalTo: programImageButton.topAnchor).isActive = true
+        programNameStackedView.topAnchor.constraint(equalTo: programImageButton.topAnchor, constant: -5).isActive = true
         programNameStackedView.leadingAnchor.constraint(equalTo: programImageButton.trailingAnchor, constant: 10).isActive = true
         programNameStackedView.trailingAnchor.constraint(lessThanOrEqualTo: self.trailingAnchor, constant: -35).isActive = true
         
@@ -55,6 +92,28 @@ class EpisodeCellSmlLink: EpisodeCell {
         captionTextView.leadingAnchor.constraint(equalTo: programNameStackedView.leadingAnchor).isActive = true
         captionTextView.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -16.0).isActive = true
         
+        addSubview(moreButton)
+        moreButton.translatesAutoresizingMaskIntoConstraints = false
+        moreButton.bottomAnchor.constraint(equalTo: captionTextView.bottomAnchor).isActive = true
+        moreButton.trailingAnchor.constraint(equalTo: captionTextView.trailingAnchor, constant: -3).isActive = true
+        moreButton.heightAnchor.constraint(equalToConstant: captionTextView.font!.lineHeight).isActive = true
+        moreButton.widthAnchor.constraint(equalToConstant: 40).isActive = true
+        
+        captionTextView.addSubview(moreGradientView)
+        moreGradientView.translatesAutoresizingMaskIntoConstraints = false
+        moreGradientView.bottomAnchor.constraint(equalTo: captionTextView.bottomAnchor).isActive = true
+        moreGradientView.trailingAnchor.constraint(equalTo: moreButton.leadingAnchor).isActive = true
+        moreGradientView.heightAnchor.constraint(equalToConstant: 20).isActive = true
+        moreGradientView.widthAnchor.constraint(equalToConstant: 20).isActive = true
+        
+        moreButtonGradient.frame = CGRect(x: 0, y: 0, width: 18, height: 20)
+        let whiteColor = UIColor.white
+        moreButtonGradient.colors = [whiteColor.withAlphaComponent(0.0).cgColor, whiteColor.withAlphaComponent(5.0).cgColor, whiteColor.withAlphaComponent(1.0).cgColor]
+        
+        moreGradientView.transform = CGAffineTransform(rotationAngle: (-90.0 * .pi) / 180.0)
+        moreGradientView.layer.insertSublayer(moreButtonGradient, at: 0)
+        bringSubviewToFront(moreButton)
+        
         self.addSubview(linkStackView)
         linkStackView.translatesAutoresizingMaskIntoConstraints = false
         linkStackView.topAnchor.constraint(equalTo: captionTextView.bottomAnchor, constant: 10).isActive = true
@@ -71,11 +130,8 @@ class EpisodeCellSmlLink: EpisodeCell {
         tagScrollView.translatesAutoresizingMaskIntoConstraints = false
         tagScrollView.topAnchor.constraint(equalTo: linkStackView.bottomAnchor, constant: 10).isActive = true
         tagScrollView.leadingAnchor.constraint(equalTo: captionTextView.leadingAnchor).isActive = true
-        tagScrollView.trailingAnchor.constraint(equalTo: self.trailingAnchor,constant: -35).isActive = true
-        tagContentBottomConstraint = tagScrollView.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: -15)
-        tagScrollViewHeightConstraint = tagScrollView.heightAnchor.constraint(equalToConstant: 22)
-        tagScrollViewHeightConstraint.isActive = true
-        tagContentBottomConstraint.isActive = true
+        tagScrollView.trailingAnchor.constraint(equalTo: self.trailingAnchor,constant: -16).isActive = true
+        tagScrollView.heightAnchor.constraint(equalToConstant: 22).isActive = true
         
         tagScrollView.addSubview(tagContainingStackView)
         tagContainingStackView.translatesAutoresizingMaskIntoConstraints = false
@@ -91,12 +147,79 @@ class EpisodeCellSmlLink: EpisodeCell {
         gradientOverlayView.trailingAnchor.constraint(equalTo: tagScrollView.trailingAnchor).isActive = true
         gradientOverlayView.widthAnchor.constraint(equalToConstant: 22.0).isActive = true
         
+        self.addSubview(episodeOptions)
+        episodeOptions.translatesAutoresizingMaskIntoConstraints = false
+        episodeOptions.topAnchor.constraint(equalTo: tagScrollView.bottomAnchor, constant: 5).isActive = true
+        episodeOptions.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: -5).isActive = true
+        episodeOptions.leadingAnchor.constraint(equalTo: tagScrollView.leadingAnchor).isActive = true
+        episodeOptions.trailingAnchor.constraint(equalTo: self.trailingAnchor).isActive = true
+        episodeOptions.heightAnchor.constraint(equalToConstant: 30).isActive = true
+        
+        episodeOptions.addSubview(likeButton)
+        likeButton.translatesAutoresizingMaskIntoConstraints = false
+        likeButton.centerYAnchor.constraint(equalTo: episodeOptions.centerYAnchor).isActive = true
+        likeButton.leadingAnchor.constraint(equalTo: episodeOptions.leadingAnchor).isActive = true
+        likeButton.widthAnchor.constraint(equalToConstant: 18).isActive = true
+        likeButton.heightAnchor.constraint(equalToConstant: 18).isActive = true
+        
+        episodeOptions.addSubview(likeCountLabel)
+        likeCountLabel.translatesAutoresizingMaskIntoConstraints = false
+        likeCountLabel.centerYAnchor.constraint(equalTo: episodeOptions.centerYAnchor).isActive = true
+        likeCountLabel.leadingAnchor.constraint(equalTo: likeButton.trailingAnchor, constant: 5).isActive = true
+        likeCountLabel.widthAnchor.constraint(equalToConstant: 35).isActive = true
+        
+        episodeOptions.addSubview(commentButton)
+        commentButton.translatesAutoresizingMaskIntoConstraints = false
+        commentButton.centerYAnchor.constraint(equalTo: episodeOptions.centerYAnchor).isActive = true
+        commentButton.leadingAnchor.constraint(equalTo: likeCountLabel.trailingAnchor, constant: 10).isActive = true
+        commentButton.widthAnchor.constraint(equalToConstant: 18).isActive = true
+        commentButton.heightAnchor.constraint(equalToConstant: 18).isActive = true
+        
+        episodeOptions.addSubview(commentCountLabel)
+        commentCountLabel.translatesAutoresizingMaskIntoConstraints = false
+        commentCountLabel.centerYAnchor.constraint(equalTo: episodeOptions.centerYAnchor).isActive = true
+        commentCountLabel.leadingAnchor.constraint(equalTo: commentButton.trailingAnchor, constant: 5).isActive = true
+        commentCountLabel.widthAnchor.constraint(equalToConstant: 35).isActive = true
+        
+        episodeOptions.addSubview(shareButton)
+        shareButton.translatesAutoresizingMaskIntoConstraints = false
+        shareButton.centerYAnchor.constraint(equalTo: episodeOptions.centerYAnchor).isActive = true
+        shareButton.leadingAnchor.constraint(equalTo: commentCountLabel.trailingAnchor, constant: 10).isActive = true
+        shareButton.widthAnchor.constraint(equalToConstant: 18).isActive = true
+        shareButton.heightAnchor.constraint(equalToConstant: 18).isActive = true
+        
+        episodeOptions.addSubview(shareCountLabel)
+        shareCountLabel.translatesAutoresizingMaskIntoConstraints = false
+        shareCountLabel.centerYAnchor.constraint(equalTo: episodeOptions.centerYAnchor).isActive = true
+        shareCountLabel.leadingAnchor.constraint(equalTo: shareButton.trailingAnchor, constant: 5).isActive = true
+        shareCountLabel.widthAnchor.constraint(equalToConstant: 35).isActive = true
+        
+        if UIDevice.current.deviceType != .iPhone4S && UIDevice.current.deviceType != .iPhoneSE {
+        episodeOptions.addSubview(listenIconImage)
+        listenIconImage.translatesAutoresizingMaskIntoConstraints = false
+        listenIconImage.centerYAnchor.constraint(equalTo: episodeOptions.centerYAnchor).isActive = true
+        listenIconImage.leadingAnchor.constraint(equalTo: shareCountLabel.trailingAnchor, constant: 7).isActive = true
+        listenIconImage.widthAnchor.constraint(equalToConstant: 18).isActive = true
+        listenIconImage.heightAnchor.constraint(equalToConstant: 18).isActive = true
+        
+        episodeOptions.addSubview(listenCountLabel)
+        listenCountLabel.translatesAutoresizingMaskIntoConstraints = false
+        listenCountLabel.centerYAnchor.constraint(equalTo: episodeOptions.centerYAnchor).isActive = true
+        listenCountLabel.leadingAnchor.constraint(equalTo: listenIconImage.trailingAnchor, constant: 5).isActive = true
+        listenCountLabel.widthAnchor.constraint(equalToConstant: 35).isActive = true
+        }
+
+        
+        episodeOptions.addSubview(timeSinceReleaseLabel)
+        timeSinceReleaseLabel.translatesAutoresizingMaskIntoConstraints = false
+        timeSinceReleaseLabel.centerYAnchor.constraint(equalTo: episodeOptions.centerYAnchor).isActive = true
+        timeSinceReleaseLabel.trailingAnchor.constraint(equalTo: self.trailingAnchor,constant: -16).isActive = true
+        
         self.addSubview(timeSinceReleaseLabel)
         timeSinceReleaseLabel.translatesAutoresizingMaskIntoConstraints = false
         timeSinceReleaseLabel.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: -14).isActive = true
         timeSinceReleaseLabel.trailingAnchor.constraint(equalTo: self.trailingAnchor,constant: -16).isActive = true
     }
-
     
     override func normalSetUp(episode: Episode) {
         includeRichLink()
@@ -107,16 +230,13 @@ class EpisodeCellSmlLink: EpisodeCell {
                 self.programImageButton.setImage(image, for: .normal)
             }
         }
-                
+        
+        listenCountLabel.text = episode.listenCount.roundedWithAbbreviations
         programNameLabel.text = episode.programName
         usernameButton.setTitle("@\(episode.username)", for: .normal)
         timeSinceReleaseLabel.text = episode.timeSince
         captionTextView.text = episode.caption
         episodeTags = episode.tags!
-        
-        if episodeTags.count == 0 && episode.likeCount > 10 {
-            tagScrollViewHeightConstraint.constant = 0
-        }
         
         createTagButtons()
         setupProgressBar()
@@ -124,117 +244,34 @@ class EpisodeCellSmlLink: EpisodeCell {
         DispatchQueue.main.async {
             self.addGradient()
             if self.captionTextView.lineCount() > 3 {
-                self.addMoreButton()
+                self.moreButtonGradient.isHidden = false
+                self.moreGradientView.isHidden = false
+                self.moreButton.isHidden = false
+            } else {
+                self.moreButtonGradient.isHidden = true
+                self.moreGradientView.isHidden = true
+                self.moreButton.isHidden = true
             }
         }
     }
     
-    
-    // MARK: Rich Link
     func includeRichLink() {
-        configureRegularPreview { (result) in
+        FileManager.getLinkImageWith(imageID: episode.linkImageID!) { image in
             DispatchQueue.main.async {
-                if result == true {
-                    self.squarePreview.imageButton.setImage(self.richLinkGenerator.squareImage, for: .normal)
-                    self.squarePreview.imageButton.addTarget(self, action: #selector(self.linkTouched), for: .touchUpInside)
-                    self.squarePreview.backgroundButton.addTarget(self, action: #selector(self.linkTouched), for: .touchUpInside)
-                    self.squarePreview.squareLabel.text = self.richLinkGenerator.mainTitle
-                    self.squarePreview.urlLabel.text = self.richLinkGenerator.canonicalUrl
-                }
+                self.squarePreview.imageButton.setImage(image, for: .normal)
             }
         }
-    }
-
-    func configureRegularPreview(completion: @escaping (Bool) -> ()) {
-        swiftLinkPreview.preview(episode.richLink!, onSuccess: { result in
-            self.richLinkGenerator = RichLinkGenerator(response: result)
-            self.richLinkGenerator.isImageLarge(completion: { result in
-                if result != true {
-                    completion(true)
-                }
-            })
-        }, onError: { error in
-            print("\(error)")
-            completion(false)
-        })
+        self.squarePreview.imageButton.addTarget(self, action: #selector(self.linkTouched), for: .touchUpInside)
+        self.squarePreview.backgroundButton.addTarget(self, action: #selector(self.linkTouched), for: .touchUpInside)
+        self.squarePreview.squareLabel.text = episode.linkHeadline!
+        self.squarePreview.urlLabel.text = episode.canonicalUrl!
     }
     
-    @objc override func linkTouched() {
+    @objc func linkTouched() {
         print("link touched")
-
         guard let url = URL(string: episode.richLink!) else { return }
         UIApplication.shared.open(url)
     }
-    
-    @objc override func likeButtonPress() {
-        guard let indexPath = getIndexPath() else { return }
-        var likeCount = episode.likeCount
-        
-        if likedEpisode == false {
-            
-            likedEpisode = true
-            likeCount += 1
-            likeCountLabel.text = String(likeCount)
-            likeButton.setImage(UIImage(named: "cell-liked-button"), for: .normal)
-            likeCountLabel.textColor = CustomStyle.fourthShade
-            FireStoreManager.updateEpisodeLikeCountWith(episodeID: episode.ID, by: .increase)
-            
-            episode.likeCount += 1
-            cellDelegate?.updateLikeCountFor(episode: episode, at: indexPath)
-            
-        } else {
-            likedEpisode = false
-            likeCount -= 1
-            likeCountLabel.text = String(likeCount)
-            likeButton.setImage(UIImage(named: "cell-like-button"), for: .normal)
-            likeCountLabel.textColor = CustomStyle.thirdShade
-            FireStoreManager.updateEpisodeLikeCountWith(episodeID: episode.ID, by: .decrease)
-            
-            episode.likeCount -= 1
-            cellDelegate?.updateLikeCountFor(episode: episode, at: indexPath)
-            
-            if likeCount == 0 {
-                likeCountLabel.text = ""
-            }
-        }
-    }
-    
-    @objc override func playEpisode() {
-        cellDelegate!.playEpisode(cell: self )
-    }
-    
-    @objc override func showSettings() {
-        print("Reached")
-        cellDelegate!.showSettings(cell: self )
-    }
-    
-    @objc override func visitProfile() {
-        
-        if User.isPublisher! && CurrentProgram.programsIDs().contains(episode.programID) {
-            let tabBar = MainTabController()
-            tabBar.selectedIndex = 4
-            
-            if #available(iOS 13.0, *) {
-                let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
-                 sceneDelegate.window?.rootViewController = tabBar
-            } else {
-                 appDelegate.window?.rootViewController = tabBar
-            }
-            
-        } else {
-            FireStoreManager.fetchAndCreateProgramWith(programID: episode.programID) { program in
-                if program.isPrimaryProgram && program.hasMultiplePrograms! {
-                    FireStoreManager.fetchSubProgramsWithIDs(programIDs: program.programIDs!, for: program) {
-                        self.cellDelegate!.visitProfile(program: program)
-                    }
-                } else {
-                     self.cellDelegate!.visitProfile(program: program)
-                }
-            }
-        }
-    }
-    
-    
     
 }
 

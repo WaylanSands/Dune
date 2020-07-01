@@ -21,7 +21,7 @@ class SignInVC: UIViewController, UITextFieldDelegate {
     @IBOutlet weak var forgotPasswordLabel: UILabel!
     @IBOutlet weak var clickHereLabel: UIButton!
     @IBOutlet weak var emailLabelTopAnchor: NSLayoutConstraint!
-    @IBOutlet weak var socialSignInYConstraint: NSLayoutConstraint!
+    @IBOutlet weak var passwordLabelTopConstraint: NSLayoutConstraint!
     
     var provider = OAuthProvider(providerID: "twitter.com")
     let networkingIndicator = NetworkingProgress()
@@ -35,7 +35,6 @@ class SignInVC: UIViewController, UITextFieldDelegate {
         }
     }
     
-    // Unhashed nonce.
     fileprivate var currentNonce: String?
     
     let customNavBar = CustomNavBar()
@@ -75,7 +74,7 @@ class SignInVC: UIViewController, UITextFieldDelegate {
     let textFieldToggle: UIButton =  {
         let button = UIButton()
         button.setTitle("Show", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .regular)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .medium)
         button.setTitleColor(.white, for: .normal)
         button.addTarget(self, action:#selector(toggleButtonPress), for: .touchUpInside)
         return button
@@ -133,6 +132,30 @@ class SignInVC: UIViewController, UITextFieldDelegate {
         socialAccountNotFoundAlert.alertDelegate = self
     }
     
+    func styleForScreens() {
+        switch deviceType {
+        case .iPhone4S, .iPhoneSE:
+            emailLabel.isHidden = true
+            passwordLabel.isHidden = true
+            emailLabelTopAnchor.constant = 20
+            emailLabel.font = UIFont.systemFont(ofSize: 20.0, weight: .semibold)
+            passwordLabel.font = UIFont.systemFont(ofSize: 20.0, weight: .semibold)
+            passwordLabelTopConstraint.constant = -10
+        case .iPhone8:
+            emailLabelTopAnchor.constant = 50
+        case .iPhone8Plus:
+            emailLabelTopAnchor.constant = 70
+        case .iPhone11:
+            emailLabelTopAnchor.constant = 120
+        case .iPhone11Pro:
+            emailLabelTopAnchor.constant = 70
+        case .iPhone11ProMax:
+            emailLabelTopAnchor.constant = 120
+        case .unknown:
+            break
+        }
+    }
+    
     func configureViews() {
         customNavBar.backgroundColor = .clear
         customNavBar.titleLabel.text = "Sign in"
@@ -174,29 +197,6 @@ class SignInVC: UIViewController, UITextFieldDelegate {
         passwordTextField.textContentType = .password
     }
     
-    func styleForScreens() {
-        switch deviceType {
-        case .iPhone4S:
-            break
-        case .iPhoneSE:
-            emailLabelTopAnchor.constant = 50
-            emailLabel.font = UIFont.systemFont(ofSize: 20.0, weight: .semibold)
-            passwordLabel.font = UIFont.systemFont(ofSize: 20.0, weight: .semibold)
-        case .iPhone8:
-            emailLabelTopAnchor.constant = 80
-        case .iPhone8Plus:
-            break
-        case .iPhone11:
-            emailLabelTopAnchor.constant = 140
-        case .iPhone11Pro:
-            emailLabelTopAnchor.constant = 90
-        case .iPhone11ProMax:
-            emailLabelTopAnchor.constant = 140
-        case .unknown:
-            break
-        }
-    }
-    
     @objc func backButtonPress() {
         navigationController?.popViewController(animated: true)
     }
@@ -217,7 +217,6 @@ class SignInVC: UIViewController, UITextFieldDelegate {
     }
     
     @objc func signInButtonPress() {
-        print("hit")
         guard let email =  emailTextField.text else { return }
         guard let password =  passwordTextField.text else { return }
         
@@ -264,14 +263,13 @@ class SignInVC: UIViewController, UITextFieldDelegate {
             } else {
                 
                 if snapshot!.exists {
-                
-                UserDefaults.standard.set(true, forKey: "loggedIn")
-                guard let data = snapshot?.data() else { return }
-                User.modelUser(data: data)
-                
-                let completedOnBoarding = data["completedOnBoarding"] as! Bool
-                
-                if User.isPublisher! {
+                    
+                    UserDefaults.standard.set(true, forKey: "loggedIn")
+                    guard let data = snapshot?.data() else { return }
+                    User.modelUser(data: data)
+                    
+                    let completedOnBoarding = data["completedOnBoarding"] as! Bool
+                    
                     FireStoreManager.getProgramData { success in
                         print("Received program data: \(success)")
                         
@@ -281,13 +279,6 @@ class SignInVC: UIViewController, UITextFieldDelegate {
                             self.sendToAccountType()
                         }
                     }
-                } else {
-                    if completedOnBoarding {
-                        self.sendToMainFeed()
-                    } else {
-                        self.sendToAccountType()
-                    }
-                }
                 } else {
                     UIApplication.shared.keyWindow!.addSubview(self.socialAccountNotFoundAlert)
                     self.signInButton.isHidden = false
@@ -431,9 +422,7 @@ class SignInVC: UIViewController, UITextFieldDelegate {
         let summary = info!["description"] as? String
         let name = info!["name"] as? String
         
-        User.displayName = name
         User.username = username
-        User.imagePath = imagePath
         User.socialSignUp = true
         User.ID = twitterAuthResult!.user.uid
         

@@ -12,12 +12,36 @@ import UIKit
 
 struct CustomAnimation {
     
+   static func distanceTwenty() -> CGFloat {
+        if UIDevice.current.deviceType == .iPhoneSE {
+              return 20
+        } else {
+            return 20
+        }
+    }
+    
+    static func distanceForty() -> CGFloat {
+         if UIDevice.current.deviceType == .iPhoneSE {
+               return 25
+         } else {
+             return 40
+         }
+     }
+    
+    static func distanceFifty() -> CGFloat {
+         if UIDevice.current.deviceType == .iPhoneSE {
+               return 35
+         } else {
+             return 50
+         }
+     }
+    
     static func moveTrimXPosition(button: UIButton, to recordButton: UIButton) {
-        button.frame.origin.x = (recordButton.frame.origin.x - button.frame.width) - 20
+        button.frame.origin.x = (recordButton.frame.origin.x - button.frame.width) - distanceTwenty()
     }
     
     static func moveFilterXPosition(button: UIButton, to recordButton: UIButton) {
-        button.frame.origin.x = (recordButton.frame.origin.x - (button.frame.width * 2)) - 40
+        button.frame.origin.x = (recordButton.frame.origin.x - (button.frame.width * 2)) - distanceForty()
     }
     
     static func moveRedoXPosition(button: UIButton, to recordButton: UIButton) {
@@ -25,7 +49,7 @@ struct CustomAnimation {
     }
     
     static func moveMusicXPosition(button: UIButton, to recordButton: UIButton) {
-        button.frame.origin.x = (recordButton.frame.origin.x + (button.frame.width * 2)) + 50
+        button.frame.origin.x = (recordButton.frame.origin.x + (button.frame.width * 2)) + distanceFifty()
     }
     
     static func transitionFilter(button: UIButton, to recordButton: UIButton) {

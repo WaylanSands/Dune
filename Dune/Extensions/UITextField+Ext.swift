@@ -24,19 +24,17 @@ extension UITextField {
         self.rightViewMode = .always
     }
     
-    func checkEmail(db: Firestore, field: String, completion: @escaping (Bool) -> Void) {
-        let collectionRef =  db.collection("users")
-        collectionRef.whereField("email", isEqualTo: field).getDocuments { (snapshot, err) in
+    func checkEmail(db: Firestore, field: String, completion: @escaping (Bool,String) -> Void) {
+        
+        let collectionRef =  db.collection("users").whereField("email", isEqualTo: field)
+        
+        collectionRef.getDocuments { (snapshot, err) in
             if let err = err {
                 print("Error getting document: \(err)")
             } else if (snapshot?.isEmpty)! {
-                completion(false)
+                completion(false, field)
             } else {
-                for document in (snapshot?.documents)! {
-                    if document.data()["email"] != nil {
-                        completion(true)
-                    }
-                }
+                completion(true, field)
             }
         }
     }

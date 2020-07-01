@@ -16,7 +16,7 @@ class publisherCategoriesVC: UIViewController {
     @IBOutlet weak var continueButton: UIButton!
     @IBOutlet var categoryButtons: [UIButton]!
     @IBOutlet weak var titleLabelStack: UIStackView!
-    @IBOutlet weak var headlingTitleLabel: UILabel!
+    @IBOutlet weak var headingTitleLabel: UILabel!
     @IBOutlet weak var subtitleLabel: UILabel!
     @IBOutlet weak var categoryStack: UIStackView!
     @IBOutlet weak var headingTopAnchor: NSLayoutConstraint!
@@ -52,7 +52,7 @@ class publisherCategoriesVC: UIViewController {
         case .iPhone4S:
             break
         case .iPhoneSE:
-            headlingTitleLabel.font = UIFont.systemFont(ofSize: 26, weight: .bold)
+            headingTitleLabel.font = UIFont.systemFont(ofSize: 26, weight: .bold)
             headingTopAnchor.constant = 40.0
             continueButtonHeightAnchor.constant = 45.0
             shrinkButtons()

@@ -15,7 +15,6 @@ protocol EpisodeEditorDelegate {
 
 class EditPublishedEpisode: UIViewController {
     
-    let imageViewSize:CGFloat = 65.0
     let maxCaptionCharacters = 240
     let maxTagCharacters = 45
     
@@ -36,19 +35,16 @@ class EditPublishedEpisode: UIViewController {
     lazy var tagButtons: [UIButton] = [firstTagButton, secondTagButton, thirdTagButton]
     lazy var tagScrollViewWidth = tagScrollView.frame.width
     
+    // For screen-size adjustment
+    var imageViewSize:CGFloat = 55.0
+    var scrollHeightPadding: CGFloat = 60
+    
     var networkingIndicator = NetworkingProgress()
-    
-//    let customNavBar: CustomNavBar = {
-//        let nav = CustomNavBar()
-//        nav.leftButton.isHidden = true
-//        return nav
-//    }()
-    
+
     let scrollView: UIScrollView = {
         let view = UIScrollView()
         view.isScrollEnabled = true
         view.contentInsetAdjustmentBehavior = .never
-        view.keyboardDismissMode = .interactive
         view.showsVerticalScrollIndicator = false
         return view
     }()
@@ -74,7 +70,7 @@ class EditPublishedEpisode: UIViewController {
     
     let programNameLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 15, weight: .bold)
+        label.font = UIFont.systemFont(ofSize: 14, weight: .bold)
         return label
     }()
     
@@ -169,7 +165,7 @@ class EditPublishedEpisode: UIViewController {
     
     let captionTextView: UITextView = {
         let textView = UITextView()
-        textView.font = UIFont.systemFont(ofSize: 16, weight: .regular)
+        textView.font = UIFont.systemFont(ofSize: 15, weight: .regular)
         textView.textContainer.maximumNumberOfLines = 12
         textView.isScrollEnabled = false
         textView.textColor = CustomStyle.fifthShade
@@ -202,7 +198,7 @@ class EditPublishedEpisode: UIViewController {
     let tagTextView: UITextView = {
         let textView = UITextView()
         textView.text = "Add three tags"
-        textView.font = UIFont.systemFont(ofSize: 16, weight: .regular)
+        textView.font = UIFont.systemFont(ofSize: 15, weight: .regular)
         textView.textContainer.maximumNumberOfLines = 2
         textView.isScrollEnabled = false
         textView.textColor = CustomStyle.fourthShade
@@ -211,64 +207,10 @@ class EditPublishedEpisode: UIViewController {
         return textView
     }()
     
-    lazy var passThoughView = PassThoughView(frame: CGRect(x: 0, y: 0, width: view.frame.width, height: view.frame.height))
-    
-    let floatingDetailsView: UIView = {
-        let view = UIView()
-        view.backgroundColor = CustomStyle.primaryBlack
-        return view
-    }()
-    
-    let bottomBarImageView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.layer.cornerRadius = 7
-        imageView.clipsToBounds = true
-        return imageView
-    }()
-    
-    let bottomBarProgramNameLabel: UILabel = {
-        let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 16.0, weight: .bold)
-        label.textColor = .white
-        return label
-    }()
-    
-    let bottomBarUsernameLabel: UILabel = {
-        let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 14.0, weight: .regular)
-        label.textColor = .white
-        return label
-    }()
-    
-    let publishButton: UIButton = {
-        let button = UIButton()
-        button.alpha = 0.2
-        button.layer.cornerRadius = 7.0
-        button.layer.borderColor = CustomStyle.white.cgColor
-        button.setTitleColor(.white, for: .normal)
-        button.setTitleColor(UIColor.white.withAlphaComponent(0.8), for: .highlighted)
-        button.layer.borderWidth = 1
-        button.setTitle("Save", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 14.0, weight: .semibold)
-        button.addTarget(self, action: #selector(publishButtonPress), for: .touchUpInside)
-        button.addTarget(self, action: #selector(publishButtonTouch), for: .touchDown)
-        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 10.0, bottom: 0, right: 10.0)
-        button.isEnabled = false
-        return button
-    }()
-    
-    let bottomFill: UIView = {
-        let view = UIView()
-        view.backgroundColor = CustomStyle.primaryBlack
-        return view
-    }()
-    
     override var preferredStatusBarStyle: UIStatusBarStyle {
         return .lightContent
     }
-    
-    // MARK: Custom Init
-    
+        
     init(episode: Episode) {
         self.episode = episode
         captionLabel.text = episode.caption
@@ -276,9 +218,6 @@ class EditPublishedEpisode: UIViewController {
         programNameLabel.text = episode.programName
         usernameLabel.text = "@\(User.username!)"
         mainImage.image = CurrentProgram.image
-        bottomBarUsernameLabel.text = "@\(User.username!)"
-        bottomBarImageView.image = CurrentProgram.image
-        bottomBarProgramNameLabel.text = episode.programName
        
         if episode.tags != nil {
             tagsUsed = episode.tags!
@@ -288,7 +227,6 @@ class EditPublishedEpisode: UIViewController {
                 tagPlaceholderText = true
             }
         }
-        
         super.init(nibName: nil, bundle: nil)
     }
   
@@ -299,10 +237,8 @@ class EditPublishedEpisode: UIViewController {
         setUpTagButtonsWithTags()
         removeEmptyTags()
         configureNavBar()
+        styleForScreens()
         setupViews()
-        addFloatingView()
-        
-        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillChange(notification:)), name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -314,20 +250,12 @@ class EditPublishedEpisode: UIViewController {
     }
     
     override func viewDidAppear(_ animated: Bool) {
-        checkIfAbleToPublish()
         addGradient()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         captionTextView.resignFirstResponder()
         tagTextView.resignFirstResponder()
-    }
-    
-    @objc func keyboardWillChange(notification : Notification) {
-        guard let keyboardRect = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue else {
-            return
-        }
-        floatingDetailsView.frame.origin.y = view.frame.height - keyboardRect.height -  (floatingDetailsView.frame.height - 70)
     }
     
     func setUpTagButtonsWithTags() {
@@ -370,20 +298,42 @@ class EditPublishedEpisode: UIViewController {
     }
     
     func configureNavBar() {
-        self.title = "Edit Episode"
+        navigationController?.navigationBar.prefersLargeTitles = true
+        navigationController?.navigationBar.isHidden = false
         navigationController?.isNavigationBarHidden = false
+        navigationItem.largeTitleDisplayMode = .never
         
         let navBar = navigationController?.navigationBar
-        navBar?.barStyle = .black
-        navBar?.setBackgroundImage(UIImage(), for: .default)
+        navBar?.barStyle = .default
+        navBar?.setBackgroundImage(nil, for: .default)
         navBar?.shadowImage = UIImage()
-        navBar?.titleTextAttributes = [.foregroundColor: UIColor.white]
-        navBar?.tintColor = .white
+        navBar?.titleTextAttributes = [.foregroundColor: UIColor.black]
+        navBar?.tintColor = .black
         
         let imgBackArrow = #imageLiteral(resourceName: "back-button-white")
         navBar?.backIndicatorImage = imgBackArrow
         navBar?.backIndicatorTransitionMaskImage = imgBackArrow
         navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
+    }
+    
+    func styleForScreens() {
+        switch UIDevice.current.deviceType {
+        case .iPhone4S, .iPhoneSE:
+            scrollHeightPadding = 140
+            imageViewSize = 50
+        case .iPhone8:
+            break
+        case .iPhone8Plus:
+            break
+        case .iPhone11:
+            break
+        case .iPhone11Pro:
+            break
+        case .iPhone11ProMax:
+            break
+        case .unknown:
+            break
+        }
     }
     
     func setupViews() {
@@ -399,12 +349,12 @@ class EditPublishedEpisode: UIViewController {
         scrollContentView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor).isActive = true
         scrollContentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor).isActive = true
         scrollContentView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor).isActive = true
-        scrollContentHeightConstraint = scrollContentView.heightAnchor.constraint(equalToConstant: screenHeight)
+        scrollContentHeightConstraint = scrollContentView.heightAnchor.constraint(equalToConstant: screenHeight + scrollHeightPadding)
         scrollContentHeightConstraint.isActive = true
         
         scrollContentView.addSubview(mainImage)
         mainImage.translatesAutoresizingMaskIntoConstraints = false
-        mainImage.topAnchor.constraint(equalTo: scrollContentView.topAnchor, constant: 20).isActive = true
+        mainImage.topAnchor.constraint(equalTo: scrollContentView.topAnchor, constant: UIDevice.current.navBarHeight() + 10).isActive = true
         mainImage.leadingAnchor.constraint(equalTo: scrollContentView.leadingAnchor, constant: 16).isActive = true
         mainImage.heightAnchor.constraint(equalToConstant: imageViewSize).isActive = true
         mainImage.widthAnchor.constraint(equalToConstant: imageViewSize).isActive = true
@@ -513,52 +463,6 @@ class EditPublishedEpisode: UIViewController {
         tagTextView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -13).isActive = true
     }
     
-    func addFloatingView() {
-        view.addSubview(passThoughView)
-        
-        passThoughView.addSubview(floatingDetailsView)
-        floatingDetailsView.translatesAutoresizingMaskIntoConstraints = false
-        floatingDetailsView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
-        floatingDetailsView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-        floatingDetailsView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        floatingDetailsView.heightAnchor.constraint(equalToConstant: 135.0).isActive = true
-        
-        floatingDetailsView.addSubview(bottomBarImageView)
-        bottomBarImageView.translatesAutoresizingMaskIntoConstraints = false
-        bottomBarImageView.topAnchor.constraint(equalTo: floatingDetailsView.topAnchor, constant: 10).isActive = true
-        bottomBarImageView.leadingAnchor.constraint(equalTo: floatingDetailsView.leadingAnchor, constant: 16.0).isActive = true
-        bottomBarImageView.heightAnchor.constraint(equalToConstant: 45.0).isActive = true
-        bottomBarImageView.widthAnchor.constraint(equalToConstant: 45.0).isActive = true
-        
-        floatingDetailsView.addSubview(bottomBarProgramNameLabel)
-        bottomBarProgramNameLabel.translatesAutoresizingMaskIntoConstraints = false
-        bottomBarProgramNameLabel.topAnchor.constraint(equalTo: floatingDetailsView.topAnchor, constant: 12.0).isActive = true
-        bottomBarProgramNameLabel.leadingAnchor.constraint(equalTo: bottomBarImageView.trailingAnchor, constant: 10.0).isActive = true
-        bottomBarProgramNameLabel.heightAnchor.constraint(equalToConstant: 20.0).isActive = true
-        
-        floatingDetailsView.addSubview(bottomBarUsernameLabel)
-        bottomBarUsernameLabel.translatesAutoresizingMaskIntoConstraints = false
-        bottomBarUsernameLabel.topAnchor.constraint(equalTo: bottomBarProgramNameLabel.bottomAnchor).isActive = true
-        bottomBarUsernameLabel.leadingAnchor.constraint(equalTo: bottomBarProgramNameLabel.leadingAnchor).isActive = true
-        bottomBarUsernameLabel.heightAnchor.constraint(equalToConstant: 20.0).isActive = true
-        
-        floatingDetailsView.addSubview(publishButton)
-        publishButton.translatesAutoresizingMaskIntoConstraints = false
-        publishButton.centerYAnchor.constraint(equalTo: bottomBarImageView.centerYAnchor).isActive = true
-        publishButton.trailingAnchor.constraint(equalTo: floatingDetailsView.trailingAnchor, constant: -16.0).isActive = true
-        publishButton.heightAnchor.constraint(equalToConstant: 32.0).isActive = true
-    }
-    
-    func addBottomFill() {
-        view.addSubview(bottomFill)
-        view.sendSubviewToBack(bottomFill)
-        bottomFill.translatesAutoresizingMaskIntoConstraints = false
-        bottomFill.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
-        bottomFill.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-        bottomFill.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        bottomFill.heightAnchor.constraint(equalToConstant: 70.0).isActive = true
-    }
-    
     func addGradient() {
         let gradient = CAGradientLayer()
         gradient.frame = gradientOverlayView.bounds
@@ -582,7 +486,6 @@ class EditPublishedEpisode: UIViewController {
     }
     
     func updateCharacterCount(textView: UITextView) {
-        
         captionCounterLabel.text =  String(maxCaptionCharacters - captionTextView.text!.count)
         tagCounterLabel.text =  String(maxTagCharacters - tagTextView.text!.count)
         
@@ -639,7 +542,6 @@ class EditPublishedEpisode: UIViewController {
         }
     }
     
-    
     // MARK: Save Episode
     @objc func publishButtonPress() {
         print("Saving episode")
@@ -651,7 +553,7 @@ class EditPublishedEpisode: UIViewController {
             if success {
                 self.delegate.updateCell(episode: self.episode)
                 self.networkingIndicator.removeFromSuperview()
-                self.dismiss(animated: true, completion: nil)
+                self.navigationController?.popViewController(animated: true)
             } else {
                 self.networkingIndicator.removeFromSuperview()
                print("Failed")
@@ -659,25 +561,20 @@ class EditPublishedEpisode: UIViewController {
         }
     }
     
-    func enablePublishButton() {
-        publishButton.isEnabled = true
-        publishButton.alpha = 1
-    }
-    
-    func disablePublishButton() {
-        publishButton.isEnabled = false
-        publishButton.alpha = 0.2
-    }
-    
-    @objc func publishButtonTouch() {
-        publishButton.layer.borderColor = UIColor.white.withAlphaComponent(0.8).cgColor
-    }
+//    func enablePublishButton() {
+//
+//    }
+//
+//    func disablePublishButton() {
+//
+//    }
     
     func checkIfAbleToPublish() {
         if captionPlaceholderText == false && captionTextView.text.count < maxCaptionCharacters && tagTextView.text.count < maxTagCharacters {
-            enablePublishButton()
+            navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Save", style: .plain, target: self, action: #selector(publishButtonPress))
+            navigationItem.rightBarButtonItem!.setTitleTextAttributes(CustomStyle.blackNavBarAttributes, for: .normal)
         } else {
-            disablePublishButton()
+            navigationItem.rightBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
         }
     }
 }
@@ -706,16 +603,16 @@ extension EditPublishedEpisode: UITextViewDelegate {
         if textView == captionTextView {
             if captionTextView.text.isEmpty {
                 addCaptionPlaceholderText()
-                scrollContentHeightConstraint.constant = scrollView.frame.height
+                scrollContentHeightConstraint.constant = scrollView.frame.height + scrollHeightPadding
             } else {
-                scrollContentHeightConstraint.constant = scrollView.frame.height + captionTextView.frame.height
+                scrollContentHeightConstraint.constant = scrollView.frame.height + captionTextView.frame.height + scrollHeightPadding
                 captionLabel.textColor = CustomStyle.sixthShade
                 captionLabel.text = captionTextView.text
             }
         }
         
         if textView == tagTextView {
-            tagsUsed = tagTextView.text.split(separator: " ").map { String($0).lowercased() }
+            tagsUsed = tagTextView.text.split(separator: " ").map { String($0) }
             if tagTextView.text.isEmpty {
                 addTagPlaceholderText()
             }
@@ -774,7 +671,6 @@ extension EditPublishedEpisode: UITextViewDelegate {
                 return tagsUsed.count < 4 && tagCount <= 2
             }
         }
-        
         return true
     }
 }

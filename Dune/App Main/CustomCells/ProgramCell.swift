@@ -10,24 +10,20 @@ import UIKit
 
 
 protocol ProgramCellDelegate {
-    func updateRows()
-    func addTappedProgram(programName: String)
     func playProgramIntro(cell: ProgramCell)
+    func unsubscribeFrom(program: Program)
     func showSettings(cell: ProgramCell)
     func visitProfile(program: Program)
-    func tagSelected(tag: String)
+    func programTagSelected(tag: String)
+    func noIntroAlert()
+    func updateRows()
 }
 
-
 class ProgramCell: UITableViewCell {
-    
     var cellDelegate: ProgramCellDelegate!
     var program: Program!
     var moreButtonPress = false
-    let programImageSize:CGFloat = 55.0
     var unwrapped = false
-    var fontNameSize: CGFloat = 16
-    var fontIDSize: CGFloat = 14
     let scrollPadding: CGFloat = 40.0
     var programTags: [String]!
     var cellHeight: NSLayoutConstraint!
@@ -35,21 +31,33 @@ class ProgramCell: UITableViewCell {
     var tagContentWidthConstraint: NSLayoutConstraint!
         
     // Used for modifying space when adding/removing options
-    
     var summaryViewHeight: NSLayoutConstraint!
     lazy var tagscrollViewWidth = tagScrollView.frame.width
     lazy var deviceType = UIDevice.current.deviceType
     lazy var tagButtons: [UIButton] = [firstTagButton, secondTagButton, thirdTagButton]
     var tagContentSizeWidth: CGFloat = 0
     
+    // For screen-size adjustment
+    var usernameSize: CGFloat = 14
+    var imageSize:CGFloat = 50.0
+    var nameSize: CGFloat = 14
+    
     let playbackBarView = PlaybackBarView()
     
     let programImageButton: UIButton = {
         let button = UIButton()
-        button.layer.cornerRadius = 7
+        button.layer.cornerRadius = 6
         button.clipsToBounds = true
         button.contentMode = .scaleAspectFit
         button.backgroundColor = CustomStyle.secondShade
+        button.isOpaque = true
+        return button
+    }()
+    
+    lazy var playProgramButton: UIButton = {
+        let button = UIButton()
+        button.setImage(UIImage(named: "play-episode-btn"), for: .normal)
+        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: -imageSize + 15, bottom: 0, right: 0)
         return button
     }()
     
@@ -67,9 +75,9 @@ class ProgramCell: UITableViewCell {
         return button
     }()
     
-    let programNameLabel: UILabel = {
+    lazy var programNameLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 15, weight: .bold)
+        label.font = UIFont.systemFont(ofSize: nameSize, weight: .bold)
         return label
     }()
     
@@ -138,13 +146,22 @@ class ProgramCell: UITableViewCell {
         return button
     }()
     
-    let moreButton: UIButton = {
-        let button = UIButton()
+    let moreButton: ExtendedButton = {
+        let button = ExtendedButton()
         button.setTitle("more", for: .normal)
         button.titleLabel!.font = UIFont.systemFont(ofSize: 13, weight: .regular)
         button.setTitleColor(CustomStyle.linkBlue, for: .normal)
         button.addTarget(self, action: #selector(moreUnwrap), for: .touchUpInside)
+        button.backgroundColor = .white
+        button.padding = 10
         return button
+    }()
+    
+    let moreButtonGradient = CAGradientLayer()
+    
+    let moreGradientView: UIView = {
+        let view = UIView()
+        return view
     }()
     
     let subscribeButton: UIButton = {
@@ -171,23 +188,30 @@ class ProgramCell: UITableViewCell {
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
+        self.layer.rasterizationScale = UIScreen.main.scale
+        self.layer.shouldRasterize = true
         self.selectionStyle = .none
         styleForScreens()
         configureViews()
     }
     
     override func prepareForReuse() {
+        captionTextView.textContainer.maximumNumberOfLines = 3
         clearTagButtons()
-        moreButton.removeFromSuperview()
     }
     
     // MARK: Setup Cell
     func normalSetUp(program: Program) {
-        
-        FileManager.getImageWith(imageID: program.imageID!) { image in
-            DispatchQueue.main.async {
-                self.programImageButton.setImage(image, for: .normal)
+        self.program = program
+       
+        if program.imageID != nil {
+            FileManager.getImageWith(imageID: program.imageID!) { image in
+                DispatchQueue.main.async {
+                    self.programImageButton.setImage(image, for: .normal)
+                }
             }
+        } else {
+            self.programImageButton.setImage(#imageLiteral(resourceName: "missing-image-large"), for: .normal)
         }
         
         if let programIDs = CurrentProgram.programIDs {
@@ -216,22 +240,31 @@ class ProgramCell: UITableViewCell {
         
         DispatchQueue.main.async {
             self.addGradient()
-            if self.captionTextView.lineCount() > 3 {
-                self.addMoreButton()
+            if self.captionTextView.lineCount() > 3 && !self.unwrapped {
+                self.moreButtonGradient.isHidden = false
+                self.moreGradientView.isHidden = false
+                self.moreButton.isHidden = false
+            } else {
+                self.moreButtonGradient.isHidden = true
+                self.moreGradientView.isHidden = true
+                self.moreButton.isHidden = true
             }
         }
     }
     
     func setupProgressBar() {
         if program.hasIntro {
-            playbackBarView.isHidden = false
-            playbackBarView.setupPlaybackBar()
+            playProgramButton.isHidden = false
+            playProgramButton.setImage(UIImage(named: "play-episode-btn"), for: .normal)
             if program.hasBeenPlayed {
+                playbackBarView.isHidden = false
+                playbackBarView.setupPlaybackBar()
+                playProgramButton.setImage(nil, for: .normal)
                 playbackBarView.setProgressWith(percentage: program.playBackProgress)
-                print(program.playBackProgress)
             }
          } else {
-             playbackBarView.isHidden = true
+            playbackBarView.isHidden = true
+            playProgramButton.isHidden = true
          }
     }
     
@@ -250,11 +283,11 @@ class ProgramCell: UITableViewCell {
             subs = "Subscriber"
         }
         
-        programStatsLabel.text = "\(subscribers) \(subs)  |  \(episodes.count) \(eps)"
+        programStatsLabel.text = "\(subscribers) \(subs)  |  \(episodes.count) \(eps) |  Rep \(program.rep)"
     }
     
     func configureSubscribeButton() {
-        if User.subscriptionIDs!.contains(program.ID) {
+        if CurrentProgram.subscriptionIDs!.contains(program.ID) {
             setupUnsubscribeButton()
         } else {
             setupSubscribeButton()
@@ -274,25 +307,14 @@ class ProgramCell: UITableViewCell {
         subscribeButton.contentEdgeInsets = UIEdgeInsets(top: 0, left: 4, bottom: 0, right: 4)
     }
     
-    func refreshSetupMoreTapFalse() {
-        captionTextView.textContainer.maximumNumberOfLines = 3
-        moreButton.isHidden = false
-        moreButtonPress = false
-    }
-    
-    func refreshSetupMoreTapTrue() {
-        captionTextView.textContainer.maximumNumberOfLines = 0
-        captionTextView.textContainer.exclusionPaths.removeAll()
-        moreButton.isHidden = true
-    }
-    
     func styleForScreens() {
         switch deviceType {
         case .iPhone4S:
             break
         case .iPhoneSE:
-            fontNameSize = 14
-            fontIDSize = 12
+            usernameSize = 14
+            imageSize = 45.0
+            nameSize = 14
         case .iPhone8:
             break
         case .iPhone8Plus:
@@ -313,15 +335,22 @@ class ProgramCell: UITableViewCell {
         programImageButton.translatesAutoresizingMaskIntoConstraints = false
         programImageButton.topAnchor.constraint(equalTo: self.topAnchor, constant: 15).isActive = true
         programImageButton.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 16).isActive = true
-        programImageButton.heightAnchor.constraint(equalToConstant: programImageSize).isActive = true
-        programImageButton.widthAnchor.constraint(equalToConstant: programImageSize).isActive = true
+        programImageButton.heightAnchor.constraint(equalToConstant: imageSize).isActive = true
+        programImageButton.widthAnchor.constraint(equalToConstant: imageSize).isActive = true
         
         self.addSubview(playbackBarView)
         playbackBarView.translatesAutoresizingMaskIntoConstraints = false
         playbackBarView.centerXAnchor.constraint(equalTo: programImageButton.centerXAnchor).isActive = true
         playbackBarView.topAnchor.constraint(equalTo: programImageButton.bottomAnchor, constant: 10).isActive = true
         playbackBarView.heightAnchor.constraint(equalToConstant: 5).isActive = true
-        playbackBarView.widthAnchor.constraint(equalToConstant: 50).isActive = true
+        playbackBarView.widthAnchor.constraint(equalToConstant: imageSize - 5).isActive = true
+        
+        self.addSubview(playProgramButton)
+        playProgramButton.translatesAutoresizingMaskIntoConstraints = false
+        playProgramButton.centerXAnchor.constraint(equalTo: programImageButton.centerXAnchor).isActive = true
+        playProgramButton.topAnchor.constraint(equalTo: programImageButton.bottomAnchor, constant: 3).isActive = true
+        playProgramButton.widthAnchor.constraint(equalTo: programImageButton.widthAnchor).isActive = true
+        playProgramButton.heightAnchor.constraint(equalToConstant: 20).isActive = true
         
         self.addSubview(programSettingsButton)
         programSettingsButton.translatesAutoresizingMaskIntoConstraints = false
@@ -335,7 +364,6 @@ class ProgramCell: UITableViewCell {
         subscribeButton.heightAnchor.constraint(equalToConstant: 24).isActive = true
         subscribeButton.widthAnchor.constraint(equalToConstant: subscribeButton.intrinsicContentSize.width + 5).isActive = true
 
-        
         self.addSubview(programNameLabel)
         programNameLabel.translatesAutoresizingMaskIntoConstraints = false
         programNameLabel.topAnchor.constraint(equalTo: programImageButton.topAnchor).isActive = true
@@ -359,7 +387,7 @@ class ProgramCell: UITableViewCell {
         tagScrollView.translatesAutoresizingMaskIntoConstraints = false
         tagScrollView.topAnchor.constraint(equalTo: captionTextView.bottomAnchor, constant: 10).isActive = true
         tagScrollView.leadingAnchor.constraint(equalTo: captionTextView.leadingAnchor).isActive = true
-        tagScrollView.trailingAnchor.constraint(equalTo: self.trailingAnchor,constant: -35).isActive = true
+        tagScrollView.trailingAnchor.constraint(equalTo: self.trailingAnchor,constant: -16).isActive = true
         tagScrollViewHeightConstraint = tagScrollView.heightAnchor.constraint(equalToConstant: 22)
         tagScrollViewHeightConstraint.isActive = true
         
@@ -382,6 +410,28 @@ class ProgramCell: UITableViewCell {
         gradientOverlayView.heightAnchor.constraint(equalToConstant: 40.0).isActive = true
         gradientOverlayView.trailingAnchor.constraint(equalTo: tagScrollView.trailingAnchor).isActive = true
         gradientOverlayView.widthAnchor.constraint(equalToConstant: 22.0).isActive = true
+        
+        self.addSubview(self.moreButton)
+        self.moreButton.translatesAutoresizingMaskIntoConstraints = false
+        self.moreButton.bottomAnchor.constraint(equalTo: self.captionTextView.bottomAnchor).isActive = true
+        self.moreButton.trailingAnchor.constraint(equalTo: self.captionTextView.trailingAnchor).isActive = true
+        self.moreButton.heightAnchor.constraint(equalToConstant: self.captionTextView.font!.lineHeight).isActive = true
+        self.moreButton.widthAnchor.constraint(equalToConstant: 40).isActive = true
+        
+        self.captionTextView.addSubview(self.moreGradientView)
+        self.moreGradientView.translatesAutoresizingMaskIntoConstraints = false
+        self.moreGradientView.centerYAnchor.constraint(equalTo: self.moreButton.centerYAnchor).isActive = true
+        self.moreGradientView.trailingAnchor.constraint(equalTo: self.moreButton.leadingAnchor).isActive = true
+        self.moreGradientView.heightAnchor.constraint(equalToConstant: 20).isActive = true
+        self.moreGradientView.widthAnchor.constraint(equalToConstant: 20).isActive = true
+
+        self.moreButtonGradient.frame = CGRect(x: 0, y: 0, width: 18, height: 20)
+        let whiteColor = UIColor.white
+        self.moreButtonGradient.colors = [whiteColor.withAlphaComponent(0.0).cgColor, whiteColor.withAlphaComponent(5.0).cgColor, whiteColor.withAlphaComponent(1.0).cgColor]
+
+        self.moreGradientView.transform = CGAffineTransform(rotationAngle: (-90.0 * .pi) / 180.0)
+        self.moreGradientView.layer.insertSublayer(self.moreButtonGradient, at: 0)
+        self.bringSubviewToFront(self.moreButton)
     }
     
     func addGradient() {
@@ -405,14 +455,16 @@ class ProgramCell: UITableViewCell {
     func addMoreButton() {
         DispatchQueue.main.async {
             if !self.unwrapped {
-                self.addSubview(self.moreButton)
-                self.moreButton.translatesAutoresizingMaskIntoConstraints = false
-                self.moreButton.bottomAnchor.constraint(equalTo: self.captionTextView.bottomAnchor).isActive = true
-                self.moreButton.trailingAnchor.constraint(equalTo: self.captionTextView.trailingAnchor, constant: -3).isActive = true
-                self.moreButton.heightAnchor.constraint(equalToConstant: self.captionTextView.font!.lineHeight).isActive = true
-                let rect = CGRect(x: self.captionTextView.frame.width - 40, y: self.captionTextView.frame.height - 10, width: 40, height: 10)
-                let path = UIBezierPath(rect: rect)
-                self.captionTextView.textContainer.exclusionPaths = [path]
+                
+//                self.addSubview(self.moreButton)
+//                self.moreButton.translatesAutoresizingMaskIntoConstraints = false
+//                self.moreButton.bottomAnchor.constraint(equalTo: self.captionTextView.bottomAnchor).isActive = true
+//                self.moreButton.trailingAnchor.constraint(equalTo: self.captionTextView.trailingAnchor, constant: -3).isActive = true
+//                self.moreButton.heightAnchor.constraint(equalToConstant: self.captionTextView.font!.lineHeight).isActive = true
+//                let rect = CGRect(x: self.captionTextView.frame.width - 40, y: self.captionTextView.frame.height - 10, width: 40, height: 10)
+//                let path = UIBezierPath(rect: rect)
+//                self.captionTextView.textContainer.exclusionPaths = [path]
+                
             }
         }
     }
@@ -427,21 +479,22 @@ class ProgramCell: UITableViewCell {
     
     func tagButton(with title: String) -> TagButton {
         let button = TagButton(title: title)
-        button.addTarget(self, action: #selector(tagSelected), for: .touchUpInside)
+        button.addTarget(self, action: #selector(programTagSelected), for: .touchUpInside)
         return button
     }
     
-    @objc func tagSelected(sender: UIButton) {
+    @objc func programTagSelected(sender: UIButton) {
         let tag = sender.titleLabel!.text!
-        cellDelegate?.tagSelected(tag: tag)
+        cellDelegate?.programTagSelected(tag: tag)
     }
     
     @objc func moreUnwrap() {
-        unwrapped = true
         captionTextView.textContainer.maximumNumberOfLines = 0
-        captionTextView.textContainer.exclusionPaths.removeAll()
         captionTextView.text = "\(captionTextView.text!) "
-        moreButton.removeFromSuperview()
+        
+        self.moreButtonGradient.isHidden = true
+        self.moreGradientView.isHidden = true
+        self.moreButton.isHidden = true
         
         if UIDevice.current.deviceType == .iPhoneSE {
         }
@@ -460,7 +513,11 @@ class ProgramCell: UITableViewCell {
     
     @objc func playProgramIntro(cell: ProgramCell) {
         if program.hasIntro {
-             cellDelegate?.playProgramIntro(cell: self)
+            playbackBarView.isHidden = false
+            cellDelegate?.playProgramIntro(cell: self)
+            playProgramButton.setImage(nil, for: .normal)
+        } else {
+            cellDelegate.noIntroAlert()
         }
     }
     
@@ -469,20 +526,21 @@ class ProgramCell: UITableViewCell {
     }
     
     @objc func subscribeButtonPress() {
-        if User.subscriptionIDs!.contains(program.ID) {
+        if CurrentProgram.subscriptionIDs!.contains(program.ID) {
             setupSubscribeButton()
-            User.subscriptionIDs?.removeAll(where: { $0 == program.ID })
-            FireStoreManager.removeFavouriteWith(programID: program.ID)
-            FireStoreManager.updateProgramWithUnSubscribe(programID: program.ID)
+            CurrentProgram.subscriptionIDs!.removeAll(where: { $0 == program.ID })
+            FireStoreManager.removeSubscriptionFromProgramWith(programID: program.ID)
             FireStoreManager.unsubscribeFromProgramWith(programID: program.ID)
+            cellDelegate.unsubscribeFrom(program: program)
+            program.subscriberCount -= 1
+            configureStats()
         } else {
             setupUnsubscribeButton()
-            User.subscriptionIDs?.append(program.ID)
-            FireStoreManager.updateProgramWithSubscription(programID: program.ID)
-            FireStoreManager.subscribeUserToProgramWith(programID: program.ID)
-            if User.favouriteIDs!.count < 10 {
-                FireStoreManager.addFavouriteWith(programID: program.ID)
-            }
+            CurrentProgram.subscriptionIDs!.append(program.ID)
+            FireStoreManager.addSubscriptionToProgramWith(programID: program.ID)
+            FireStoreManager.subscribeToProgramWith(programID: program.ID)
+            program.subscriberCount += 1
+            configureStats()
         }
     }
     

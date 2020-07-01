@@ -8,21 +8,24 @@
 
 import UIKit
 
-class Program {
+public class Program {
     
     var ID: String
+    var rep: Int
     var name: String
     var username: String
     var ownerID: String
     var summary: String
     var webLink: String?
+    var hasMentions: Bool
+    var repMethods: [String]
     var isPrimaryProgram: Bool
     var tags: [String]
     var subscriberCount: Int
     var episodeIDs: [[String : Any]]
     var subscriberIDs: [String]
+    var subscriptionIDs: [String]
     var hasIntro: Bool
-    var hasMultiplePrograms: Bool?
     var subPrograms: [Program]?
     var programIDs: [String]?
     var image: UIImage?
@@ -34,25 +37,28 @@ class Program {
     var hasBeenPlayed = false
     var playBackProgress: CGFloat = 0
     
-    init(data: [String: Any]) {        
+    init(data: [String: Any]) {
+        rep = data["rep"] as! Int
         ID = data["ID"] as! String
         name = data["name"] as! String
+        hasMentions = data["hasMentions"] as! Bool
         username = data["username"] as! String
         summary = data["summary"] as! String
         ownerID = data["ownerID"] as! String
         hasIntro = data["hasIntro"] as! Bool
+        repMethods = data["repMethods"] as! [String]
         subscriberCount = data["subscriberCount"] as! Int
         tags = data["tags"] as! [String]
         isPrimaryProgram = data["isPrimaryProgram"] as! Bool
         episodeIDs = data["episodeIDs"] as! [[String : Any]]
         subscriberIDs = data["subscriberIDs"] as! [String]
         webLink = data["webLink"] as? String
-        hasMultiplePrograms = data["hasMultiplePrograms"] as? Bool
         programIDs = data["programIDs"] as? [String]
         imageID = data["imageID"] as? String
         imagePath = data["imagePath"] as? String
         introID = data["introID"] as? String
         introPath = data["introPath"] as? String
+        subscriptionIDs = data["subscriptionIDs"] as! [String]
         primaryCategory = data["primaryCategory"] as? String
         
         if imageID != nil {
@@ -65,20 +71,19 @@ class Program {
             self.image = #imageLiteral(resourceName: "missing-image-large")
         }
         
-        if isPrimaryProgram && hasMultiplePrograms! {
+        if isPrimaryProgram && !programIDs!.isEmpty {
             FireStoreManager.fetchSubProgramsWithIDs(programIDs: programIDs!, for: self) {
-                print("Programs added")
             }
         }
     }
     
     func programsIDs() -> [String] {
-        if self.hasMultiplePrograms! {
+        if !self.programIDs!.isEmpty {
             var ids = programIDs!
             ids.append(ID)
             return ids
         } else {
-            return [CurrentProgram.ID!]
+            return [ID]
         }
     }
     

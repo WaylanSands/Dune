@@ -23,17 +23,6 @@ class ChangePasswordVC: UIViewController {
     lazy var currentPasswordTextField = CustomStyle.styleSignUpTextField(color: CustomStyle.secondShade, view: view, placeholder: "Enter current password")
     lazy var newPasswordTextField = CustomStyle.styleSignUpTextField(color: CustomStyle.secondShade, view: view, placeholder: "Enter new password")
     
-//    let newPasswordTextField: UITextField = {
-//        let field = UITextField()
-//        field.placeholder = "Enter new password"
-//        field.backgroundColor = CustomStyle.secondShade
-//        field.font = UIFont.systemFont(ofSize: 16)
-//        field.clearButtonMode = UITextField.ViewMode.whileEditing
-//        field.layer.cornerRadius = 6.0
-//        field.layer.masksToBounds = true
-//        return field
-//    }()
-    
     let customNavBar: CustomNavBar = {
         let nav = CustomNavBar()
         nav.leftButton.isHidden = true
@@ -42,8 +31,8 @@ class ChangePasswordVC: UIViewController {
     
     let textFieldToggleOne: UIButton =  {
         let button = UIButton()
-        button.setTitle("Show", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .regular)
+        button.setTitle("Hide", for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .medium)
         button.setTitleColor(CustomStyle.linkBlue, for: .normal)
         button.addTarget(self, action:#selector(toggleButtonPressOne), for: .touchUpInside)
         return button
@@ -51,7 +40,7 @@ class ChangePasswordVC: UIViewController {
     
     let textFieldToggleTwo: UIButton =  {
         let button = UIButton()
-        button.setTitle("Show", for: .normal)
+        button.setTitle("Hide", for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .regular)
         button.setTitleColor(CustomStyle.linkBlue, for: .normal)
         button.addTarget(self, action:#selector(toggleButtonPressTwo), for: .touchUpInside)

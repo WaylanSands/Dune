@@ -17,12 +17,14 @@ class RichLinkGenerator {
     var mainTitle: String?
     var subHeading: String? // description
     var images: [String]?
-    var image: String?
+    var imageLink: String?
     var largeImage: UIImage?
     var squareImage: UIImage?
     var icon: String?
     var video: String?
     var price: String?
+    
+    let imageNotSupportedAlert = CustomAlertView(alertType: .imageNotSupported)
     
     let slimView: UIView = {
         let view = UIView()
@@ -90,7 +92,7 @@ class RichLinkGenerator {
         self.mainTitle = response.title
         self.subHeading = response.description
         self.images = response.images
-        self.image = response.image
+        self.imageLink = response.image
         self.icon = response.icon
         self.video = response.video
         self.price = response.price
@@ -107,7 +109,7 @@ class RichLinkGenerator {
     }
     
     func linkIsRich() -> Bool {
-        if canonicalUrl != nil && mainTitle != nil && subHeading != nil && image != nil {
+        if canonicalUrl != nil && mainTitle != nil && subHeading != nil && imageLink != nil {
             return true
         } else {
             return false
@@ -115,9 +117,7 @@ class RichLinkGenerator {
     }
     
     func addRichLinkTo(stackedView: UIStackView) {
-        
         isImageLarge { (result) in
-            
             if result == true {
                 DispatchQueue.main.async {
                     let button = self.configureRegularImageView()
@@ -129,30 +129,40 @@ class RichLinkGenerator {
                     self.addSquareButtonTo(stackedView: stackedView, button: button)
                 }
             }
-            
         }
     }
     
     func isImageLarge(completion: @escaping (Bool) -> ()) {
-            self.setImageTwo(from: self.image!) { image in
-                if image != nil {
-                    let width = image!.size.width
-                    if width <= CGFloat(200) {
+        self.setImageTwo(from: self.imageLink!) { image in
+            if image != nil {
+                let width = image!.size.width
+                if width <= CGFloat(200) {
+                    if self.icon != nil {
                         self.setImage(from: self.icon!) { image in
                             self.squareImage = image
                             completion(false)
                         }
                     } else {
-                        self.largeImage = image
-                        completion(true)
+                        self.setImage(from: self.imageLink!) { image in
+                            self.squareImage = image
+                            completion(false)
+                        }
                     }
+                } else {
+                    self.largeImage = image
+                    completion(true)
                 }
+            } else {
+                DispatchQueue.main.async {
+                    UIApplication.shared.windows.last?.addSubview(self.imageNotSupportedAlert)
+                }
+                return
             }
+        }
     }
     
     func checkIfImageIsLarge(completion: @escaping (Bool) -> ()) {
-        
-        self.setImage(from: self.image!) { image in
+        self.setImage(from: self.imageLink!) { image in
             if image != nil {
                 let width = image!.size.width
                 if width <= CGFloat(200) {
@@ -270,12 +280,9 @@ class RichLinkGenerator {
     
     func setImageTwo(from url: String, completion: @escaping (UIImage?) -> ()) {
         DispatchQueue.global(qos: .userInitiated).async {
-            if let imageURL = URL(string: url) {
-                if let imageData = try? Data(contentsOf: imageURL) {
-                    if let image = UIImage(data: imageData) {
+            if let imageURL = URL(string: url), let imageData = try? Data(contentsOf: imageURL), let image = UIImage(data: imageData) {
                         completion(image)
-                    }
-                }
+                    
             } else {
                  completion(nil)
             }
@@ -293,6 +300,7 @@ class RichLinkGenerator {
            
             if FileManager.default.fileExists(atPath: fileURL.path) {
                 if let image = UIImage(contentsOfFile: fileURL.path) {
+                      print("fileExists")
                     completion(image)
                 } else {
                     print("Failed to turn file into an Image")

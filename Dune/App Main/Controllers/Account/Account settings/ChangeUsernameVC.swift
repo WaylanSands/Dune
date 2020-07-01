@@ -172,7 +172,7 @@ class ChangeUsernameVC: UIViewController {
     
     @objc func selectButtonPress() {
         User.username = usernameTextField.text
-        FireStoreManager.updateUsername()
+        FireStoreManager.updateUserUsername()
         navigationController?.popViewController(animated: true)
     }
 }

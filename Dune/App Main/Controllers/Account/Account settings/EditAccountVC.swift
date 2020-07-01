@@ -19,9 +19,15 @@ class EditAccountVC: UIViewController {
     let Under18Years = Calendar.current.date(byAdding: .year, value: -18, to: Date())
     
     let headerViewHeight: CGFloat = 300
-    let changingDisplayName = CustomAlertView(alertType: .publisherChangingDisplayName)
+    let changingDisplayName = CustomAlertView(alertType: .programChangingName)
     let datePicker = CustomDatePicker()
     let db = Firestore.firestore()
+    
+    // For various screen-sizes
+    var imageSize: CGFloat = 90
+    var imageViewTopConstant: CGFloat = 120
+    var headerViewHeightConstant: CGFloat = 300
+    var scrollPadding: CGFloat = 100
     
     let customNavBar: CustomNavBar = {
         let nav = CustomNavBar()
@@ -76,24 +82,24 @@ class EditAccountVC: UIViewController {
         return stackView
     }()
     
-    let displayNameLabel: UILabel = {
+    let nameLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 16, weight: .regular)
+        label.font = UIFont.systemFont(ofSize: 15, weight: .regular)
         label.textColor = CustomStyle.primaryBlack
         label.text = "Display Name"
         return label
     }()
     
-    let displayNameTextField: UITextField = {
+    let nameTextField: UITextField = {
         let textField = UITextField()
         let placeholder = NSAttributedString(string: "", attributes: [NSAttributedString.Key.foregroundColor : CustomStyle.fourthShade])
         textField.attributedPlaceholder = placeholder;
         textField.textColor = CustomStyle.primaryBlack
-        textField.font = UIFont.systemFont(ofSize: 16, weight: .regular)
+        textField.font = UIFont.systemFont(ofSize: 15, weight: .regular)
         return textField
     }()
     
-    let displayNameUnlineView: UIView = {
+    let nameUnderlineView: UIView = {
         let view = UIView()
         view.backgroundColor = CustomStyle.thirdShade
         return view
@@ -101,7 +107,7 @@ class EditAccountVC: UIViewController {
     
     let usernameLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 16, weight: .regular)
+        label.font = UIFont.systemFont(ofSize: 15, weight: .regular)
         label.textColor = CustomStyle.primaryBlack
         label.text = "Username"
         return label
@@ -109,7 +115,7 @@ class EditAccountVC: UIViewController {
     
     let handelAtLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 16, weight: .regular)
+        label.font = UIFont.systemFont(ofSize: 15, weight: .regular)
         label.textColor = CustomStyle.fourthShade
         label.text = "@"
         return label
@@ -118,7 +124,7 @@ class EditAccountVC: UIViewController {
     lazy var usernameTextButton: UIButton = {
         let button = UIButton()
         button.setTitle(User.username!, for: .normal)
-        button.titleLabel!.font = UIFont.systemFont(ofSize: 16, weight: .regular)
+        button.titleLabel!.font = UIFont.systemFont(ofSize: 15, weight: .regular)
         button.setTitleColor(CustomStyle.fourthShade, for: .normal)
         button.addTarget(self, action: #selector(changeUsernamePress), for: .touchUpInside)
         return button
@@ -132,7 +138,7 @@ class EditAccountVC: UIViewController {
     
     let emailLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 16, weight: .regular)
+        label.font = UIFont.systemFont(ofSize: 15, weight: .regular)
         label.textColor = CustomStyle.primaryBlack
         label.text = "Email"
         return label
@@ -144,7 +150,7 @@ class EditAccountVC: UIViewController {
         label.addGestureRecognizer(gestureRec)
         label.isUserInteractionEnabled = true
         label.text = User.email
-        label.font = UIFont.systemFont(ofSize: 16, weight: .regular)
+        label.font = UIFont.systemFont(ofSize: 15, weight: .regular)
         label.textColor = CustomStyle.fourthShade
         label.textAlignment = .left
         return label
@@ -158,7 +164,7 @@ class EditAccountVC: UIViewController {
     
     let bdayLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 16, weight: .regular)
+        label.font = UIFont.systemFont(ofSize: 15, weight: .regular)
         label.textColor = CustomStyle.primaryBlack
         label.text = "Birthday"
         return label
@@ -167,7 +173,7 @@ class EditAccountVC: UIViewController {
     let bdayTextButton: UIButton = {
         let button = UIButton()
         button.setTitleColor(CustomStyle.fourthShade, for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .regular)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .regular)
         button.addTarget(self, action: #selector(changeBirthDate), for: .touchUpInside)
         return button
     }()
@@ -180,7 +186,7 @@ class EditAccountVC: UIViewController {
     
     let countryLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 16, weight: .regular)
+        label.font = UIFont.systemFont(ofSize: 15, weight: .regular)
         label.textColor = CustomStyle.primaryBlack
         label.text = "Country"
         return label
@@ -190,7 +196,7 @@ class EditAccountVC: UIViewController {
         let textField = UITextField()
         textField.isUserInteractionEnabled = false
         let placeholder = NSAttributedString(string: "Australia", attributes: [NSAttributedString.Key.foregroundColor : CustomStyle.fourthShade])
-        textField.font = UIFont.systemFont(ofSize: 16, weight: .regular)
+        textField.font = UIFont.systemFont(ofSize: 15, weight: .regular)
         textField.attributedPlaceholder = placeholder;
         textField.textColor = CustomStyle.primaryBlack
         return textField
@@ -204,7 +210,7 @@ class EditAccountVC: UIViewController {
     
     let passwordLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 16, weight: .regular)
+        label.font = UIFont.systemFont(ofSize: 15, weight: .regular)
         label.textColor = CustomStyle.primaryBlack
         label.text = "Password"
         return label
@@ -222,7 +228,7 @@ class EditAccountVC: UIViewController {
         return button
     }()
     
-    let topUnlineView: UIView = {
+    let topUnderlineView: UIView = {
         let view = UIView()
         view.backgroundColor = CustomStyle.thirdShade
         return view
@@ -259,7 +265,8 @@ class EditAccountVC: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        configiureViews()
+        styleForScreens()
+        configureViews()
         configureDelegates()
         navigationItem.title = "Edit Account"
     }
@@ -267,17 +274,12 @@ class EditAccountVC: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         usernameTextButton.setTitle(User.username, for: .normal)
-        emailLabelButton.text = User.email
         bdayTextButton.setTitle(User.birthDate, for: .normal)
-        setProgramImage()
+        profileImageView.image = CurrentProgram.image
+        emailLabelButton.text = User.email
         
-        if User.isPublisher!  {
-            let placeholder = NSAttributedString(string: CurrentProgram.name!, attributes: [NSAttributedString.Key.foregroundColor : CustomStyle.fourthShade])
-            displayNameTextField.attributedPlaceholder = placeholder
-        } else {
-            let placeholder = NSAttributedString(string: User.displayName!, attributes: [NSAttributedString.Key.foregroundColor : CustomStyle.fourthShade])
-            displayNameTextField.attributedPlaceholder = placeholder
-        }
+        let placeholder = NSAttributedString(string: CurrentProgram.name!, attributes: [NSAttributedString.Key.foregroundColor : CustomStyle.fourthShade])
+        nameTextField.attributedPlaceholder = placeholder
         
         navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
         self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
@@ -289,38 +291,45 @@ class EditAccountVC: UIViewController {
     // Save changed fields
     override func viewWillDisappear(_ animated: Bool) {
         
-        // Check if display name has changed
-        if displayNameTextField.text != "" {
-            // Check if display name is new
-            if User.isPublisher! && displayNameTextField.text != CurrentProgram.name {
-                print("Save new name")
-                CurrentProgram.name = displayNameTextField.text
-                FireStoreManager.updatePrimaryProgramName()
-            } else if User.isPublisher! == false && displayNameTextField.text != User.displayName  {
-                print("Save new name")
-                User.displayName = displayNameTextField.text
-                FireStoreManager.updateUserDisplayName()
-            }
+        if nameTextField.text != "" && nameTextField.text != CurrentProgram.name {
+            print("Save new name")
+            CurrentProgram.name = nameTextField.text
+            FireStoreManager.updatePrimaryProgramName()
         }
     }
+
     
     func configureDelegates() {
         scrollView.delegate = self
         datePicker.delegate = self
-        displayNameTextField.delegate = self
+        nameTextField.delegate = self
         changingDisplayName.alertDelegate = self
     }
     
-    func setProgramImage() {
-        
-        if User.isPublisher! {
-            profileImageView.image = CurrentProgram.image
-        } else {
-            profileImageView.image = User.image
+    func styleForScreens() {
+        switch UIDevice.current.deviceType {
+        case .iPhone4S, .iPhoneSE:
+            imageSize = 80
+            headerViewHeightConstant = 260
+            imageViewTopConstant = 90
+            scrollPadding = 140
+        case .iPhone8:
+            headerViewHeightConstant = 280
+            imageViewTopConstant = 100
+        case .iPhone8Plus:
+            imageViewTopConstant = 110
+        case .iPhone11:
+            break
+        case .iPhone11Pro:
+            break
+        case .iPhone11ProMax:
+            break
+        case .unknown:
+            break
         }
     }
     
-    func configiureViews() {
+    func configureViews() {
         view.backgroundColor = .white
         
         view.addSubview(blackBGView)
@@ -334,7 +343,7 @@ class EditAccountVC: UIViewController {
         scrollContentView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor).isActive = true
         scrollContentView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor).isActive = true
         scrollContentView.topAnchor.constraint(equalTo: scrollView.topAnchor).isActive = true
-        scrollContentView.heightAnchor.constraint(equalToConstant: viewHeight + 100).isActive = true
+        scrollContentView.heightAnchor.constraint(equalToConstant: viewHeight + scrollPadding).isActive = true
         scrollContentView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor).isActive = true
         scrollContentView.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor).isActive = true
         
@@ -343,14 +352,14 @@ class EditAccountVC: UIViewController {
         headerView.topAnchor.constraint(equalTo: scrollContentView.topAnchor).isActive = true
         headerView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         headerView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        headerView.heightAnchor.constraint(equalToConstant: headerViewHeight).isActive = true
+        headerView.heightAnchor.constraint(equalToConstant: headerViewHeightConstant).isActive = true
         
         headerView.addSubview(profileImageView)
         profileImageView.translatesAutoresizingMaskIntoConstraints = false
         profileImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
-        profileImageView.topAnchor.constraint(equalTo: headerView.topAnchor , constant: 120).isActive = true
-        profileImageView.heightAnchor.constraint(equalToConstant: 90).isActive = true
-        profileImageView.widthAnchor.constraint(equalToConstant: 90).isActive = true
+        profileImageView.topAnchor.constraint(equalTo: headerView.topAnchor , constant: imageViewTopConstant).isActive = true
+        profileImageView.heightAnchor.constraint(equalToConstant: imageSize).isActive = true
+        profileImageView.widthAnchor.constraint(equalToConstant: imageSize).isActive = true
         
         headerView.addSubview(changeImageButton)
         changeImageButton.translatesAutoresizingMaskIntoConstraints = false
@@ -372,7 +381,7 @@ class EditAccountVC: UIViewController {
         
         // Add user fields
         
-        userFieldsStackedView.addArrangedSubview(displayNameLabel)
+        userFieldsStackedView.addArrangedSubview(nameLabel)
         userFieldsStackedView.addArrangedSubview(usernameLabel)
         userFieldsStackedView.addArrangedSubview(emailLabel)
         userFieldsStackedView.addArrangedSubview(bdayLabel)
@@ -381,19 +390,19 @@ class EditAccountVC: UIViewController {
         
         // Add user values
         
-        scrollContentView.addSubview(displayNameTextField)
-        displayNameTextField.translatesAutoresizingMaskIntoConstraints = false
-        displayNameTextField.centerYAnchor.constraint(equalTo: displayNameLabel.centerYAnchor).isActive = true
-        displayNameTextField.leadingAnchor.constraint(equalTo: userFieldsStackedView.trailingAnchor).isActive = true
-        displayNameTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20).isActive = true
-        displayNameTextField.heightAnchor.constraint(equalToConstant: 30).isActive = true
+        scrollContentView.addSubview(nameTextField)
+        nameTextField.translatesAutoresizingMaskIntoConstraints = false
+        nameTextField.centerYAnchor.constraint(equalTo: nameLabel.centerYAnchor).isActive = true
+        nameTextField.leadingAnchor.constraint(equalTo: userFieldsStackedView.trailingAnchor).isActive = true
+        nameTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20).isActive = true
+        nameTextField.heightAnchor.constraint(equalToConstant: 30).isActive = true
         
-        scrollContentView.addSubview(displayNameUnlineView)
-        displayNameUnlineView.translatesAutoresizingMaskIntoConstraints = false
-        displayNameUnlineView.topAnchor.constraint(equalTo: displayNameTextField.bottomAnchor, constant: 10).isActive = true
-        displayNameUnlineView.leadingAnchor.constraint(equalTo: displayNameTextField.leadingAnchor).isActive = true
-        displayNameUnlineView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        displayNameUnlineView.heightAnchor.constraint(equalToConstant: 1).isActive = true
+        scrollContentView.addSubview(nameUnderlineView)
+        nameUnderlineView.translatesAutoresizingMaskIntoConstraints = false
+        nameUnderlineView.topAnchor.constraint(equalTo: nameTextField.bottomAnchor, constant: 10).isActive = true
+        nameUnderlineView.leadingAnchor.constraint(equalTo: nameTextField.leadingAnchor).isActive = true
+        nameUnderlineView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        nameUnderlineView.heightAnchor.constraint(equalToConstant: 1).isActive = true
         
         scrollContentView.addSubview(handelAtLabel)
         handelAtLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -460,12 +469,12 @@ class EditAccountVC: UIViewController {
         passwordButton.leadingAnchor.constraint(equalTo: userFieldsStackedView.trailingAnchor).isActive = true
         passwordButton.heightAnchor.constraint(equalToConstant: 26).isActive = true
         
-        scrollContentView.addSubview(topUnlineView)
-        topUnlineView.translatesAutoresizingMaskIntoConstraints = false
-        topUnlineView.topAnchor.constraint(equalTo: profileInfoView.topAnchor, constant: 0).isActive = true
-        topUnlineView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-        topUnlineView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        topUnlineView.heightAnchor.constraint(equalToConstant: 1).isActive = true
+        scrollContentView.addSubview(topUnderlineView)
+        topUnderlineView.translatesAutoresizingMaskIntoConstraints = false
+        topUnderlineView.topAnchor.constraint(equalTo: profileInfoView.topAnchor, constant: 0).isActive = true
+        topUnderlineView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        topUnderlineView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        topUnderlineView.heightAnchor.constraint(equalToConstant: 1).isActive = true
         
         scrollContentView.addSubview(bottomlineView)
         bottomlineView.translatesAutoresizingMaskIntoConstraints = false
@@ -488,12 +497,12 @@ class EditAccountVC: UIViewController {
     }
     
     @objc func changeBirthDate() {
-        displayNameTextField.resignFirstResponder()
+        nameTextField.resignFirstResponder()
         datePicker.presentDatePicker()
     }
     
     @objc func textFieldDidChange(_ textField: UITextField) {
-        User.displayName = displayNameTextField.text
+//        User.displayName = displayNameTextField.text
     }
     
     @objc func changeUsernamePress() {
@@ -524,13 +533,13 @@ extension EditAccountVC: CustomAlertDelegate {
     
     func primaryButtonPress() {
         if activeTextField == "displayName" {
-            displayNameTextField.becomeFirstResponder()
+            nameTextField.becomeFirstResponder()
         }
     }
     
     func cancelButtonPress() {
         if activeTextField == "displayName" {
-            displayNameTextField.resignFirstResponder()
+            nameTextField.resignFirstResponder()
         }
     }
 }
@@ -567,7 +576,7 @@ extension EditAccountVC: CustomDatePickerDelegate {
 // Alert publishers about changing name
 extension EditAccountVC: UITextFieldDelegate {
     func textFieldDidBeginEditing(_ textField: UITextField) {
-        if textField == displayNameTextField && User.isPublisher! {
+        if textField == nameTextField && User.isPublisher! {
             activeTextField = "displayName"
             DispatchQueue.main.async {
                 UIApplication.shared.windows.last?.addSubview(self.changingDisplayName)
@@ -604,11 +613,7 @@ extension EditAccountVC: UIImagePickerControllerDelegate, UINavigationController
             profileImageView.image = selectedImage
             
             // Store selected image to user or Program
-            if User.isPublisher! {
-                  FileManager.storeSelectedProgramImage(image: selectedImage, imageID: CurrentProgram.imageID, programID: CurrentProgram.ID!)
-            } else {
-                FireStorageManager.storeUserImage(image: selectedImage)
-            }
+            FileManager.storeSelectedProgramImage(image: selectedImage, imageID: CurrentProgram.imageID, programID: CurrentProgram.ID!)
             dismiss(animated: true, completion: nil)
         }
     }

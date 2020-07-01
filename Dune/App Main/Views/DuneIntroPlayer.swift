@@ -8,14 +8,19 @@
 
 import UIKit
 import AVFoundation
+import FirebaseStorage
 
 class DuneIntroPlayer: UIView {
     
     var audioPlayer: AVAudioPlayer!
     var currentState: playerStatus = .ready
     let playbackCircleView = PlaybackCircleView()
+    let loadingCircle = LoadingAudioView()
     var playbackDelegate: DuneAudioPlayerDelegate!
     var isProgramPageIntro: Bool?
+    
+    var loadingAudioID: String?
+    var currentAudioID: String?
     
     var isInPosition = false
     var yPosition: CGFloat!
@@ -116,6 +121,12 @@ class DuneIntroPlayer: UIView {
         playbackCircleView.centerYAnchor.constraint(equalTo: playbackButton.centerYAnchor, constant: 0).isActive = true
         playbackCircleView.centerXAnchor.constraint(equalTo: playbackButton.centerXAnchor, constant: 0).isActive = true
         
+        playbackView.addSubview(loadingCircle)
+        loadingCircle.translatesAutoresizingMaskIntoConstraints = false
+        loadingCircle.centerYAnchor.constraint(equalTo: playbackButton.centerYAnchor, constant: 0).isActive = true
+        loadingCircle.centerXAnchor.constraint(equalTo: playbackButton.centerXAnchor, constant: 0).isActive = true
+        loadingCircle.setupLoadingAnimation()
+        
         playbackView.addSubview(usernameLabel)
         usernameLabel.translatesAutoresizingMaskIntoConstraints = false
         usernameLabel.topAnchor.constraint(equalTo: programNameLabel.bottomAnchor, constant: 2).isActive = true
@@ -132,38 +143,75 @@ class DuneIntroPlayer: UIView {
          playbackBottomView.heightAnchor.constraint(equalToConstant: 70).isActive = true
      }
     
-    func playOrPauseWith(url: URL, name: String, image: UIImage) {
+    func setProgramDetailsWith(program: Program, image: UIImage) {
+        programNameLabel.text = program.name
+        usernameLabel.text = program.username
         programImageView.image = image
+        self.program = program
+    }
+    
+    func setProgramDetailsWith(name: String, username: String, image: UIImage) {
         programNameLabel.text = name
+        usernameLabel.text = username
+        programImageView.image = image
+    }
+    
+    func playOrPauseIntroWith(audioID: String) {
         
         if isInPosition == false {
             animatePlayerIntoPosition()
         }
-        
+
         switch currentState {
         case .ready:
-            playAudioFrom(url: url)
+            getAudioWith(audioID: audioID) { url in
+                self.playAudioFrom(url: url)
+            }
         case .playing:
-            if audioPlayer.url != url {
-                playAudioFrom(url: url)
+            if currentAudioID != audioID {
+                audioPlayer.pause()
+                playbackCircleLink.isPaused = true
+                currentState = .paused
+                getAudioWith(audioID: audioID) { url in
+                    self.playAudioFrom(url: url)
+                }
             } else {
+                playbackButton.setImage(UIImage(named: "play-episode-icon"), for: .normal)
+                playbackButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: 3, bottom: 0, right: 0)
                 audioPlayer.pause()
                 playbackCircleLink.isPaused = true
                 currentState = .paused
             }
         case .paused:
-            if audioPlayer.url == url {
+            if currentAudioID == audioID {
                 playbackButton.setImage(UIImage(named: "pause-episode-icon"), for: .normal)
                 playbackButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
                 currentState = .playing
                 trackIntroPlayback()
                 audioPlayer.play()
             } else {
-                playAudioFrom(url: url)
+                getAudioWith(audioID: audioID) { url in
+                    self.playAudioFrom(url: url)
+                }
+            }
+        case .loading:
+            if audioID == loadingAudioID {
+                break
+            } else {
+                cancelCurrentDownload()
+                getAudioWith(audioID: audioID) { url in
+                    self.playAudioFrom(url: url)
+                }
             }
         }
     }
     
+    func cancelCurrentDownload() {
+        if let task = downloadTask {
+             task.cancel()
+        }
+    }
+        
     func trackIntroPlayback() {
         playbackCircleLink = CADisplayLink(target: self, selector: #selector(updatePlaybackPosition))
         playbackCircleLink.add(to: RunLoop.current, forMode: RunLoop.Mode.common)
@@ -207,22 +255,62 @@ class DuneIntroPlayer: UIView {
     }
     
     func getAudioWith(audioID: String, completion: @escaping (URL) -> ()) {
-        
         let documentsURL = FileManager.getDocumentsDirectory()
         let fileURL = documentsURL.appendingPathComponent(audioID)
+        currentAudioID = audioID
         
         if FileManager.default.fileExists(atPath: fileURL.path) {
             completion(fileURL)
         } else {
-            FireStorageManager.downloadIntroAudio(audioID: audioID) { url in
+            downloadAudio(audioID: audioID) { url in
                 completion(url)
+            }
+        }
+    }
+    
+    var downloadTask: StorageDownloadTask!
+    
+    func downloadAudio(audioID: String, completion: @escaping (URL) -> ()) {
+        print("Will download")
+        
+        self.loadingCircle.isHidden = false
+        self.loadingCircle.shapeLayer.strokeEnd = 0
+        playbackButton.setImage(UIImage.init(named: "download-arrow"), for: .normal)
+        playbackButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
+
+        DispatchQueue.global(qos: .userInitiated).async {
+            
+            let storageRef = Storage.storage().reference().child("introAudio/\(audioID)")
+            let documentsURL = FileManager.getDocumentsDirectory()
+            let audioURL = documentsURL.appendingPathComponent(audioID)
+            self.loadingAudioID = audioID
+            self.currentState = .loading
+            
+            self.downloadTask = storageRef.write(toFile: audioURL) { (url, error) in
+                
+                if error != nil {
+                    print(error!)
+                } else {
+                    completion(url!)
+                }
+            }
+            self.downloadTask.observe(.progress) { snapshot in
+                if snapshot.progress!.fractionCompleted == 1 {
+                    self.loadingCircle.isHidden = true
+                    self.loadingCircle.shapeLayer.strokeEnd = 0
+                    DispatchQueue.main.async {
+                        self.playbackButton.setImage(UIImage(named: "play-episode-icon"), for: .normal)
+                        self.playbackButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: 3, bottom: 0, right: 0)
+                    }
+                } else {
+                    self.loadingCircle.shapeLayer.strokeEnd = CGFloat(snapshot.progress!.fractionCompleted)
+                }
             }
         }
     }
     
     func animatePlayerIntoPosition() {
         isInPosition = true
-        print("Triggered to move to \(yPosition!)")
         UIView.animateKeyframes(withDuration: 0.2, delay: 0, options: .beginFromCurrentState, animations: {
         self.frame = CGRect(x: 0, y: self.yPosition, width: self.frame.width, height: 70)
         }, completion: nil)
@@ -241,6 +329,7 @@ class DuneIntroPlayer: UIView {
         transitionOutOfView()
         currentState = .ready
         if audioPlayer != nil {
+            playbackCircleLink.invalidate()
             audioPlayer.setVolume(0, fadeDuration: 2)
             DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                 self.audioPlayer.volume = 1

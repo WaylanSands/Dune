@@ -17,7 +17,7 @@ enum alertType {
     case skipAddingImage
     case skipAddingProgramSummary
     case changingUsername
-    case publisherChangingDisplayName
+    case programChangingName
     case changingPassword
     case changingEmail
     case signOutAttempt
@@ -33,7 +33,21 @@ enum alertType {
     case socialAccountNotFound
     case appleNameFail
     case iOS13Needed
+    case userNotFound
+    case loggingOut
+    case emailInUse
+    case nextVersion
+    case hashTagUsed
+    case linkNotSecure
+    case imageNotSupported
+    case reportProgram
+    case reportEpisode
+    case noIntroRecorded
 }
+
+// For implementation
+// UIApplication.shared.windows.last?.addSubview()
+
 
 protocol CustomAlertDelegate {
     func primaryButtonPress()
@@ -48,7 +62,7 @@ class CustomAlertView: UIView {
     let containerView: UIView = {
         let view = UIView()
         view.backgroundColor = .white
-        view.layer.cornerRadius = 10
+        view.layer.cornerRadius = 7
         view.clipsToBounds = true
         view.alpha = 0
         return view
@@ -138,7 +152,7 @@ class CustomAlertView: UIView {
             primaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
         case .skipAddingImage:
             headingLabel.text = "Skipping Forward"
-            bodyTextLabel.text = "You may skip this step though all publishers are required to have a unique profile image before pubishing episodes on Dune."
+            bodyTextLabel.text = "You may skip this step though all programs are required to have a unique profile image before publishing episodes on Dune."
             primaryButton.setTitle("Skip", for: .normal)
             primaryButton.addTarget(self, action: #selector(skipForward), for: .touchUpInside)
             secondaryButton.setTitle("Dismiss", for: .normal)
@@ -157,9 +171,9 @@ class CustomAlertView: UIView {
             primaryButton.addTarget(self, action: #selector(primaryButtonPress), for: .touchUpInside)
             secondaryButton.setTitle("Cancel", for: .normal)
             secondaryButton.addTarget(self, action: #selector(cancelPress), for: .touchUpInside)
-        case .publisherChangingDisplayName:
-            headingLabel.text = "Change Display Name"
-            bodyTextLabel.text = "Changing your display name will also change the name of your primary program"
+        case .programChangingName:
+            headingLabel.text = "Change Name"
+            bodyTextLabel.text = "Changing this will change the name of your primary program"
             primaryButton.setTitle("Continue", for: .normal)
             primaryButton.addTarget(self, action: #selector(primaryButtonPress), for: .touchUpInside)
             secondaryButton.setTitle("Cancel", for: .normal)
@@ -189,9 +203,9 @@ class CustomAlertView: UIView {
             headingLabel.text = "Delete Account"
             bodyTextLabel.text = "Are you sure you would like to delete your account? It will be permanent."
             primaryButton.setTitle("Continue", for: .normal)
-            //                      primaryButton.addTarget(self, action: #selector(skipForward), for: .touchUpInside)
+            primaryButton.addTarget(self, action: #selector(primaryButtonPress), for: .touchUpInside)
             secondaryButton.setTitle("Dismiss", for: .normal)
-            secondaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
+            secondaryButton.addTarget(self, action: #selector(cancelPress), for: .touchUpInside)
         case .wrongPasswordForChange:
             headingLabel.text = "Wrong password"
             bodyTextLabel.text = "The password you have entered is incorrect"
@@ -229,13 +243,9 @@ class CustomAlertView: UIView {
             primaryButton.setTitle("Dismiss", for: .normal)
             primaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
         case .notAPublisher:
-            headingLabel.text = "Welcome to Dune Studio"
-            bodyTextLabel.text = """
-            The studio is only made available to publishers.
-            
-            If you wish to publish content, you can switch to a publisher account in a few simple steps.
-            """
-            primaryButton.setTitle("Switch account", for: .normal)
+            headingLabel.text = "Finish account setup"
+            bodyTextLabel.text = "To unlock all Dune features you must complete your account setup."
+            primaryButton.setTitle("Finish setup", for: .normal)
             primaryButton.addTarget(self, action: #selector(primaryButtonPress), for: .touchUpInside)
             secondaryButton.setTitle("Dismiss", for: .normal)
             secondaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
@@ -268,8 +278,65 @@ class CustomAlertView: UIView {
             bodyTextLabel.text = "We apologise, this feature is only available for devices on iOS 13 "
             primaryButton.setTitle("Dismiss", for: .normal)
             primaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
+        case .userNotFound:
+            headingLabel.text = "User not found"
+            bodyTextLabel.text = "There is no user with this username. They may have changed it or it doesn't exist."
+            primaryButton.setTitle("Dismiss", for: .normal)
+            primaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
+        case .loggingOut:
+            headingLabel.text = "Logging out"
+            bodyTextLabel.text = "Are you sure you would like to log out?"
+            primaryButton.setTitle("Log out", for: .normal)
+            primaryButton.addTarget(self, action: #selector(primaryButtonPress), for: .touchUpInside)
+            secondaryButton.setTitle("Dismiss", for: .normal)
+            secondaryButton.addTarget(self, action: #selector(cancelPress), for: .touchUpInside)
+        case .emailInUse:
+            headingLabel.text = "Invalid Email"
+            bodyTextLabel.text = "The email address you have entered is already in use"
+            primaryButton.setTitle("Dismiss", for: .normal)
+            primaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
+        case .nextVersion:
+            headingLabel.text = "Withheld Feature"
+            bodyTextLabel.text = "This feature is being withheld pending the official Appstore release."
+            primaryButton.setTitle("Dismiss", for: .normal)
+            primaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
+        case .hashTagUsed:
+            headingLabel.text = "Hashtags not needed"
+            bodyTextLabel.text = "This isn't Instagram, no need for hashtags."
+            primaryButton.setTitle("Dismiss", for: .normal)
+            primaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
+        case .linkNotSecure:
+            headingLabel.text = "Unsecure link"
+            bodyTextLabel.text = "The link you have supplied seems to be unsecure. We recommend using a link which starts in https"
+            primaryButton.setTitle("Dismiss", for: .normal)
+            primaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
+        case .imageNotSupported:
+            headingLabel.text = "Unsupported image"
+            bodyTextLabel.text = "We apologise the image file supplied from the link is not currently supported. This will be corrected in the near future."
+            primaryButton.setTitle("Dismiss", for: .normal)
+            primaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
+        case .reportProgram:
+            headingLabel.text = "Report program"
+            bodyTextLabel.text = "If you believe this program has been acting inappropriately please report."
+            primaryButton.setTitle("Report", for: .normal)
+            primaryButton.addTarget(self, action: #selector(primaryButtonPress), for: .touchUpInside)
+            secondaryButton.setTitle("Cancel", for: .normal)
+            secondaryButton.addTarget(self, action: #selector(cancelPress), for: .touchUpInside)
+        case .reportEpisode:
+            headingLabel.text = "Report episode"
+            bodyTextLabel.text = "If you believe this episode's material is inappropriate please report."
+            primaryButton.setTitle("Report", for: .normal)
+            primaryButton.addTarget(self, action: #selector(primaryButtonPress), for: .touchUpInside)
+            secondaryButton.setTitle("Cancel", for: .normal)
+            secondaryButton.addTarget(self, action: #selector(cancelPress), for: .touchUpInside)
+        case .noIntroRecorded:
+            headingLabel.text = "No intro recorded"
+            bodyTextLabel.text = "Programs without a play button below them have not recorded an intro"
+            primaryButton.setTitle("Dismiss", for: .normal)
+            primaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
         }
     }
+    
     
     func configureViews() {
         let blurredView = UIView()

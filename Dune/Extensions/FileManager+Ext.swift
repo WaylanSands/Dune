@@ -232,7 +232,7 @@ extension FileManager {
         
         let documentsUrl =  getDocumentsDirectory()
         let fileManager = FileManager.default
-        DispatchQueue.global().async {
+        DispatchQueue.global(qos: .background).async {
             do {
                 let directoryContents = try FileManager.default.contentsOfDirectory(at: documentsUrl, includingPropertiesForKeys: nil)
                 
@@ -391,37 +391,37 @@ extension FileManager {
         }
     }
     
-    static func storeSelectedUserImage(image: UIImage, imageID: String?) {
-        
-        let fileManager = FileManager.default
-        
-        let imageID = imageID ?? NSUUID().uuidString
-        
-        if let data = image.jpegData(compressionQuality: 0.5) {
-           
-            let cacheURL = getCacheDirectory()
-            let fileURL = cacheURL.appendingPathComponent(imageID)
-            
-            if fileManager.fileExists(atPath: fileURL.path) {
-                do {
-                    try fileManager.removeItem(at: fileURL)
-                } catch {
-                    print("Unable to remove file from cache \(error)")
-                }
-            } else {
-                print("There is no data with that fileName")
-            }
-
-            do {
-                try data.write(to: fileURL)
-                print("Adding image to cache")
-                FireStorageManager.storeUserImage(image: image)
-            }
-            catch {
-                print("Unable to add Image to cache: (\(error))")
-            }
-        }
-    }
+//    static func storeSelectedUserImage(image: UIImage, imageID: String?) {
+//        
+//        let fileManager = FileManager.default
+//        
+//        let imageID = imageID ?? NSUUID().uuidString
+//        
+//        if let data = image.jpegData(compressionQuality: 0.5) {
+//           
+//            let cacheURL = getCacheDirectory()
+//            let fileURL = cacheURL.appendingPathComponent(imageID)
+//            
+//            if fileManager.fileExists(atPath: fileURL.path) {
+//                do {
+//                    try fileManager.removeItem(at: fileURL)
+//                } catch {
+//                    print("Unable to remove file from cache \(error)")
+//                }
+//            } else {
+//                print("There is no data with that fileName")
+//            }
+//
+//            do {
+//                try data.write(to: fileURL)
+//                print("Adding image to cache")
+//                FireStorageManager.storeUserImage(image: image)
+//            }
+//            catch {
+//                print("Unable to add Image to cache: (\(error))")
+//            }
+//        }
+//    }
     
     static func storeInitialProgramImage(image: UIImage, programID: String) {
         
@@ -472,8 +472,28 @@ extension FileManager {
                     print("Failed to turn file into an Image")
                 }
             } else {
-                print("Fetching image from Firebase Storage")
                 FireStorageManager.downloadAccountImage(imageID: imageID) { image in
+                    completion(image)
+                }
+            }
+        }
+    }
+    
+    // Check image isn't already in cache, if not download and store there
+    static func getLinkImageWith(imageID: String, completion: @escaping (UIImage) -> ()) {
+        
+        let cacheURL = FileManager.getCacheDirectory()
+        let fileURL = cacheURL.appendingPathComponent(imageID)
+        
+        DispatchQueue.global().async {
+            if FileManager.default.fileExists(atPath: fileURL.path) {
+                if let image = UIImage(contentsOfFile: fileURL.path) {
+                    completion(image)
+                } else {
+                    print("Failed to turn file into an Image")
+                }
+            } else {
+                FireStorageManager.downloadLinkImage(imageID: imageID) { image in
                     completion(image)
                 }
             }

@@ -11,24 +11,25 @@ import FirebaseFirestore
 
 protocol NextButtonDelegate {
     func makeNextButton(active: Bool)
-    func keyboatrdNextButtonPress()
+    func keyboardNextButtonPress()
 }
 
 class CreateUserVC: UIViewController {
     
     @IBOutlet weak var progressBar: UIImageView!
-    @IBOutlet weak var progressBarSE: UIImageView!
     @IBOutlet weak var progressBarTopAnchor: NSLayoutConstraint!
     
     var nextButtonYPosition: CGFloat = 14
     var datePickerDistance: CGFloat  = 40.0
     lazy var screenWidth = view.frame.width
-    lazy var centerXposition = self.view.frame.origin.x
+    lazy var centerXPosition = self.view.frame.origin.x
     let Under18Years = Calendar.current.date(byAdding: .year, value: -18, to: Date())
+    
+    let emailTakenAlert = CustomAlertView(alertType: .emailInUse)
     
     let db = Firestore.firestore()
     
-    let nextButtonReal: UIButton = {
+    let nextButton: UIButton = {
         let button = UIButton()
         button.setTitle("Next", for: .normal)
         button.backgroundColor = CustomStyle.primaryBlue
@@ -39,12 +40,12 @@ class CreateUserVC: UIViewController {
     }()
     
     let customNavBar: CustomNavBar = {
-        let navbar = CustomNavBar()
-        navbar.leftButton.setImage(#imageLiteral(resourceName: "back-button-blk"), for: .normal)
-        navbar.rightButton.isHidden = true
-        navbar.leftButton.addTarget(self, action: #selector(backButtonPress), for: .touchUpInside)
-        navbar.backgroundColor = .clear
-        return navbar
+        let navBar = CustomNavBar()
+        navBar.leftButton.setImage(#imageLiteral(resourceName: "back-button-blk"), for: .normal)
+        navBar.rightButton.isHidden = true
+        navBar.leftButton.addTarget(self, action: #selector(backButtonPress), for: .touchUpInside)
+        navBar.backgroundColor = .clear
+        return navBar
     }()
     
     let datePicker: UIDatePicker = {
@@ -89,21 +90,21 @@ class CreateUserVC: UIViewController {
     
     func styleForScreens() {
         switch UIDevice.current.deviceType {
-        case .iPhoneSE:
+        case .iPhone4S, .iPhoneSE:
             nextButtonYPosition = 4
             progressBar.isHidden = true
             datePickerDistance = 20.0
         case .iPhone8:
             nextButtonYPosition = 20
-            progressBarTopAnchor.constant = 60.0
+            progressBarTopAnchor.constant = 50.0
         case .iPhone8Plus:
-            break
+             progressBarTopAnchor.constant = 70.0
         case .iPhone11:
-            break
+            progressBarTopAnchor.constant = 100.0
         case .iPhone11Pro:
-            break
+            progressBarTopAnchor.constant = 70.0
         case .iPhone11ProMax:
-            break
+            progressBarTopAnchor.constant = 90.0
         default:
             break
         }
@@ -150,23 +151,23 @@ class CreateUserVC: UIViewController {
         addBirthDate.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
         addBirthDate.nextButtonDelegate = self
         
-        view.addSubview(nextButtonReal)
-        nextButtonReal.translatesAutoresizingMaskIntoConstraints = false
-        nextButtonReal.heightAnchor.constraint(equalToConstant: 40).isActive = true
-        nextButtonReal.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
-        nextButtonReal.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
-        nextButtonReal.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: nextButtonYPosition).isActive = true
+        view.addSubview(nextButton)
+        nextButton.translatesAutoresizingMaskIntoConstraints = false
+        nextButton.heightAnchor.constraint(equalToConstant: 40).isActive = true
+        nextButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
+        nextButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
+        nextButton.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: nextButtonYPosition).isActive = true
         
         view.addSubview(datePicker)
         datePicker.translatesAutoresizingMaskIntoConstraints = false
-        datePicker.topAnchor.constraint(equalTo: nextButtonReal.bottomAnchor, constant: datePickerDistance).isActive = true
+        datePicker.topAnchor.constraint(equalTo: nextButton.bottomAnchor, constant: datePickerDistance).isActive = true
         datePicker.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         datePicker.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         datePicker.setYearValidation()
         
         view.addSubview(dateLabel)
         dateLabel.translatesAutoresizingMaskIntoConstraints = false
-        dateLabel.bottomAnchor.constraint(equalTo: nextButtonReal.topAnchor, constant: -10.0).isActive = true
+        dateLabel.bottomAnchor.constraint(equalTo: nextButton.topAnchor, constant: -10.0).isActive = true
         dateLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16.0).isActive = true
         dateLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
         dateLabel.heightAnchor.constraint(equalToConstant: 40.0).isActive = true
@@ -180,7 +181,7 @@ class CreateUserVC: UIViewController {
     
     // Transition functions
     func toCenter(view: UIView) {
-        view.frame.origin.x = self.centerXposition
+        view.frame.origin.x = self.centerXPosition
     }
 
     func backOffScreen(view: UIView) {
@@ -235,14 +236,7 @@ class CreateUserVC: UIViewController {
                 addEmail.emailTextField.shake()
                 addEmail.showInvalidMessage()
             } else {
-                let alert = UIAlertController(title: "Email Address Taken", message: "This email address is already in use.", preferredStyle: .alert)
-                          
-                          alert.addAction(UIAlertAction(title: "Reset Password", style: UIAlertAction.Style.default, handler: {(alert: UIAlertAction!) in
-                              self.navigateToAccountType()
-                          }))
-                              
-                          alert.addAction(UIAlertAction(title: "Cancel", style: UIAlertAction.Style.cancel, handler: nil))
-                          self.present(alert, animated: true, completion: nil)
+               UIApplication.shared.windows.last?.addSubview(emailTakenAlert)
             }
         }
         
@@ -365,7 +359,7 @@ extension CreateUserVC: NextButtonDelegate {
         nextButtonActive = active
     }
     
-    func keyboatrdNextButtonPress() {
+    func keyboardNextButtonPress() {
         nextButtonPress()
     }
     

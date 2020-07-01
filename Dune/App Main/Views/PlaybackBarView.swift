@@ -21,7 +21,7 @@ class PlaybackBarView: UIView {
     let trackView = UIView()
     let progressView = UIView()
     let startSize = CGRect(x: 0, y: 0, width: 0, height: 4)
-    let endSize = CGRect(x: 0, y: 0, width: 50, height: 4)
+    lazy var endSize = CGRect(x: 0, y: 0, width: width(), height: 4)
     var animator: UIViewPropertyAnimator!
     
     func setupPlaybackBar() {
@@ -38,14 +38,16 @@ class PlaybackBarView: UIView {
     }
     
     func progressUpdateWith(percentage: CGFloat) {
+        let dynamicWidth = width()
         let percent = percentage * 100
-        let width = (50 * percent) / 100
+        let width = (dynamicWidth * percent) / 100
         self.progressView.frame = CGRect(x: 0, y: 0, width: width, height: 4)
     }
     
     func setProgressWith(percentage: CGFloat) {
+        let dynamicWidth = width()
         let percent = percentage * 100
-        let width = (50 * percent) / 100
+        let width = (dynamicWidth * percent) / 100
         self.progressView.frame = CGRect(x: 0, y: 0, width: width, height: 4)
     }
     
@@ -54,6 +56,14 @@ class PlaybackBarView: UIView {
         progressView.backgroundColor = .clear
         progressView.frame = startSize
         playbackBarIsSetup = false
+    }
+    
+    func width() -> CGFloat {
+        if UIDevice.current.deviceType == .iPhoneSE {
+            return 40
+        } else {
+            return 50
+        }
     }
     
 

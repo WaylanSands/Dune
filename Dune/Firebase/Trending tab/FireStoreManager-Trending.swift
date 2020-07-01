@@ -11,10 +11,10 @@ import FirebaseFirestore
 
 extension FireStoreManager {
     
-    static let minuteInterval:TimeInterval = 60.0
-    static let hourInterval:TimeInterval = 60.0 * minuteInterval
-    static let dayInterval:TimeInterval = 24 * hourInterval
-    static let weekInterval:TimeInterval = 7 * dayInterval
+    static let minuteInterval: TimeInterval = 60.0
+    static let hourInterval: TimeInterval = 60.0 * minuteInterval
+    static let dayInterval: TimeInterval = 24 * hourInterval
+    static let weekInterval: TimeInterval = 7 * dayInterval
     
     // Fetch first batch of trending episodes from last week, ordered by likes
     static func fetchTrendingEpisodesWith(limit: Int, completion: @escaping ([QueryDocumentSnapshot]) -> ()) {

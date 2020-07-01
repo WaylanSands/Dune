@@ -7,13 +7,13 @@
 //
 
 import UIKit
+import ActiveLabel
 import AVFoundation
 import SwiftLinkPreview
 
 class AddEpisodeDetails: UIViewController {
     
     let appDelegate = UIApplication.shared.delegate as! AppDelegate
-    let imageViewSize:CGFloat = 65.0
     let maxCaptionCharacters = 240
     let maxTagCharacters = 45
     
@@ -33,13 +33,19 @@ class AddEpisodeDetails: UIViewController {
     var linkButton: RichLinkGenerator!
     var richLinkPresented = false
     
+    // For screen-size adjustment
+    var imageViewSize:CGFloat = 55.0
+    var floatingBarHeight:CGFloat = 65.0
+    var imageBarViewSize:CGFloat = 45.0
+    var scrollHeightPadding: CGFloat = 60
+    
     var scrollContentHeightConstraint: NSLayoutConstraint!
     var tagContentWidthConstraint: NSLayoutConstraint!
     
     var homeIndicatorHeight:CGFloat = 34.0
-    var captionPlaceholderText = true
+    var captionPlaceholderIsActive = true
     var captionLabelPlaceholderText = true
-    var tagPlaceholderText = true
+    var tagPlaceholderIsActive = true
     var tagsUsed = [String]()
     var tagCount: Int = 0
     var caption: String?
@@ -50,6 +56,9 @@ class AddEpisodeDetails: UIViewController {
     lazy var screenHeight = view.frame.height
     lazy var tagButtons: [UIButton] = [firstTagButton, secondTagButton, thirdTagButton]
     lazy var tagScrollViewWidth = tagScrollView.frame.width
+    
+    let hashTagAlert = CustomAlertView(alertType: .hashTagUsed)
+    let unsafeLinkAlert = CustomAlertView(alertType: .linkNotSecure)
     
     let swiftLinkPreview = SwiftLinkPreview(session: URLSession.shared, workQueue: SwiftLinkPreview.defaultWorkQueue, responseQueue: DispatchQueue.main, cache: DisabledCache.instance)
     
@@ -65,7 +74,6 @@ class AddEpisodeDetails: UIViewController {
         let view = UIScrollView()
         view.isScrollEnabled = true
         view.contentInsetAdjustmentBehavior = .never
-        view.keyboardDismissMode = .interactive
         view.showsVerticalScrollIndicator = false
         return view
     }()
@@ -102,12 +110,16 @@ class AddEpisodeDetails: UIViewController {
         return label
     }()
     
-    let captionLabel: UILabel = {
-        let label = UILabel()
-        label.text = "placeholder"
-        label.numberOfLines = 7
+    let captionLabel: ActiveLabel = {
+        let label = ActiveLabel()
         label.font = UIFont.systemFont(ofSize: 14, weight: .regular)
-        label.textColor = CustomStyle.white
+        label.textColor = CustomStyle.seventhShade
+        label.numberOfLines = 0
+        label.lineBreakMode = .byWordWrapping
+        label.sizeToFit()
+        label.handleMentionTap { userHandle in print("\(userHandle) tapped") }
+        label.mentionColor = CustomStyle.linkBlue
+        label.enabledTypes = [.mention]
         return label
     }()
     
@@ -265,7 +277,7 @@ class AddEpisodeDetails: UIViewController {
     
     let bottomBarProgramNameLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 16.0, weight: .bold)
+        label.font = UIFont.systemFont(ofSize: 14.0, weight: .bold)
         label.textColor = .white
         return label
     }()
@@ -311,6 +323,7 @@ class AddEpisodeDetails: UIViewController {
         removeEmptyTags()
         configureNavBar()
         checkIfAbleToPublish()
+        styleForScreens()
         setupViews()
         addFloatingView()
         captionTextView.delegate = self
@@ -325,7 +338,7 @@ class AddEpisodeDetails: UIViewController {
             captionTextView.text = caption
             captionLabel.textColor = CustomStyle.sixthShade
             captionTextView.textColor = CustomStyle.fifthShade
-            captionPlaceholderText = false
+            captionPlaceholderIsActive = false
         }
         
         let startPosition: UITextPosition = self.captionTextView.beginningOfDocument
@@ -352,7 +365,7 @@ class AddEpisodeDetails: UIViewController {
         if !tagsUsed.isEmpty {
             tagTextView.text = ""
             tagTextView.textColor = CustomStyle.fifthShade
-            tagPlaceholderText = false
+            tagPlaceholderIsActive = false
             
             for (index, item) in tagsUsed.enumerated() {
                 tagCount += 1
@@ -417,7 +430,7 @@ class AddEpisodeDetails: UIViewController {
         guard let keyboardRect = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue else {
             return
         }
-        floatingDetailsView.frame.origin.y = view.frame.height - keyboardRect.height -  (floatingDetailsView.frame.height - 70)
+        floatingDetailsView.frame.origin.y = view.frame.height - keyboardRect.height -  floatingDetailsView.frame.height
     }
     
     func configureNavBar() {
@@ -439,6 +452,30 @@ class AddEpisodeDetails: UIViewController {
         navigationItem.rightBarButtonItem!.setTitleTextAttributes(CustomStyle.barButtonAttributes, for: .normal)
     }
     
+    func styleForScreens() {
+        switch UIDevice.current.deviceType {
+        case .iPhoneSE:
+            floatingBarHeight = 50.0
+            imageBarViewSize = 36.0
+            scrollHeightPadding = 140
+            imageViewSize = 50
+        case .iPhone8:
+            break
+        case .iPhone8Plus:
+            break
+        case .iPhone11:
+            break
+        case .iPhone11Pro:
+            break
+        case .iPhone11ProMax:
+            break
+        case .unknown:
+            break
+        default:
+            break
+        }
+    }
+    
     func setupViews() {
         view.backgroundColor = .white
         
@@ -452,7 +489,7 @@ class AddEpisodeDetails: UIViewController {
         scrollContentView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor).isActive = true
         scrollContentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor).isActive = true
         scrollContentView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor).isActive = true
-        scrollContentHeightConstraint = scrollContentView.heightAnchor.constraint(equalToConstant: screenHeight)
+        scrollContentHeightConstraint = scrollContentView.heightAnchor.constraint(equalToConstant: screenHeight + scrollHeightPadding)
         scrollContentHeightConstraint.isActive = true
         
         scrollContentView.addSubview(mainImage)
@@ -470,7 +507,7 @@ class AddEpisodeDetails: UIViewController {
         
         programNameStackedView.addArrangedSubview(programNameLabel)
         programNameStackedView.addArrangedSubview(usernameLabel)
-
+        
         scrollContentView.addSubview(captionLabel)
         captionLabel.translatesAutoresizingMaskIntoConstraints = false
         captionLabel.topAnchor.constraint(equalTo: programNameStackedView.bottomAnchor, constant: 2).isActive = true
@@ -577,32 +614,29 @@ class AddEpisodeDetails: UIViewController {
     
     func addFloatingView() {
         view.addSubview(passThoughView)
-        
         passThoughView.addSubview(floatingDetailsView)
         floatingDetailsView.translatesAutoresizingMaskIntoConstraints = false
         floatingDetailsView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
         floatingDetailsView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         floatingDetailsView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        floatingDetailsView.heightAnchor.constraint(equalToConstant: 135.0).isActive = true
+        floatingDetailsView.heightAnchor.constraint(equalToConstant: floatingBarHeight).isActive = true
         
         floatingDetailsView.addSubview(bottomBarImageView)
         bottomBarImageView.translatesAutoresizingMaskIntoConstraints = false
-        bottomBarImageView.topAnchor.constraint(equalTo: floatingDetailsView.topAnchor, constant: 10).isActive = true
+        bottomBarImageView.centerYAnchor.constraint(equalTo: floatingDetailsView.centerYAnchor).isActive = true
         bottomBarImageView.leadingAnchor.constraint(equalTo: floatingDetailsView.leadingAnchor, constant: 16.0).isActive = true
-        bottomBarImageView.heightAnchor.constraint(equalToConstant: 45.0).isActive = true
-        bottomBarImageView.widthAnchor.constraint(equalToConstant: 45.0).isActive = true
+        bottomBarImageView.heightAnchor.constraint(equalToConstant: imageBarViewSize).isActive = true
+        bottomBarImageView.widthAnchor.constraint(equalToConstant: imageBarViewSize).isActive = true
         
         floatingDetailsView.addSubview(bottomBarProgramNameLabel)
         bottomBarProgramNameLabel.translatesAutoresizingMaskIntoConstraints = false
-        bottomBarProgramNameLabel.topAnchor.constraint(equalTo: floatingDetailsView.topAnchor, constant: 12.0).isActive = true
+        bottomBarProgramNameLabel.topAnchor.constraint(equalTo: bottomBarImageView.topAnchor, constant: 1).isActive = true
         bottomBarProgramNameLabel.leadingAnchor.constraint(equalTo: bottomBarImageView.trailingAnchor, constant: 10.0).isActive = true
-        bottomBarProgramNameLabel.heightAnchor.constraint(equalToConstant: 20.0).isActive = true
         
         floatingDetailsView.addSubview(bottomBarUsernameLabel)
         bottomBarUsernameLabel.translatesAutoresizingMaskIntoConstraints = false
         bottomBarUsernameLabel.topAnchor.constraint(equalTo: bottomBarProgramNameLabel.bottomAnchor).isActive = true
         bottomBarUsernameLabel.leadingAnchor.constraint(equalTo: bottomBarProgramNameLabel.leadingAnchor).isActive = true
-        bottomBarUsernameLabel.heightAnchor.constraint(equalToConstant: 20.0).isActive = true
         
         floatingDetailsView.addSubview(publishButton)
         publishButton.translatesAutoresizingMaskIntoConstraints = false
@@ -646,8 +680,17 @@ class AddEpisodeDetails: UIViewController {
     
     func updateCharacterCount(textView: UITextView) {
         
-        captionCounterLabel.text =  String(maxCaptionCharacters - captionTextView.text!.count)
-        tagCounterLabel.text =  String(maxTagCharacters - tagTextView.text!.count)
+        if !captionPlaceholderIsActive {
+            captionCounterLabel.text =  String(maxCaptionCharacters - captionTextView.text!.count)
+        } else {
+            captionCounterLabel.text =  String(maxCaptionCharacters)
+        }
+        
+        if !tagPlaceholderIsActive {
+            tagCounterLabel.text =  String(maxTagCharacters - tagTextView.text!.count)
+        } else {
+            tagCounterLabel.text =  String(maxTagCharacters)
+        }
         
         if Int(captionCounterLabel.text!)! < 0 {
             captionCounterLabel.font = UIFont.systemFont(ofSize: 12, weight: .bold)
@@ -685,7 +728,7 @@ class AddEpisodeDetails: UIViewController {
             let startPosition: UITextPosition = self.captionTextView.beginningOfDocument
             self.captionTextView.selectedTextRange = self.captionTextView.textRange(from: startPosition, to: startPosition)
             self.captionTextView.textColor = CustomStyle.fourthShade
-            self.captionPlaceholderText = true
+            self.captionPlaceholderIsActive = true
             
             self.captionLabel.text = "placeholder"
             self.captionLabel.textColor = .white
@@ -699,7 +742,7 @@ class AddEpisodeDetails: UIViewController {
             let startPosition: UITextPosition = self.tagTextView.beginningOfDocument
             self.tagTextView.selectedTextRange = self.tagTextView.textRange(from: startPosition, to: startPosition)
             self.tagTextView.textColor = CustomStyle.fourthShade
-            self.tagPlaceholderText = true
+            self.tagPlaceholderIsActive = true
         }
     }
     
@@ -747,9 +790,9 @@ class AddEpisodeDetails: UIViewController {
         var ID: String
         
         if episodeFileName!.contains(".") {
-             audioID = episodeFileName!
+            audioID = episodeFileName!
         } else {
-             audioID = episodeFileName! + fileExtension
+            audioID = episodeFileName! + fileExtension
         }
         
         if isDraft {
@@ -768,26 +811,33 @@ class AddEpisodeDetails: UIViewController {
                 if success {
                     self.presentStudioVC()
                     FileManager.removeFileFromTempDirectory(fileName: self.episodeFileName! + fileExtension)
-                       print("Content after \(FileManager.printContentsOfTempDirectory())")
+                    print("Content after \(FileManager.printContentsOfTempDirectory())")
                 }
             }
         }
     }
     
-       // MARK: Publish Episode
-    
+    // MARK: Publish Episode
     func storePublishedEpisodeOnFirebase() {
         print("Storing episode on Firebase")
         
+        var linkImage: UIImage!
+        
         if self.linkButton != nil {
             if self.linkButton.largeImage != nil {
-                print("Link is bigggggg")
                 self.linkIsSmall = false
+                linkImage = self.linkButton.largeImage!
             } else if self.linkButton.squareImage != nil {
                 self.linkIsSmall = true
-                 print("Link is smalllll")
-            }  
+                linkImage = self.linkButton.squareImage!
+            } else {
+                richLinkPresented = false
+            }
+        } else {
+            richLinkPresented = false
         }
+        
+        print(richLinkPresented)
         
         var caption = captionTextView.text!
         caption = caption.trimmingTrailingSpaces
@@ -822,6 +872,7 @@ class AddEpisodeDetails: UIViewController {
         }
         
         var fileName: String
+        FireStoreManager.updateProgramRep(programID: CurrentProgram.ID!, repMethod: episodeFileName!, rep: 5)
         
         if episodeFileName!.contains(".") {
             fileName = episodeFileName!
@@ -833,8 +884,7 @@ class AddEpisodeDetails: UIViewController {
             let length = String.timeString(time: self.duration)
             
             if self.richLinkPresented {
-                
-                FireStoreManager.publishEpisodeWithLink(programID: programID, imageID: imageID, imagePath: imagePath, programName: programName, caption: caption, richLink: self.richLink!, linkIsSmall: self.linkIsSmall!, tags: self.tagsUsed, audioID: fileName, audioURL: url, duration: length) { success in
+                FireStoreManager.publishEpisodeWithLinkMedia(programID: programID, imageID: imageID, imagePath: imagePath, programName: programName, caption: caption, richLink: self.richLink!, linkIsSmall: self.linkIsSmall!, linkImage: linkImage, linkHeadline: self.linkButton.mainTitle!, canonicalUrl: self.linkButton.canonicalUrl!, tags: self.tagsUsed, audioID: fileName, audioURL: url, duration: length) { success in
                     if success {
                         self.presentDailyFeedVC()
                     }
@@ -850,9 +900,41 @@ class AddEpisodeDetails: UIViewController {
         }
     }
     
+    func linkWithPrefix(urlString: String) -> String {
+        if !urlString.starts(with: "http://") && !urlString.starts(with: "https://") {
+            print("Added https")
+            return "https://\(urlString)"
+        } else if urlString.hasPrefix("http://") {
+            let url = urlString.dropFirst("http://".count)
+            print("switched to https")
+            return "https://" + url
+        } else {
+            return urlString
+        }
+    }
+    
     func storeTrimmedEpisodeOnFirebase(fileName: String, url: URL) {
         print("Storing episode on Firebase")
         let audioTrack = FileManager.getTrimmedAudioFileFromTempDirectory(fileName: fileName)
+        
+        var linkImage: UIImage!
+        
+        if self.linkButton != nil {
+            if self.linkButton.largeImage != nil {
+                self.linkIsSmall = false
+                linkImage = self.linkButton.largeImage!
+            } else if self.linkButton.squareImage != nil {
+                linkImage = self.linkButton.squareImage!
+                self.linkIsSmall = true
+            } else {
+                richLinkPresented = false
+            }
+        } else {
+            richLinkPresented = false
+        }
+        
+        var caption = captionTextView.text!
+        caption = caption.trimmingTrailingSpaces
         
         guard let episode = audioTrack else { return }
         
@@ -879,40 +961,19 @@ class AddEpisodeDetails: UIViewController {
             FireStoreManager.removeDraftIDFromUser(episodeID: draftID!)
             FireStorageManager.deleteDraftFileFromStorage(fileName: episodeFileName!)
         }
-
+        
         FireStorageManager.storeEpisodeAudio(fileName: fileName, data: episode) { url in
-
+            
             let length = String.timeString(time: self.duration)
             
             if self.richLinkPresented {
-                
-                print(programID)
-                print(imageID)
-                print(imagePath)
-                print(programName)
-                print(self.caption!)
-                print(self.tagsUsed)
-                print(fileName)
-                print(url)
-                print(length)
-                print(self.richLink!)
-                
-                FireStoreManager.publishEpisodeWithLink(programID: programID, imageID: imageID, imagePath: imagePath, programName: programName, caption: self.caption!, richLink: self.richLink!, linkIsSmall: self.linkIsSmall!, tags: self.tagsUsed, audioID: fileName, audioURL: url, duration: length) { success in
+                FireStoreManager.publishEpisodeWithLinkMedia(programID: programID, imageID: imageID, imagePath: imagePath, programName: programName, caption: caption, richLink: self.richLink!, linkIsSmall: self.linkIsSmall!, linkImage: linkImage, linkHeadline: self.linkButton.mainTitle!, canonicalUrl: self.linkButton.canonicalUrl!, tags: self.tagsUsed, audioID: fileName, audioURL: url, duration: length) { success in
                     if success {
                         self.presentDailyFeedVC()
                     }
                 }
             } else {
-                print(programID)
-                  print(imageID)
-                  print(imagePath)
-                  print(programName)
-                print(self.caption!)
-                print(self.tagsUsed)
-                  print(fileName)
-                 print(url)
-                 print(length)
-                FireStoreManager.publishEpisode(programID: programID, imageID: imageID, imagePath: imagePath, programName: programName, caption: self.caption!, tags: self.tagsUsed, audioID: fileName, audioURL: url, duration: length) { success in
+                FireStoreManager.publishEpisode(programID: programID, imageID: imageID, imagePath: imagePath, programName: programName, caption: caption, tags: self.tagsUsed, audioID: fileName, audioURL: url, duration: length) { success in
                     if success {
                         self.presentDailyFeedVC()
                     }
@@ -928,9 +989,9 @@ class AddEpisodeDetails: UIViewController {
         
         if #available(iOS 13.0, *) {
             let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
-             sceneDelegate.window?.rootViewController = tabBar
+            sceneDelegate.window?.rootViewController = tabBar
         } else {
-             appDelegate.window?.rootViewController = tabBar
+            appDelegate.window?.rootViewController = tabBar
         }
         
     }
@@ -954,15 +1015,15 @@ class AddEpisodeDetails: UIViewController {
         
         if #available(iOS 13.0, *) {
             let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
-             sceneDelegate.window?.rootViewController = tabBar
+            sceneDelegate.window?.rootViewController = tabBar
         } else {
-             appDelegate.window?.rootViewController = tabBar
+            appDelegate.window?.rootViewController = tabBar
         }
     }
     
     func trimThanStoreEpisodeOnFirebase() {
         let fileName = "\(NSUUID().uuidString).m4a"
-
+        
         let asset = AVAsset(url: recordingURL)
         let tempDirectory = FileManager.getTempDirectory()
         let fileURL = tempDirectory.appendingPathComponent(fileName)
@@ -972,7 +1033,7 @@ class AddEpisodeDetails: UIViewController {
         if fileManager.fileExists(atPath: filePath) {
             do {
                 try fileManager.removeItem(atPath: filePath)
-                 print("Removing file from \(fileURL.path)")
+                print("Removing file from \(fileURL.path)")
             }
             catch {
                 print("Couldn't remove existing destination file: \(error)")
@@ -983,11 +1044,11 @@ class AddEpisodeDetails: UIViewController {
         if let exporter = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetAppleM4A) {
             exporter.outputFileType = AVFileType.m4a
             exporter.outputURL = fileURL
-
+            
             let start = CMTime(seconds: startTime, preferredTimescale: 1)
             let stop = CMTime(seconds: duration, preferredTimescale: 1)
             exporter.timeRange = CMTimeRangeFromTimeToTime(start: start, end: stop)
-
+            
             
             exporter.exportAsynchronously(completionHandler: {
                 switch exporter.status {
@@ -1003,7 +1064,9 @@ class AddEpisodeDetails: UIViewController {
                     print("exporting\(exporter.error!)")
                 default:
                     print("complete")
-                    self.storeTrimmedEpisodeOnFirebase(fileName: fileName, url: fileURL)
+                    DispatchQueue.main.async {
+                        self.storeTrimmedEpisodeOnFirebase(fileName: fileName, url: fileURL)
+                    }
                 }
             })
         } else {
@@ -1017,13 +1080,12 @@ class AddEpisodeDetails: UIViewController {
     }
     
     func checkIfAbleToPublish() {
-        if captionPlaceholderText == false && captionTextView.text.count < maxCaptionCharacters && tagTextView.text.count < maxTagCharacters {
+        if captionPlaceholderIsActive == false && captionTextView.text.count < maxCaptionCharacters && tagTextView.text.count < maxTagCharacters {
             enablePublishButton()
         } else {
             disablePublishButton()
         }
     }
-    
     
     // MARK: Creating Rich Link
     
@@ -1035,54 +1097,33 @@ class AddEpisodeDetails: UIViewController {
             let range = Range(matches[0].range, in: input)!
             let url = input[range]
             let urlString = String(url)
-            richLink = urlString
+            richLink = linkWithPrefix(urlString: urlString)
             swiftLinkPreview.preview(richLink!, onSuccess: { result in
-                 DispatchQueue.main.async {
+                DispatchQueue.main.async {
                     
                     self.linkButton = RichLinkGenerator(response: result)
-        
+                    
                     if self.linkButton.linkIsRich() {
-                        self.captionLabel.text = self.captionTextView.text!.replacingOccurrences(of: self.richLink!, with: "")
-                        self.captionTextView.text! = self.captionTextView.text!.replacingOccurrences(of: self.richLink!, with: "")
+                        self.captionLabel.text = self.captionTextView.text!.replacingOccurrences(of: "\(urlString) ", with: "")
+                        self.captionTextView.text! = self.captionTextView.text!.replacingOccurrences(of: "\(urlString) ", with: "")
                         self.linkButton.addRichLinkTo(stackedView: self.linkStackedView)
                         self.linkButton.imageButton.addTarget(self, action: #selector(self.linkTouched), for: .touchUpInside)
                         self.linkButton.linkBackgroundView.addTarget(self, action: #selector(self.linkTouched), for: .touchUpInside)
+                        self.richLinkPresented = true
+                    } else {
+                        print("Link is not rich")
                     }
                 }
                 
             }, onError: { error in
-                print("\(error)")
-                
+                print(error.localizedDescription)
+                print("This link is not secure")
+                UIApplication.shared.windows.last?.addSubview(self.unsafeLinkAlert)
             })
-            richLinkPresented = true
-        } else if matches.count == 0 {
-            richLinkPresented = false
-            richLink = ""
         }
- 
     }
     
-    
-//    func setImage(from url: String, completion: (UIImage) ->()) {
-//        print("Setting image")
-//        if let imageURL = URL(string: url) {
-//            if let imageData = try? Data(contentsOf: imageURL) {
-//                if let image = UIImage(data: imageData){
-//                    print("good with image")
-//                    completion(image)
-//                } else {
-//                    print("fuck three")
-//                }
-//            } else {
-//                 print("fuck two")
-//            }
-//        } else {
-//             print("fuck one")
-//        }
-//    }
-    
     @objc func linkTouched() {
-        
         let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
         
         alert.addAction(UIAlertAction(title: "Remove Link", style: .default, handler: { (_) in
@@ -1108,13 +1149,13 @@ extension AddEpisodeDetails: UITextViewDelegate {
     func textViewDidBeginEditing(_ textView: UITextView) {
         
         if textView == captionTextView {
-            if captionPlaceholderText == true {
+            if captionPlaceholderIsActive == true {
                 addCaptionPlaceholderText()
             }
         }
         
         if textView == tagTextView {
-            if tagPlaceholderText == true {
+            if tagPlaceholderIsActive == true {
                 addTagPlaceholderText()
             }
         }
@@ -1127,16 +1168,16 @@ extension AddEpisodeDetails: UITextViewDelegate {
         if textView == captionTextView {
             if captionTextView.text.isEmpty {
                 addCaptionPlaceholderText()
-                scrollContentHeightConstraint.constant = scrollView.frame.height
+                scrollContentHeightConstraint.constant = scrollView.frame.height + scrollHeightPadding + linkStackedView.frame.height
             } else {
-                scrollContentHeightConstraint.constant = scrollView.frame.height + captionTextView.frame.height
+                scrollContentHeightConstraint.constant = scrollView.frame.height + captionTextView.frame.height + scrollHeightPadding + linkStackedView.frame.height
                 captionLabel.textColor = CustomStyle.sixthShade
                 captionLabel.text = captionTextView.text
             }
         }
         
         if textView == tagTextView {
-            tagsUsed = tagTextView.text.split(separator: " ").map { String($0).lowercased() }
+            tagsUsed = tagTextView.text.split(separator: " ").map { String($0) }
             if tagTextView.text.isEmpty {
                 addTagPlaceholderText()
             }
@@ -1176,25 +1217,29 @@ extension AddEpisodeDetails: UITextViewDelegate {
             return true
         }
         
+        if text == "#" {
+            UIApplication.shared.windows.last?.addSubview(hashTagAlert)
+        }
+        
         if text == " " {
             checkIfLinkWasCreatedWith(input: captionTextView.text)
         }
         
         // Should change captionTextView
         if textView == captionTextView {
-            if captionPlaceholderText == true {
+            if captionPlaceholderIsActive == true {
                 captionTextView.text.removeAll()
                 captionTextView.textColor = CustomStyle.fifthShade
-                captionPlaceholderText = false
+                captionPlaceholderIsActive = false
             }
         }
         
         // Should change tagTextView
         if textView == tagTextView {
-            if tagPlaceholderText == true {
+            if tagPlaceholderIsActive == true {
                 tagTextView.text.removeAll()
                 self.tagTextView.textColor = CustomStyle.fifthShade
-                tagPlaceholderText = false
+                tagPlaceholderIsActive = false
             } else {
                 return tagsUsed.count < 4 && tagCount <= 2
             }

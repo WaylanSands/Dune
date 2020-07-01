@@ -6,22 +6,22 @@
 //  Copyright © 2020 Waylan Sands. All rights reserved.
 //
 
-import Firebase
+import FirebaseAuth
 
-enum result {
+enum Result {
     case success
     case fail
 }
 
 struct FireAuthManager {
     
-    static let networkIssueAlert = CustomAlertView(alertType: .networkIssue)
-    static let wrongPasswordAlert = CustomAlertView(alertType: .wrongPassword)
     static let wrongPasswordForChangAlert = CustomAlertView(alertType: .wrongPasswordForChange)
+    static let wrongPasswordAlert = CustomAlertView(alertType: .wrongPassword)
+    static let networkIssueAlert = CustomAlertView(alertType: .networkIssue)
+    static let invalidEmailAlert = CustomAlertView(alertType: .invalidEmail)
     static let noUserAlert = CustomAlertView(alertType: .noUserFound)
-    static  let invalidEmailAlert = CustomAlertView(alertType: .invalidEmail)
     
-    static func updateUser(with newEmail: String, using password: String, completion: @escaping (result) -> ()){
+    static func updateUser(with newEmail: String, using password: String, completion: @escaping (Result) -> ()){
         
         DispatchQueue.global(qos: .userInitiated).async {
             
@@ -70,7 +70,7 @@ struct FireAuthManager {
         }
     }
     
-    static func updateUser(password: String, with newPassword: String, completion: @escaping (result) -> ()){
+    static func updateUser(password: String, with newPassword: String, completion: @escaping (Result) -> ()){
         
         DispatchQueue.global(qos: .userInitiated).async {
             
@@ -105,7 +105,7 @@ struct FireAuthManager {
                 } else {
                     print("The user was successfully re-authenticated.")
                     authData?.user.updatePassword(to: newPassword, completion: { error in
-                       
+                        
                         if error != nil {
                             print("Error updating new password")
                         } else {
@@ -117,5 +117,56 @@ struct FireAuthManager {
             }
         }
     }
+    
+    
+    static func reAuthenticate(with email: String, using password: String, completion: @escaping (Result) -> ()) {
+        
+        DispatchQueue.global(qos: .userInitiated).async {
+            
+            guard let email = User.email else { return }
+            
+            let credential = EmailAuthProvider.credential(withEmail: email, password: password)
+            Auth.auth().currentUser?.reauthenticate(with: credential) { authData, error in
+                
+                if let error = error {
+                    if let errCode = AuthErrorCode(rawValue: error._code) {
+                        
+                        switch errCode {
+                        case .networkError:
+                            UIApplication.shared.windows.last?.addSubview(networkIssueAlert)
+                            print("There was a networkError")
+                        case .wrongPassword:
+                            UIApplication.shared.windows.last?.addSubview(wrongPasswordForChangAlert)
+                            print("Wrong password")
+                        case .userNotFound:
+                            UIApplication.shared.windows.last?.addSubview(noUserAlert)
+                            print("No user found")
+                        case .invalidEmail:
+                            UIApplication.shared.windows.last?.addSubview(invalidEmailAlert)
+                            print("Invalid Email")
+                        default:
+                            print("Other error! \(errCode)")
+                        }
+                    }
+                    completion(.fail)
+                } else {
+                    print("The user was successfully re-authenticated.")
+                    completion(.success)
+                }
+            }
+        }
+    }
+
+    static func reAuthenticate(credential: AuthCredential, completion: @escaping (Result) -> ()) {
+        Auth.auth().currentUser?.reauthenticate(with: credential, completion: {  authData, error in
+            if let error = error {
+                print("Error with re-authentication \(error.localizedDescription)")
+                 completion(.fail)
+            } else {
+                completion(.success)
+            }
+        })
+     }
+    
 }
 

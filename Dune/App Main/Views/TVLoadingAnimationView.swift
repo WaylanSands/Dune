@@ -10,7 +10,7 @@ import UIKit
 
 class TVLoadingAnimationView: UIView {
     
-    let imageViewSize: CGFloat = 55
+    let imageViewSize: CGFloat = 50
     let gradient = CAGradientLayer()
     var topHeight: CGFloat!
     
@@ -25,7 +25,7 @@ class TVLoadingAnimationView: UIView {
     let programImageView: UIView = {
         let view = UIView()
         view.backgroundColor = CustomStyle.thirdShade
-        view.layer.cornerRadius = 7
+        view.layer.cornerRadius = 6
         view.clipsToBounds = true
         return view
     }()
@@ -33,7 +33,7 @@ class TVLoadingAnimationView: UIView {
     let bottomprogramImageView: UIView = {
         let view = UIView()
         view.backgroundColor = CustomStyle.secondShade
-        view.layer.cornerRadius = 7
+        view.layer.cornerRadius = 6
         view.clipsToBounds = true
         return view
     }()
@@ -114,7 +114,7 @@ class TVLoadingAnimationView: UIView {
     let secProgramImageView: UIView = {
         let view = UIView()
         view.backgroundColor = CustomStyle.thirdShade
-        view.layer.cornerRadius = 7
+        view.layer.cornerRadius = 6
         view.clipsToBounds = true
         return view
     }()
@@ -122,7 +122,7 @@ class TVLoadingAnimationView: UIView {
     let secBottomprogramImageView: UIView = {
         let view = UIView()
         view.backgroundColor = CustomStyle.secondShade
-        view.layer.cornerRadius = 7
+        view.layer.cornerRadius = 6
         view.clipsToBounds = true
         return view
     }()
@@ -203,7 +203,7 @@ class TVLoadingAnimationView: UIView {
     let thirdProgramImageView: UIView = {
         let view = UIView()
         view.backgroundColor = CustomStyle.thirdShade
-        view.layer.cornerRadius = 7
+        view.layer.cornerRadius = 6
         view.clipsToBounds = true
         return view
     }()
@@ -211,7 +211,7 @@ class TVLoadingAnimationView: UIView {
     let thirdBottomprogramImageView: UIView = {
         let view = UIView()
         view.backgroundColor = CustomStyle.secondShade
-        view.layer.cornerRadius = 7
+        view.layer.cornerRadius = 6
         view.clipsToBounds = true
         return view
     }()
@@ -293,7 +293,7 @@ class TVLoadingAnimationView: UIView {
     let forthProgramImageView: UIView = {
         let view = UIView()
         view.backgroundColor = CustomStyle.thirdShade
-        view.layer.cornerRadius = 7
+        view.layer.cornerRadius = 6
         view.clipsToBounds = true
         return view
     }()
@@ -301,7 +301,7 @@ class TVLoadingAnimationView: UIView {
     let forthBottomprogramImageView: UIView = {
         let view = UIView()
         view.backgroundColor = CustomStyle.secondShade
-        view.layer.cornerRadius = 7
+        view.layer.cornerRadius = 6
         view.clipsToBounds = true
         return view
     }()
@@ -383,7 +383,7 @@ class TVLoadingAnimationView: UIView {
     let fifProgramImageView: UIView = {
         let view = UIView()
         view.backgroundColor = CustomStyle.thirdShade
-        view.layer.cornerRadius = 7
+        view.layer.cornerRadius = 6
         view.clipsToBounds = true
         return view
     }()
@@ -391,7 +391,7 @@ class TVLoadingAnimationView: UIView {
     let fifBottomprogramImageView: UIView = {
         let view = UIView()
         view.backgroundColor = CustomStyle.secondShade
-        view.layer.cornerRadius = 7
+        view.layer.cornerRadius = 6
         view.clipsToBounds = true
         return view
     }()
@@ -473,7 +473,7 @@ class TVLoadingAnimationView: UIView {
     let sixProgramImageView: UIView = {
         let view = UIView()
         view.backgroundColor = CustomStyle.thirdShade
-        view.layer.cornerRadius = 7
+        view.layer.cornerRadius = 6
         view.clipsToBounds = true
         return view
     }()
@@ -481,7 +481,7 @@ class TVLoadingAnimationView: UIView {
     let sixBottomprogramImageView: UIView = {
         let view = UIView()
         view.backgroundColor = CustomStyle.secondShade
-        view.layer.cornerRadius = 7
+        view.layer.cornerRadius = 6
         view.clipsToBounds = true
         return view
     }()

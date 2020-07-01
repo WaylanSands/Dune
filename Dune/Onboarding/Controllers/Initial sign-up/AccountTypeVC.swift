@@ -12,14 +12,17 @@ import FirebaseFirestore
 
 class AccountTypeVC: UIViewController {
     
+    @IBOutlet weak var headingLabel: UILabel!
     @IBOutlet weak var listenerButton: UIButton!
     @IBOutlet weak var publisherButton: UIButton!
-    @IBOutlet weak var headingLabel: UILabel!
     @IBOutlet weak var subHeadingBottomAnchor: NSLayoutConstraint!
     
-    let db = Firestore.firestore()
+    let networkingIndicator = NetworkingProgress()
+    let appDelegate = UIApplication.shared.delegate as! AppDelegate
     let customNavBar = CustomNavBar()
+    let db = Firestore.firestore()
     let device = UIDevice()
+    var fastTrack = false
     
     override var preferredStatusBarStyle: UIStatusBarStyle {
         return .lightContent
@@ -31,6 +34,10 @@ class AccountTypeVC: UIViewController {
         configureNavigation()
         styleForScreens()
         configureViews()
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+       fastTrack = false
     }
     
     func removeBackButtonIfRootView() {
@@ -56,9 +63,7 @@ class AccountTypeVC: UIViewController {
     
     func styleForScreens() {
         switch UIDevice.current.deviceType {
-        case .iPhone4S:
-            break
-        case .iPhoneSE:
+        case .iPhone4S, .iPhoneSE:
             headingLabel.font = UIFont.systemFont(ofSize: 26, weight: .bold)
             subHeadingBottomAnchor.constant = 50.0
         case .iPhone8:
@@ -77,25 +82,18 @@ class AccountTypeVC: UIViewController {
     }
     
     @IBAction func accountTypeButtonPress(_ sender: UIButton) {
-        
-        if sender.titleLabel?.text == "Publisher" {
-            print("hit publisher")
-            User.isPublisher = true
-            attemptToStoreProgramImage()
-            if let programNameVC = UIStoryboard(name: "OnboardingPublisher", bundle: nil).instantiateViewController(withIdentifier: "programNameVC") as? ProgramNameVC {
-                navigationController?.pushViewController(programNameVC, animated: true)
-                print("publisher push")
-            }
-        } else if sender.titleLabel?.text == "Listener" {
-            User.isPublisher = false
-            attemptToStoreUserImage()
-            if let listenerNameVC = UIStoryboard(name: "OnboardingListener", bundle: nil).instantiateViewController(withIdentifier: "listenerDisplayNameVC") as? ListenerNameVC {
-                navigationController?.pushViewController(listenerNameVC, animated: true)
-            }
-        }
-        
-        // If is already logged in they are returning to finish on-boarding
         let loggedIn = UserDefaults.standard.bool(forKey: "loggedIn")
+        
+        if sender.titleLabel?.text == "Finish Setup" {
+            User.isPublisher = true
+            presentProgramNameVC()
+        } else if sender.titleLabel?.text == "Start Listening" {
+            networkingIndicator.taskLabel.text = "Fast tracking account"
+            UIApplication.shared.keyWindow!.addSubview(self.networkingIndicator)
+
+            User.isPublisher = false
+            fastTrack = true
+        }
         
         if loggedIn {
             updateReturningUser()
@@ -106,31 +104,16 @@ class AccountTypeVC: UIViewController {
         }
     }
    
-    func attemptToStoreProgramImage() {
-        let programID = NSUUID().uuidString
-        CurrentProgram.ID = programID
-        User.programID = programID
-        
-        if User.imagePath != nil && User.imagePath != ""  {
-            FileManager.fetchImageFrom(url: User.imagePath!) { image in
-                if image != nil {
-                    FileManager.storeInitialProgramImage(image: image!, programID: CurrentProgram.ID!)
-                }
-            }
-        }
-    }
+//    func attemptToStoreProgramImage() {
+//        if CurrentProgram.imagePath != nil && CurrentProgram.imagePath != ""  {
+//            FileManager.fetchImageFrom(url: CurrentProgram.imagePath!) { image in
+//                if image != nil {
+//                    FileManager.storeInitialProgramImage(image: image!, programID: CurrentProgram.ID!)
+//                }
+//            }
+//        }
+//    }
     
-    func attemptToStoreUserImage() {
-         if User.imagePath != nil && User.imagePath != ""  {
-             FileManager.fetchImageFrom(url: User.imagePath!) { image in
-                 if image != nil {
-                    FireStorageManager.storeUserImage(image: image!)
-                 }
-             }
-         }
-     }
-    
-    // Ceate new user and add details
     func createNewUser() {
         DispatchQueue.global(qos: .userInitiated).async {
             print("creating new User")
@@ -145,28 +128,23 @@ class AccountTypeVC: UIViewController {
                     
                     guard let uid = result?.user.uid else { return }
                     User.ID = uid
-                    User.subscriberCount = 0
-                    User.favouriteIDs = [String]()
-                    User.subscriberIDs = [String]()
-                    User.subscriptionIDs = [String]()
-                    User.favouritePrograms = [Program]()
                     
                     self.db.collection("users").document(uid).setData([
                         "ID" : User.ID!,
-                        "favouriteIDs" : [],
-                        "subscriberIDs" : [],
                         "email": User.email!,
-                        "subscriberCount" : 0,
                         "username": User.username!,
                         "birthDate": User.birthDate!,
+                        "displayName": User.username!,
                         "completedOnBoarding" : false,
                         "isPublisher": User.isPublisher!,
-                        "subscriptionIDs" : User.subscriptionIDs!,
                     ]) { err in
                         if let err = err {
                             print("Error creating new user document: \(err)")
                         } else {
                             print("Success creating new user document")
+                            if self.fastTrack {
+                                self.fastTrackAccount()
+                            }
                         }
                     }
                 }
@@ -174,11 +152,103 @@ class AccountTypeVC: UIViewController {
         }
     }
     
-    // The user is returning after not finishing onboarding previously
+    func fastTrackAccount() {
+            DispatchQueue.global(qos: .userInitiated).async {
+                
+                let programID = NSUUID().uuidString
+                guard let uid = Auth.auth().currentUser?.uid else { return }
+                
+                User.ID = uid
+                CurrentProgram.rep = 0
+                CurrentProgram.image = #imageLiteral(resourceName: "missing-image-large")
+                CurrentProgram.summary = ""
+                CurrentProgram.tags = [String]()
+                User.completedOnBoarding = true
+                CurrentProgram.hasIntro = false
+                CurrentProgram.hasMentions = false
+                CurrentProgram.programIDs = [String]()
+                CurrentProgram.name = User.username!
+                CurrentProgram.isPrimaryProgram = true
+                CurrentProgram.subscriberCount = 0
+                CurrentProgram.repMethods = [String]()
+                CurrentProgram.username = User.username
+                CurrentProgram.subPrograms = [Program]()
+                CurrentProgram.subscriberIDs = [String]()
+                CurrentProgram.episodeIDs = [[String:Any]]()
+                User.programID = CurrentProgram.ID ?? programID
+                CurrentProgram.ID = CurrentProgram.ID ?? programID
+                CurrentProgram.subscriptionIDs = [CurrentProgram.ID ?? programID]
+
+                // Ready to move
+                self.presentSearchVC()
+
+                let db = Firestore.firestore()
+                let userRef = db.collection("users").document(User.ID!)
+                let programRef = db.collection("programs").document(User.programID!)
+                
+                userRef.updateData([
+                    "programID": User.programID!,
+                    "completedOnBoarding" : true,
+                        ])
+                 { (error) in
+                    if let error = error {
+                        print("There has been an error adding program ID: \(error.localizedDescription)")
+                    } else {
+                        print("Successfully added channel ID")
+                        
+                        programRef.setData([
+                            "subscriptionIDs" : CurrentProgram.subscriptionIDs!,
+                            "episodeIDs" : CurrentProgram.episodeIDs!,
+                            "summary": CurrentProgram.summary ?? "",
+                            "username" : User.username!,
+                            "isPrimaryProgram" : true,
+                            "ID" : CurrentProgram.ID!,
+                            "name" : User.username!,
+                            "subscriberCount" : 0,
+                            "hasMentions" : false,
+                            "ownerID" : User.ID!,
+                            "subscriberIDs": [],
+                            "programIDs" : [],
+                            "hasIntro" : false,
+                            "repMethods" : [],
+                            "tags" : [],
+                            "rep" : 0
+                        ]) { (error) in
+                            if let error = error {
+                                print("There has been an error adding the program: \(error.localizedDescription)")
+                            } else {
+                                print("Successfully fast tracked")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    
+    func presentProgramNameVC() {
+        if let programNameVC = UIStoryboard(name: "OnboardingPublisher", bundle: nil).instantiateViewController(withIdentifier: "programNameVC") as? ProgramNameVC {
+            navigationController?.pushViewController(programNameVC, animated: true)
+        }
+    }
+    
+    func presentSearchVC() {
+        DispatchQueue.main.async {
+            self.networkingIndicator.removeFromSuperview()
+            let tabBar = MainTabController()
+            tabBar.selectedIndex = 1
+            
+            if #available(iOS 13.0, *) {
+                let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
+                sceneDelegate.window?.rootViewController = tabBar
+            } else {
+                self.appDelegate.window?.rootViewController = tabBar
+            }
+        }
+    }
+    
     func updateReturningUser() {
         print("attempting to update returning user")
         DispatchQueue.global(qos: .userInitiated).async {
-            print("updating user")
             
             guard let uid = Auth.auth().currentUser?.uid else { return }
             User.ID = uid
@@ -192,6 +262,9 @@ class AccountTypeVC: UIViewController {
                     print("Error adding publisher type for returning user: \(err)")
                 } else {
                     print("Success adding publisher type for returning user")
+                    if self.fastTrack {
+                        self.fastTrackAccount()
+                    }
                 }
             }
             
@@ -223,36 +296,95 @@ class AccountTypeVC: UIViewController {
     
     func signUpSocialUser() {
         DispatchQueue.global(qos: .userInitiated).sync {
-            
-            User.subscriberCount = 0
-            User.favouriteIDs = [String]()
-            User.subscriberIDs = [String]()
-            User.favouritePrograms = [Program]()
-            User.subscriptionIDs = [String]()
-            
+                        
             let userRef = db.collection("users").document(User.ID!)
             
             userRef.setData([
                 "ID" : User.ID!,
-                "favouriteIDs" : [],
-                "subscriberIDs" : [],
-                "subscriberCount" : 0,
                 "username" : User.username!,
                 "completedOnBoarding" : false,
-                "displayName" : User.displayName!,
                 "isPublisher" : User.isPublisher!,
-                "imagePath" : User.imagePath ?? "",
-                "subscriptionIDs" : User.subscriptionIDs!,
                 ]) { error in
                 if error != nil {
                     print("Error attempting to signup Twitter user: \(error!.localizedDescription)")
                 } else {
                     print("Success signing up Twitter user")
                     UserDefaults.standard.set(true, forKey: "loggedIn")
+                    if self.fastTrack {
+                        self.fastTrackSocialAccount()
+                    }
                 }
             }
         }
     }
+    
+    func fastTrackSocialAccount() {
+            DispatchQueue.global(qos: .userInitiated).async {
+                print("Social")
+                CurrentProgram.rep = 0
+                User.completedOnBoarding = true
+                CurrentProgram.hasIntro = false
+                CurrentProgram.hasMentions = false
+                CurrentProgram.tags = [String]()
+                CurrentProgram.repMethods = [String]()
+                CurrentProgram.programIDs = [String]()
+                CurrentProgram.isPrimaryProgram = true
+                CurrentProgram.subscriberCount = 0
+                CurrentProgram.subPrograms = [Program]()
+                CurrentProgram.subscriberIDs = [String]()
+                CurrentProgram.episodeIDs = [[String:Any]]()
+                User.programID = CurrentProgram.ID
+                CurrentProgram.image = CurrentProgram.image ?? #imageLiteral(resourceName: "missing-image-large")
+                CurrentProgram.subscriptionIDs = [CurrentProgram.ID!]
+                CurrentProgram.summary = (CurrentProgram.summary ?? "")
+                                
+                // Ready to move
+                self.presentSearchVC()
+
+                let db = Firestore.firestore()
+                let userRef = db.collection("users").document(User.ID!)
+                let programRef = db.collection("programs").document(User.programID!)
+                
+                userRef.updateData([
+                    "programID": User.programID!,
+                    "completedOnBoarding" : true,
+                        ])
+                 { (error) in
+                    if let error = error {
+                        print("There has been an error adding program ID: \(error.localizedDescription)")
+                    } else {
+                        print("Successfully added channel ID")
+                        
+                        programRef.setData([
+                            "subscriptionIDs" :  CurrentProgram.subscriptionIDs!,
+                            "episodeIDs" : CurrentProgram.episodeIDs!,
+//                            "imagePath" : (CurrentProgram.imagePath ?? nil)!,
+                            "summary": CurrentProgram.summary!,
+                            "name" : CurrentProgram.name!,
+                            "username" : User.username!,
+                            "isPrimaryProgram" : true,
+                            "ID" : User.ID!,
+                            "hasMentions" : false,
+                            "subscriberCount" : 0,
+                            "ownerID" : User.ID!,
+                            "subscriberIDs": [],
+                            "programIDs" : [],
+                            "hasIntro" : false,
+                            "repMethods" : [],
+                            "tags": [],
+                            "rep": 0
+                        ]) { (error) in
+                            if let error = error {
+                                print("There has been an error adding the program: \(error.localizedDescription)")
+                            } else {
+                                print("Successfully fast tracked")
+//                                self.attemptToStoreProgramImage()
+                            }
+                        }
+                    }
+                }
+            }
+        }
     
     @objc func backButtonPress() {
         navigationController?.popViewController(animated: true)

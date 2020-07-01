@@ -25,14 +25,15 @@ class CommentThreadVC: UIViewController {
     lazy var passThoughView = PassThoughView(frame: CGRect(x: 0, y: 0, width: view.frame.width, height: view.frame.height))
     var commentTextView = CommentTextView()
     let appDelegate = UIApplication.shared.delegate as! AppDelegate
-    
+    let nonPublisherAlert = CustomAlertView(alertType: .notAPublisher)
+
     let customNavBar: CustomNavBar = {
         let nav = CustomNavBar()
         nav.leftButton.isHidden = true
         nav.backgroundColor = .black
         nav.titleLabel.text = "Comments"
         nav.titleLabel.textColor = .white
-        nav.alpha = 0.9
+        nav.alpha = 0.8
         return nav
     }()
 
@@ -79,18 +80,12 @@ class CommentThreadVC: UIViewController {
         tableView.register(CommentCell.self, forCellReuseIdentifier: "commentCell")
         commentTextView.commentView.delegate = self
         commentTextView.commentDelegate = self
+        nonPublisherAlert.alertDelegate = self
         tableView.dataSource = self
         tableView.delegate = self
     }
     
    func configureNavigation() {
-//        navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
-//        navigationController?.navigationBar.backIndicatorTransitionMaskImage = #imageLiteral(resourceName: "back-button-white")
-//        navigationController?.navigationBar.tintColor = CustomStyle.primaryBlack
-//        navigationController?.navigationBar.backIndicatorImage = #imageLiteral(resourceName: "back-button-white")
-//        navigationController?.navigationBar.prefersLargeTitles = true
-//        navigationController?.navigationBar.shadowImage = nil
-//        navigationItem.largeTitleDisplayMode = .never
     navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
     navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
     navigationController?.navigationBar.backIndicatorTransitionMaskImage = #imageLiteral(resourceName: "back-button-white")
@@ -102,11 +97,12 @@ class CommentThreadVC: UIViewController {
     navigationController?.navigationBar.barStyle = .black
     navigationController?.navigationBar.shadowImage = UIImage()
     navigationController?.navigationBar.tintColor = .white
+    navigationController?.navigationBar.isHidden = false
     navigationItem.largeTitleDisplayMode = .never
     }
     
     func configureViews() {
-        view.backgroundColor = CustomStyle.primaryBlack
+        view.backgroundColor = CustomStyle.sixthShade
         view.addSubview(tableView)
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
@@ -122,7 +118,7 @@ class CommentThreadVC: UIViewController {
         commentTextView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         commentTextView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         commentTextView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -homeIndicatorHeight).isActive = true
-        commentTextView.heightAnchor.constraint(greaterThanOrEqualToConstant: 60).isActive = true
+        commentTextView.heightAnchor.constraint(greaterThanOrEqualToConstant: 48).isActive = true
         commentTextView.episodeID = episode.ID
         
         view.addSubview(customNavBar)
@@ -158,7 +154,7 @@ class CommentThreadVC: UIViewController {
             return
         }
         keyboardRectHeight = keyboardRect.height
-        commentTextView.frame.origin.y = view.frame.height - keyboardRect.height - commentTextView.commentView.frame.height - 24
+        commentTextView.frame.origin.y = view.frame.height - keyboardRect.height - commentTextView.commentView.frame.height - 14
         if !keyboardUp {
           animateTableView()
         }
@@ -179,6 +175,7 @@ extension CommentThreadVC: UITableViewDataSource, UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         var commentCell: CommentCell
+        print(" \(downloadedComments.count) : \(indexPath.row)")
         let comment = downloadedComments[indexPath.row]
         
         if comment.subCommentCount > 0 && !comment.isUnwrapped {
@@ -215,7 +212,6 @@ extension CommentThreadVC: UITableViewDataSource, UITableViewDelegate {
         let comment = self.downloadedComments[indexPath.row]
         let deleteItem = UIContextualAction(style: .destructive, title: "Delete") {  (contextualAction, view, completionBool) in
             let comment = self.downloadedComments[indexPath.row]
-            
             if comment.isSubComment {
                 FireBaseComments.deleteSubCommentForEpisode(ID: comment.episodeID, primaryID: comment.primaryID!, commentID: comment.ID)
                 guard var primaryComment = self.downloadedComments.first(where: { $0.ID == comment.primaryID }) else { return }
@@ -272,16 +268,21 @@ extension CommentThreadVC: UITextViewDelegate {
     }
     
     func textViewDidChange(_ textView: UITextView) {
+        if !User.isPublisher! || CurrentProgram.imagePath == nil {
+            UIApplication.shared.windows.last?.addSubview(nonPublisherAlert)
+            textView.text = ""
+        }
+        
         var textViewHeight: CGFloat
         let intrinsicHeight = commentTextView.commentView.intrinsicContentSize.height
-        if intrinsicHeight > 37 {
+        if intrinsicHeight > 34 {
             textViewHeight = intrinsicHeight
         } else {
-            textViewHeight = 37
+            textViewHeight = 34
         }
         commentTextView.commentView.frame.size = CGSize(width: commentTextView.commentView.frame.width , height: textViewHeight)
         commentTextView.frame.size = CGSize(width: commentTextView.backgroundView.frame.width , height: commentTextView.backgroundView.frame.height)
-        commentTextView.frame.origin.y = view.frame.height - keyboardRectHeight - commentTextView.commentView.frame.height - 24
+        commentTextView.frame.origin.y = view.frame.height - keyboardRectHeight - commentTextView.commentView.frame.height - 14
         tableViewBottomConstraint.constant = -(keyboardRectHeight + commentTextView.commentView.frame.height - 30)
         
         if textView.text.isEmpty {
@@ -314,36 +315,29 @@ extension CommentThreadVC: UITextViewDelegate {
 }
 
 extension CommentThreadVC: CommentCellDelegate {
-    
-    func visitCommenterWith(ownerID: String, isPublisher: Bool) {
-        print("Is publisher \(isPublisher)")
-        FireBaseComments.fetchProfileWith(ownerID: ownerID, isPublisher: isPublisher) { program, listener in
-            if program != nil {
-                if User.isPublisher! && CurrentProgram.programsIDs().contains(program!.ID) {
-                    let tabBar = MainTabController()
-                    tabBar.selectedIndex = 4
-                    if #available(iOS 13.0, *) {
-                        let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
-                         sceneDelegate.window?.rootViewController = tabBar
-                    } else {
-                        self.appDelegate.window?.rootViewController = tabBar
-                    }
-                } else {
-                    if program!.isPrimaryProgram && program!.hasMultiplePrograms!  {
-                        let programVC = ProgramProfileVC()
-                        programVC.program = program
-                        self.navigationController?.pushViewController(programVC, animated: true)
-                    } else {
-                        let programVC = SubProgramProfileVC(program: program!)
-                        self.navigationController?.present(programVC, animated: true, completion: nil)
-                    }
-                }
-            } else {
-                print("Comment is a listener")
-            }
-        }
+  
+    func visitProfile(program: Program) {
+        if User.isPublisher! && CurrentProgram.programsIDs().contains(program.ID) {
+             let tabBar = MainTabController()
+             tabBar.selectedIndex = 4
+             if #available(iOS 13.0, *) {
+                 let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
+                  sceneDelegate.window?.rootViewController = tabBar
+             } else {
+                let appDelegate = UIApplication.shared.delegate as! AppDelegate
+                  appDelegate.window?.rootViewController = tabBar
+             }
+         } else {
+             if program.isPrimaryProgram && !program.programIDs!.isEmpty  {
+                 let programVC = ProgramProfileVC()
+                 programVC.program = program
+                 navigationController?.pushViewController(programVC, animated: true)
+             } else {
+                 let programVC = SingleProgramProfileVC(program: program)
+                 navigationController?.pushViewController(programVC, animated: true)
+             }
+         }
     }
-    
    
     func fetchSubCommentsFor(comment: Comment) {
         guard let commentIndex = downloadedComments.firstIndex(where: {$0.ID == comment.ID}) else { return }
@@ -408,6 +402,7 @@ extension CommentThreadVC: commentTextViewDelegate {
     func append(comment: Comment, primaryID: String?) {
         DispatchQueue.main.async {
             self.commentTextView.commentView.resignFirstResponder()
+            self.commentTextView.frame.size = CGSize(width: self.commentTextView.backgroundView.frame.width , height: self.commentTextView.backgroundView.frame.height)
             self.commentTextView.frame.origin.y = self.view.frame.height - (self.commentTextView.frame.height + self.homeIndicatorHeight)
             self.tableViewBottomConstraint.constant = -self.homeIndicatorHeight
             self.keyboardUp = false
@@ -427,7 +422,7 @@ extension CommentThreadVC: commentTextViewDelegate {
                 downloadedComments.insert(comment, at: index + 1)
                 tableView.reloadData()
             } else {
-                reloadTableView()
+                tableView.reloadData()
             }
         } else {
             downloadedComments.append(comment)
@@ -456,6 +451,21 @@ extension CommentThreadVC: commentTextViewDelegate {
         }
     }
  
+}
+
+extension CommentThreadVC: CustomAlertDelegate {
+   
+    func primaryButtonPress() {
+        let editProgramVC = EditProgramVC()
+        editProgramVC.hidesBottomBarWhenPushed = true
+        navigationController?.pushViewController(editProgramVC, animated: true)
+    }
+    
+    func cancelButtonPress() {
+        //
+    }
+    
+    
 }
 
 

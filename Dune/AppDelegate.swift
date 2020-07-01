@@ -15,14 +15,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-      
-//        let launchScreen = LaunchVC()
-//
-//        let frame = UIScreen.main.bounds
-//        window = UIWindow(frame: frame)
-//
-//        window!.rootViewController = launchScreen
-//        window!.makeKeyAndVisible()
         
         if #available(iOS 13.0, *) { } else {
             let launchScreen = LaunchVC()

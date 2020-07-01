@@ -12,16 +12,18 @@ import AVFoundation
 
 class MainFeedVC: UIViewController {
     
+    enum FilterMode {
+        case all
+        case today
+    }
+    
     let tableView = UITableView()
     var audioPlayer = DuneAudioPlayer()
     
-    var batchLimit = 10
+//    var batchLimit = 10
     var pushingComment = false
     var subscriptionIDs = [String]()
-    var fetchedEpisodeIDs = [String]()
-    var downloadedEpisodes = [Episode]()
-    var episodesToFetch = [String]()
-    var episodeIDs = [String]()
+//    var episodesToFetch = [String]()
     
     var activeCell: EpisodeCell?
     var selectedCellRow: Int?
@@ -30,22 +32,116 @@ class MainFeedVC: UIViewController {
     var lastPlayedID: String?
     var listenCountUpdated = false
     
-    let loadingView = TVLoadingAnimationView(topHeight: 150)
+    //Episodes
+    var filteredEpisodeItems = [EpisodeItem]()
+    var downloadedEpisodes = [Episode]()
+    var episodeItems = [EpisodeItem]()
+    var isFetchingEpisodes = false
+    var startingIndex: Int = 0
+    var episodes = [Episode]()
+    
+    // Settings
+    var episodeReported = false
+    var programReported = false
+    
+    // Categories
+    var categoryButtons = [UIButton]()
+    var filterMode: FilterMode = .all
+    var selectedCategory: String?
+    
+    var refreshControl: UIRefreshControl!
+    
+    // For various screen sizes
+    var tvInset: CGFloat = 1
+    
+    let loadingView = TVLoadingAnimationView(topHeight: 20)
     
     let subscriptionSettings = SettingsLauncher(options: SettingOptions.subscriptionEpisode, type: .subscriptionEpisode)
     let ownEpisodeSettings = SettingsLauncher(options: SettingOptions.ownEpisode, type: .ownEpisode)
+    let reportEpisodeAlert = CustomAlertView(alertType: .reportEpisode)
+    
+    let navBarView: UIView = {
+        let view = UIView()
+        view.backgroundColor = hexStringToUIColor(hex: "191919").withAlphaComponent(0.9)
+        return view
+    }()
+    
+    let navLogoImage: UIImageView = {
+        let imageView = UIImageView()
+        imageView.image = UIImage(named: "nav-logo")
+        return imageView
+    }()
+    
+    let navLogoLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Dune"
+        label.textColor = .white
+        label.font = UIFont.systemFont(ofSize: 24, weight: .bold)
+        return label
+    }()
     
     let currentDateLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
-        label.textColor = CustomStyle.fourthShade
+        label.font = UIFont.systemFont(ofSize: 14, weight: .bold)
+        label.textColor = CustomStyle.white
+        return label
+    }()
+    
+    let searchScrollView: UIScrollView = {
+        let view = UIScrollView()
+        view.isScrollEnabled = true
+        view.showsHorizontalScrollIndicator = false
+        view.contentInsetAdjustmentBehavior = .never
+        view.backgroundColor = .clear
+        return view
+    }()
+    
+    let searchContentStackView: UIStackView = {
+        let view = UIStackView()
+        view.distribution = .equalSpacing
+        view.spacing = 7
+        return view
+    }()
+    
+    let allButton: UIButton = {
+        let button = UIButton()
+        button.layer.cornerRadius = 13
+        button.setTitle("All", for: .normal)
+        button.backgroundColor = CustomStyle.primaryYellow
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 12, weight: .medium)
+        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 15, bottom: 2, right: 15)
+        button.addTarget(self, action: #selector(searchModePress), for: .touchUpInside)
+        button.setTitleColor(.black, for: .normal)
+        return button
+    }()
+    
+    let todayButton: UIButton = {
+        let button = UIButton()
+        button.layer.cornerRadius = 13
+        button.setTitle("Daily", for: .normal)
+        button.backgroundColor = CustomStyle.sixthShade
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 12, weight: .medium)
+        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 15, bottom: 2, right: 15)
+        button.addTarget(self, action: #selector(searchModePress), for: .touchUpInside)
+        button.setTitleColor(CustomStyle.fifthShade, for: .normal)
+        return button
+    }()
+    
+    let noEpisodesMainLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Subscribe to programs"
+        label.font = UIFont.systemFont(ofSize: 18, weight: .bold)
+        label.textAlignment = .center
+        label.textColor = CustomStyle.primaryBlack
+        label.numberOfLines = 0
+        label.isHidden = true
         return label
     }()
     
     let noEpisodesLabel: UILabel = {
         let label = UILabel()
-        label.text = "Currently no episodes to display"
-        label.font = UIFont.systemFont(ofSize: 18, weight: .medium)
+        label.text = "Search and subscribe to your interests for episodes to display here."
+        label.font = UIFont.systemFont(ofSize: 16, weight: .regular)
         label.textAlignment = .center
         label.textColor = CustomStyle.fourthShade
         label.numberOfLines = 0
@@ -55,15 +151,20 @@ class MainFeedVC: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        navigationItem.title = "Daily Feed"
+        configureRefreshControl()
         configureDelegates()
+        styleForScreens()
         configureViews()
-        addLoadingView()
+        
+        let notificationCenter = NotificationCenter.default
+        notificationCenter.addObserver(self, selector: #selector(appMovedToBackground), name: UIApplication.willResignActiveNotification, object: nil)
     }
     
     override func viewWillAppear(_ animated: Bool) {
-        subscriptionIDs = User.subscriptionIDs!
+        subscriptionIDs = CurrentProgram.subscriptionIDs!
         setupModalCommentObserver()
-        fetchEpisodeIDsForUser()
+        fetchEpisodeIDs()
         pushingComment = false
         configureNavigation()
         selectedCellRow = nil
@@ -71,6 +172,7 @@ class MainFeedVC: UIViewController {
     }
     
     override func viewWillDisappear(_ animated: Bool) {
+        searchScrollView.setScrollBarToTopLeft()
         removeModalCommentObserver()
         if !pushingComment {
             audioPlayer.finishSession()
@@ -81,19 +183,35 @@ class MainFeedVC: UIViewController {
         }
     }
     
+    @objc func appMovedToBackground() {
+        print("App moved to background!")
+    }
+    
     func configureDelegates() {
         subscriptionSettings.settingsDelegate = self
         ownEpisodeSettings.settingsDelegate = self
+        reportEpisodeAlert.alertDelegate = self
         tableView.register(EpisodeCell.self, forCellReuseIdentifier: "episodeCell")
         tableView.register(EpisodeCellRegLink.self, forCellReuseIdentifier: "episodeCellRegLink")
         tableView.register(EpisodeCellSmlLink.self, forCellReuseIdentifier: "EpisodeCellSmlLink")
         audioPlayer.audioPlayerDelegate = self
         tableView.dataSource = self
         tableView.delegate = self
+        tableView.showsVerticalScrollIndicator = false
     }
     
     func setupModalCommentObserver() {
         NotificationCenter.default.addObserver(self, selector: #selector(self.showCommentFromModal), name: NSNotification.Name(rawValue: "modalCommentPush"), object: nil)
+    }
+    
+    @objc func updateCommentCount(_ notification: Notification) {
+        let episodeID = notification.userInfo?["ID"] as! String
+        let update = notification.userInfo?["update"] as! Int
+        guard let episode = downloadedEpisodes.first(where: {$0.ID == episodeID}) else { return }
+        guard let index = downloadedEpisodes.firstIndex(where: {$0.ID == episodeID}) else { return }
+        episode.commentCount += update
+        downloadedEpisodes[index] = episode
+        tableView.reloadRows(at: [IndexPath(item: index, section: 0)], with: .fade)
     }
     
     @objc func showCommentFromModal(_ notification: Notification) {
@@ -129,50 +247,85 @@ class MainFeedVC: UIViewController {
     }
     
     func resetTableView() {
-        addLoadingView()
-        navigationItem.title = "Daily Feed"
-        noEpisodesLabel.isHidden = true
-        batchLimit = 10
-        fetchedEpisodeIDs = [String]()
+        audioPlayer.downloadedEpisodes = [Episode]()
+        noEpisodesMainLabel.isHidden = true
         downloadedEpisodes = [Episode]()
-        subscriptionIDs = [String]()
-        episodeIDs = [String]()
-        batch = [Episode]()
-        tableView.isHidden = false
+        noEpisodesLabel.isHidden = true
+        startingIndex = 0
+        episodeItems = []
+        episodes = []
         tableView.reloadData()
+    }
+    
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+          return .lightContent
     }
     
     func configureNavigation() {
         UINavigationBar.appearance().titleTextAttributes = CustomStyle.blackNavBarAttributes
-        navigationItem.title = "Daily Feed"
-        navigationController?.navigationBar.prefersLargeTitles = true
-        navigationItem.largeTitleDisplayMode = .always
-        navigationController?.navigationBar.isHidden = false
+//        navigationController?.navigationBar.prefersLargeTitles = true
+//        navigationItem.largeTitleDisplayMode = .always
+        navigationController?.navigationBar.isHidden = true
         navigationController?.navigationBar.setBackgroundImage(nil, for: .default)
-        navigationController?.navigationBar.barStyle = .default
+        navigationController?.navigationBar.barStyle = .black
         navigationController?.navigationBar.shadowImage = UIImage()
         
         let imgBackArrow = #imageLiteral(resourceName: "back-button-white")
         navigationController?.navigationBar.backIndicatorImage = imgBackArrow
         navigationController?.navigationBar.backIndicatorTransitionMaskImage = imgBackArrow
         navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
+        self.tabBarController?.tabBar.backgroundImage = UIImage()
+        self.tabBarController?.tabBar.backgroundColor = hexStringToUIColor(hex: "F4F7FB")
     }
     
-    func addLoadingView() {
-        view.addSubview(loadingView)
-        loadingView.translatesAutoresizingMaskIntoConstraints = false
-        loadingView.topAnchor.constraint(equalTo: tableView.topAnchor).isActive = true
-        loadingView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-        loadingView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        loadingView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+    func styleForScreens() {
+        switch UIDevice.current.deviceType {
+        case .iPhone4S, .iPhoneSE:
+            tvInset = 20
+        case .iPhone8:
+            tvInset = 20
+        case .iPhone8Plus:
+            tvInset = 20
+        case .iPhone11:
+            break
+        case .iPhone11Pro:
+            break
+        case .iPhone11ProMax:
+            break
+        case .unknown:
+            break
+        }
     }
     
     func configureViews() {
         view.backgroundColor = .white
         
+        view.addSubview(navBarView)
+        navBarView.translatesAutoresizingMaskIntoConstraints = false
+        navBarView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+        navBarView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        navBarView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        navBarView.heightAnchor.constraint(equalToConstant: UIDevice.current.navBarHeight()).isActive = true
+
+        navBarView.addSubview(navLogoLabel)
+        navLogoLabel.translatesAutoresizingMaskIntoConstraints = false
+        navLogoLabel.bottomAnchor.constraint(equalTo: navBarView.bottomAnchor, constant: -7).isActive = true
+        navLogoLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
+        
+        navBarView.addSubview(currentDateLabel)
+        currentDateLabel.translatesAutoresizingMaskIntoConstraints = false
+        currentDateLabel.centerYAnchor.constraint(equalTo: navLogoLabel.centerYAnchor, constant: 5).isActive = true
+        currentDateLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
+
+        view.addSubview(noEpisodesMainLabel)
+        noEpisodesMainLabel.translatesAutoresizingMaskIntoConstraints = false
+        noEpisodesMainLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -60).isActive = true
+        noEpisodesMainLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
+        noEpisodesMainLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
+        
         view.addSubview(noEpisodesLabel)
         noEpisodesLabel.translatesAutoresizingMaskIntoConstraints = false
-        noEpisodesLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor).isActive = true
+        noEpisodesLabel.topAnchor.constraint(equalTo: noEpisodesMainLabel.bottomAnchor, constant: 15).isActive = true
         noEpisodesLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 40).isActive = true
         noEpisodesLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -40).isActive = true
         
@@ -180,132 +333,374 @@ class MainFeedVC: UIViewController {
         view.sendSubviewToBack(tableView)
         tableView.pinEdges(to: view)
         tableView.backgroundColor = .white
+        tableView.contentInset = UIEdgeInsets(top: UIDevice.current.navBarHeight() + tvInset, left: 0, bottom: 64, right: 0)
+        tableView.addTopBounceAreaView(color: hexStringToUIColor(hex: "191919"))
+        tableView.bringSubviewToFront(refreshControl)
         
-        tableView.addSubview(currentDateLabel)
-        currentDateLabel.translatesAutoresizingMaskIntoConstraints = false
-        currentDateLabel.bottomAnchor.constraint(equalTo: tableView.topAnchor, constant: -10).isActive = true
-        currentDateLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
+        tableView.addSubview(searchScrollView)
+        searchScrollView.translatesAutoresizingMaskIntoConstraints = false
+        searchScrollView.bottomAnchor.constraint(equalTo: tableView.topAnchor).isActive = true
+        searchScrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        searchScrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        searchScrollView.heightAnchor.constraint(equalToConstant: 45).isActive = true
+        
+        searchScrollView.addSubview(searchContentStackView)
+        searchContentStackView.translatesAutoresizingMaskIntoConstraints = false
+        searchContentStackView.centerYAnchor.constraint(equalTo: searchScrollView.centerYAnchor).isActive = true
+        searchContentStackView.trailingAnchor.constraint(equalTo: searchScrollView.trailingAnchor, constant: -16).isActive = true
+        searchContentStackView.leadingAnchor.constraint(equalTo: searchScrollView.leadingAnchor, constant: 16).isActive = true
+        searchContentStackView.heightAnchor.constraint(equalToConstant: 26.0).isActive = true
+        
+        searchContentStackView.addArrangedSubview(allButton)
+        
+        view.addSubview(loadingView)
+        loadingView.translatesAutoresizingMaskIntoConstraints = false
+        loadingView.topAnchor.constraint(equalTo: searchScrollView.bottomAnchor).isActive = true
+        loadingView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        loadingView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        loadingView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
         
         view.addSubview(audioPlayer)
-        audioPlayer.frame = CGRect(x: 0, y: view.frame.height, width: view.frame.width, height: 70)
+        audioPlayer.frame = CGRect(x: 0, y: view.frame.height, width: view.frame.width, height: 600)
+        audioPlayer.setupRemoteTransportControls()
+        
+        view.bringSubviewToFront(navBarView)
     }
     
-    
-    func fetchEpisodeIDsForUser() {
-        FireStoreManager.fetchEpisodesIDsWith(with: subscriptionIDs) { ids in
-            
-            if ids.isEmpty {
-                print("No episodes to display")
-                self.tableView.isHidden = true
-                self.noEpisodesLabel.isHidden = false
-                self.loadingView.removeFromSuperview()
-                self.navigationItem.title = ""
-            } else {
-                if ids != self.episodeIDs {
-                    self.resetTableView()
-                    self.episodeIDs = ids
-                    self.loadFirstBatch()
-                }
-            }
-        }
+    func configureRefreshControl() {
+        refreshControl = UIRefreshControl()
+        refreshControl.tintColor = CustomStyle.white.withAlphaComponent(0.95)
+        tableView.addSubview(refreshControl)
+        refreshControl.addTarget(self, action: #selector(checkRefresh), for: .valueChanged)
+        refreshControl.bounds = CGRect(x: 0, y: 50, width: refreshControl!.frame.width, height: refreshControl!.frame.height)
     }
-    
-    func loadFirstBatch() {
-        var endIndex = batchLimit
         
-        if episodeIDs.count < batchLimit {
-            endIndex = episodeIDs.count
-        }
-        
-        episodesToFetch = Array(episodeIDs[0..<endIndex])
-        
-        for eachID in episodesToFetch {
-            downloadEpisodeWith(ID: eachID)
-        }
-    }
-    
-    func  loadNextBatch() {
-        var endIndex = batchLimit
-        
-        if (episodeIDs.count - fetchedEpisodeIDs.count) < batchLimit {
-            endIndex = episodeIDs.count - fetchedEpisodeIDs.count
-        }
-        
-        let lastEp = fetchedEpisodeIDs.last!
-        let startIndex = episodeIDs.firstIndex(where: { $0 == lastEp })
-        endIndex += startIndex!
-        
-        episodesToFetch = Array(episodeIDs[startIndex!..<endIndex])
-        
-        for eachID in episodesToFetch {
-            downloadEpisodeWith(ID: eachID)
-        }
-    }
-    
-    
-    // MARK: Download episodes
-    var batch = [Episode]()
-    
-    func downloadEpisodeWith(ID: String) {
-        
-        let alreadyDownloaded = self.fetchedEpisodeIDs.contains(where: { $0 == ID })
-        
-        if !alreadyDownloaded {
-            FireStoreManager.getEpisodeDataWith(ID: ID) { (data) in
-                
-                let episode = Episode(data: data)
-                self.batch.append(episode)
-                
-                if self.batch.count == self.episodesToFetch.count {
-                    
-                    let orderedBatch = self.batch.sorted { (epA , epB) -> Bool in
-                        let dateA = epA.timeStamp.dateValue()
-                        let dateB = epB.timeStamp.dateValue()
-                        return dateA > dateB
-                    }
-                    
-                    for each in orderedBatch {
-                        self.downloadedEpisodes.append(each)
-                        self.audioPlayer.downloadedEpisodes.append(each)
-                        //                        self.audioPlayer.audioIDs.append(each.audioID)
-                    }
-                    
-                    self.fetchedEpisodeIDs += self.episodesToFetch
-                    self.loadingView.removeFromSuperview()
-                    self.episodesToFetch.removeAll()
-                    self.tableView.reloadData()
-                    self.batch.removeAll()
-                }
-            }
-        }
-    }
-    
-    func getAudioWith(audioID: String, completion: @escaping (URL) -> ()) {
-        
-        let tempURL = FileManager.getTempDirectory()
-        let fileURL = tempURL.appendingPathComponent(audioID)
-        
-        if FileManager.default.fileExists(atPath: fileURL.path) {
-            completion(fileURL)
+    func handleRefreshControl() {
+        if filterMode == .all && selectedCategory == nil {
+            fetchEpisodeIDs()
         } else {
-            FireStorageManager.downloadEpisodeAudio(audioID: audioID) { url in
-                completion(url)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
+                self.refreshControl.endRefreshing()
             }
         }
     }
     
+    func fetchEpisodeIDs() {
+        FireStoreManager.fetchEpisodesItemsWith(with: CurrentProgram.subscriptionIDs!) { items in
+            DispatchQueue.main.async {
+                self.refreshControl.endRefreshing()
+                if items.isEmpty {
+                    self.resetTableView()
+                    self.tableView.isHidden = true
+                    self.loadingView.isHidden = true
+                    self.noEpisodesLabel.isHidden = false
+                    self.noEpisodesMainLabel.isHidden = false
+                    self.navigationItem.title = ""
+                } else {
+                    if items != self.episodeItems {
+                        self.loadingView.isHidden = false
+                        self.tableView.isHidden = false
+                        self.resetTableView()
+                        self.episodeItems = items
+                        self.recreateCategoryPills()
+                        self.fetchEpisodes()
+                    }
+                }
+            }
+        }
+    }
+    
+    func recreateCategoryPills() {
+        for each in searchContentStackView.arrangedSubviews {
+            let button = each as! UIButton
+            if button.titleLabel?.text != "All" && button.titleLabel?.text != "Daily" {
+                button.removeFromSuperview()
+            }
+        }
+        createCategoryPills()
+    }
+    
+    func fetchEpisodes() {
+        if downloadedEpisodes.count != episodeItems.count {
+            var endIndex = 10
+             print("Fetch eps")
+            if episodeItems.count - downloadedEpisodes.count < endIndex {
+                endIndex = episodeItems.count - downloadedEpisodes.count
+            }
+            endIndex += startingIndex
+            var items = Array(episodeItems[startingIndex..<endIndex])
+            
+            for each in items {
+                if downloadedEpisodes.contains(where: {$0.ID == each.id}) {
+                    items.removeAll(where: {$0 == each})
+                }
+            }
+            
+            startingIndex = downloadedEpisodes.count + items.count
+            
+            if items.count == 0 {
+                return
+            }
+            addBottomLoadingSpinner()
+            self.isFetchingEpisodes = true
+            FireStoreManager.fetchEpisodesWith(episodeItems: items) { episodes in
+                DispatchQueue.main.async {
+                    if !episodes.isEmpty {
+                        self.audioPlayer.downloadedEpisodes += episodes
+                        self.tableView.tableFooterView = nil
+                        self.downloadedEpisodes += episodes
+                        self.episodes += episodes
+                        self.episodes = self.episodes.sorted(by: >)
+                        self.tableView.reloadData()
+                        self.loadingView.isHidden = true
+                        self.isFetchingEpisodes = false
+                    }
+                }
+            }
+        }
+    }
+    
+    func addBottomLoadingSpinner() {
+        var spinner: UIActivityIndicatorView
+        
+        if #available(iOS 13.0, *) {
+            spinner = UIActivityIndicatorView(style: .medium)
+            spinner.color = CustomStyle.fifthShade
+        } else {
+            spinner = UIActivityIndicatorView(style: .gray)
+        }
+        spinner.startAnimating()
+        spinner.frame = CGRect(x: 0.0, y: 0.0, width: tableView.bounds.width, height: 60.0)
+        
+        self.tableView.tableFooterView = spinner
+        self.tableView.tableFooterView?.isHidden = false
+    }
+    
+    
+    func availableCategories() -> [String] {
+        var categories = [String]()
+        for eachCategory in Category.allCases {
+            if filterMode == .all {
+                if episodeItems.contains(where: { $0.category == eachCategory.rawValue }) {
+                    categories.append(eachCategory.rawValue)
+                }
+            } else if filterMode == .today {
+                if episodeItems.contains(where: { $0.category == eachCategory.rawValue && Calendar.current.isDateInToday($0.postedDate) }) {
+                    categories.append(eachCategory.rawValue)
+                }
+            }
+        }
+         return categories
+    }
+    
+    func createCategoryPills() {
+            for each in availableCategories() {
+                let button = self.categoryPill()
+                button.setTitle(each, for: .normal)
+                button.addTarget(self, action: #selector(self.categoryButtonPress), for: .touchUpInside)
+                self.searchContentStackView.addArrangedSubview(button)
+                self.categoryButtons.append(button)
+            }
+        
+        if !episodeItems.contains(where: { Calendar.current.isDateInToday($0.postedDate)}) {
+              for each in searchContentStackView.arrangedSubviews {
+                  let button = each as! UIButton
+                  if button.titleLabel?.text == "Daily" {
+                      button.removeFromSuperview()
+                  }
+              }
+        } else {
+            let buttons = searchContentStackView.arrangedSubviews as! [UIButton]
+            if !buttons.contains(where: {$0.titleLabel?.text == "Daily" }) {
+                searchContentStackView.insertArrangedSubview(todayButton, at: 1)
+            }
+        }
+    }
+    
+    @objc func categoryButtonPress(category: UIButton) {
+        if selectedCategory == category.titleLabel?.text {
+            category.backgroundColor = CustomStyle.sixthShade
+            category.setTitleColor(CustomStyle.fifthShade, for: .normal)
+            selectedCategory = nil
+            removeCategorySelection()
+        } else {
+            if filterMode == .all {
+                filteredEpisodeItems = episodeItems.filter({$0.category == category.titleLabel?.text})
+            } else if filterMode == .today {
+                filteredEpisodeItems = episodeItems.filter({$0.category == category.titleLabel?.text && Calendar.current.isDateInToday($0.postedDate)})
+            }
+            highLightButtonWith(title: category.titleLabel!.text!)
+            loadingView.isHidden = false
+            startingIndex = 0
+            episodes = []
+            fetchFilteredEpisodes()
+        }
+    }
+    
+    func removeCategorySelection() {
+        if filterMode == .all {
+            filteredEpisodeItems = []
+            episodes = downloadedEpisodes
+            tableView.reloadData()
+        } else if filterMode == .today {
+
+        }
+    }
+    
+    func highLightButtonWith(title: String) {
+        selectedCategory = title
+        for each in categoryButtons {
+            if each.titleLabel?.text != title {
+                each.backgroundColor = CustomStyle.sixthShade
+                each.setTitleColor(CustomStyle.fifthShade, for: .normal)
+            } else {
+                each.backgroundColor = CustomStyle.white
+                each.setTitleColor(CustomStyle.primaryBlack, for: .normal)
+            }
+        }
+    }
+    
+    func fetchFilteredEpisodes() {
+        if episodes.count != filteredEpisodeItems.count {
+            var endIndex = 10
+            
+            if filteredEpisodeItems.count - episodes.count < endIndex {
+                endIndex = filteredEpisodeItems.count - episodes.count
+            }
+            endIndex += startingIndex
+            
+            let items = Array(filteredEpisodeItems[startingIndex..<endIndex])
+            startingIndex = episodes.count + items.count
+            
+            var itemsNeeded = [EpisodeItem]()
+
+            for eachItem in items  {
+                if let episode = downloadedEpisodes.first(where: {$0.ID == eachItem.id}) {
+                    episodes.append(episode)
+                } else {
+                    itemsNeeded.append(eachItem)
+                }
+            }
+            
+            if itemsNeeded.count == 0 {
+                episodes = episodes.sorted(by: >)
+                loadingView.isHidden = true
+                tableView.reloadData()
+            } else {
+                fetchEpisodesWith(items: itemsNeeded)
+            }
+        }
+    }
+    
+    func fetchEpisodesWith(items: [EpisodeItem] ) {
+        self.isFetchingEpisodes = true
+        addBottomLoadingSpinner()
+        FireStoreManager.fetchEpisodesWith(episodeItems: items) { episodes in
+            DispatchQueue.main.async {
+                if !episodes.isEmpty {
+                    self.audioPlayer.downloadedEpisodes = episodes
+                    self.tableView.tableFooterView = nil
+                    self.downloadedEpisodes += episodes
+                    self.episodes += episodes
+                    self.episodes = self.episodes.sorted(by: >)
+                    self.tableView.reloadData()
+                    self.loadingView.isHidden = true
+                    self.isFetchingEpisodes = false
+                }
+            }
+        }
+    }
+    
+    func categoryPill() -> UIButton {
+        let button = UIButton()
+        button.backgroundColor = CustomStyle.sixthShade
+        button.layer.cornerRadius = 13
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 12, weight: .medium)
+        button.setTitleColor(CustomStyle.fifthShade, for: .normal)
+        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 15, bottom: 2, right: 15)
+        return button
+    }
+    
+    @objc func searchModePress(sender: UIButton) {
+        selectedCategory = nil
+        if sender.titleLabel?.text == "All" {
+            filterMode = .all
+            allButton.backgroundColor = CustomStyle.primaryYellow
+            allButton.setTitleColor(.black, for: .normal)
+            todayButton.backgroundColor = CustomStyle.sixthShade
+            todayButton.setTitleColor(CustomStyle.fifthShade, for: .normal)
+            recreateCategoryPills()
+            episodes = downloadedEpisodes.sorted(by: >)
+            tableView.reloadData()
+        } else if sender.titleLabel?.text == "Daily" {
+            filterMode = .today
+            getTodaysEpisodes()
+            allButton.setTitleColor(CustomStyle.fifthShade, for: .normal)
+            allButton.backgroundColor = CustomStyle.sixthShade
+            todayButton.backgroundColor = CustomStyle.primaryYellow
+            todayButton.setTitleColor(.black, for: .normal)
+            for each in categoryButtons {
+                each.backgroundColor = CustomStyle.sixthShade
+                each.setTitleColor(CustomStyle.fifthShade, for: .normal)
+            }
+            recreateCategoryPills()
+        }
+    }
+    
+    func getTodaysEpisodes() {
+        let items = episodeItems.filter({Calendar.current.isDateInToday($0.postedDate)})
+        
+        var itemsNeeded = [EpisodeItem]()
+        episodes = []
+        
+        for eachItem in items  {
+            if let episode = downloadedEpisodes.first(where: {$0.ID == eachItem.id}) {
+                episodes.append(episode)
+            } else {
+                itemsNeeded.append(eachItem)
+            }
+        }
+        
+        if itemsNeeded.count == 0 {
+            episodes = episodes.sorted(by: >)
+            tableView.reloadData()
+        } else {
+            loadingView.isHidden = false
+            fetchTodaysEpisodesWith(items: itemsNeeded)
+            print("Fetching todays")
+        }
+    }
+    
+    func fetchTodaysEpisodesWith(items: [EpisodeItem] ) {
+        self.isFetchingEpisodes = true
+        FireStoreManager.fetchAllEpisodesWith(episodeItems: items) { episodes in
+            DispatchQueue.main.async {
+                if !episodes.isEmpty {
+                    self.audioPlayer.downloadedEpisodes = episodes
+                    self.downloadedEpisodes += episodes
+                    self.episodes += episodes
+                    self.episodes = self.episodes.sorted(by: >)
+                    self.tableView.reloadData()
+                    self.loadingView.isHidden = true
+                    self.isFetchingEpisodes = false
+                }
+            }
+        }
+    }
+ 
 }
 
 extension MainFeedVC: UITableViewDataSource, UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return downloadedEpisodes.count
+        return episodes.count
     }
+    
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         var episodeCell: EpisodeCell
-        let episode = downloadedEpisodes[indexPath.row]
-        
+        let episode = episodes[indexPath.row]
+                
         if episode.richLink == nil {
             episodeCell = tableView.dequeueReusableCell(withIdentifier: "episodeCell") as! EpisodeCell
         } else if episode.linkIsSmall! {
@@ -317,19 +712,25 @@ extension MainFeedVC: UITableViewDataSource, UITableViewDelegate {
         episodeCell.episode = episode
         episodeCell.moreButton.addTarget(episodeCell, action: #selector(EpisodeCell.moreUnwrap), for: .touchUpInside)
         episodeCell.programImageButton.addTarget(episodeCell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
+        episodeCell.playEpisodeButton.addTarget(episodeCell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
         episodeCell.episodeSettingsButton.addTarget(episodeCell, action: #selector(EpisodeCell.showSettings), for: .touchUpInside)
         episodeCell.likeButton.addTarget(episodeCell, action: #selector(EpisodeCell.likeButtonPress), for: .touchUpInside)
         episodeCell.usernameButton.addTarget(episodeCell, action: #selector(EpisodeCell.visitProfile), for: .touchUpInside)
         episodeCell.commentButton.addTarget(episodeCell, action: #selector(EpisodeCell.showComments), for: .touchUpInside)
         episodeCell.normalSetUp(episode: episode)
         episodeCell.cellDelegate = self
-        
-        if episode.likeCount >= 10 && episodeCell.optionsConfigured == false {
-            episodeCell.configureCellWithOptions()
-            episodeCell.optionsConfigured = true
-        } else if episode.likeCount < 10 && episodeCell.optionsConfigured {
-            episodeCell.configureWithoutOptions()
-            episodeCell.optionsConfigured = false
+          
+        let gestureRec = UITapGestureRecognizer(target: episodeCell, action: #selector(EpisodeCell.captionPress))
+        if (episodeCell.captionTextView.gestureRecognizers?.count == 0 || episodeCell.captionTextView.gestureRecognizers?.count == nil)  && !episode.caption.contains("@") {
+            episodeCell.captionTextView.addGestureRecognizer(gestureRec)
+        } else if episode.caption.contains("@") {
+            if let recognisers = episodeCell.captionTextView.gestureRecognizers {
+                for gesture in recognisers  {
+                    if let recogniser = gesture as? UITapGestureRecognizer {
+                        episodeCell.captionTextView.removeGestureRecognizer(recogniser)
+                    }
+                }
+            }
         }
         
         if let playerEpisode = audioPlayer.episode  {
@@ -349,35 +750,76 @@ extension MainFeedVC: UITableViewDataSource, UITableViewDelegate {
         return view
     }
     
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        let currentOffset = scrollView.contentOffset.y
+        
+        if currentOffset > 0 {
+            navBarView.backgroundColor = CustomStyle.darkestBlack.withAlphaComponent(0.9)
+        } else {
+            navBarView.backgroundColor = hexStringToUIColor(hex: "191919").withAlphaComponent(0.9)
+            searchScrollView.setScrollBarToTopLeft()
+        }
+    }
     
     func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
         
         let currentOffset = scrollView.contentOffset.y
         let maximumOffset = scrollView.contentSize.height - scrollView.frame.size.height
         
-        if maximumOffset - currentOffset <= 90.0 && fetchedEpisodeIDs.count != episodeIDs.count {
-            loadNextBatch()
+        if currentOffset < -120  && !self.refreshControl.isRefreshing {
+            refreshControl.beginRefreshing()
+            self.handleRefreshControl()
+        }
+        
+        if maximumOffset - currentOffset <= 90.0 && isFetchingEpisodes == false {
+            
+            if filterMode == .all && selectedCategory == nil {
+                fetchEpisodes()
+            } else if filterMode == .all && selectedCategory != nil {
+                fetchFilteredEpisodes()
+            }
+            
+        } else {
+           self.tableView.tableFooterView = nil
         }
     }
     
+    @objc func checkRefresh() {
+        if refreshControl.isRefreshing && isFetchingEpisodes == false {
+            refreshControl.endRefreshing()
+        }
+    }
+
 }
 
 extension MainFeedVC: EpisodeCellDelegate {
     
-    func tagSelected(tag: String) {
+    func episodeTagSelected(tag: String) {
         let tagSelectedVC = EpisodeTagLookupVC(tag: tag)
         navigationController?.pushViewController(tagSelectedVC, animated: true)
     }
     
     func visitProfile(program: Program) {
-        if program.isPrimaryProgram && program.hasMultiplePrograms!  {
-            let programVC = ProgramProfileVC()
-            programVC.program = program
-            navigationController?.pushViewController(programVC, animated: true)
-        } else {
-            let programVC = SubProgramProfileVC(program: program)
-            navigationController?.present(programVC, animated: true, completion: nil)
-        }
+        if User.isPublisher! && CurrentProgram.programsIDs().contains(program.ID) {
+             let tabBar = MainTabController()
+             tabBar.selectedIndex = 4
+             if #available(iOS 13.0, *) {
+                 let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
+                  sceneDelegate.window?.rootViewController = tabBar
+             } else {
+                let appDelegate = UIApplication.shared.delegate as! AppDelegate
+                  appDelegate.window?.rootViewController = tabBar
+             }
+         } else {
+             if program.isPrimaryProgram && !program.programIDs!.isEmpty  {
+                 let programVC = ProgramProfileVC()
+                 programVC.program = program
+                 navigationController?.pushViewController(programVC, animated: true)
+             } else {
+                 let programVC = SingleProgramProfileVC(program: program)
+                 navigationController?.pushViewController(programVC, animated: true)
+             }
+         }
     }
     
     func duration(for resource: String) -> Double {
@@ -398,9 +840,9 @@ extension MainFeedVC: EpisodeCellDelegate {
         let image = cell.programImageButton.imageView?.image
         let audioID = cell.episode.audioID
         
-        getAudioWith(audioID: audioID) { url in
-            self.audioPlayer.playOrPause(episode: cell.episode, with: url, image: image!)
-        }
+        self.audioPlayer.setEpisodeDetailsWith(episode: cell.episode, image: image!)
+        self.audioPlayer.animateToPositionIfNeeded()
+        self.audioPlayer.playOrPauseEpisodeWith(audioID: audioID)
     }
     
     func updateLikeCountFor(episode: Episode, at indexPath: IndexPath) {
@@ -408,7 +850,6 @@ extension MainFeedVC: EpisodeCellDelegate {
     }
     
     func showSettings(cell: EpisodeCell) {
-        print("reached")
         selectedCellRow =  downloadedEpisodes.firstIndex(where: { $0.ID == cell.episode.ID })
         
         if cell.episode.username == User.username! {
@@ -421,9 +862,19 @@ extension MainFeedVC: EpisodeCellDelegate {
     
     func deleteOwnEpisode() {
         guard let row = selectedCellRow else { return }
-        let episode = self.downloadedEpisodes[row]
+        var episode: Episode
+        
+        if filterMode == .all && selectedCategory == nil  {
+            print("will delete")
+            episode = self.downloadedEpisodes[row]
+        } else {
+            episode = self.episodes[row]
+        }
+        
         FireStorageManager.deletePublishedAudioFromStorage(audioID: episode.audioID)
-        FireStoreManager.removeEpisodeIDFromProgram(programID: episode.programID, episodeID: episode.ID, time: episode.timeStamp)
+        guard let item = episodeItems.first(where: { $0.id == episode.ID }) else { return }
+        FireStoreManager.removeEpisodeIDFromProgram(programID: episode.programID, episodeID: episode.ID, time: episode.timeStamp, category: item.category)
+        FireStoreManager.updateProgramRep(programID: CurrentProgram.ID!, repMethod: episode.ID, rep: -7)
         FireStoreManager.deleteEpisodeDocument(ID: episode.ID)
         
         if episode.programID == CurrentProgram.ID {
@@ -431,18 +882,29 @@ extension MainFeedVC: EpisodeCellDelegate {
         }
         
         let index = IndexPath(item: row, section: 0)
-        episodeIDs.removeAll(where: { $0 == episode.ID })
-        fetchedEpisodeIDs.removeAll(where: { $0 == episode.ID })
+        episodes.removeAll(where: { $0.ID == episode.ID })
+        episodeItems.removeAll(where: { $0.id == episode.ID })
         downloadedEpisodes.removeAll(where: { $0.ID == episode.ID })
         audioPlayer.downloadedEpisodes.removeAll(where: { $0.ID == episode.ID })
         tableView.deleteRows(at: [index], with: .fade)
+        audioPlayer.transitionOutOfView()
+        recreateCategoryPills()
+        startingIndex -= 1
         
-        if episodeIDs.count == 0 {
-            resetTableView()
-            fetchEpisodeIDsForUser()
+        if episodeItems.count == 0 {
+           fetchEpisodeIDs()
         }
         
-        audioPlayer.transitionOutOfView()
+        if episodes.count == 0 {
+            filterMode = .all
+            allButton.setTitleColor(.black, for: .normal)
+            todayButton.backgroundColor = CustomStyle.sixthShade
+            allButton.backgroundColor = CustomStyle.primaryYellow
+            todayButton.setTitleColor(CustomStyle.fifthShade, for: .normal)
+            episodes = downloadedEpisodes.sorted(by: >)
+            recreateCategoryPills()
+            tableView.reloadData()
+        }
     }
     
     func addTappedProgram(programName: String) {
@@ -461,14 +923,25 @@ extension MainFeedVC: EpisodeCellDelegate {
 extension MainFeedVC: SettingsLauncherDelegate {
     
     func selectionOf(setting: String) {
+        let episode = downloadedEpisodes[selectedCellRow!]
+        let cell = tableView.cellForRow(at: IndexPath(item: selectedCellRow!, section: 0)) as! EpisodeCell
+        let image = cell.programImageButton.imageView!.image
+
         switch setting {
         case "Delete":
             deleteOwnEpisode()
         case "Edit":
-            let episode = downloadedEpisodes[selectedCellRow!]
             let editEpisodeVC = EditPublishedEpisode(episode: episode)
             editEpisodeVC.delegate = self
-            navigationController?.present(editEpisodeVC, animated: true, completion: nil)
+            editEpisodeVC.hidesBottomBarWhenPushed = true
+            navigationController?.pushViewController(editEpisodeVC, animated: true)
+        case "Report":
+            episodeReported = true
+            UIApplication.shared.windows.last?.addSubview(reportEpisodeAlert)
+        case "Share via...":
+            let items: [Any] = [image!]
+            let ac = UIActivityViewController(activityItems: items, applicationActivities: nil)
+            present(ac, animated: true)
         default:
             break
         }
@@ -491,7 +964,12 @@ extension MainFeedVC: DuneAudioPlayerDelegate {
     
     func showCommentsFor(episode: Episode) {
         pushingComment = true
-        audioPlayer.pauseSession()
+        if audioPlayer.audioPlayer != nil {
+            audioPlayer.pauseSession()
+        } else if audioPlayer.currentState == .loading {
+            audioPlayer.cancelCurrentDownload()
+            audioPlayer.finishSession()
+        }
         let commentVC = CommentThreadVC(episode: episode)
         commentVC.hidesBottomBarWhenPushed = true
         navigationController?.pushViewController(commentVC, animated: true)
@@ -511,7 +989,7 @@ extension MainFeedVC: DuneAudioPlayerDelegate {
         
         lastPlayedID = episodeID
         guard let cell = activeCell else { return }
-        if percentage > 0.0 {
+        if percentage > 0.01 {
             cell.playbackBarView.progressUpdateWith(percentage: percentage)
             lastProgress = percentage
             
@@ -529,6 +1007,7 @@ extension MainFeedVC: DuneAudioPlayerDelegate {
         let indexPath = IndexPath(item: atIndex, section: 0)
         if tableView.indexPathsForVisibleRows!.contains(indexPath) {
             let cell = tableView.cellForRow(at: IndexPath(item: atIndex, section: 0)) as! EpisodeCell
+            cell.playEpisodeButton.setImage(nil, for: .normal)
             cell.playbackBarView.setupPlaybackBar()
             activeCell = cell
         }
@@ -539,6 +1018,23 @@ extension MainFeedVC: DuneAudioPlayerDelegate {
         let episode = downloadedEpisodes[index]
         episode.playBackProgress = lastProgress
         downloadedEpisodes[index] = episode
+    }
+    
+}
+
+extension MainFeedVC: CustomAlertDelegate {
+  
+    func primaryButtonPress() {
+        
+        if episodeReported {
+             let episode = downloadedEpisodes[selectedCellRow!]
+             FireStoreManager.reportEpisodeWith(episodeID: episode.ID)
+             episodeReported = false
+        }
+    }
+    
+    func cancelButtonPress() {
+        episodeReported = false
     }
     
 }

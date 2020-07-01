@@ -8,9 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		0FD107C9A74D61DE3EEBB529 /* Pods_Dune.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 53708AC5C9CACFEB5AA66C80 /* Pods_Dune.framework */; };
+		480001F62493A8C200831564 /* DeleteAccount.swift in Sources */ = {isa = PBXBuildFile; fileRef = 480001F52493A8C200831564 /* DeleteAccount.swift */; };
 		4801619823C7BE500038318B /* CustomStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4801619723C7BE500038318B /* CustomStyle.swift */; };
 		48018F772470C88F00C6BB38 /* EpisodeTagLookupVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48018F762470C88F00C6BB38 /* EpisodeTagLookupVC.swift */; };
-		48018F7B2471121500C6BB38 /* FireStoreManager-AccountVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48018F7A2471121500C6BB38 /* FireStoreManager-AccountVC.swift */; };
 		48018F7D24714BC500C6BB38 /* BecomeAPublisherVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48018F7C24714BC500C6BB38 /* BecomeAPublisherVC.swift */; };
 		4801959123D7C9680027FA91 /* DeviceSizes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4801959023D7C9680027FA91 /* DeviceSizes.swift */; };
 		480516C1244B2A120097334E /* DuneAudioPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 480516C0244B2A120097334E /* DuneAudioPlayer.swift */; };
@@ -25,12 +25,13 @@
 		480BE7BD247A777B000E93AC /* ProgramProfileVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 480BE7BC247A777B000E93AC /* ProgramProfileVC.swift */; };
 		480BE7BF247A7D90000E93AC /* ProgramProfileBottomVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 480BE7BE247A7D90000E93AC /* ProgramProfileBottomVC.swift */; };
 		480DDA2623E8BB190078FEAC /* PublisherAddSummaryController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 480DDA2523E8BB190078FEAC /* PublisherAddSummaryController.swift */; };
+		481495E2248FA4CB008F4E59 /* SingleProgramProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 481495E1248FA4CB008F4E59 /* SingleProgramProfile.swift */; };
 		481958032485EE7700C7534D /* PrimaryCommentCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 481958022485EE7700C7534D /* PrimaryCommentCell.swift */; };
 		48195805248608ED00C7534D /* SubComment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48195804248608ED00C7534D /* SubComment.swift */; };
 		4819C2372460DAFA00C6696A /* FireStoreManager-Trending.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4819C2362460DAFA00C6696A /* FireStoreManager-Trending.swift */; };
 		4819C23924619A7400C6696A /* Int+Ext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4819C23824619A7400C6696A /* Int+Ext.swift */; };
-		481C2BB324884FB700ED29BC /* Listener.swift in Sources */ = {isa = PBXBuildFile; fileRef = 481C2BB224884FB700ED29BC /* Listener.swift */; };
 		48205C64240710570049C131 /* InvitePeopleVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48205C63240710570049C131 /* InvitePeopleVC.swift */; };
+		48236D2B248CDE2400E35318 /* MentionCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48236D2A248CDE2400E35318 /* MentionCell.swift */; };
 		48239C77246BAF3900AD6A86 /* SubProgramProfileVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48239C76246BAF3900AD6A86 /* SubProgramProfileVC.swift */; };
 		4824AF462454D94F00E208A3 /* Dict+Ext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4824AF452454D94F00E208A3 /* Dict+Ext.swift */; };
 		482950C124330B980040EF29 /* TVLoadingAnimationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 482950C024330B980040EF29 /* TVLoadingAnimationView.swift */; };
@@ -39,16 +40,18 @@
 		482BD9C6244085A700CA11D2 /* ChangeEmailVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 482BD9C5244085A700CA11D2 /* ChangeEmailVC.swift */; };
 		482F23FE241B5A0F0099A282 /* CurrentProgram.swift in Sources */ = {isa = PBXBuildFile; fileRef = 482F23FD241B5A0F0099A282 /* CurrentProgram.swift */; };
 		4832A92823EA661400BDAA4E /* PassThoughView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4832A92723EA661400BDAA4E /* PassThoughView.swift */; };
+		4833B70724A94D9100FD4BCB /* UITableView+Ext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4833B70624A94D9100FD4BCB /* UITableView+Ext.swift */; };
+		48341EB4248DE41F009EDB45 /* SubscribersVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48341EB3248DE41F009EDB45 /* SubscribersVC.swift */; };
 		4836C68A240E5BD8005E2A9C /* UITextField+Ext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4836C689240E5BD8005E2A9C /* UITextField+Ext.swift */; };
 		48437A35243F2A1500AF9905 /* CustomDatePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48437A34243F2A1500AF9905 /* CustomDatePicker.swift */; };
 		48437A37243F4B1E00AF9905 /* ChangeUsernameVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48437A36243F4B1E00AF9905 /* ChangeUsernameVC.swift */; };
 		48441C2F245036F60061180B /* EditingBooth.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48441C2E245036F60061180B /* EditingBooth.swift */; };
 		4844916623CFCD9F000E13FA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4844916523CFCD9F000E13FA /* Assets.xcassets */; };
+		484D7831248CA6E900655C83 /* MentionTV.swift in Sources */ = {isa = PBXBuildFile; fileRef = 484D7830248CA6E900655C83 /* MentionTV.swift */; };
 		484DCAAC244FB8EC001118E9 /* DraftEpisodeCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 484DCAAB244FB8EC001118E9 /* DraftEpisodeCell.swift */; };
 		484DCAAE244FD717001118E9 /* Date+Ext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 484DCAAD244FD717001118E9 /* Date+Ext.swift */; };
 		484EA87D24432B96000B6BF4 /* ChangePasswordVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 484EA87C24432B96000B6BF4 /* ChangePasswordVC.swift */; };
 		484FD694241F2A79008087AA /* RecordBoothVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 484FD693241F2A79008087AA /* RecordBoothVC.swift */; };
-		485605B123CEE938006CEBC9 /* ListenerCategoriesController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 485605B023CEE938006CEBC9 /* ListenerCategoriesController.swift */; };
 		485605B323CEF5BE006CEBC9 /* Category.swift in Sources */ = {isa = PBXBuildFile; fileRef = 485605B223CEF5BE006CEBC9 /* Category.swift */; };
 		4858B14124627E3800C20CE4 /* FireStoreManager-ProgramVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4858B14024627E3800C20CE4 /* FireStoreManager-ProgramVC.swift */; };
 		485B68D32468399100E3D7AC /* ProgramSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 485B68D22468399100E3D7AC /* ProgramSelectionView.swift */; };
@@ -58,13 +61,11 @@
 		48616F0A23FA5A0F00E91530 /* SearchVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48616F0923FA5A0F00E91530 /* SearchVC.swift */; };
 		48616F0C23FA5A3300E91530 /* StudioVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48616F0B23FA5A3300E91530 /* StudioVC.swift */; };
 		48616F0E23FA5A4900E91530 /* TrendingVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48616F0D23FA5A4900E91530 /* TrendingVC.swift */; };
-		48616F1023FA5A6500E91530 /* AccountVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48616F0F23FA5A6500E91530 /* AccountVC.swift */; };
 		48616F1323FA5BAC00E91530 /* MainTabController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48616F1223FA5BAC00E91530 /* MainTabController.swift */; };
 		4863EB38246FE2BB00819174 /* DuneLinkPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4863EB37246FE2BB00819174 /* DuneLinkPreview.swift */; };
-		4864BCC42489007B00DDF2B5 /* ListenerProfileVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4864BCC32489007B00DDF2B5 /* ListenerProfileVC.swift */; };
-		4864BCC62489017800DDF2B5 /* ListenerProfileBottomVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4864BCC52489017800DDF2B5 /* ListenerProfileBottomVC.swift */; };
 		486E33E2245160DD002325AB /* NetworkingProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = 486E33E1245160DD002325AB /* NetworkingProgress.swift */; };
 		486F77BA24753FA400AE341A /* ProgramAccountVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 486F77B624753FA300AE341A /* ProgramAccountVC.swift */; };
+		486F7F66249779050099ACDD /* CloudKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 486F7F65249779050099ACDD /* CloudKit.framework */; };
 		487045D5247695E800FAD184 /* ProgramAccountBottomVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 487045D4247695E800FAD184 /* ProgramAccountBottomVC.swift */; };
 		487045D72476971900FAD184 /* UIViewController+Ext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 487045D62476971900FAD184 /* UIViewController+Ext.swift */; };
 		4870767C24281F9100A635BB /* AudioPresetButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4870767B24281F9100A635BB /* AudioPresetButton.swift */; };
@@ -77,9 +78,7 @@
 		487E6A9B245BCDFB00192AF2 /* Program.swift in Sources */ = {isa = PBXBuildFile; fileRef = 487E6A9A245BCDFB00192AF2 /* Program.swift */; };
 		487E6A9D245BD6CC00192AF2 /* ProgramCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 487E6A9C245BD6CC00192AF2 /* ProgramCell.swift */; };
 		4885A3F1245830AD00828601 /* PlaybackBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4885A3F0245830AD00828601 /* PlaybackBarView.swift */; };
-		488679E224876990006B221F /* EditListenerDetailsVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 488679E124876990006B221F /* EditListenerDetailsVC.swift */; };
 		488CB63F23D5379D00E9EBA4 /* publisherCategoriesController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 488CB63E23D5379D00E9EBA4 /* publisherCategoriesController.swift */; };
-		488CB64123D5571700E9EBA4 /* ListenerNameController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 488CB64023D5571700E9EBA4 /* ListenerNameController.swift */; };
 		48922EE7242C9BFB0017E412 /* BackgroundMusicCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48922EE6242C9BFB0017E412 /* BackgroundMusicCell.swift */; };
 		48922EE9242C9C370017E412 /* MusicOption.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48922EE8242C9C370017E412 /* MusicOption.swift */; };
 		48922EED242CA75E0017E412 /* BackgroundMusic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48922EEC242CA75E0017E412 /* BackgroundMusic.swift */; };
@@ -91,6 +90,7 @@
 		489E14742463B2C0002E3B9F /* SubProgramAccountVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 489E14732463B2C0002E3B9F /* SubProgramAccountVC.swift */; };
 		489E14762463BD71002E3B9F /* EditSubProgramVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 489E14752463BD71002E3B9F /* EditSubProgramVC.swift */; };
 		48A1EC1F246EC44800A0B9D1 /* RichLinkGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48A1EC1E246EC44800A0B9D1 /* RichLinkGenerator.swift */; };
+		48A5900D248BA635007A480C /* Mention.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48A5900C248BA635007A480C /* Mention.swift */; };
 		48AB33562481E7020013A645 /* CommentThreadVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48AB33552481E7020013A645 /* CommentThreadVC.swift */; };
 		48AB3358248202EC0013A645 /* Comment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48AB3357248202EC0013A645 /* Comment.swift */; };
 		48AB335B2482075B0013A645 /* FireBaseComments.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48AB335A2482075B0013A645 /* FireBaseComments.swift */; };
@@ -110,10 +110,6 @@
 		48C084DF23CA7148009F417F /* CreatePassword.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48C084DE23CA7148009F417F /* CreatePassword.swift */; };
 		48C084E123CA7166009F417F /* AddBirthDate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48C084E023CA7166009F417F /* AddBirthDate.swift */; };
 		48C1E87623D4302700AACD71 /* ProgramNameVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48C1E87523D4302700AACD71 /* ProgramNameVC.swift */; };
-		48CC97DC24872074009015E6 /* ListenerSummaryVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48CC97DB24872074009015E6 /* ListenerSummaryVC.swift */; };
-		48CC97E0248734B8009015E6 /* ListenerAccount.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48CC97DF248734B8009015E6 /* ListenerAccount.swift */; };
-		48CC97E224873E82009015E6 /* ListenerAccountBottomVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48CC97E124873E82009015E6 /* ListenerAccountBottomVC.swift */; };
-		48CC97E424875C33009015E6 /* EditListenerAccountVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48CC97E324875C33009015E6 /* EditListenerAccountVC.swift */; };
 		48CFC1F923EB643D004434CC /* CustomNavBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48CFC1F823EB643D004434CC /* CustomNavBar.swift */; };
 		48D21DF5242340D500BB3A05 /* UIColor+Ext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48D21DF4242340D500BB3A05 /* UIColor+Ext.swift */; };
 		48D533A42403A2DF008EFADF /* AccountSettingsVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48D533A32403A2DF008EFADF /* AccountSettingsVC.swift */; };
@@ -125,8 +121,6 @@
 		48DC721423C6E998002AB21F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 48DC721223C6E998002AB21F /* Main.storyboard */; };
 		48DC721923C6E999002AB21F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 48DC721723C6E999002AB21F /* LaunchScreen.storyboard */; };
 		48DC7644245F729600FC3575 /* LaunchVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48DC7643245F729600FC3575 /* LaunchVC.swift */; };
-		48DEC40623CFDD83005A1E83 /* ListenerProgramSelectionController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48DEC40523CFDD83005A1E83 /* ListenerProgramSelectionController.swift */; };
-		48DEC40823CFE999005A1E83 /* OnboardingProgramCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48DEC40723CFE999005A1E83 /* OnboardingProgramCell.swift */; };
 		48E5438B241C233E00C50C21 /* UIImageView+Ext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48E5438A241C233E00C50C21 /* UIImageView+Ext.swift */; };
 		48E5438D241C297900C50C21 /* CacheControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48E5438C241C297900C50C21 /* CacheControl.swift */; };
 		48E6EC9F241842C800C1CA99 /* LoadingCircleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48E6EC9E241842C800C1CA99 /* LoadingCircleView.swift */; };
@@ -134,9 +128,7 @@
 		48EC2C9A242637C800F6BBB6 /* AudioTrimmerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48EC2C99242637C800F6BBB6 /* AudioTrimmerView.swift */; };
 		48ED47952439F1C2003A326A /* EditProgramVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48ED47942439F1C2003A326A /* EditProgramVC.swift */; };
 		48EF84F6240C569400A150B6 /* Episode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48EF84F5240C569400A150B6 /* Episode.swift */; };
-		48F25C9823CEC8EA00B91AE2 /* OnboardingListener.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 48F25C9723CEC8EA00B91AE2 /* OnboardingListener.storyboard */; };
 		48F4C0F1242C7A44005D84DE /* AddBGMusicVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48F4C0F0242C7A44005D84DE /* AddBGMusicVC.swift */; };
-		48F655C423CFAF20004B44E0 /* ListenerProfileImageController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48F655C323CFAF20004B44E0 /* ListenerProfileImageController.swift */; };
 		48F866032457816A0013A127 /* PlaybackCircleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48F866022457816A0013A127 /* PlaybackCircleView.swift */; };
 		48F88BF7246D431100000E25 /* EditPublishedEpisodeVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48F88BF6246D431100000E25 /* EditPublishedEpisodeVC.swift */; };
 		48F8DDCE243682DA00A3971E /* UILabel+Ext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48F8DDCD243682DA00A3971E /* UILabel+Ext.swift */; };
@@ -152,14 +144,15 @@
 		48FE95F7243B29370085C2EC /* UpdateProgramDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48FE95F6243B29370085C2EC /* UpdateProgramDetails.swift */; };
 		48FE95FA243B4ED10085C2EC /* AccountButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48FE95F9243B4ED10085C2EC /* AccountButton.swift */; };
 		48FEDEC824676B33006D2E0C /* ProgramSubscriptionTV.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48FEDEC724676B33006D2E0C /* ProgramSubscriptionTV.swift */; };
+		48FF01FB24984201009780E2 /* LoadingAudioView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48FF01FA24984201009780E2 /* LoadingAudioView.swift */; };
 		48FFF88323FE3AA90071A89A /* ExtendedButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48FFF88223FE3AA90071A89A /* ExtendedButton.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		3BB9E8F2478A62F8C645B14D /* Pods-Dune.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Dune.release.xcconfig"; path = "Target Support Files/Pods-Dune/Pods-Dune.release.xcconfig"; sourceTree = "<group>"; };
+		480001F52493A8C200831564 /* DeleteAccount.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeleteAccount.swift; sourceTree = "<group>"; };
 		4801619723C7BE500038318B /* CustomStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomStyle.swift; sourceTree = "<group>"; };
 		48018F762470C88F00C6BB38 /* EpisodeTagLookupVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EpisodeTagLookupVC.swift; sourceTree = "<group>"; };
-		48018F7A2471121500C6BB38 /* FireStoreManager-AccountVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FireStoreManager-AccountVC.swift"; sourceTree = "<group>"; };
 		48018F7C24714BC500C6BB38 /* BecomeAPublisherVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BecomeAPublisherVC.swift; sourceTree = "<group>"; };
 		4801959023D7C9680027FA91 /* DeviceSizes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceSizes.swift; sourceTree = "<group>"; };
 		480516C0244B2A120097334E /* DuneAudioPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DuneAudioPlayer.swift; sourceTree = "<group>"; };
@@ -174,12 +167,13 @@
 		480BE7BC247A777B000E93AC /* ProgramProfileVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramProfileVC.swift; sourceTree = "<group>"; };
 		480BE7BE247A7D90000E93AC /* ProgramProfileBottomVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramProfileBottomVC.swift; sourceTree = "<group>"; };
 		480DDA2523E8BB190078FEAC /* PublisherAddSummaryController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublisherAddSummaryController.swift; sourceTree = "<group>"; };
+		481495E1248FA4CB008F4E59 /* SingleProgramProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SingleProgramProfile.swift; sourceTree = "<group>"; };
 		481958022485EE7700C7534D /* PrimaryCommentCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrimaryCommentCell.swift; sourceTree = "<group>"; };
 		48195804248608ED00C7534D /* SubComment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubComment.swift; sourceTree = "<group>"; };
 		4819C2362460DAFA00C6696A /* FireStoreManager-Trending.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FireStoreManager-Trending.swift"; sourceTree = "<group>"; };
 		4819C23824619A7400C6696A /* Int+Ext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Int+Ext.swift"; sourceTree = "<group>"; };
-		481C2BB224884FB700ED29BC /* Listener.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Listener.swift; sourceTree = "<group>"; };
 		48205C63240710570049C131 /* InvitePeopleVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InvitePeopleVC.swift; sourceTree = "<group>"; };
+		48236D2A248CDE2400E35318 /* MentionCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MentionCell.swift; sourceTree = "<group>"; };
 		48239C76246BAF3900AD6A86 /* SubProgramProfileVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubProgramProfileVC.swift; sourceTree = "<group>"; };
 		4824AF452454D94F00E208A3 /* Dict+Ext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Dict+Ext.swift"; sourceTree = "<group>"; };
 		482950C024330B980040EF29 /* TVLoadingAnimationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TVLoadingAnimationView.swift; sourceTree = "<group>"; };
@@ -188,16 +182,18 @@
 		482BD9C5244085A700CA11D2 /* ChangeEmailVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChangeEmailVC.swift; sourceTree = "<group>"; };
 		482F23FD241B5A0F0099A282 /* CurrentProgram.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrentProgram.swift; sourceTree = "<group>"; };
 		4832A92723EA661400BDAA4E /* PassThoughView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassThoughView.swift; sourceTree = "<group>"; };
+		4833B70624A94D9100FD4BCB /* UITableView+Ext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UITableView+Ext.swift"; sourceTree = "<group>"; };
+		48341EB3248DE41F009EDB45 /* SubscribersVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscribersVC.swift; sourceTree = "<group>"; };
 		4836C689240E5BD8005E2A9C /* UITextField+Ext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UITextField+Ext.swift"; sourceTree = "<group>"; };
 		48437A34243F2A1500AF9905 /* CustomDatePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomDatePicker.swift; sourceTree = "<group>"; };
 		48437A36243F4B1E00AF9905 /* ChangeUsernameVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChangeUsernameVC.swift; sourceTree = "<group>"; };
 		48441C2E245036F60061180B /* EditingBooth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditingBooth.swift; sourceTree = "<group>"; };
 		4844916523CFCD9F000E13FA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = Dune/Assets.xcassets; sourceTree = "<group>"; };
+		484D7830248CA6E900655C83 /* MentionTV.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MentionTV.swift; sourceTree = "<group>"; };
 		484DCAAB244FB8EC001118E9 /* DraftEpisodeCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraftEpisodeCell.swift; sourceTree = "<group>"; };
 		484DCAAD244FD717001118E9 /* Date+Ext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Date+Ext.swift"; sourceTree = "<group>"; };
 		484EA87C24432B96000B6BF4 /* ChangePasswordVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChangePasswordVC.swift; sourceTree = "<group>"; };
 		484FD693241F2A79008087AA /* RecordBoothVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordBoothVC.swift; sourceTree = "<group>"; };
-		485605B023CEE938006CEBC9 /* ListenerCategoriesController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListenerCategoriesController.swift; sourceTree = "<group>"; };
 		485605B223CEF5BE006CEBC9 /* Category.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Category.swift; sourceTree = "<group>"; };
 		4858B14024627E3800C20CE4 /* FireStoreManager-ProgramVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FireStoreManager-ProgramVC.swift"; sourceTree = "<group>"; };
 		485B68D22468399100E3D7AC /* ProgramSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramSelectionView.swift; sourceTree = "<group>"; };
@@ -207,13 +203,11 @@
 		48616F0923FA5A0F00E91530 /* SearchVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchVC.swift; sourceTree = "<group>"; };
 		48616F0B23FA5A3300E91530 /* StudioVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudioVC.swift; sourceTree = "<group>"; };
 		48616F0D23FA5A4900E91530 /* TrendingVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrendingVC.swift; sourceTree = "<group>"; };
-		48616F0F23FA5A6500E91530 /* AccountVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountVC.swift; sourceTree = "<group>"; };
 		48616F1223FA5BAC00E91530 /* MainTabController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabController.swift; sourceTree = "<group>"; };
 		4863EB37246FE2BB00819174 /* DuneLinkPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DuneLinkPreview.swift; sourceTree = "<group>"; };
-		4864BCC32489007B00DDF2B5 /* ListenerProfileVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListenerProfileVC.swift; sourceTree = "<group>"; };
-		4864BCC52489017800DDF2B5 /* ListenerProfileBottomVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListenerProfileBottomVC.swift; sourceTree = "<group>"; };
 		486E33E1245160DD002325AB /* NetworkingProgress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkingProgress.swift; sourceTree = "<group>"; };
 		486F77B624753FA300AE341A /* ProgramAccountVC.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProgramAccountVC.swift; sourceTree = "<group>"; };
+		486F7F65249779050099ACDD /* CloudKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CloudKit.framework; path = System/Library/Frameworks/CloudKit.framework; sourceTree = SDKROOT; };
 		487045D4247695E800FAD184 /* ProgramAccountBottomVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramAccountBottomVC.swift; sourceTree = "<group>"; };
 		487045D62476971900FAD184 /* UIViewController+Ext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIViewController+Ext.swift"; sourceTree = "<group>"; };
 		4870767B24281F9100A635BB /* AudioPresetButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPresetButton.swift; sourceTree = "<group>"; };
@@ -226,9 +220,7 @@
 		487E6A9A245BCDFB00192AF2 /* Program.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Program.swift; sourceTree = "<group>"; };
 		487E6A9C245BD6CC00192AF2 /* ProgramCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramCell.swift; sourceTree = "<group>"; };
 		4885A3F0245830AD00828601 /* PlaybackBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackBarView.swift; sourceTree = "<group>"; };
-		488679E124876990006B221F /* EditListenerDetailsVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditListenerDetailsVC.swift; sourceTree = "<group>"; };
 		488CB63E23D5379D00E9EBA4 /* publisherCategoriesController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = publisherCategoriesController.swift; sourceTree = "<group>"; };
-		488CB64023D5571700E9EBA4 /* ListenerNameController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListenerNameController.swift; sourceTree = "<group>"; };
 		48922EE6242C9BFB0017E412 /* BackgroundMusicCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundMusicCell.swift; sourceTree = "<group>"; };
 		48922EE8242C9C370017E412 /* MusicOption.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicOption.swift; sourceTree = "<group>"; };
 		48922EEC242CA75E0017E412 /* BackgroundMusic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundMusic.swift; sourceTree = "<group>"; };
@@ -240,6 +232,7 @@
 		489E14732463B2C0002E3B9F /* SubProgramAccountVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubProgramAccountVC.swift; sourceTree = "<group>"; };
 		489E14752463BD71002E3B9F /* EditSubProgramVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditSubProgramVC.swift; sourceTree = "<group>"; };
 		48A1EC1E246EC44800A0B9D1 /* RichLinkGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RichLinkGenerator.swift; sourceTree = "<group>"; };
+		48A5900C248BA635007A480C /* Mention.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Mention.swift; sourceTree = "<group>"; };
 		48AB33552481E7020013A645 /* CommentThreadVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentThreadVC.swift; sourceTree = "<group>"; };
 		48AB3357248202EC0013A645 /* Comment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Comment.swift; sourceTree = "<group>"; };
 		48AB335A2482075B0013A645 /* FireBaseComments.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FireBaseComments.swift; sourceTree = "<group>"; };
@@ -259,10 +252,6 @@
 		48C084DE23CA7148009F417F /* CreatePassword.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreatePassword.swift; sourceTree = "<group>"; };
 		48C084E023CA7166009F417F /* AddBirthDate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddBirthDate.swift; sourceTree = "<group>"; };
 		48C1E87523D4302700AACD71 /* ProgramNameVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ProgramNameVC.swift; path = "Dune/Onboarding/Controllers/Publisher controllers/ProgramNameVC.swift"; sourceTree = SOURCE_ROOT; };
-		48CC97DB24872074009015E6 /* ListenerSummaryVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListenerSummaryVC.swift; sourceTree = "<group>"; };
-		48CC97DF248734B8009015E6 /* ListenerAccount.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListenerAccount.swift; sourceTree = "<group>"; };
-		48CC97E124873E82009015E6 /* ListenerAccountBottomVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListenerAccountBottomVC.swift; sourceTree = "<group>"; };
-		48CC97E324875C33009015E6 /* EditListenerAccountVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditListenerAccountVC.swift; sourceTree = "<group>"; };
 		48CFC1F823EB643D004434CC /* CustomNavBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomNavBar.swift; sourceTree = "<group>"; };
 		48D21DF4242340D500BB3A05 /* UIColor+Ext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIColor+Ext.swift"; sourceTree = "<group>"; };
 		48D533A32403A2DF008EFADF /* AccountSettingsVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountSettingsVC.swift; sourceTree = "<group>"; };
@@ -276,8 +265,6 @@
 		48DC721823C6E999002AB21F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		48DC721A23C6E999002AB21F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		48DC7643245F729600FC3575 /* LaunchVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchVC.swift; sourceTree = "<group>"; };
-		48DEC40523CFDD83005A1E83 /* ListenerProgramSelectionController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListenerProgramSelectionController.swift; sourceTree = "<group>"; };
-		48DEC40723CFE999005A1E83 /* OnboardingProgramCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingProgramCell.swift; sourceTree = "<group>"; };
 		48E5438A241C233E00C50C21 /* UIImageView+Ext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIImageView+Ext.swift"; sourceTree = "<group>"; };
 		48E5438C241C297900C50C21 /* CacheControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CacheControl.swift; sourceTree = "<group>"; };
 		48E6EC9E241842C800C1CA99 /* LoadingCircleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingCircleView.swift; sourceTree = "<group>"; };
@@ -285,9 +272,7 @@
 		48EC2C99242637C800F6BBB6 /* AudioTrimmerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioTrimmerView.swift; sourceTree = "<group>"; };
 		48ED47942439F1C2003A326A /* EditProgramVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditProgramVC.swift; sourceTree = "<group>"; };
 		48EF84F5240C569400A150B6 /* Episode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Episode.swift; sourceTree = "<group>"; };
-		48F25C9723CEC8EA00B91AE2 /* OnboardingListener.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = OnboardingListener.storyboard; sourceTree = "<group>"; };
 		48F4C0F0242C7A44005D84DE /* AddBGMusicVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddBGMusicVC.swift; sourceTree = "<group>"; };
-		48F655C323CFAF20004B44E0 /* ListenerProfileImageController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListenerProfileImageController.swift; sourceTree = "<group>"; };
 		48F866022457816A0013A127 /* PlaybackCircleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackCircleView.swift; sourceTree = "<group>"; };
 		48F88BF6246D431100000E25 /* EditPublishedEpisodeVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditPublishedEpisodeVC.swift; sourceTree = "<group>"; };
 		48F8DDCC2435856D00A3971E /* Dune.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Dune.entitlements; sourceTree = "<group>"; };
@@ -304,6 +289,7 @@
 		48FE95F6243B29370085C2EC /* UpdateProgramDetails.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateProgramDetails.swift; sourceTree = "<group>"; };
 		48FE95F9243B4ED10085C2EC /* AccountButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountButton.swift; sourceTree = "<group>"; };
 		48FEDEC724676B33006D2E0C /* ProgramSubscriptionTV.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramSubscriptionTV.swift; sourceTree = "<group>"; };
+		48FF01FA24984201009780E2 /* LoadingAudioView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingAudioView.swift; sourceTree = "<group>"; };
 		48FFF88223FE3AA90071A89A /* ExtendedButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtendedButton.swift; sourceTree = "<group>"; };
 		49EECD92C1BA88B2E717BA1F /* Pods-Dune.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Dune.debug.xcconfig"; path = "Target Support Files/Pods-Dune/Pods-Dune.debug.xcconfig"; sourceTree = "<group>"; };
 		53708AC5C9CACFEB5AA66C80 /* Pods_Dune.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Dune.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -315,6 +301,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0FD107C9A74D61DE3EEBB529 /* Pods_Dune.framework in Frameworks */,
+				486F7F66249779050099ACDD /* CloudKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -324,6 +311,7 @@
 		189009685BF5F90691E9345A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				486F7F65249779050099ACDD /* CloudKit.framework */,
 				53708AC5C9CACFEB5AA66C80 /* Pods_Dune.framework */,
 			);
 			name = Frameworks;
@@ -355,7 +343,6 @@
 				48B8688323C7586A00EFEB88 /* AddEmail.swift */,
 				48C084DE23CA7148009F417F /* CreatePassword.swift */,
 				48C084E023CA7166009F417F /* AddBirthDate.swift */,
-				48DEC40723CFE999005A1E83 /* OnboardingProgramCell.swift */,
 				4832A92723EA661400BDAA4E /* PassThoughView.swift */,
 				48CFC1F823EB643D004434CC /* CustomNavBar.swift */,
 			);
@@ -366,7 +353,6 @@
 			isa = PBXGroup;
 			children = (
 				487DFC8823D524C400137C36 /* Initial sign-up */,
-				487DFC8723D5248F00137C36 /* Listener controlers */,
 				487DFC8623D5247800137C36 /* Publisher controllers */,
 			);
 			path = Controllers;
@@ -383,18 +369,9 @@
 		48018F782471117F00C6BB38 /* Account tab */ = {
 			isa = PBXGroup;
 			children = (
-				48018F79247111C000C6BB38 /* Listener */,
 				4858B13F24627DC300C20CE4 /* Program */,
 			);
 			path = "Account tab";
-			sourceTree = "<group>";
-		};
-		48018F79247111C000C6BB38 /* Listener */ = {
-			isa = PBXGroup;
-			children = (
-				48018F7A2471121500C6BB38 /* FireStoreManager-AccountVC.swift */,
-			);
-			path = Listener;
 			sourceTree = "<group>";
 		};
 		480485E023CBB5AF00F8CA89 /* Extensions */ = {
@@ -416,6 +393,7 @@
 				4819C23824619A7400C6696A /* Int+Ext.swift */,
 				48F90EB6241C5DBC0005FB9C /* FileManager+Ext.swift */,
 				487045D62476971900FAD184 /* UIViewController+Ext.swift */,
+				4833B70624A94D9100FD4BCB /* UITableView+Ext.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -468,6 +446,7 @@
 				48205C63240710570049C131 /* InvitePeopleVC.swift */,
 				48437A36243F4B1E00AF9905 /* ChangeUsernameVC.swift */,
 				482BD9C5244085A700CA11D2 /* ChangeEmailVC.swift */,
+				480001F52493A8C200831564 /* DeleteAccount.swift */,
 				484EA87C24432B96000B6BF4 /* ChangePasswordVC.swift */,
 				48FE45182419A39C001E075B /* PublisherNotificationsVC.swift */,
 			);
@@ -497,6 +476,7 @@
 				48AB335C24821DA40013A645 /* CommentCell.swift */,
 				48195804248608ED00C7534D /* SubComment.swift */,
 				481958022485EE7700C7534D /* PrimaryCommentCell.swift */,
+				48236D2A248CDE2400E35318 /* MentionCell.swift */,
 				487E6A9C245BD6CC00192AF2 /* ProgramCell.swift */,
 				484DCAAB244FB8EC001118E9 /* DraftEpisodeCell.swift */,
 				48922EE6242C9BFB0017E412 /* BackgroundMusicCell.swift */,
@@ -512,8 +492,8 @@
 				482F23FD241B5A0F0099A282 /* CurrentProgram.swift */,
 				48EF84F5240C569400A150B6 /* Episode.swift */,
 				487E6A9A245BCDFB00192AF2 /* Program.swift */,
-				481C2BB224884FB700ED29BC /* Listener.swift */,
 				48AB3357248202EC0013A645 /* Comment.swift */,
+				48A5900C248BA635007A480C /* Mention.swift */,
 				480825E8240C65FC007C4352 /* StubbedPrograms.swift */,
 				48DC0F87240CEC88003D489B /* EpisodeStatus.swift */,
 				48AF2DF424296F9700662F9F /* AudioEffectCreator.swift */,
@@ -552,6 +532,7 @@
 				48018F762470C88F00C6BB38 /* EpisodeTagLookupVC.swift */,
 				48E714DD247B55F400C723FF /* ProgramTagLookupVc.swift */,
 				48AB33552481E7020013A645 /* CommentThreadVC.swift */,
+				48341EB3248DE41F009EDB45 /* SubscribersVC.swift */,
 				480BE7BB247A7622000E93AC /* Search */,
 				484FD692241F2A2E008087AA /* Studio */,
 				48616F0D23FA5A4900E91530 /* TrendingVC.swift */,
@@ -564,9 +545,8 @@
 		4864BCC22489001300DDF2B5 /* Profiles */ = {
 			isa = PBXGroup;
 			children = (
-				4864BCC32489007B00DDF2B5 /* ListenerProfileVC.swift */,
-				4864BCC52489017800DDF2B5 /* ListenerProfileBottomVC.swift */,
 				480BE7BC247A777B000E93AC /* ProgramProfileVC.swift */,
+				481495E1248FA4CB008F4E59 /* SingleProgramProfile.swift */,
 				480BE7BE247A7D90000E93AC /* ProgramProfileBottomVC.swift */,
 				48239C76246BAF3900AD6A86 /* SubProgramProfileVC.swift */,
 			);
@@ -576,8 +556,12 @@
 		486F77B324753F7200AE341A /* Account */ = {
 			isa = PBXGroup;
 			children = (
-				48CC97DE2487347B009015E6 /* Listener */,
-				48CC97DD24873472009015E6 /* Publisher */,
+				486F77B624753FA300AE341A /* ProgramAccountVC.swift */,
+				487045D4247695E800FAD184 /* ProgramAccountBottomVC.swift */,
+				489E14732463B2C0002E3B9F /* SubProgramAccountVC.swift */,
+				48ED47942439F1C2003A326A /* EditProgramVC.swift */,
+				48FE95F6243B29370085C2EC /* UpdateProgramDetails.swift */,
+				4899A5312462B22D00E72C41 /* CreateProgramVC.swift */,
 				48205C622407100C0049C131 /* Account settings */,
 			);
 			path = Account;
@@ -592,18 +576,6 @@
 				480DDA2523E8BB190078FEAC /* PublisherAddSummaryController.swift */,
 			);
 			path = "Publisher controllers";
-			sourceTree = "<group>";
-		};
-		487DFC8723D5248F00137C36 /* Listener controlers */ = {
-			isa = PBXGroup;
-			children = (
-				488CB64023D5571700E9EBA4 /* ListenerNameController.swift */,
-				48F655C323CFAF20004B44E0 /* ListenerProfileImageController.swift */,
-				485605B023CEE938006CEBC9 /* ListenerCategoriesController.swift */,
-				48CC97DB24872074009015E6 /* ListenerSummaryVC.swift */,
-				48DEC40523CFDD83005A1E83 /* ListenerProgramSelectionController.swift */,
-			);
-			path = "Listener controlers";
 			sourceTree = "<group>";
 		};
 		487DFC8823D524C400137C36 /* Initial sign-up */ = {
@@ -631,31 +603,6 @@
 				48AB335A2482075B0013A645 /* FireBaseComments.swift */,
 			);
 			path = "comment thread";
-			sourceTree = "<group>";
-		};
-		48CC97DD24873472009015E6 /* Publisher */ = {
-			isa = PBXGroup;
-			children = (
-				486F77B624753FA300AE341A /* ProgramAccountVC.swift */,
-				487045D4247695E800FAD184 /* ProgramAccountBottomVC.swift */,
-				489E14732463B2C0002E3B9F /* SubProgramAccountVC.swift */,
-				48ED47942439F1C2003A326A /* EditProgramVC.swift */,
-				48FE95F6243B29370085C2EC /* UpdateProgramDetails.swift */,
-				4899A5312462B22D00E72C41 /* CreateProgramVC.swift */,
-			);
-			path = Publisher;
-			sourceTree = "<group>";
-		};
-		48CC97DE2487347B009015E6 /* Listener */ = {
-			isa = PBXGroup;
-			children = (
-				48CC97DF248734B8009015E6 /* ListenerAccount.swift */,
-				48CC97E124873E82009015E6 /* ListenerAccountBottomVC.swift */,
-				48CC97E324875C33009015E6 /* EditListenerAccountVC.swift */,
-				488679E124876990006B221F /* EditListenerDetailsVC.swift */,
-				48616F0F23FA5A6500E91530 /* AccountVC.swift */,
-			);
-			path = Listener;
 			sourceTree = "<group>";
 		};
 		48DC720223C6E998002AB21F = {
@@ -706,7 +653,9 @@
 				480516C0244B2A120097334E /* DuneAudioPlayer.swift */,
 				48AB6AAA24622DF4007EE973 /* DuneIntroPlayer.swift */,
 				48E6EC9E241842C800C1CA99 /* LoadingCircleView.swift */,
+				48FF01FA24984201009780E2 /* LoadingAudioView.swift */,
 				48FEDEC724676B33006D2E0C /* ProgramSubscriptionTV.swift */,
+				484D7830248CA6E900655C83 /* MentionTV.swift */,
 				48F866022457816A0013A127 /* PlaybackCircleView.swift */,
 				4885A3F0245830AD00828601 /* PlaybackBarView.swift */,
 				480A0B392421A9160041CF2E /* drawWaveform.swift */,
@@ -733,7 +682,6 @@
 			isa = PBXGroup;
 			children = (
 				48DC721223C6E998002AB21F /* Main.storyboard */,
-				48F25C9723CEC8EA00B91AE2 /* OnboardingListener.storyboard */,
 				48FC1B3B23D10CA800318113 /* OnboardingPublisher.storyboard */,
 			);
 			path = Storyboards;
@@ -827,7 +775,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				48DC721923C6E999002AB21F /* LaunchScreen.storyboard in Resources */,
-				48F25C9823CEC8EA00B91AE2 /* OnboardingListener.storyboard in Resources */,
 				4844916623CFCD9F000E13FA /* Assets.xcassets in Resources */,
 				48DC721423C6E998002AB21F /* Main.storyboard in Resources */,
 				48FC1B3C23D10CA800318113 /* OnboardingPublisher.storyboard in Resources */,
@@ -897,30 +844,31 @@
 				48DC0F84240CE5E4003D489B /* User.swift in Sources */,
 				48AF19CA243D75D600650AB0 /* TagButton.swift in Sources */,
 				48616F1323FA5BAC00E91530 /* MainTabController.swift in Sources */,
-				48CC97E224873E82009015E6 /* ListenerAccountBottomVC.swift in Sources */,
 				48018F772470C88F00C6BB38 /* EpisodeTagLookupVC.swift in Sources */,
 				487DFC8423D5245E00137C36 /* publisherImageController.swift in Sources */,
 				48195805248608ED00C7534D /* SubComment.swift in Sources */,
 				480907AF242AA5E0008FC504 /* CustomAnimation.swift in Sources */,
-				48DEC40823CFE999005A1E83 /* OnboardingProgramCell.swift in Sources */,
 				48922EF1242DB3500017E412 /* AddEpisodeDetails.swift in Sources */,
 				48AB3358248202EC0013A645 /* Comment.swift in Sources */,
 				4858B14124627E3800C20CE4 /* FireStoreManager-ProgramVC.swift in Sources */,
 				48B26242244949DA0073ADAF /* EpisodeCell.swift in Sources */,
 				480A0B3A2421A9160041CF2E /* drawWaveform.swift in Sources */,
 				4801619823C7BE500038318B /* CustomStyle.swift in Sources */,
+				480001F62493A8C200831564 /* DeleteAccount.swift in Sources */,
 				4899A5322462B22D00E72C41 /* CreateProgramVC.swift in Sources */,
 				482F23FE241B5A0F0099A282 /* CurrentProgram.swift in Sources */,
 				480A9F6224417310001A5F4B /* FireStoreManager.swift in Sources */,
 				48437A37243F4B1E00AF9905 /* ChangeUsernameVC.swift in Sources */,
+				481495E2248FA4CB008F4E59 /* SingleProgramProfile.swift in Sources */,
 				48D533A42403A2DF008EFADF /* AccountSettingsVC.swift in Sources */,
 				48B8688023C744B800EFEB88 /* CreateUsername.swift in Sources */,
 				48ED47952439F1C2003A326A /* EditProgramVC.swift in Sources */,
 				48CFC1F923EB643D004434CC /* CustomNavBar.swift in Sources */,
+				4833B70724A94D9100FD4BCB /* UITableView+Ext.swift in Sources */,
+				48236D2B248CDE2400E35318 /* MentionCell.swift in Sources */,
 				48EC2C9A242637C800F6BBB6 /* AudioTrimmerView.swift in Sources */,
 				4824AF462454D94F00E208A3 /* Dict+Ext.swift in Sources */,
 				48FE95F3243AB2BD0085C2EC /* settingsLauncher.swift in Sources */,
-				4864BCC42489007B00DDF2B5 /* ListenerProfileVC.swift in Sources */,
 				48922EEF242D93FA0017E412 /* BackgroundMusicView.swift in Sources */,
 				48FEDEC824676B33006D2E0C /* ProgramSubscriptionTV.swift in Sources */,
 				48AB33562481E7020013A645 /* CommentThreadVC.swift in Sources */,
@@ -933,8 +881,8 @@
 				48D21DF5242340D500BB3A05 /* UIColor+Ext.swift in Sources */,
 				48239C77246BAF3900AD6A86 /* SubProgramProfileVC.swift in Sources */,
 				487045D5247695E800FAD184 /* ProgramAccountBottomVC.swift in Sources */,
+				48A5900D248BA635007A480C /* Mention.swift in Sources */,
 				48F4C0F1242C7A44005D84DE /* AddBGMusicVC.swift in Sources */,
-				48DEC40623CFDD83005A1E83 /* ListenerProgramSelectionController.swift in Sources */,
 				486F77BA24753FA400AE341A /* ProgramAccountVC.swift in Sources */,
 				4899D37B2473951A00A1C4F9 /* LinkPreview.swift in Sources */,
 				4863EB38246FE2BB00819174 /* DuneLinkPreview.swift in Sources */,
@@ -942,18 +890,15 @@
 				48A1EC1F246EC44800A0B9D1 /* RichLinkGenerator.swift in Sources */,
 				4899D37D24739C0300A1C4F9 /* DuneSquareLinkPreview.swift in Sources */,
 				482950C5243440EC0040EF29 /* SignUpVC.swift in Sources */,
-				48CC97E424875C33009015E6 /* EditListenerAccountVC.swift in Sources */,
 				48DC0F88240CEC88003D489B /* EpisodeStatus.swift in Sources */,
 				487C647D2443F3F400D01C83 /* FirebaseStatus.swift in Sources */,
 				48922EED242CA75E0017E412 /* BackgroundMusic.swift in Sources */,
 				48C084E123CA7166009F417F /* AddBirthDate.swift in Sources */,
 				48C084DF23CA7148009F417F /* CreatePassword.swift in Sources */,
 				480825E9240C65FC007C4352 /* StubbedPrograms.swift in Sources */,
-				48018F7B2471121500C6BB38 /* FireStoreManager-AccountVC.swift in Sources */,
 				488CB63F23D5379D00E9EBA4 /* publisherCategoriesController.swift in Sources */,
 				48F8DDCE243682DA00A3971E /* UILabel+Ext.swift in Sources */,
 				480B040C2439562D00F26638 /* UIScrollView+Ext.swift in Sources */,
-				4864BCC62489017800DDF2B5 /* ListenerProfileBottomVC.swift in Sources */,
 				484FD694241F2A79008087AA /* RecordBoothVC.swift in Sources */,
 				48616F0A23FA5A0F00E91530 /* SearchVC.swift in Sources */,
 				48616F0523FA220800E91530 /* UIView+Ext.swift in Sources */,
@@ -961,19 +906,16 @@
 				482BD9C6244085A700CA11D2 /* ChangeEmailVC.swift in Sources */,
 				48E5438D241C297900C50C21 /* CacheControl.swift in Sources */,
 				484DCAAE244FD717001118E9 /* Date+Ext.swift in Sources */,
-				48CC97E0248734B8009015E6 /* ListenerAccount.swift in Sources */,
 				489E14742463B2C0002E3B9F /* SubProgramAccountVC.swift in Sources */,
 				48BBCDAD247CBF7A00A1BFB5 /* SceneDelegate.swift in Sources */,
 				48018F7D24714BC500C6BB38 /* BecomeAPublisherVC.swift in Sources */,
 				48AB335D24821DA40013A645 /* CommentCell.swift in Sources */,
 				482950C124330B980040EF29 /* TVLoadingAnimationView.swift in Sources */,
-				488679E224876990006B221F /* EditListenerDetailsVC.swift in Sources */,
 				48B8688423C7586A00EFEB88 /* AddEmail.swift in Sources */,
 				485B68D32468399100E3D7AC /* ProgramSelectionView.swift in Sources */,
 				48E714DE247B55F400C723FF /* ProgramTagLookupVc.swift in Sources */,
 				48F88BF7246D431100000E25 /* EditPublishedEpisodeVC.swift in Sources */,
 				48E6EC9F241842C800C1CA99 /* LoadingCircleView.swift in Sources */,
-				481C2BB324884FB700ED29BC /* Listener.swift in Sources */,
 				480BE7BF247A7D90000E93AC /* ProgramProfileBottomVC.swift in Sources */,
 				480526C323CC54B500D62224 /* AccountTypeVC.swift in Sources */,
 				48AC107D2410CF6B009064EB /* UIDatePicker+Ext.swift in Sources */,
@@ -982,15 +924,13 @@
 				48EF84F6240C569400A150B6 /* Episode.swift in Sources */,
 				4870767E2428233500A635BB /* AudioPresetScrollView.swift in Sources */,
 				48616F0323FA208100E91530 /* UITextView+Ext.swift in Sources */,
+				48FF01FB24984201009780E2 /* LoadingAudioView.swift in Sources */,
 				481958032485EE7700C7534D /* PrimaryCommentCell.swift in Sources */,
-				485605B123CEE938006CEBC9 /* ListenerCategoriesController.swift in Sources */,
 				48AB335B2482075B0013A645 /* FireBaseComments.swift in Sources */,
 				4836C68A240E5BD8005E2A9C /* UITextField+Ext.swift in Sources */,
 				48AB6AAB24622DF4007EE973 /* DuneIntroPlayer.swift in Sources */,
-				488CB64123D5571700E9EBA4 /* ListenerNameController.swift in Sources */,
 				48437A35243F2A1500AF9905 /* CustomDatePicker.swift in Sources */,
 				48616F0823FA4F1700E91530 /* MainFeedVC.swift in Sources */,
-				48CC97DC24872074009015E6 /* ListenerSummaryVC.swift in Sources */,
 				48FE95FA243B4ED10085C2EC /* AccountButton.swift in Sources */,
 				48F866032457816A0013A127 /* PlaybackCircleView.swift in Sources */,
 				48616F0C23FA5A3300E91530 /* StudioVC.swift in Sources */,
@@ -1001,10 +941,10 @@
 				48FE90A124747E4800D8108A /* EpisodeCellRegLink.swift in Sources */,
 				48FE451B2419AE07001E075B /* EditAccountVC.swift in Sources */,
 				487E6A9B245BCDFB00192AF2 /* Program.swift in Sources */,
-				48F655C423CFAF20004B44E0 /* ListenerProfileImageController.swift in Sources */,
 				48B3740624207992003F47E9 /* ResponsiveWaveformView.swift in Sources */,
 				4819C23924619A7400C6696A /* Int+Ext.swift in Sources */,
 				48FE95F7243B29370085C2EC /* UpdateProgramDetails.swift in Sources */,
+				484D7831248CA6E900655C83 /* MentionTV.swift in Sources */,
 				4801959123D7C9680027FA91 /* DeviceSizes.swift in Sources */,
 				48D9AAA3243BEB3D00F5F212 /* SettingOptions.swift in Sources */,
 				484DCAAC244FB8EC001118E9 /* DraftEpisodeCell.swift in Sources */,
@@ -1017,11 +957,11 @@
 				485605B323CEF5BE006CEBC9 /* Category.swift in Sources */,
 				48205C64240710570049C131 /* InvitePeopleVC.swift in Sources */,
 				48441C2F245036F60061180B /* EditingBooth.swift in Sources */,
+				48341EB4248DE41F009EDB45 /* SubscribersVC.swift in Sources */,
 				487045D72476971900FAD184 /* UIViewController+Ext.swift in Sources */,
 				487B3E262430A832009CCDF4 /* CustomAlertView.swift in Sources */,
 				48C1E87623D4302700AACD71 /* ProgramNameVC.swift in Sources */,
 				48AF2DF524296F9700662F9F /* AudioEffectCreator.swift in Sources */,
-				48616F1023FA5A6500E91530 /* AccountVC.swift in Sources */,
 				48616F0E23FA5A4900E91530 /* TrendingVC.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1169,20 +1109,24 @@
 			baseConfigurationReference = 49EECD92C1BA88B2E717BA1F /* Pods-Dune.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_WARN_UNREACHABLE_CODE = YES_AGGRESSIVE;
 				CODE_SIGN_ENTITLEMENTS = Dune/Dune.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = PMDTSY5PZ6;
+				GCC_WARN_UNUSED_PARAMETER = YES;
 				INFOPLIST_FILE = Dune/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.dailyune.Dune;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -1191,20 +1135,24 @@
 			baseConfigurationReference = 3BB9E8F2478A62F8C645B14D /* Pods-Dune.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_WARN_UNREACHABLE_CODE = YES_AGGRESSIVE;
 				CODE_SIGN_ENTITLEMENTS = Dune/Dune.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = PMDTSY5PZ6;
+				GCC_WARN_UNUSED_PARAMETER = YES;
 				INFOPLIST_FILE = Dune/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.dailyune.Dune;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};

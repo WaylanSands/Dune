@@ -2,7 +2,7 @@
   "images" : [
     {
       "idiom" : "universal",
-      "filename" : "feed-icon.png",
+      "filename" : "feed-icon@1x.png",
       "scale" : "1x"
     },
     {

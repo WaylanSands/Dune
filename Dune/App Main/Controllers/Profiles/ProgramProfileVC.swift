@@ -31,12 +31,13 @@ class ProgramProfileVC: UIViewController {
     var subAccounts = [Program]()
     var program: Program!
     
+    lazy var headerBarButtons: [UIButton] = [episodesButton, subscriptionsButton, mentionsButton]
+    
     lazy var accountBottomVC = ProgramProfileBottomVC(program: program)
 
-    let settingsLauncher = SettingsLauncher(options: SettingOptions.sharing, type: .sharing)
-    let favProgramSettings = SettingsLauncher(options: SettingOptions.favouriteProgramSettings, type: .program)
-    let publisherProgramSettings = SettingsLauncher(options: SettingOptions.publisherProgramSettings, type: .program)
-    let nonFavouriteProgramSettings = SettingsLauncher(options: SettingOptions.nonFavouriteProgramSettings, type: .program)
+    let programSettings = SettingsLauncher(options: SettingOptions.programSettings, type: .program)
+    let sharingSettings = SettingsLauncher(options: SettingOptions.sharing, type: .sharing)
+    let reportProgramAlert = CustomAlertView(alertType: .reportProgram)
     
     let customNavBar: CustomNavBar = {
         let nav = CustomNavBar()
@@ -52,7 +53,6 @@ class ProgramProfileVC: UIViewController {
         view.frame = UIScreen.main.bounds
         view.scrollsToTop = false
         view.showsVerticalScrollIndicator = false
-        view.backgroundColor = .clear
         view.doNotAdjustContentInset()
         return view
     }()
@@ -62,7 +62,6 @@ class ProgramProfileVC: UIViewController {
         view.backgroundColor = .clear
         view.frame = UIScreen.main.bounds
         view.showsVerticalScrollIndicator = false
-        view.backgroundColor = UIColor.clear
         view.doNotAdjustContentInset()
         return view
     }()
@@ -156,7 +155,7 @@ class ProgramProfileVC: UIViewController {
         button.setTitleColor(CustomStyle.primaryBlue, for: .normal)
         button.titleLabel?.textAlignment = .left
         button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 15, bottom: 0, right: 0)
-        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: -10, bottom: 0, right: 15)
+        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: -10, bottom: 0, right: 0)
         button.addTarget(self, action: #selector(websiteButtonPress), for: .touchUpInside)
         return button
     }()
@@ -165,8 +164,7 @@ class ProgramProfileVC: UIViewController {
         let view = UIStackView()
         view.axis = .vertical
         view.spacing = 20
-        view.layoutMargins = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 20)
-        view.isLayoutMarginsRelativeArrangement = true
+        view.alignment = .leading
         return view
     }()
     
@@ -182,11 +180,13 @@ class ProgramProfileVC: UIViewController {
         return label
     }()
 
-    let subscribersLabel: UILabel = {
-        let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
-        label.textColor = CustomStyle.fourthShade
-        return label
+    let subscribersButton: ExtendedButton = {
+        let button = ExtendedButton()
+        button.titleLabel!.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
+        button.addTarget(self, action: #selector(pushSubscribersVC), for: .touchUpInside)
+        button.setTitleColor(CustomStyle.fourthShade, for: .normal)
+        button.padding = 10
+        return button
     }()
 
     let episodeCountLabel: UILabel = {
@@ -202,6 +202,21 @@ class ProgramProfileVC: UIViewController {
         label.textColor = CustomStyle.fourthShade
         return label
     }()
+    
+    let repCountLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
+        label.textColor = CustomStyle.sixthShade
+        return label
+    }()
+    
+    let repLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
+        label.textColor = CustomStyle.fourthShade
+        label.text = "Rep"
+        return label
+    }()
 
     let buttonsStackedView: UIStackView = {
         let view = UIStackView()
@@ -214,6 +229,7 @@ class ProgramProfileVC: UIViewController {
         let button = AccountButton()
         button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 0)
         button.addTarget(self, action: #selector(subscribeButtonPress), for: .touchUpInside)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
         return button
     }()
 
@@ -221,6 +237,7 @@ class ProgramProfileVC: UIViewController {
         let button = AccountButton()
         button.setImage(UIImage(named: "share-account-icon"), for: .normal)
         button.addTarget(self, action: #selector(shareButtonPress), for: .touchUpInside)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
         button.setTitle("Share Program", for: .normal)
         return button
     }()
@@ -263,18 +280,37 @@ class ProgramProfileVC: UIViewController {
         return view
     }()
     
-    let episodesTVLabel: UILabel = {
-        let label = UILabel()
-        label.text = "Episodes"
-        label.font =  UIFont.systemFont(ofSize: 13, weight: .semibold)
-        label.textColor = CustomStyle.primaryBlack
-        return label
-    }()
-    
-    let tableViewLine: UIView = {
+    let tableViewButtonsLine: UIView = {
         let view = UIView()
         view.backgroundColor = CustomStyle.secondShade
         return view
+    }()
+    
+    let episodesButton: UIButton = {
+        let button = UIButton()
+        button.setTitle("Episodes", for: .normal)
+        button.setTitleColor(CustomStyle.primaryBlack, for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
+        button.addTarget(self, action: #selector(tableViewTabButtonPress(sender:)), for: .touchUpInside)
+        return button
+    }()
+    
+    let mentionsButton: UIButton = {
+        let button = UIButton()
+        button.setTitle("Mentions", for: .normal)
+        button.setTitleColor(CustomStyle.thirdShade, for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
+        button.addTarget(self, action: #selector(tableViewTabButtonPress(sender:)), for: .touchUpInside)
+        return button
+    }()
+    
+    let subscriptionsButton: UIButton = {
+        let button = UIButton()
+        button.setTitle("Subscriptions", for: .normal)
+        button.setTitleColor(CustomStyle.thirdShade, for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
+        button.addTarget(self, action: #selector(tableViewTabButtonPress(sender:)), for: .touchUpInside)
+        return button
     }()
 
     override func viewDidLoad() {
@@ -300,6 +336,7 @@ class ProgramProfileVC: UIViewController {
         usernameLabel.text = "@\(program.username)"
         categoryLabel.text = program.primaryCategory
         summaryTextView.text = program.summary
+        repCountLabel.text = String(program.rep)
         
         multipleProgramsSubLabel.text = "Programs brought to you by @\(program.username)"
 
@@ -310,8 +347,8 @@ class ProgramProfileVC: UIViewController {
     }
     
     func  configureDelegates() {
-        nonFavouriteProgramSettings.settingsDelegate = self
-        favProgramSettings.settingsDelegate = self
+        programSettings.settingsDelegate = self
+        reportProgramAlert.alertDelegate = self
     }
     
     func configureProgramStats() {
@@ -328,14 +365,14 @@ class ProgramProfileVC: UIViewController {
         }
 
         if subscribers == 1 {
-            subscribersLabel.text = "Subscriber"
+            subscribersButton.setTitle("Subscriber", for: .normal)
         } else {
-             subscribersLabel.text = "Subscribers"
+            subscribersButton.setTitle("Subscribers", for: .normal)
         }
     }
     
     func programsIDs() -> [String] {
-        if program.hasMultiplePrograms! {
+        if !program.programIDs!.isEmpty {
             var ids = program.programIDs!
             ids.append(program.ID)
             return ids
@@ -378,7 +415,7 @@ class ProgramProfileVC: UIViewController {
         
         self.add(accountBottomVC, to: scrollView, frame:  CGRect(x: viewFrame.minX, y: headerHeight.upperBound, width: viewFrame.width, height: viewFrame.height))
 
-        self.tableViews[currentIndex] = accountBottomVC.episodeTV
+        self.tableViews[currentIndex] = accountBottomVC.activeTableView()
         if let scrollView = self.tableViews[currentIndex] as? UIScrollView {
             scrollView.panGestureRecognizer.require(toFail: self.overlayScrollView.panGestureRecognizer)
             scrollView.doNotAdjustContentInset()
@@ -416,29 +453,13 @@ class ProgramProfileVC: UIViewController {
         navigationController?.navigationBar.backIndicatorImage = #imageLiteral(resourceName: "back-button-white")
         navigationController?.navigationBar.prefersLargeTitles = true
         navigationController?.navigationBar.isTranslucent = true
+        navigationController?.navigationBar.isHidden = false
         navigationController?.navigationBar.shadowImage = nil
         navigationController?.navigationBar.barStyle = .default
         navigationController?.navigationBar.shadowImage = UIImage()
         navigationController?.navigationBar.tintColor = .black
         navigationItem.largeTitleDisplayMode = .never
-        
-//        let navBar = navigationController?.navigationBar
-//        navigationController?.navigationBar.prefersLargeTitles = false
-//        navigationItem.largeTitleDisplayMode = .never
-//        navigationController?.navigationBar.isTranslucent = true
-//        navigationController?.isNavigationBarHidden = false
-//        navBar?.setBackgroundImage(UIImage(), for: .default)
-//        navBar?.barStyle = .default
-//        navBar?.shadowImage = UIImage()
-//        navBar?.tintColor = .black
-                
-//        navBar?.titleTextAttributes = CustomStyle.blackNavBarAttributes
         navigationItem.rightBarButtonItem = UIBarButtonItem(image: #imageLiteral(resourceName: "white-settings-icon"), style: .plain, target: self, action: #selector(settingsButtonPress))
-
-//        let imgBackArrow = #imageLiteral(resourceName: "back-button-white")
-//        navBar?.backIndicatorImage = imgBackArrow
-//        navBar?.backIndicatorTransitionMaskImage = imgBackArrow
-//        navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
     }
 
     func styleForScreens() {
@@ -465,7 +486,7 @@ class ProgramProfileVC: UIViewController {
     }
 
     func configureIntroButton() {
-        if CurrentProgram.hasIntro == true {
+        if program.hasIntro == true {
             playIntroButton.setTitle("Play Intro", for: .normal)
             playIntroButton.backgroundColor = CustomStyle.primaryYellow
             playIntroButton.setTitleColor(CustomStyle.darkestBlack, for: .normal)
@@ -523,28 +544,42 @@ class ProgramProfileVC: UIViewController {
         headerView.addSubview(linkAndStatsStackedView)
         linkAndStatsStackedView.translatesAutoresizingMaskIntoConstraints = false
         linkAndStatsStackedView.topAnchor.constraint(equalTo: summaryTextView.bottomAnchor, constant: 15).isActive = true
+        linkAndStatsStackedView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
+        linkAndStatsStackedView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
         
         linkAndStatsStackedView.addArrangedSubview(statsView)
         statsView.heightAnchor.constraint(equalToConstant: 15).isActive = true
+        statsView.widthAnchor.constraint(equalTo: linkAndStatsStackedView.widthAnchor).isActive = true
         
         statsView.addSubview(subscriberCountLabel)
         subscriberCountLabel.translatesAutoresizingMaskIntoConstraints = false
         subscriberCountLabel.centerYAnchor.constraint(equalTo: statsView.centerYAnchor).isActive = true
         
-        statsView.addSubview(subscribersLabel)
-        subscribersLabel.translatesAutoresizingMaskIntoConstraints = false
-        subscribersLabel.centerYAnchor.constraint(equalTo: statsView.centerYAnchor).isActive = true
-        subscribersLabel.leadingAnchor.constraint(equalTo: subscriberCountLabel.trailingAnchor, constant: 5).isActive = true
+        statsView.addSubview(subscribersButton)
+        subscribersButton.translatesAutoresizingMaskIntoConstraints = false
+        subscribersButton.centerYAnchor.constraint(equalTo: statsView.centerYAnchor).isActive = true
+        subscribersButton.leadingAnchor.constraint(equalTo: subscriberCountLabel.trailingAnchor, constant: 5).isActive = true
+        subscribersButton.heightAnchor.constraint(equalToConstant: 20).isActive = true
         
         statsView.addSubview(episodeCountLabel)
         episodeCountLabel.translatesAutoresizingMaskIntoConstraints = false
         episodeCountLabel.centerYAnchor.constraint(equalTo: statsView.centerYAnchor).isActive = true
-        episodeCountLabel.leadingAnchor.constraint(equalTo: subscribersLabel.trailingAnchor, constant: 15).isActive = true
+        episodeCountLabel.leadingAnchor.constraint(equalTo: subscribersButton.trailingAnchor, constant: 15).isActive = true
         
         statsView.addSubview(episodesLabel)
         episodesLabel.translatesAutoresizingMaskIntoConstraints = false
         episodesLabel.centerYAnchor.constraint(equalTo: statsView.centerYAnchor).isActive = true
         episodesLabel.leadingAnchor.constraint(equalTo: episodeCountLabel.trailingAnchor, constant: 5).isActive = true
+        
+        statsView.addSubview(repCountLabel)
+        repCountLabel.translatesAutoresizingMaskIntoConstraints = false
+        repCountLabel.centerYAnchor.constraint(equalTo: statsView.centerYAnchor).isActive = true
+        repCountLabel.leadingAnchor.constraint(equalTo: episodesLabel.trailingAnchor, constant: 15).isActive = true
+        
+        statsView.addSubview(repLabel)
+        repLabel.translatesAutoresizingMaskIntoConstraints = false
+        repLabel.centerYAnchor.constraint(equalTo: statsView.centerYAnchor).isActive = true
+        repLabel.leadingAnchor.constraint(equalTo: repCountLabel.trailingAnchor, constant: 5).isActive = true
         
         headerView.addSubview(buttonsStackedView)
         buttonsStackedView.translatesAutoresizingMaskIntoConstraints = false
@@ -589,18 +624,34 @@ class ProgramProfileVC: UIViewController {
         
         createProgramButtons()
         
-        headerView.addSubview(episodesTVLabel)
-        episodesTVLabel.translatesAutoresizingMaskIntoConstraints = false
-        episodesTVLabel.topAnchor.constraint(equalTo: programsStackView.bottomAnchor, constant: 30).isActive = true
-        episodesTVLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20).isActive = true
-        episodesTVLabel.heightAnchor.constraint(equalToConstant: 30).isActive = true
+        headerView.addSubview(tableViewButtons)
+        tableViewButtons.translatesAutoresizingMaskIntoConstraints = false
+        tableViewButtons.topAnchor.constraint(equalTo: programsStackView.bottomAnchor, constant: 40).isActive = true
+        tableViewButtons.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        tableViewButtons.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        tableViewButtons.heightAnchor.constraint(equalToConstant: 40).isActive = true
         
-        headerView.addSubview(tableViewLine)
-        tableViewLine.translatesAutoresizingMaskIntoConstraints = false
-        tableViewLine.bottomAnchor.constraint(equalTo: headerView.bottomAnchor).isActive = true
-        tableViewLine.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-        tableViewLine.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        tableViewLine.heightAnchor.constraint(equalToConstant: 1).isActive = true
+        tableViewButtons.addSubview(episodesButton)
+        episodesButton.translatesAutoresizingMaskIntoConstraints = false
+        episodesButton.centerYAnchor.constraint(equalTo: tableViewButtons.centerYAnchor, constant: -4).isActive = true
+        episodesButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
+        
+        tableViewButtons.addSubview(subscriptionsButton)
+        subscriptionsButton.translatesAutoresizingMaskIntoConstraints = false
+        subscriptionsButton.centerYAnchor.constraint(equalTo: tableViewButtons.centerYAnchor, constant: -4).isActive = true
+        subscriptionsButton.leadingAnchor.constraint(equalTo: episodesButton.trailingAnchor, constant: 20).isActive = true
+        
+        tableViewButtons.addSubview(mentionsButton)
+        mentionsButton.translatesAutoresizingMaskIntoConstraints = false
+        mentionsButton.centerYAnchor.constraint(equalTo: tableViewButtons.centerYAnchor, constant: -4).isActive = true
+        mentionsButton.leadingAnchor.constraint(equalTo: subscriptionsButton.trailingAnchor, constant: 20).isActive = true
+        
+        tableViewButtons.addSubview(tableViewButtonsLine)
+        tableViewButtonsLine.translatesAutoresizingMaskIntoConstraints = false
+        tableViewButtonsLine.bottomAnchor.constraint(equalTo: headerView.bottomAnchor).isActive = true
+        tableViewButtonsLine.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        tableViewButtonsLine.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        tableViewButtonsLine.heightAnchor.constraint(equalToConstant: 1).isActive = true
             
         view.addSubview(customNavBar)
         customNavBar.pinNavBarTo(view)
@@ -643,8 +694,10 @@ class ProgramProfileVC: UIViewController {
         let programs = program.subPrograms!
         let program = programs[index!]
 
-        let subProgramVC = SubProgramProfileVC(program: program)
-        navigationController?.present(subProgramVC, animated: true, completion: nil)
+//        let subProgramVC = SubProgramProfileVC(program: program)
+//        navigationController?.present(subProgramVC, animated: true, completion: nil)
+        let subProgramVC = SingleProgramProfileVC(program: program)
+        navigationController?.pushViewController(subProgramVC, animated: true)
     }
 
     func createProgramButtons() {
@@ -693,7 +746,6 @@ class ProgramProfileVC: UIViewController {
     
     // MARK: Play Intro
     @objc func playIntro() {
-        accountBottomVC.playIntro()
         
         let offset = self.scrollView.contentOffset.y + unwrapDifference
         let difference = UIScreen.main.bounds.height - headerHeight.upperBound
@@ -704,12 +756,13 @@ class ProgramProfileVC: UIViewController {
         } else {
             accountBottomVC.introPlayer.updateYPositionWith(value: position)
         }
+        accountBottomVC.playIntro()
     }
     
     func updateScrollContent() {
         let vc = accountBottomVC
         if self.tableViews[currentIndex] == nil{
-            self.tableViews[currentIndex] = vc.episodeTV
+            self.tableViews[currentIndex] = vc.activeTableView()
             if let scrollView = self.tableViews[currentIndex] as? UIScrollView{
                 scrollView.panGestureRecognizer.require(toFail: self.overlayScrollView.panGestureRecognizer)
                 scrollView.doNotAdjustContentInset()
@@ -735,7 +788,7 @@ class ProgramProfileVC: UIViewController {
     }
     
     func configureSubscribeButton() {
-        if !User.subscriptionIDs!.contains(program.ID) {
+        if !CurrentProgram.subscriptionIDs!.contains(program.ID) {
             subscribeButton.setTitle("Subscribe", for: .normal)
             subscribeButton.setImage(UIImage(named: "subscribe-icon"), for: .normal)
         } else {
@@ -746,22 +799,18 @@ class ProgramProfileVC: UIViewController {
 
     // MARK: Subscribe button press
     @objc func subscribeButtonPress() {
-        if User.subscriptionIDs!.contains(program.ID) {
-            FireStoreManager.removeFavouriteWith(programID: program.ID)
+        if CurrentProgram.subscriptionIDs!.contains(program.ID) {
+            FireStoreManager.removeSubscriptionFromProgramWith(programID: program.ID)
             FireStoreManager.unsubscribeFromProgramWith(programID: program.ID)
-            FireStoreManager.updateProgramWithUnSubscribe(programID: program.ID)
-            User.subscriptionIDs!.removeAll(where: {$0 == program.ID})
+            CurrentProgram.subscriptionIDs!.removeAll(where: {$0 == program.ID})
             program.subscriberCount -= 1
             subscribeButton.setTitle("Subscribe", for: .normal)
             subscribeButton.setImage(UIImage(named: "subscribe-icon"), for: .normal)
             configureProgramStats()
         } else {
-            if User.favouriteIDs != nil && User.favouriteIDs!.count < 10 {
-                FireStoreManager.addFavouriteWith(programID: program.ID)
-            }
-            FireStoreManager.subscribeUserToProgramWith(programID: program.ID)
-            FireStoreManager.updateProgramWithSubscription(programID: program.ID)
-            User.subscriptionIDs!.append(program.ID)
+            FireStoreManager.addSubscriptionToProgramWith(programID: program.ID)
+            FireStoreManager.subscribeToProgramWith(programID: program.ID)
+            CurrentProgram.subscriptionIDs!.append(program.ID)
             program.subscriberCount += 1
             subscribeButton.setTitle("Subscribed", for: .normal)
             subscribeButton.setImage(UIImage(named: "subscribed-icon"), for: .normal)
@@ -770,17 +819,11 @@ class ProgramProfileVC: UIViewController {
     }
 
     @objc func shareButtonPress() {
-        settingsLauncher.showSettings()
+        sharingSettings.showSettings()
     }
     
     @objc func settingsButtonPress() {
-        if !User.isPublisher! && User.favouriteIDs!.contains(program.ID) {
-            favProgramSettings.showSettings()
-        } else if !User.isPublisher! && !User.favouriteIDs!.contains(program.ID) {
-            nonFavouriteProgramSettings.showSettings()
-        } else {
-            publisherProgramSettings.showSettings()
-        }
+         programSettings.showSettings()
     }
     
     @objc func moreUnwrap() {
@@ -788,7 +831,7 @@ class ProgramProfileVC: UIViewController {
         print("Height before : \(heightBefore)")
         unwrapped = true
         summaryTextView.textContainer.maximumNumberOfLines = 0
-        summaryTextView.text = "\(CurrentProgram.summary!) "
+        summaryTextView.text = "\(program.summary) "
         moreButton.removeFromSuperview()
         summaryTextView.textContainer.exclusionPaths.removeAll()
         
@@ -819,6 +862,30 @@ class ProgramProfileVC: UIViewController {
         }
     }
     
+    @objc func tableViewTabButtonPress(sender: UIButton) {
+        sender.setTitleColor(CustomStyle.primaryBlack, for: .normal)
+        let nonSelectedButtons = headerBarButtons.filter() { $0 != sender }
+        for each in nonSelectedButtons {
+            each.setTitleColor(CustomStyle.thirdShade, for: .normal)
+        }
+
+         let title = sender.titleLabel!.text!
+         accountBottomVC.updateTableViewWith(title: title)
+        
+         switch title {
+         case "Episodes":
+             currentIndex = 0
+         case "Subscriptions":
+             currentIndex = 1
+         case "Mentions":
+             currentIndex = 2
+         default:
+             break
+         }
+        
+         updateScrollContent()
+    }
+    
     @objc func websiteButtonPress() {
         let link = linkWithPrefix(urlString: program.webLink!)
         print("The link is \(link)")
@@ -834,6 +901,12 @@ class ProgramProfileVC: UIViewController {
             return urlString
         }
     }
+    
+    @objc func pushSubscribersVC() {
+         let subscribersVC = SubscribersVC(programName: program.name, programID: program.ID, programIDs: program.programIDs!, subscriberIDs: program.subscriberIDs)
+         subscribersVC.hidesBottomBarWhenPushed = true
+         navigationController?.pushViewController(subscribersVC, animated: true)
+     }
 
 }
 
@@ -864,14 +937,17 @@ extension ProgramProfileVC: UIScrollViewDelegate {
                                       height: CGFloat(headerHeight.upperBound))
         }
         
-        let offset = self.scrollView.contentOffset.y + unwrapDifference
-        let difference = UIScreen.main.bounds.height - headerHeight.upperBound
-        let introPosition = (difference - tabBarController!.tabBar.frame.height - 70) + offset
-        let audioPosition = (difference - tabBarController!.tabBar.frame.height) + offset
-        
-        accountBottomVC.yOffset = self.scrollView.contentOffset.y
-        accountBottomVC.introPlayer.updateYPositionWith(value: introPosition)
-        accountBottomVC.audioPlayer.updateYPositionWith(value: audioPosition)
+//        let offset = self.scrollView.contentOffset.y + unwrapDifference
+//        let difference = UIScreen.main.bounds.height - headerHeight.upperBound
+//
+//        guard let tabBarHeight = tabBarController?.tabBar.frame.height else { return }
+//
+//        let introPosition = (difference - tabBarHeight - 70) + offset
+//        let audioPosition = (difference - tabBarHeight) + offset
+//
+//        accountBottomVC.yOffset = self.scrollView.contentOffset.y
+//        accountBottomVC.introPlayer.updateYPositionWith(value: introPosition)
+//        accountBottomVC.audioPlayer.updateYPositionWith(value: audioPosition)
 
         let progress = self.scrollView.contentOffset.y / topHeight
         
@@ -892,21 +968,49 @@ extension ProgramProfileVC: UIScrollViewDelegate {
             customNavBar.alpha = 0.9
         }
     }
+    
+    func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+        let currentOffset = scrollView.contentOffset.y
+        let maximumOffset = scrollView.contentSize.height - scrollView.frame.size.height
+        
+        if maximumOffset - currentOffset <= 90.0 {
+            switch accountBottomVC.activeTV {
+            case accountBottomVC.episodeTV:
+                accountBottomVC.fetchProgramsEpisodes()
+            case accountBottomVC.mentionTV:
+                print("mentionTV")
+            case accountBottomVC.subscriptionTV:
+                print("subscriptionTV")
+            default:
+                break
+            }
+        }
+    }
 }
 
 extension ProgramProfileVC: SettingsLauncherDelegate {
    
     func selectionOf(setting: String) {
         switch setting {
-        case "Unfavourite":
-            FireStoreManager.removeFavouriteWith(programID: program.ID)
-        case "Favourite":
-            print("Favourite")
-            FireStoreManager.addFavouriteWith(programID: program.ID)
+        case "Report":
+            UIApplication.shared.keyWindow?.addSubview(reportProgramAlert)
         default:
             break
         }
     }
+}
+
+extension ProgramProfileVC: CustomAlertDelegate {
+   
+    func primaryButtonPress() {
+        FireStoreManager.reportProgramWith(programID: program.ID)
+    }
+    
+    func cancelButtonPress() {
+        //
+    }
+    
+    
 }
 
 

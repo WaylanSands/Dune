@@ -11,9 +11,10 @@ import ActiveLabel
 
 protocol CommentCellDelegate {
     func updateTableView()
-    func visitCommenterWith(ownerID: String, isPublisher: Bool)
+//    func visitProgramWith(programID: String)
     func updateCommentTextFieldWithReply(comment: Comment)
     func fetchSubCommentsFor(comment: Comment)
+    func visitProfile(program: Program)
 }
 
 class CommentCell: UITableViewCell {
@@ -23,10 +24,14 @@ class CommentCell: UITableViewCell {
     var userDownVoted = false
     var voteDisplayCount: Int = 0
     var cellDelegate: CommentCellDelegate!
+    var isFetching = false
+    
+    let userNotFoundAlert = CustomAlertView(alertType: .userNotFound)
     
     var profileImageButton: UIButton = {
         let button = UIButton()
         button.clipsToBounds = true
+        button.layer.cornerRadius = 7
         return button
     }()
     
@@ -37,16 +42,29 @@ class CommentCell: UITableViewCell {
         return label
     }()
     
-    let activeCommentLabel: ActiveLabel = {
+    lazy var activeCommentLabel: ActiveLabel = {
         let label = ActiveLabel()
-        label.font = UIFont.systemFont(ofSize: 15, weight: .regular)
+        label.font = UIFont.systemFont(ofSize: 14, weight: .regular)
         label.textColor = CustomStyle.seventhShade
         label.numberOfLines = 0
         label.enabledTypes = [.mention, .url]
         label.lineBreakMode = .byWordWrapping
         label.urlMaximumLength = 30
         label.sizeToFit()
-        label.handleMentionTap { userHandle in print("\(userHandle) tapped") }
+        label.handleMentionTap { username in
+            if !self.isFetching {
+                self.isFetching = true
+                FireStoreManager.getProgramWith(username: username) { program in
+                    self.isFetching = false
+                    if program != nil {
+                        self.cellDelegate?.visitProfile(program: program!)
+                    } else {
+                        print("User does not exist")
+                        UIApplication.shared.windows.last?.addSubview(self.userNotFoundAlert)
+                    }
+                }
+            }
+        }
         label.mentionColor = CustomStyle.linkBlue
         label.enabledTypes = [.mention, .url]
         return label
@@ -128,17 +146,9 @@ class CommentCell: UITableViewCell {
                 self.profileImageButton.setImage(image, for: .normal)
             }
         }
-        setupImageRadius()
+        
         checkVoteParticipation()
         configureIfCommentHeading()
-    }
-    
-    func setupImageRadius() {
-        if !comment.isPublisher {
-            profileImageButton.layer.cornerRadius = 20
-        } else {
-            profileImageButton.layer.cornerRadius = 7
-        }
     }
     
     func styleForScreens() {
@@ -271,6 +281,11 @@ class CommentCell: UITableViewCell {
                 FireBaseComments.upVote(comment: comment, by: 2)
             } else {
                 FireBaseComments.upVote(comment: comment, by: 1)
+                if !CurrentProgram.repMethods!.contains(comment.ID) {
+                    FireStoreManager.updateProgramRep(programID: comment.programID, repMethod: comment.ID, rep: 6)
+                    FireStoreManager.updateProgramMethodsUsed(programID: CurrentProgram.ID!, repMethod: comment.ID)
+                    CurrentProgram.repMethods?.append(comment.ID)
+                }
             }
             if userDownVoted {
                voteCountLabel.text = dynamicVotesTextWith(votes: 2)
@@ -297,6 +312,11 @@ class CommentCell: UITableViewCell {
                 FireBaseComments.downVote(comment: comment, by: -2)
             } else {
                 FireBaseComments.downVote(comment: comment, by: -1)
+                if !CurrentProgram.repMethods!.contains(comment.ID) {
+                    FireStoreManager.updateProgramRep(programID: comment.programID, repMethod: comment.ID, rep: -4)
+                    FireStoreManager.updateProgramMethodsUsed(programID: CurrentProgram.ID!, repMethod: comment.ID)
+                    CurrentProgram.repMethods?.append(comment.ID)
+                }
             }
             if userUpVoted {
                voteCountLabel.text = dynamicVotesTextWith(votes: -2)
@@ -313,7 +333,13 @@ class CommentCell: UITableViewCell {
     }
     
     @objc func visitCommenter() {
-        cellDelegate.visitCommenterWith(ownerID: comment.ownerID, isPublisher: comment.isPublisher)
+        if !isFetching {
+            isFetching = true
+            FireStoreManager.fetchAndCreateProgramWith(programID: comment.programID) { program in
+                self.cellDelegate.visitProfile(program: program)
+                self.isFetching = false
+            }
+        }
     }
    
 }

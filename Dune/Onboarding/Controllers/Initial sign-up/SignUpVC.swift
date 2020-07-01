@@ -75,16 +75,14 @@ class SignUpVC: UIViewController {
     }
     
     func styleButtons() {
-        CustomStyle.styleRoundedSignUpButton(color: CustomStyle.primaryBlue, image: #imageLiteral(resourceName: "closed-mail-envelope"), button: emailSignUpOutlet)
+        CustomStyle.styleRoundedSignUpButton(color: CustomStyle.primaryBlue, image: #imageLiteral(resourceName: "mail-icon"), button: emailSignUpOutlet)
         CustomStyle.styleRoundedSignUpButton(color: #colorLiteral(red: 0.1137254902, green: 0.631372549, blue: 0.9529411765, alpha: 1), image: UIImage(named: "twitter-logo"), button: facebookSignUpOutlet)
         CustomStyle.styleRoundedSignUpButton(color: CustomStyle.white, image: #imageLiteral(resourceName: "apple-logo"), button: appleSignUpOutlet)
     }
     
     func styleForScreens() {
         switch deviceType {
-        case .iPhone4S:
-            break
-        case .iPhoneSE:
+        case .iPhone4S, .iPhoneSE:
             titleBottomAnchor.constant = 30.0
             stackedTitleAndIcon.spacing = 40.0
             stackedButtonsYAnchor.constant = 30
@@ -138,11 +136,10 @@ class SignUpVC: UIViewController {
                         let summary = info!["description"] as? String
                         let name = info!["name"] as? String
                         
-                        User.displayName = name
-                        User.username = username
-                        User.imagePath = imagePath
                         User.socialSignUp = true
+                        User.username = username
                         User.ID = authResult!.user.uid
+                        CurrentProgram.imagePath = imagePath
                         
                         CurrentProgram.name = name
                         CurrentProgram.summary = summary
@@ -150,10 +147,22 @@ class SignUpVC: UIViewController {
                         CurrentProgram.imagePath = imagePath
                         CurrentProgram.ID = authResult!.user.uid
                         
+                        self.attemptToStoreProgramImage()
+                        
                         if let accountTypeVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "accountTypeController") as? AccountTypeVC {
                             self.navigationController?.pushViewController(accountTypeVC, animated: true)
                         }
                     }
+                }
+            }
+        }
+    }
+    
+    func attemptToStoreProgramImage() {
+        if CurrentProgram.imagePath != nil && CurrentProgram.imagePath != ""  {
+            FileManager.fetchImageFrom(url: CurrentProgram.imagePath!) { image in
+                if image != nil {
+                    FileManager.storeInitialProgramImage(image: image!, programID: CurrentProgram.ID!)
                 }
             }
         }
@@ -247,7 +256,6 @@ class SignUpVC: UIViewController {
             if error != nil {
                 print("There was an error getting users document: \(error!)")
             } else {
-                
                 UserDefaults.standard.set(true, forKey: "loggedIn")
                 guard let data = snapshot?.data() else { return }
                 
@@ -255,17 +263,9 @@ class SignUpVC: UIViewController {
                 
                 let completedOnBoarding = data["completedOnBoarding"] as! Bool
                 
-                if User.isPublisher! {
-                    FireStoreManager.getProgramData { success in
-                        print("Received program data: \(success)")
-                        
-                        if completedOnBoarding {
-                            self.sendToMainFeed()
-                        } else {
-                            self.sendToAccountType()
-                        }
-                    }
-                } else {
+                FireStoreManager.getProgramData { success in
+                    print("Received program data: \(success)")
+                    
                     if completedOnBoarding {
                         self.sendToMainFeed()
                     } else {
@@ -324,7 +324,6 @@ extension SignUpVC: ASAuthorizationControllerDelegate, ASAuthorizationController
                 return
             }
             
-            print("Adding indicator")
             self.networkingIndicator.taskLabel.text = "Fetching details"
             UIApplication.shared.keyWindow!.addSubview(self.networkingIndicator)
 
@@ -353,7 +352,6 @@ extension SignUpVC: ASAuthorizationControllerDelegate, ASAuthorizationController
                             let familyName = fullName.familyName {
                             let username = firstName + familyName
                             
-                            User.displayName = "\(firstName) \(familyName)"
                             CurrentProgram.name = "\(firstName) \(familyName)"
                            
                             print("Users Apple name is \(username)")
@@ -402,3 +400,24 @@ extension SignUpVC: ASAuthorizationControllerDelegate, ASAuthorizationController
     
 }
 
+#if DEBUG
+import SwiftUI
+
+struct InfoVCRepresentable: UIViewControllerRepresentable {
+    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
+        // leave this empty
+    }
+    
+    @available(iOS 13.0.0, *)
+    func makeUIViewController(context: Context) -> UIViewController {
+        SignUpVC()
+    }
+}
+
+@available(iOS 13.0, *)
+struct InfoVCPreview: PreviewProvider {
+    static var previews: some View {
+       InfoVCRepresentable()
+    }
+}
+#endif

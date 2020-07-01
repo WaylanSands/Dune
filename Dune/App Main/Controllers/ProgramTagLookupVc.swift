@@ -24,12 +24,19 @@ class ProgramTagLookupVC: UIViewController {
     var downloadedPrograms = [Program]()
 
     var activeCell: ProgramCell?
+    var activeProgram: Program?
     var selectedCellRow: Int?
+    var lastPlayedID: String?
+    var lastProgress: CGFloat = 0
 
     let loadingView = TVLoadingAnimationView(topHeight: UIDevice.current.navBarHeight() + 20)
+    
+    var selectedProgramCellRow: Int?
 
     let subscriptionSettings = SettingsLauncher(options: SettingOptions.subscriptionEpisode, type: .subscriptionEpisode)
-    let programSettings = SettingsLauncher(options: SettingOptions.nonFavouriteProgramSettings, type: .program)
+    let programSettings = SettingsLauncher(options: SettingOptions.programSettings, type: .program)
+    let noIntroRecordedAlert = CustomAlertView(alertType: .noIntroRecorded)
+    let reportProgramAlert = CustomAlertView(alertType: .reportProgram)
     
     let customNavBar: CustomNavBar = {
         let nav = CustomNavBar()
@@ -88,9 +95,9 @@ class ProgramTagLookupVC: UIViewController {
     override func viewWillDisappear(_ animated: Bool) {
         introPlayer.finishSession()
         
-        if pushedForward == false {
-            navigationController?.popToRootViewController(animated: true)
-        }
+//        if pushedForward == false {
+//            navigationController?.popToRootViewController(animated: true)
+//        }
 
         FileManager.removeAudioFilesFromDocumentsDirectory() {
             print("Audio removed")
@@ -98,8 +105,9 @@ class ProgramTagLookupVC: UIViewController {
     }
 
     func configureDelegates() {
-//        programSettings.settingsDelegate = self
         tableView.register(ProgramCell.self, forCellReuseIdentifier: "programCell")
+        programSettings.settingsDelegate = self
+        reportProgramAlert.alertDelegate = self
         introPlayer.playbackDelegate = self
         tableView.dataSource = self
         tableView.delegate = self
@@ -179,16 +187,26 @@ extension ProgramTagLookupVC: UITableViewDataSource, UITableViewDelegate {
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let programCell = tableView.dequeueReusableCell(withIdentifier: "programCell") as! ProgramCell
-        programCell.moreButton.addTarget(programCell, action: #selector(ProgramCell.moreUnwrap), for: .touchUpInside)
-        programCell.programImageButton.addTarget(programCell, action: #selector(ProgramCell.playProgramIntro), for: .touchUpInside)
-        programCell.programSettingsButton.addTarget(programCell, action: #selector(ProgramCell.showSettings), for: .touchUpInside)
-        programCell.subscribeButton.addTarget(programCell, action: #selector(ProgramCell.subscribeButtonPress), for: .touchUpInside)
-        programCell.usernameButton.addTarget(programCell, action: #selector(ProgramCell.visitProfile), for: .touchUpInside)
         let program = downloadedPrograms[indexPath.row]
-        
+       
         programCell.program = program
-        programCell.cellDelegate = self
+        programCell.subscribeButton.addTarget(programCell, action: #selector(ProgramCell.subscribeButtonPress), for: .touchUpInside)
+        programCell.programImageButton.addTarget(programCell, action: #selector(ProgramCell.playProgramIntro), for: .touchUpInside)
+        programCell.playProgramButton.addTarget(programCell, action: #selector(ProgramCell.playProgramIntro), for: .touchUpInside)
+        programCell.programSettingsButton.addTarget(programCell, action: #selector(ProgramCell.showSettings), for: .touchUpInside)
+        programCell.usernameButton.addTarget(programCell, action: #selector(ProgramCell.visitProfile), for: .touchUpInside)
+        programCell.moreButton.addTarget(programCell, action: #selector(ProgramCell.moreUnwrap), for: .touchUpInside)
         programCell.normalSetUp(program: program)
+        programCell.cellDelegate = self
+        
+        if lastPlayedID == program.ID {
+            activeProgram = program
+        }
+        
+        if program.ID == lastPlayedID {
+            programCell.playbackBarView.setProgressWith(percentage: lastProgress)
+        }
+        
         return programCell
     }
 
@@ -207,58 +225,78 @@ extension ProgramTagLookupVC: UITableViewDataSource, UITableViewDelegate {
 }
 
 extension ProgramTagLookupVC: ProgramCellDelegate {
+    
+    func noIntroAlert() {
+         UIApplication.shared.windows.last?.addSubview(noIntroRecordedAlert)
+    }
+    
+    func unsubscribeFrom(program: Program) {
+        //
+    }
    
-    func tagSelected(tag: String) {
+    func programTagSelected(tag: String) {
         pushedForward = true
         let tagSelectedVC = ProgramTagLookupVC(tag: tag)
         navigationController?.pushViewController(tagSelectedVC, animated: true)
     }
     
     func visitProfile(program: Program) {
-        
         if User.isPublisher! && CurrentProgram.programsIDs().contains(program.ID) {
-            let tabBar = MainTabController()
-            tabBar.selectedIndex = 4
-            
-            if #available(iOS 13.0, *) {
-                let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
-                 sceneDelegate.window?.rootViewController = tabBar
-            } else {
-                 appDelegate.window?.rootViewController = tabBar
-            }
-            
-        } else {
-            if program.isPrimaryProgram && program.hasMultiplePrograms!  {
-                let programVC = ProgramProfileVC()
-                programVC.program = program
-                navigationController?.pushViewController(programVC, animated: true)
-            } else {
-                let programVC = SubProgramProfileVC(program: program)
-                navigationController?.present(programVC, animated: true, completion: nil)
-            }
-        }
+             let tabBar = MainTabController()
+             tabBar.selectedIndex = 4
+             if #available(iOS 13.0, *) {
+                 let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
+                  sceneDelegate.window?.rootViewController = tabBar
+             } else {
+                let appDelegate = UIApplication.shared.delegate as! AppDelegate
+                  appDelegate.window?.rootViewController = tabBar
+             }
+         } else {
+             if program.isPrimaryProgram && !program.programIDs!.isEmpty  {
+                 let programVC = ProgramProfileVC()
+                 programVC.program = program
+                 navigationController?.pushViewController(programVC, animated: true)
+             } else {
+                 let programVC = SingleProgramProfileVC(program: program)
+                 navigationController?.pushViewController(programVC, animated: true)
+             }
+         }
     }
     
     func playProgramIntro(cell: ProgramCell) {
-        introPlayer.isProgramPageIntro = false
-        activeCell = cell
-
-        let programIntro = cell.program.introID!
-        let programImage = cell.program.image!
-        let programName = cell.program.name
-                
-        print("NAV height \(self.tabBarController!.tabBar.frame.height)")
-        print("Screen height \(view.frame.height)")
+              introPlayer.isProgramPageIntro = false
+              activeProgram = cell.program
+              
+              cell.program.hasBeenPlayed = true
+              guard let index = downloadedPrograms.firstIndex(where: { $0.ID == cell.program.ID }) else { return }
+              downloadedPrograms[index] = cell.program
+              
+              if cell.program.ID != lastPlayedID {
+                  updatePastProgress()
+              }
+              
+              if !cell.playbackBarView.playbackBarIsSetup {
+                  cell.playbackBarView.setupPlaybackBar()
+              }
+              
+              introPlayer.yPosition = view.frame.height - tabBarController!.tabBar.frame.height - introPlayer.frame.height
+            
+              let image = cell.programImageButton.imageView!.image!
+              let audioID = cell.program.introID
         
-        introPlayer.yPosition = view.frame.height - tabBarController!.tabBar.frame.height - introPlayer.frame.height
-        
-        introPlayer.getAudioWith(audioID: programIntro) { url in
-            self.introPlayer.playOrPauseWith(url: url, name: programName, image: programImage)
-        }
-        print("Play intro")
+              self.introPlayer.setProgramDetailsWith(program: cell.program, image: image)
+              self.introPlayer.playOrPauseIntroWith(audioID: audioID!)
+    }
+    
+    func updatePastProgress() {
+        guard let index = downloadedPrograms.firstIndex(where: { $0.ID == lastPlayedID }) else { return }
+        let program = downloadedPrograms[index]
+        program.playBackProgress = lastProgress
+        downloadedPrograms[index] = program
     }
     
     func showSettings(cell: ProgramCell) {
+        selectedProgramCellRow = downloadedPrograms.firstIndex(where: { $0.ID == cell.program.ID })
         programSettings.showSettings()
     }
     
@@ -288,15 +326,54 @@ extension ProgramTagLookupVC: DuneAudioPlayerDelegate {
     
    
     func updateProgressBarWith(percentage: CGFloat, forType: PlayBackType, episodeID: String) {
-        guard let cell = activeCell else { return }
-        cell.playbackBarView.progressUpdateWith(percentage: percentage)
+        if lastPlayedID != episodeID {
+            updatePastProgress()
+        }
+        
+        lastPlayedID = episodeID
+        guard let index = downloadedPrograms.firstIndex(where: { $0.ID == episodeID }) else { return }
+        let indexPath = IndexPath(item: index, section: 0)
+        if tableView.indexPathsForVisibleRows!.contains(indexPath) {
+            let cell = tableView.cellForRow(at: indexPath) as! ProgramCell
+            if percentage > 0.01 {
+                cell.playbackBarView.progressUpdateWith(percentage: percentage)
+                lastProgress = percentage
+            }
+        }
     }
     
     func updateActiveCell(atIndex: Int, forType: PlayBackType) {
-        let cell = tableView.cellForRow(at: IndexPath(item: atIndex, section: 0)) as! ProgramCell
-        cell.playbackBarView.setupPlaybackBar()
-        activeCell = cell
+        //
     }
+}
+
+extension ProgramTagLookupVC: SettingsLauncherDelegate {
+    
+    func selectionOf(setting: String) {
+        switch setting {
+        case "Report":
+              UIApplication.shared.windows.last?.addSubview(reportProgramAlert)
+        default:
+            break
+        }
+    }
+    
+    
+}
+
+extension ProgramTagLookupVC: CustomAlertDelegate {
+   
+    func primaryButtonPress() {
+        if let row = selectedProgramCellRow {
+            let program = downloadedPrograms[row]
+            FireStoreManager.reportProgramWith(programID: program.ID)
+        }
+    }
+    
+    func cancelButtonPress() {
+        //
+    }
+    
 }
 
 

@@ -13,12 +13,9 @@ import FirebaseFirestore
 
 extension FireStoreManager {
     
-    // Fetch first batch of programs
     static func fetchProgramsOrderedBySubscriptions(limit: Int, completion: @escaping ([QueryDocumentSnapshot]) -> ()) {
         
         let programsRef = db.collection("programs").order(by: "subscriberCount", descending: true).limit(to: limit)
-        
-        
         programsRef.getDocuments { snapshot, error in
             
             if error != nil {
@@ -92,69 +89,9 @@ extension FireStoreManager {
             }
         }
     }
-    
-    static func fetchFavouriteProgramsWithIDs(programIDs: [String], for listener: Listener?, completion: @escaping () ->()) {
-         
-         DispatchQueue.global(qos: .userInitiated).async {
-             
-             var programCount = 0
-             let programsRef = db.collection("programs").whereField("ID", in: programIDs)
-             
-             programsRef.getDocuments { snapshot, error in
-                 
-                 if error != nil {
-                     print("Error fetching batch of programs: \(error!)")
-                 } else if snapshot?.count == 0 {
-                     print("There are no programs to fetch")
-                 } else {
-                     guard let data = snapshot?.documents else { return }
-                    
-                    if listener == nil {
-                        User.favouritePrograms = [Program]()
-                    } else {
-                        listener?.favouritePrograms = [Program]()
-                    }
-                     
-                     for each in data {
-                         programCount += 1
-                         let programData = each.data()
-                         let loadedProgram = Program(data: programData)
-                        
-                        if listener == nil {
-                            User.favouritePrograms!.append(loadedProgram)
-                        } else {
-                            listener!.favouritePrograms!.append(loadedProgram)
-                        }
-                         
-                         if programCount == snapshot?.count {
-                             completion()
-                         }
-                     }
-                 }
-             }
-         }
-     }
-    
-    static func appendFavouriteProgramsWith(programIDs: String) {
-        
-        DispatchQueue.global(qos: .userInitiated).async {
-            
-            let programRef = db.collection("programs").document(programIDs)
-            
-            programRef.getDocument(completion: { snapshot, error in
-                if error != nil {
-                    print("Error appending favourite programs: \(error!)")
-                } else {
-                    guard let data = snapshot!.data() else { return }
-                    print("Success appending favourite")
-                    User.favouritePrograms?.append(Program(data: data))
-                }
-            })
-        }
-    }
-    
+
     static func updatePublishedEpisodeWith(episodeID: String, caption: String, tags: [String]?, completion: @escaping (Bool) ->()) {
-        
+
         DispatchQueue.global(qos: .userInitiated).async {
             
             var episodeTags = [String]()
@@ -174,83 +111,126 @@ extension FireStoreManager {
                     completion(false)
                 } else {
                     print("Episode has been updated")
+                    let usernames = checkIfUserWasTagged(caption: caption)
+                    if !usernames.isEmpty {
+                        FireBaseComments.addMentionToProgramWith(usernames: usernames, caption: caption, contentID: episodeID, primaryEpisodeID: nil, mentionType: .episodeTag)
+                    }
                     completion(true)
                 }
             }
         }
     }
     
-    // Add a subscriber to a program
-    static func updateProgramWithSubscription(programID: String) {
-        
-        let programRef = db.collection("programs").document(programID)
-        
-        let sub: Double = 1
-        
-        programRef.updateData([
-            "subscriberIDs" : FieldValue.arrayUnion([User.ID!]),
-            "subscriberCount" : FieldValue.increment(sub)
-        ]) { error in
-            if error != nil {
-                print("Error updating program with subscription")
-            } else {
-                print("Success updating program with subscription")
+    static func addSubscriptionToProgramWith(programID: String, completion: @escaping (Bool) -> ()) {
+        DispatchQueue.global(qos: .userInitiated).async {
+            let userRef = db.collection("programs").document(programID)
+            
+            userRef.updateData([
+                "subscriberIDs" : FieldValue.arrayUnion([CurrentProgram.ID!]),
+                "subscriberCount" : FieldValue.increment(Double(1)),
+            ]) { error in
+                if error != nil {
+                    print("Error subscribing user to program")
+                    completion(false)
+                } else {
+                    print("Success subscribing user to program")
+                    completion(true)
+                }
             }
         }
     }
     
-    // Remove a subscriber from a program
-    static func updateProgramWithUnSubscribe(programID: String) {
-        
-        let programRef = db.collection("programs").document(programID)
-        
-        let sub: Double = -1
-        
-        programRef.updateData([
-            "subscriberIDs" : FieldValue.arrayRemove([User.ID!]),
-            "subscriberCount" : FieldValue.increment(sub)
-        ]) { error in
-            if error != nil {
-                print("Error updating program with unsubscribe")
-            } else {
-                print("Success updating program with Unsubscribe")
+    static func subscribeToProgramWith(programID: String) {
+        DispatchQueue.global(qos: .userInitiated).async {
+            let userRef = db.collection("programs").document(CurrentProgram.ID!)
+            
+            userRef.updateData([
+                "subscriptionIDs" : FieldValue.arrayUnion([programID]),
+            ]) { error in
+                if error != nil {
+                    print("Error subscribing user to program")
+                } else {
+                    print("Success subscribing user to program")
+                }
             }
         }
     }
     
-     // Subscribe to a program
-    static func subscribeUserToProgramWith(programID: String) {
-        
-        let userRef = db.collection("users").document(User.ID!)
-                
-        userRef.updateData([
-            "subscriptionIDs" : FieldValue.arrayUnion([programID]),
-        ]) { error in
-            if error != nil {
-                print("Error subscribing user to program")
-            } else {
-                print("Success subscribing user to program")
+    static func addSubscriptionToProgramWith(programID: String) {
+        DispatchQueue.global(qos: .userInitiated).async {
+            let userRef = db.collection("programs").document(programID)
+            
+            userRef.updateData([
+                "subscriberIDs" : FieldValue.arrayUnion([CurrentProgram.ID!]),
+                "subscriberCount" : FieldValue.increment(Double(1)),
+            ]) { error in
+                if error != nil {
+                    print("Error subscribing user to program")
+                } else {
+                    print("Success subscribing user to program")
+                }
             }
         }
     }
+
     
-     // Unsubscribe from a program
     static func unsubscribeFromProgramWith(programID: String) {
-        
-        let userRef = db.collection("users").document(User.ID!)
-        
-        userRef.updateData([
-            "subscriptionIDs" : FieldValue.arrayRemove([programID])
-        ]) { error in
-            if error != nil {
-                print("Error removing subscription from user")
-            } else {
-                print("Success removing subscription from user")
+        DispatchQueue.global(qos: .userInitiated).async {
+            let programRef = db.collection("programs").document(CurrentProgram.ID!)
+            
+            programRef.updateData([
+                "subscriptionIDs" : FieldValue.arrayRemove([programID])
+            ]) { error in
+                if error != nil {
+                    print("Error removing subscription from user")
+                } else {
+                    print("Success removing subscription from user")
+                }
             }
         }
     }
     
-    // Fetch first batch of programs within category
+    static func removeSubscriptionFromProgramWith(programID: String) {
+        DispatchQueue.global(qos: .userInitiated).async {
+            let programRef = db.collection("programs").document(programID)
+            
+            programRef.updateData([
+                "subscriberIDs" : FieldValue.arrayRemove([CurrentProgram.ID!]),
+                "subscriberCount" : FieldValue.increment(Double(-1)),
+            ]) { error in
+                if error != nil {
+                    print("Error removing subscription from user")
+                } else {
+                    print("Success removing subscription from user")
+                }
+            }
+        }
+    }
+    
+    static func usedCategories(completion: @escaping ([String]) ->()) {
+        
+        DispatchQueue.global(qos: .userInitiated).async {
+            var categories = [String]()
+            var counter = 0
+            for each in Category.allCases {
+                let programRef = db.collection("programs").whereField("primaryCategory", isEqualTo: each.rawValue)
+                programRef.getDocuments { (snapshot, error) in
+                    counter += 1
+                    if error != nil {
+                        print("Error searching for program with category")
+                    } else {
+                        if snapshot!.documents.count > 0 {
+                            categories.append(each.rawValue)
+                        }
+                    }
+                    if counter == Category.allCases.count {
+                        completion(categories)
+                    }
+                }
+            }
+        }
+    }
+    
     static func fetchProgramsWithinCategory(limit: Int, category: String, completion: @escaping ([QueryDocumentSnapshot]) -> ()) {
         
         let programsRef = db.collection("programs")
@@ -307,49 +287,5 @@ extension FireStoreManager {
             }
         }
     }
-    
-    static func addFavouriteWith(programID: String) {
-        
-        let userRef = db.collection("users").document(User.ID!)
-        User.favouriteIDs?.append(programID)
-        
-        DispatchQueue.global(qos: .userInitiated).async {
-            userRef.updateData([
-                "favouriteIDs" : FieldValue.arrayUnion([programID])
-            ]) { error in
-                if error != nil {
-                    print("Error adding favouriteID")
-                } else {
-                    print("Success adding favouriteID")
-                    appendFavouriteProgramsWith(programIDs: programID)
-                    NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateFavourites"), object: nil)
-                }
-            }
-        }
-    }
-    
-    static func removeFavouriteWith(programID: String) {
-        
-        if User.favouriteIDs != nil && User.favouriteIDs!.contains(programID) {
-            
-            User.favouriteIDs?.removeAll(where: { $0 == programID })
-            User.favouritePrograms?.removeAll(where: { $0.ID == programID })
-            let userRef = db.collection("users").document(User.ID!)
-            
-            DispatchQueue.global(qos: .userInitiated).async {
-                userRef.updateData([
-                    "favouriteIDs" : FieldValue.arrayRemove([programID])
-                ]) { error in
-                    if error != nil {
-                        print("Error removing favouriteID")
-                    } else {
-                        print("Success removing favouriteID")
-                        NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateFavourites"), object: nil)
-                    }
-                }
-            }
-        }
-    }
-    
     
 }

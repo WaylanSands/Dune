@@ -14,7 +14,7 @@ public class ResponsiveWaveformView: UIView {
     @IBInspectable public var secondaryWaveLineWidth: CGFloat = 1.0
     @IBInspectable public var idleAmplitude: CGFloat = 0.01
     @IBInspectable public var frequency: CGFloat = 1.25
-    @IBInspectable public var density: CGFloat = 5
+    @IBInspectable public var density: CGFloat = 3
     @IBInspectable public var phaseShift: CGFloat = -0.15
     
     @IBInspectable public var amplitude: CGFloat {
@@ -50,7 +50,7 @@ public class ResponsiveWaveformView: UIView {
             let width = bounds.width
             let mid = width / 2.0
 
-            let maxAmplitude = halfHeight - 4.0 // 4 corresponds to twice the stroke width
+            let maxAmplitude = halfHeight - 0.5 // 4 corresponds to twice the stroke width
 
             // Progress is a value between 1.0 and -0.5, determined by the current wave idx,
             // which is used to alter the wave's amplitude.

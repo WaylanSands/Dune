@@ -12,17 +12,22 @@ import UIKit
 class DuneSquareLinkPreview: UIView {
     
     let imageButton: UIButton = {
-        let view = UIButton()
-        view.backgroundColor = .white
-        view.imageView!.contentMode = .scaleAspectFill
-        return view
+        let button = UIButton()
+        button.backgroundColor = .white
+        button.imageView!.contentMode = .scaleAspectFill
+        button.layer.shouldRasterize = true
+        button.isOpaque = true
+        return button
     }()
       
-      let backgroundButton: UIButton = {
-          let view = UIButton()
-          view.backgroundColor = CustomStyle.secondShade
-          return view
-      }()
+    let backgroundButton: UIButton = {
+        let button = UIButton()
+        button.backgroundColor = CustomStyle.white
+        button.layer.borderWidth = 0.5
+        button.layer.borderColor = CustomStyle.fourthShade.cgColor
+        button.isOpaque = true
+        return button
+    }()
     
     let squareLabel: UILabel = {
         let label = UILabel()
@@ -41,7 +46,6 @@ class DuneSquareLinkPreview: UIView {
           label.text = "Fetching"
           return label
       }()
-    
     
     override init(frame: CGRect) {
         super.init(frame: frame)

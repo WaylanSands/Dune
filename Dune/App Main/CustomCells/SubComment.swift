@@ -10,14 +10,6 @@ import UIKit
 
 class SubCommentCell: CommentCell {
     
-    override func setupImageRadius() {
-        if !comment.isPublisher {
-            profileImageButton.layer.cornerRadius = 15
-        } else {
-            profileImageButton.layer.cornerRadius = 4
-        }
-    }
-    
     override func configureViews() {
         self.addSubview(profileImageButton)
         profileImageButton.translatesAutoresizingMaskIntoConstraints = false

@@ -12,33 +12,37 @@ import FirebaseFirestore
 class PublisherAddSummaryVC: UIViewController {
     
     let appDelegate = UIApplication.shared.delegate as! AppDelegate
-    let imageViewSize:CGFloat = 65.0
     let maxCaptionCharacters = 240
     let maxTagCharacters = 45
     
     let summaryPlaceholder = "Why should people subscribe to this program. What insights do you offer?"
-    let tagPlaceholder = "Add three tags, each seperated by a space"
+    let tagPlaceholder = "Add three tags, each separated by a space"
     
     var scrollContentHeightConstraint: NSLayoutConstraint!
     var tagContentWidthConstraint: NSLayoutConstraint!
     
     var homeIndicatorHeight:CGFloat = 34.0
-    var summaryPlaceholderText = true
-    var tagPlaceholderText = true
+    var summaryPlaceholderIsActive = true
+    var tagPlaceholderIsActive = true
     var tagsUsed: [String] = []
     
     let db = Firestore.firestore()
     
     lazy var screenHeight = view.frame.height
     lazy var tagButtons: [UIButton] = [firstTagButton, secondTagButton, thirdTagButton]
-    lazy var tagscrollViewWidth = tagScrollView.frame.width
+    lazy var tagScrollViewWidth = tagScrollView.frame.width
     
-    let skipAddingSummaryAlert = CustomAlertView(alertType: .skipAddingProgramSummary)
+    let hashTagAlert = CustomAlertView(alertType: .hashTagUsed)
     
+    // For screen-size adjustment
+    var imageViewSize:CGFloat = 55.0
+    var floatingBarHeight:CGFloat = 65.0
+    var imageBarViewSize:CGFloat = 45.0
+    var scrollPadding: CGFloat = 60
+        
     let customNavBar: CustomNavBar = {
         let navBar = CustomNavBar()
         navBar.titleLabel.text = "Summary"
-        navBar.rightButton.addTarget(self, action: #selector(skipButtonPress), for: .touchUpInside)
         navBar.leftButton.addTarget(self, action: #selector(backButtonPress), for: .touchUpInside)
         return navBar
     }()
@@ -47,7 +51,6 @@ class PublisherAddSummaryVC: UIViewController {
         let view = UIScrollView()
         view.isScrollEnabled = true
         view.contentInsetAdjustmentBehavior = .never
-//        view.keyboardDismissMode = .onDrag
         return view
     }()
     
@@ -58,7 +61,6 @@ class PublisherAddSummaryVC: UIViewController {
     
     let mainImage: UIImageView = {
         let imageView = UIImageView()
-        imageView.image = #imageLiteral(resourceName: "missing-image-large")
         imageView.layer.cornerRadius = 7
         imageView.clipsToBounds = true
         imageView.contentMode = .scaleAspectFill
@@ -74,7 +76,7 @@ class PublisherAddSummaryVC: UIViewController {
     let programNameLabel: UILabel = {
         let label = UILabel()
         label.text = CurrentProgram.name
-        label.font = UIFont.systemFont(ofSize: 16, weight: .bold)
+        label.font = UIFont.systemFont(ofSize: 14, weight: .bold)
         return label
     }()
     
@@ -197,8 +199,8 @@ class PublisherAddSummaryVC: UIViewController {
         textView.textContainer.maximumNumberOfLines = 2
         textView.isScrollEnabled = false
         textView.textColor = CustomStyle.fourthShade
-        textView.keyboardType = .twitter
         textView.autocapitalizationType = .none
+        textView.keyboardType = .twitter
         return textView
     }()
     
@@ -212,21 +214,20 @@ class PublisherAddSummaryVC: UIViewController {
     
     let bottomBarImageView: UIImageView = {
         let imageView = UIImageView()
-        imageView.image = #imageLiteral(resourceName: "missing-imag-small")
         imageView.layer.cornerRadius = 7
         imageView.clipsToBounds = true
         return imageView
     }()
     
-    let bottomBarProgramNameLabel: UILabel = {
+    let bottomBarNameLabel: UILabel = {
         let label = UILabel()
         label.text = CurrentProgram.name
-        label.font = UIFont.systemFont(ofSize: 16.0, weight: .bold)
+        label.font = UIFont.systemFont(ofSize: 14.0, weight: .bold)
         label.textColor = .white
         return label
     }()
     
-    let bottomBarHandelLabel: UILabel = {
+    let bottomBarUsernameLabel: UILabel = {
         let label = UILabel()
         label.text = "@\(User.username!)"
         label.font = UIFont.systemFont(ofSize: 14.0, weight: .regular)
@@ -260,21 +261,20 @@ class PublisherAddSummaryVC: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        summaryTextView.delegate = self
+        tagTextView.delegate = self
         callBottomFill()
         setProgramImage()
+        styleForScreens()
         setupViews()
-        addFloatingView()
         styleTags()
-        tagTextView.delegate = self
-        summaryTextView.delegate = self
-        skipAddingSummaryAlert.alertDelegate = self
-        
-        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillChange(notification:)), name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
     }
     
     override func viewWillAppear(_ animated: Bool) {
+        addFloatingView()
+        setupKeyboardObserver()
         if CurrentProgram.summary != nil && CurrentProgram.summary != "" {
-            summaryPlaceholderText = false
+            summaryPlaceholderIsActive = false
             summaryLabel.text = CurrentProgram.summary
             summaryTextView.text = CurrentProgram.summary
             summaryLabel.textColor =  CustomStyle.sixthShade
@@ -298,6 +298,32 @@ class PublisherAddSummaryVC: UIViewController {
     
     deinit {
         NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
+    }
+    
+    func styleForScreens() {
+        switch UIDevice.current.deviceType {
+        case .iPhone4S, .iPhoneSE:
+            floatingBarHeight = 50.0
+            imageBarViewSize = 36.0
+            scrollPadding = 140
+            imageViewSize = 50
+        case .iPhone8:
+            break
+        case .iPhone8Plus:
+            break
+        case .iPhone11:
+            break
+        case .iPhone11Pro:
+            break
+        case .iPhone11ProMax:
+            break
+        case .unknown:
+            break
+        }
+    }
+    
+    func setupKeyboardObserver() {
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillChange(notification:)), name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
     }
     
     func setProgramImage() {
@@ -360,12 +386,12 @@ class PublisherAddSummaryVC: UIViewController {
         scrollContentView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor).isActive = true
         scrollContentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor).isActive = true
         scrollContentView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor).isActive = true
-        scrollContentHeightConstraint = scrollContentView.heightAnchor.constraint(equalToConstant: screenHeight + 60)
+        scrollContentHeightConstraint = scrollContentView.heightAnchor.constraint(equalToConstant: screenHeight + scrollPadding)
         scrollContentHeightConstraint.isActive = true
         
         scrollContentView.addSubview(mainImage)
         mainImage.translatesAutoresizingMaskIntoConstraints = false
-        mainImage.topAnchor.constraint(equalTo: scrollContentView.topAnchor, constant: 110).isActive = true
+        mainImage.topAnchor.constraint(equalTo: scrollContentView.topAnchor, constant: UIDevice.current.navBarHeight() + 10).isActive = true
         mainImage.leadingAnchor.constraint(equalTo: scrollContentView.leadingAnchor, constant: 16).isActive = true
         mainImage.heightAnchor.constraint(equalToConstant: imageViewSize).isActive = true
         mainImage.widthAnchor.constraint(equalToConstant: imageViewSize).isActive = true
@@ -404,7 +430,7 @@ class PublisherAddSummaryVC: UIViewController {
         tagContentView.leadingAnchor.constraint(equalTo: tagScrollView.leadingAnchor).isActive = true
         tagContentView.heightAnchor.constraint(equalTo: tagScrollView.heightAnchor).isActive = true
         tagContentView.trailingAnchor.constraint(equalTo: tagScrollView.trailingAnchor).isActive = true
-        tagContentWidthConstraint = tagContentView.widthAnchor.constraint(equalToConstant: tagscrollViewWidth)
+        tagContentWidthConstraint = tagContentView.widthAnchor.constraint(equalToConstant: tagScrollViewWidth)
         tagContentWidthConstraint.isActive = true
         
         scrollContentView.addSubview(gradientOverlayView)
@@ -434,7 +460,7 @@ class PublisherAddSummaryVC: UIViewController {
         
         scrollContentView.addSubview(summaryBar)
         summaryBar.translatesAutoresizingMaskIntoConstraints = false
-        summaryBar.topAnchor.constraint(equalTo: tagScrollView.bottomAnchor, constant: 20).isActive = true
+        summaryBar.topAnchor.constraint(equalTo: tagScrollView.bottomAnchor, constant: 15).isActive = true
         summaryBar.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         summaryBar.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         summaryBar.heightAnchor.constraint(equalToConstant: 37.0).isActive = true
@@ -491,26 +517,26 @@ class PublisherAddSummaryVC: UIViewController {
         floatingDetailsView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor).isActive = true
         floatingDetailsView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         floatingDetailsView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        floatingDetailsView.heightAnchor.constraint(equalToConstant: 65.0).isActive = true
+        floatingDetailsView.heightAnchor.constraint(equalToConstant: floatingBarHeight).isActive = true
         
         floatingDetailsView.addSubview(bottomBarImageView)
         bottomBarImageView.translatesAutoresizingMaskIntoConstraints = false
         bottomBarImageView.centerYAnchor.constraint(equalTo: floatingDetailsView.centerYAnchor).isActive = true
         bottomBarImageView.leadingAnchor.constraint(equalTo: floatingDetailsView.leadingAnchor, constant: 16.0).isActive = true
-        bottomBarImageView.heightAnchor.constraint(equalToConstant: 45.0).isActive = true
-        bottomBarImageView.widthAnchor.constraint(equalToConstant: 45.0).isActive = true
+        bottomBarImageView.heightAnchor.constraint(equalToConstant: imageBarViewSize).isActive = true
+        bottomBarImageView.widthAnchor.constraint(equalToConstant: imageBarViewSize).isActive = true
         
-        floatingDetailsView.addSubview(bottomBarProgramNameLabel)
-        bottomBarProgramNameLabel.translatesAutoresizingMaskIntoConstraints = false
-        bottomBarProgramNameLabel.topAnchor.constraint(equalTo: floatingDetailsView.topAnchor, constant: 12.0).isActive = true
-        bottomBarProgramNameLabel.leadingAnchor.constraint(equalTo: bottomBarImageView.trailingAnchor, constant: 10.0).isActive = true
-        bottomBarProgramNameLabel.heightAnchor.constraint(equalToConstant: 20.0).isActive = true
+        floatingDetailsView.addSubview(bottomBarNameLabel)
+        bottomBarNameLabel.translatesAutoresizingMaskIntoConstraints = false
+        bottomBarNameLabel.topAnchor.constraint(equalTo: bottomBarImageView.topAnchor, constant: 1).isActive = true
+        bottomBarNameLabel.leadingAnchor.constraint(equalTo: bottomBarImageView.trailingAnchor, constant: 10.0).isActive = true
+//        bottomBarNameLabel.heightAnchor.constraint(equalToConstant: 20.0).isActive = true
         
-        floatingDetailsView.addSubview(bottomBarHandelLabel)
-        bottomBarHandelLabel.translatesAutoresizingMaskIntoConstraints = false
-        bottomBarHandelLabel.topAnchor.constraint(equalTo: bottomBarProgramNameLabel.bottomAnchor).isActive = true
-        bottomBarHandelLabel.leadingAnchor.constraint(equalTo: bottomBarProgramNameLabel.leadingAnchor).isActive = true
-        bottomBarHandelLabel.heightAnchor.constraint(equalToConstant: 20.0).isActive = true
+        floatingDetailsView.addSubview(bottomBarUsernameLabel)
+        bottomBarUsernameLabel.translatesAutoresizingMaskIntoConstraints = false
+        bottomBarUsernameLabel.topAnchor.constraint(equalTo: bottomBarNameLabel.bottomAnchor).isActive = true
+        bottomBarUsernameLabel.leadingAnchor.constraint(equalTo: bottomBarNameLabel.leadingAnchor).isActive = true
+//        bottomBarUsernameLabel.heightAnchor.constraint(equalToConstant: 20.0).isActive = true
         
         floatingDetailsView.addSubview(confirmButton)
         confirmButton.translatesAutoresizingMaskIntoConstraints = false
@@ -544,8 +570,17 @@ class PublisherAddSummaryVC: UIViewController {
     
     func updateCharacterCount(textView: UITextView) {
         
-        summaryCounterLabel.text =  String(maxCaptionCharacters - summaryTextView.text!.count)
-        tagCounterLabel.text =  String(maxTagCharacters - tagTextView.text!.count)
+        if !summaryPlaceholderIsActive {
+            summaryCounterLabel.text =  String(maxCaptionCharacters - summaryTextView.text!.count)
+        } else {
+           summaryCounterLabel.text =  String(maxCaptionCharacters)
+        }
+        
+        if !tagPlaceholderIsActive {
+            tagCounterLabel.text =  String(maxTagCharacters - tagTextView.text!.count)
+        } else {
+            tagCounterLabel.text =  String(maxTagCharacters)
+        }
         
         if Int(summaryCounterLabel.text!)! < 0 {
             summaryCounterLabel.font = UIFont.systemFont(ofSize: 12, weight: .bold)
@@ -583,7 +618,7 @@ class PublisherAddSummaryVC: UIViewController {
             let startPosition: UITextPosition = self.summaryTextView.beginningOfDocument
             self.summaryTextView.selectedTextRange = self.summaryTextView.textRange(from: startPosition, to: startPosition)
             self.summaryTextView.textColor = CustomStyle.fourthShade
-            self.summaryPlaceholderText = true
+            self.summaryPlaceholderIsActive = true
             
             self.summaryLabel.text = "placeholder"
             self.summaryLabel.textColor = .white
@@ -597,7 +632,7 @@ class PublisherAddSummaryVC: UIViewController {
             let startPosition: UITextPosition = self.tagTextView.beginningOfDocument
             self.tagTextView.selectedTextRange = self.tagTextView.textRange(from: startPosition, to: startPosition)
             self.tagTextView.textColor = CustomStyle.fourthShade
-            self.tagPlaceholderText = true
+            self.tagPlaceholderIsActive = true
             self.disablePublishButton()
         }
     }
@@ -617,38 +652,36 @@ class PublisherAddSummaryVC: UIViewController {
     }
     
     @objc func confirmButtonPress() {
-        CurrentProgram.summary = summaryLabel.text
+        CurrentProgram.rep = 25
         CurrentProgram.tags = tagsUsed
-                
+        CurrentProgram.summary = summaryLabel.text
+        
         let programRef = db.collection("programs").document(CurrentProgram.ID!)
         let userRef = db.collection("users").document(User.ID!)
+        FireStoreManager.updateProgramRep(programID: CurrentProgram.ID!, repMethod: "signup", rep: 25)
         
         DispatchQueue.global(qos: .userInitiated).async {
-        programRef.updateData([
-            "summary" :  CurrentProgram.summary!,
-            "tags" :  CurrentProgram.tags!
-        ]) { (error) in
-            if let error = error {
-                print("Error adding program Tags: \(error.localizedDescription)")
-            } else {
-                print("Successfully added program tags and summary ")
-                if User.isPublisher! {
-                    self.presentProfileView()
+            programRef.updateData([
+                "summary" :  CurrentProgram.summary!,
+                "tags" :  CurrentProgram.tags!
+            ]) { (error) in
+                if let error = error {
+                    print("Error adding program Tags: \(error.localizedDescription)")
                 } else {
-                    self.presentStudioView()
+                    print("Successfully added program tags and summary ")
+                    self.presentSearchView()
+                    
+                }
+            }
+            userRef.updateData(["completedOnBoarding" : true]) { error in
+                if error != nil {
+                    print("Error with updating on-boarding bool for user \(error!)")
                 }
             }
         }
-        
-        userRef.updateData(["completedOnBoarding" : true]) { error in
-            if error != nil {
-                print("Error with updating on-boarding bool for user \(error!)")
-            }
-        }
-        }
     }
 
-    func presentProfileView() {
+    func presentSearchView() {
         let tabBar = MainTabController()
         tabBar.selectedIndex = 1
         
@@ -661,7 +694,6 @@ class PublisherAddSummaryVC: UIViewController {
     }
     
     func presentStudioView() {
-        
         User.isPublisher = true
         DispatchQueue.global(qos: .userInitiated).async {
             let userRef = self.db.collection("users").document(User.ID!)
@@ -686,13 +718,9 @@ class PublisherAddSummaryVC: UIViewController {
         }
     }
     
-    @objc func skipButtonPress() {
-        view.addSubview(skipAddingSummaryAlert)
-    }
-    
     // Determine if ok to confirm
     func checkIfAbleToPublish() {
-        if summaryPlaceholderText == false && summaryTextView.text.count < maxCaptionCharacters && tagTextView.text.count < maxTagCharacters && tagPlaceholderText == false {
+        if summaryPlaceholderIsActive == false && summaryTextView.text.count < maxCaptionCharacters && tagTextView.text.count < maxTagCharacters && tagPlaceholderIsActive == false {
             enablePublishButton()
         } else {
             disablePublishButton()
@@ -700,18 +728,17 @@ class PublisherAddSummaryVC: UIViewController {
     }
 }
 
-extension PublisherAddSummaryVC: UITextViewDelegate, CustomAlertDelegate {
+extension PublisherAddSummaryVC: UITextViewDelegate {
     
     func textViewDidBeginEditing(_ textView: UITextView) {
-        
         if textView == summaryTextView {
-            if summaryPlaceholderText == true {
+            if summaryPlaceholderIsActive == true {
                 addCaptionPlaceholderText()
             }
         }
         
         if textView == tagTextView {
-            if tagPlaceholderText == true {
+            if tagPlaceholderIsActive == true {
                 addTagPlaceholderText()
             }
         }
@@ -719,13 +746,12 @@ extension PublisherAddSummaryVC: UITextViewDelegate, CustomAlertDelegate {
     
     func textViewDidChange(_ textView: UITextView) {
         updateCharacterCount(textView: textView)
-        
         if textView == summaryTextView {
             if summaryTextView.text.isEmpty {
                 addCaptionPlaceholderText()
-                scrollContentHeightConstraint.constant = scrollView.frame.height
+                scrollContentHeightConstraint.constant = scrollView.frame.height + scrollPadding
             } else {
-                scrollContentHeightConstraint.constant = scrollView.frame.height + summaryTextView.frame.height
+                scrollContentHeightConstraint.constant = scrollView.frame.height + summaryTextView.frame.height + scrollPadding
                 summaryLabel.textColor = CustomStyle.sixthShade
                 summaryLabel.text = summaryTextView.text
                 tagBar.layoutIfNeeded()
@@ -733,7 +759,7 @@ extension PublisherAddSummaryVC: UITextViewDelegate, CustomAlertDelegate {
         }
         
         if textView == tagTextView {
-            tagsUsed = tagTextView.text.split(separator: " ").map { String($0).lowercased() }
+            tagsUsed = tagTextView.text.split(separator: " ").map { String($0) }
             if tagTextView.text.isEmpty {
                 addTagPlaceholderText()
             }
@@ -768,6 +794,10 @@ extension PublisherAddSummaryVC: UITextViewDelegate, CustomAlertDelegate {
         checkIfAbleToPublish()
     }
     
+    func hashTagUsed() {
+         UIApplication.shared.windows.last?.addSubview(hashTagAlert)
+    }
+    
     func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
         let tagCount = tagTextView.text.filter() {$0 == " "}.count
         let  char = text.cString(using: String.Encoding.utf8)!
@@ -778,40 +808,30 @@ extension PublisherAddSummaryVC: UITextViewDelegate, CustomAlertDelegate {
             return true
         }
         
-        // Should change captionTextView
+        if text == "#" {
+             UIApplication.shared.windows.last?.addSubview(hashTagAlert)
+        }
+        
         if textView == summaryTextView {
-            if summaryPlaceholderText == true {
+            if summaryPlaceholderIsActive == true {
                 summaryTextView.text.removeAll()
                 self.summaryTextView.textColor = CustomStyle.fifthShade
-                summaryPlaceholderText = false
+                summaryPlaceholderIsActive = false
             } else {
                 summaryLabel.textColor = CustomStyle.sixthShade
             }
         }
         
-        // Should change tagTextView
         if textView == tagTextView {
-            if tagPlaceholderText == true {
+            if tagPlaceholderIsActive == true {
                 tagTextView.text.removeAll()
                 self.tagTextView.textColor = CustomStyle.fifthShade
-                tagPlaceholderText = false
+                tagPlaceholderIsActive = false
             } else {
                 return tagsUsed.count <= 3 && tagCount <= 2
             }
         }
-        
         return true
-    }
-    
-    func primaryButtonPress() {
-//        CurrentProgram.summary = "You need to add a summary..."
-//        let tagController = PublisherTagVC()
-//        tagController.summaryTextView.text = CurrentProgram.summary
-//        navigationController?.pushViewController(tagController, animated: true)
-    }
-    
-    func cancelButtonPress() {
-        
     }
 }
 

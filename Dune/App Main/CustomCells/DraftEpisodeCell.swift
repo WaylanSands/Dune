@@ -17,16 +17,15 @@ class DraftEpisodeCell: UITableViewCell {
     
     var row: Int?
     var cellDelegate: DraftCellDelegate?
-    let imageViewSize:CGFloat = 65.0
-    var largeImageSize: CGFloat = 65.0
-    var fontNameSize: CGFloat = 16
     var fontIDSize: CGFloat = 14
     var episodeTags: [String] = []
     var tagContentWidthConstraint: NSLayoutConstraint!
     lazy var tagScrollViewWidth = tagScrollView.frame.width
     lazy var deviceType = UIDevice.current.deviceType
-//    lazy var tagButtons: [UIButton] = [firstTagButton, secondTagButton, thirdTagButton]
     var tagContentSizeWidth: CGFloat = 0
+    
+    // For screen-size adjustment
+    var imageSize:CGFloat = 55.0
     
     let cellContentView: UIView = {
         let view = UIView()
@@ -63,7 +62,7 @@ class DraftEpisodeCell: UITableViewCell {
     
     lazy var programNameLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 15, weight: .bold)
+        label.font = UIFont.systemFont(ofSize: 14, weight: .bold)
         label.textColor = .white
         label.isUserInteractionEnabled = false
         return label
@@ -82,7 +81,7 @@ class DraftEpisodeCell: UITableViewCell {
         view.isScrollEnabled = false
         view.textContainer.maximumNumberOfLines = 2
         view.textContainer.lineBreakMode = .byTruncatingTail
-        view.font = UIFont.systemFont(ofSize: 15, weight: .regular)
+        view.font = UIFont.systemFont(ofSize: 14, weight: .regular)
         view.isUserInteractionEnabled = false
         view.textContainerInset = .zero
         view.textContainer.lineFragmentPadding = 0
@@ -174,9 +173,7 @@ class DraftEpisodeCell: UITableViewCell {
         case .iPhone4S:
             break
         case .iPhoneSE:
-            largeImageSize = 60
-            fontNameSize = 14
-            fontIDSize = 12
+            imageSize = 45.0
         case .iPhone8:
             break
         case .iPhone8Plus:
@@ -204,8 +201,8 @@ class DraftEpisodeCell: UITableViewCell {
         programImageButton.translatesAutoresizingMaskIntoConstraints = false
         programImageButton.topAnchor.constraint(equalTo: cellContentView.topAnchor, constant: 15).isActive = true
         programImageButton.leadingAnchor.constraint(equalTo: cellContentView.leadingAnchor, constant: 14).isActive = true
-        programImageButton.heightAnchor.constraint(equalToConstant: imageViewSize).isActive = true
-        programImageButton.widthAnchor.constraint(equalToConstant: imageViewSize).isActive = true
+        programImageButton.heightAnchor.constraint(equalToConstant: imageSize).isActive = true
+        programImageButton.widthAnchor.constraint(equalToConstant: imageSize).isActive = true
         
         cellContentView.addSubview(programNameStackedView)
         programNameStackedView.translatesAutoresizingMaskIntoConstraints = false

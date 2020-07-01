@@ -23,7 +23,7 @@ class LaunchVC: UIViewController {
     
     let logoImageView: UIImageView = {
         let imageView = UIImageView()
-        imageView.image = UIImage(named: "signup-logo-icon")
+        imageView.image = UIImage(named: "splash-icon")
         return imageView
     }()
     
@@ -44,7 +44,6 @@ class LaunchVC: UIViewController {
         view.backgroundColor = CustomStyle.onBoardingBlack
         configureView()
 
-        print("IS logged in? \(loggedIn)")
         if loggedIn {
             getUserData()
         } else {
@@ -53,7 +52,7 @@ class LaunchVC: UIViewController {
     }
     
     override func viewWillDisappear(_ animated: Bool) {
-        style = .default
+        style = .lightContent
         setNeedsStatusBarAppearanceUpdate()
     }
     
@@ -72,7 +71,6 @@ class LaunchVC: UIViewController {
     }
     
     func getUserData() {
-        print("getting user data")
         FireStoreManager.getUserData() {
             self.determineFirstScreen()
         }

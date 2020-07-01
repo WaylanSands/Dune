@@ -26,7 +26,7 @@ class CommentTextView: UIStackView {
     
     let backgroundView: UIView = {
         let view = UIView()
-        view.backgroundColor = CustomStyle.darkestBlack
+        view.backgroundColor = CustomStyle.sixthShade
         view.layer.shadowColor = UIColor.black.cgColor
         view.layer.shadowOpacity = 0.1
         view.layer.shadowOffset = .zero
@@ -58,7 +58,7 @@ class CommentTextView: UIStackView {
         view.layer.cornerRadius = 7
         view.textContainer.maximumNumberOfLines = 7
         view.font = UIFont.systemFont(ofSize: 15, weight: .regular)
-        view.textContainerInset = UIEdgeInsets(top: 9, left: 10, bottom: 9, right: 55)
+        view.textContainerInset = UIEdgeInsets(top: 8, left: 10, bottom: 5, right: 55)
         view.textColor = CustomStyle.primaryBlack
         view.isScrollEnabled = false
         view.keyboardType = .twitter
@@ -71,11 +71,10 @@ class CommentTextView: UIStackView {
     let placeholderLabel: UILabel = {
         let label = UILabel()
         label.text = "Leave a comment..."
-        label.font = UIFont.systemFont(ofSize: 15, weight: .regular)
+        label.font = UIFont.systemFont(ofSize: 15, weight: .medium)
         label.textColor = CustomStyle.fourthShade
         return label
     }()
-    
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -94,9 +93,9 @@ class CommentTextView: UIStackView {
         commentView.translatesAutoresizingMaskIntoConstraints = false
         commentView.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 50).isActive = true
         commentView.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -16).isActive = true
-        commentView.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: -12).isActive = true
-        commentView.topAnchor.constraint(equalTo: self.topAnchor, constant: 12).isActive = true
-        commentView.heightAnchor.constraint(greaterThanOrEqualToConstant: 37).isActive = true
+        commentView.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: -7).isActive = true
+        commentView.topAnchor.constraint(equalTo: self.topAnchor, constant: 7).isActive = true
+        commentView.heightAnchor.constraint(greaterThanOrEqualToConstant: 34).isActive = true
         
         self.addSubview(placeholderLabel)
         placeholderLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -106,14 +105,14 @@ class CommentTextView: UIStackView {
         self.addSubview(dropKeyboardButton)
         dropKeyboardButton.translatesAutoresizingMaskIntoConstraints = false
         dropKeyboardButton.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 12).isActive = true
-        dropKeyboardButton.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: -22).isActive = true
+        dropKeyboardButton.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: -14).isActive = true
         dropKeyboardButton.heightAnchor.constraint(equalToConstant: 22).isActive = true
         dropKeyboardButton.widthAnchor.constraint(equalToConstant: 22).isActive = true
         
         self.addSubview(postButton)
         postButton.translatesAutoresizingMaskIntoConstraints = false
         postButton.trailingAnchor.constraint(equalTo: commentView.trailingAnchor, constant: -15).isActive = true
-        postButton.bottomAnchor.constraint(equalTo: commentView.bottomAnchor, constant: -4.5).isActive = true
+        postButton.bottomAnchor.constraint(equalTo: commentView.bottomAnchor, constant: -3).isActive = true
     }
     
     @objc func postButtonPress() {
@@ -122,16 +121,17 @@ class CommentTextView: UIStackView {
             FireBaseComments.postCommentForEpisode(ID: episodeID, comment: commentView.text) { comment in
                 self.commentDelegate.append(comment: comment, primaryID: nil)
                 self.postButton.setTitle("Post", for: .normal)
+                self.commentView.text = ""
             }
-            self.commentView.text = ""
         } else if !commentView.text.isEmpty && isReply {
             postButton.setTitle("Posting...", for: .normal)
             FireBaseComments.postCommentReplyForEpisode(ID: episodeID, primaryID: commentID!, comment: commentView.text) { comment in
                 self.commentDelegate.append(comment: comment, primaryID: comment.primaryID)
                 self.postButton.setTitle("Post", for: .normal)
+                self.commentView.text = ""
             }
-            self.commentView.text = ""
         }
+        commentView.textColor = CustomStyle.primaryBlack
         isReply = false
     }
     
