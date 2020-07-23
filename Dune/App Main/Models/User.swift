@@ -26,6 +26,7 @@ struct User {
     static var draftEpisodeIDs: [String]?
     static var completedOnBoarding: Bool?
     static var upVotedComments: [String]?
+    static var recommendedProgram: Program?
     static var downVotedComments: [String]?
     
     static func modelUser(data: [String: Any]) {
@@ -46,9 +47,9 @@ struct User {
     }
     
     static func signOutUser() {
-        ID = nil
         username = nil
         email = nil
+        socialSignUp = nil
         password = nil
         birthDate = nil
         isPublisher = nil
@@ -59,6 +60,9 @@ struct User {
         savedContent = nil
         draftEpisodeIDs = nil
         completedOnBoarding = nil
+        upVotedComments = nil
+        recommendedProgram = nil
+        downVotedComments = nil
     }
     
 }

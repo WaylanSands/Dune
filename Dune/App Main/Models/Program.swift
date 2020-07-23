@@ -8,7 +8,7 @@
 
 import UIKit
 
-public class Program {
+public class Program: Comparable {
     
     var ID: String
     var rep: Int
@@ -37,6 +37,13 @@ public class Program {
     var hasBeenPlayed = false
     var playBackProgress: CGFloat = 0
     
+    // Private Channels
+    var channelState: PrivacyStatus
+    var pendingChannels: [String]
+    var deniedChannels: [String]
+    var isPrivate: Bool
+
+    
     init(data: [String: Any]) {
         rep = data["rep"] as! Int
         ID = data["ID"] as! String
@@ -60,6 +67,24 @@ public class Program {
         introPath = data["introPath"] as? String
         subscriptionIDs = data["subscriptionIDs"] as! [String]
         primaryCategory = data["primaryCategory"] as? String
+        
+        
+        // Private channel
+        pendingChannels = data["pendingChannels"] as! [String]
+        deniedChannels = data["deniedChannels"] as! [String]
+        
+        let state = data["channelState"] as? String
+        switch state {
+        case PrivacyStatus.madePublic.rawValue:
+            channelState = .madePublic
+            isPrivate  = false
+        case PrivacyStatus.madePrivate.rawValue:
+            channelState = .madePrivate
+            isPrivate  = true
+        default:
+            channelState = .madePublic
+            isPrivate  = false
+        }
         
         if imageID != nil {
             FileManager.getImageWith(imageID: imageID!) { image in
@@ -85,6 +110,14 @@ public class Program {
         } else {
             return [ID]
         }
+    }
+    
+    public static func < (lhs: Program, rhs: Program) -> Bool {
+        return lhs.subscriberCount < rhs.subscriberCount
+    }
+    
+    public static func == (lhs: Program, rhs: Program) -> Bool {
+         return lhs.subscriberCount == rhs.subscriberCount
     }
     
 }

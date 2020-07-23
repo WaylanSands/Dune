@@ -15,26 +15,26 @@ class LoadingAudioView: PassThoughView {
     let tracklayer = CAShapeLayer()
     let basicAnimation = CABasicAnimation(keyPath: "strokeEnd")
 
-    lazy var viewCenter = CGPoint(x:20, y: 20)
+    var viewCenter = CGPoint(x:20, y: 20)
+    var lineWidth: CGFloat = 3
+    var radius: CGFloat = 20
+    
+    func configureLargePlayback() {
+        viewCenter = CGPoint(x: 28, y: 28)
+        lineWidth = 4
+        radius = 28
+        
+    }
     
     func setupLoadingAnimation() {
-        let circularPath = UIBezierPath(arcCenter: viewCenter, radius: 20, startAngle:0 , endAngle: CGFloat.pi * 2, clockwise: true)
-//        let trackPath = UIBezierPath(arcCenter: viewCenter, radius: 38, startAngle:0 , endAngle: CGFloat.pi * 2, clockwise: true)
+        let circularPath = UIBezierPath(arcCenter: viewCenter, radius: radius, startAngle:0 , endAngle: CGFloat.pi * 2, clockwise: true)
         self.isHidden = false
-//
-//        tracklayer.path = trackPath.cgPath
-//        tracklayer.bounds = trackPath.bounds
-//        tracklayer.lineWidth = 6
-//        tracklayer.lineCap = .round
-//        tracklayer.fillColor = UIColor.white.withAlphaComponent(0.1).cgColor
-//
-//        self.layer.addSublayer(tracklayer)
         
         shapeLayer.path = circularPath.cgPath
         shapeLayer.bounds = circularPath.bounds
         shapeLayer.transform = CATransform3DMakeRotation(CGFloat(-90 * Double.pi/180), 0, 0, 1)
         shapeLayer.strokeColor = CustomStyle.white.cgColor
-        shapeLayer.lineWidth = 3
+        shapeLayer.lineWidth = lineWidth
         shapeLayer.strokeEnd = 0
         shapeLayer.lineCap = .round
         shapeLayer.fillColor = UIColor.clear.cgColor

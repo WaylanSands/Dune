@@ -7,9 +7,12 @@
 //
 
 import UIKit
+import Firebase
 import FirebaseFirestore
+import UserNotifications
 
-protocol NextButtonDelegate {
+
+protocol NextButtonDelegate: class {
     func makeNextButton(active: Bool)
     func keyboardNextButtonPress()
 }
@@ -39,6 +42,18 @@ class CreateUserVC: UIViewController {
         return button
     }()
     
+    let noThanksButton: UIButton = {
+        let button = UIButton()
+        button.setTitle("No thanks", for: .normal)
+        button.backgroundColor = CustomStyle.secondShade
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        button.setTitleColor(CustomStyle.linkBlue, for: .normal)
+        button.addTarget(self, action: #selector(noToNotifications), for: .touchUpInside)
+        button.layer.cornerRadius = 6
+        button.isHidden = true
+        return button
+    }()
+    
     let customNavBar: CustomNavBar = {
         let navBar = CustomNavBar()
         navBar.leftButton.setImage(#imageLiteral(resourceName: "back-button-blk"), for: .normal)
@@ -48,32 +63,11 @@ class CreateUserVC: UIViewController {
         return navBar
     }()
     
-    let datePicker: UIDatePicker = {
-        let picker = UIDatePicker()
-        picker.datePickerMode = .date
-        picker.addTarget(self, action: #selector(updateDateLabel), for: .valueChanged)
-        picker.isHidden = true
-        return picker
-    }()
-    
-    lazy var dateLabel: UIButton = {
-        let button = UIButton()
-        button.isEnabled = false
-        button.titleLabel!.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        button.setTitle("", for: .normal)
-        button.setTitleColor(CustomStyle.primaryBlack, for: .normal)
-        button.backgroundColor = CustomStyle.secondShade
-        button.layer.cornerRadius = 7
-        button.isHidden = true
-        button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 0)
-        return button
-    }()
-    
     // Subviews
     let containerView = UIView()
     let addEmail = AddEmail(frame: .zero)
     let createPassword = CreatePassword(frame: .zero)
-    let addBirthDate = AddBirthDate(frame: .zero)
+    let addBirthDate = AllowNotifications(frame: .zero)
     let createUsername = CreateUsername(frame: .zero)
     
     // First subview
@@ -158,28 +152,20 @@ class CreateUserVC: UIViewController {
         nextButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
         nextButton.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: nextButtonYPosition).isActive = true
         
-        view.addSubview(datePicker)
-        datePicker.translatesAutoresizingMaskIntoConstraints = false
-        datePicker.topAnchor.constraint(equalTo: nextButton.bottomAnchor, constant: datePickerDistance).isActive = true
-        datePicker.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-        datePicker.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        datePicker.setYearValidation()
-        
-        view.addSubview(dateLabel)
-        dateLabel.translatesAutoresizingMaskIntoConstraints = false
-        dateLabel.bottomAnchor.constraint(equalTo: nextButton.topAnchor, constant: -10.0).isActive = true
-        dateLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16.0).isActive = true
-        dateLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
-        dateLabel.heightAnchor.constraint(equalToConstant: 40.0).isActive = true
-        updateDateLabel()
-        
+        view.addSubview(noThanksButton)
+        noThanksButton.translatesAutoresizingMaskIntoConstraints = false
+        noThanksButton.heightAnchor.constraint(equalToConstant: 40).isActive = true
+        noThanksButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
+        noThanksButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
+        noThanksButton.bottomAnchor.constraint(equalTo: nextButton.topAnchor, constant: -10).isActive = true
+
         view.bringSubviewToFront(progressBar)
         
         view.addSubview(customNavBar)
         customNavBar.pinNavBarTo(view)
     }
     
-    // Transition functions
+
     func toCenter(view: UIView) {
         view.frame.origin.x = self.centerXPosition
     }
@@ -208,28 +194,8 @@ class CreateUserVC: UIViewController {
         })
     }
     
-    // SubViews Controls
-    
+    //MARK: Next Button Press
     @IBAction func nextButtonPress() {
-        
-        if datePicker.date > Under18Years! && currentView == addBirthDate {
-            
-            let alert = UIAlertController(title: "Age Restrictions", message: """
-                The current date entered indicates you are under 18 years old.
-
-                Is this correct?
-                """, preferredStyle: .alert)
-            
-            alert.addAction(UIAlertAction(title: "Yes", style: UIAlertAction.Style.default, handler: {(alert: UIAlertAction!) in
-                self.navigateToAccountType()
-            }))
-                
-            alert.addAction(UIAlertAction(title: "No", style: UIAlertAction.Style.cancel, handler: nil))
-            self.present(alert, animated: true, completion: nil)
-        } else if datePicker.date <= Under18Years! && currentView == addBirthDate {
-            User.birthDate = datePicker.dateToStringMMMddYYY()
-            self.navigateToAccountType()
-        }
         
         if nextButtonActive == false && currentView == addEmail {
             if addEmail.emailAvailable != false {
@@ -239,6 +205,12 @@ class CreateUserVC: UIViewController {
                UIApplication.shared.windows.last?.addSubview(emailTakenAlert)
             }
         }
+        
+        if nextButtonActive == false && currentView == createPassword {
+            createPassword.validationLabel.text = "Too weak"
+            createPassword.validationLabel.isHidden = false
+        }
+        
         
         if nextButtonActive {
             switch currentView {
@@ -263,16 +235,24 @@ class CreateUserVC: UIViewController {
                 transitionBackwards(view: createPassword)
                 transitionToCenter(view: addBirthDate)
                 updateProgressImage(4)
-                nextButtonActive = false
+                nextButtonActive = true
                 createPassword.passwordTextField.resignFirstResponder()
-                addBirthDate.dateTextField.becomeFirstResponder();
-                datePicker.isHidden = false
-                dateLabel.isHidden = false
+                addBirthDate.dateTextField.becomeFirstResponder()
+                nextButton.setTitle("Allow alerts", for: .normal)
+                noThanksButton.isHidden = false
             case addBirthDate:
-                User.birthDate = datePicker.dateToStringMMMddYYY()
-                navigateToAccountType()
-                dateLabel.titleLabel?.text = nil
+                print("Selected allow")
+                askToRegisterForNotifications()
             default: return
+            }
+        }
+    }
+    
+    func askToRegisterForNotifications() {
+        let appDelegate = UIApplication.shared.delegate as! AppDelegate
+        appDelegate.promptForPushNotifications { _ in
+            DispatchQueue.main.async {
+                self.navigateToAccountType()
             }
         }
     }
@@ -305,31 +285,18 @@ class CreateUserVC: UIViewController {
             createPassword.passwordTextField.resignFirstResponder()
             addEmail.emailTextField.becomeFirstResponder()
         case addBirthDate:
+            nextButton.setTitle("Next", for: .normal)
+            noThanksButton.isHidden = true
             transitionForward(view: addBirthDate)
             transitionToCenter(view: createPassword)
             updateProgressImage(3)
             currentView = createPassword
-            datePicker.isHidden = true
-            dateLabel.isHidden = true
         default: return
         }
     }
     
     func updateProgressImage(_ imageNumber: Int) {
-        if UIDevice.current.deviceType == .iPhoneSE {
-//            switch imageNumber {
-//            case 1:
-//                progressBarSE.image = #imageLiteral(resourceName: "signup-step-one")
-//            case 2:
-//                progressBarSE.image = #imageLiteral(resourceName: "signup-step-two")
-//            case 3:
-//                progressBarSE.image = #imageLiteral(resourceName: "signup-step-three")
-//            case 4:
-//                progressBarSE.image = #imageLiteral(resourceName: "signup-step-four")
-//            default:
-//                progressBarSE.isHidden = true
-//            }
-        } else {
+        if UIDevice.current.deviceType != .iPhoneSE {
             switch imageNumber {
             case 1:
                 progressBar.image = #imageLiteral(resourceName: "signup-step-one")
@@ -345,12 +312,11 @@ class CreateUserVC: UIViewController {
         }
     }
     
-    @objc func updateDateLabel() {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "MMM dd, yyyy"
-        let date = dateFormatter.string(from: datePicker.date)
-        dateLabel.setTitle(date, for: .normal)
+    @objc func noToNotifications() {
+        print("No")
+         navigateToAccountType()
     }
+    
 }
 
 extension CreateUserVC: NextButtonDelegate {
@@ -360,6 +326,7 @@ extension CreateUserVC: NextButtonDelegate {
     }
     
     func keyboardNextButtonPress() {
+        print("keyboard")
         nextButtonPress()
     }
     

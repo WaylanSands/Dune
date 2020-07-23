@@ -12,14 +12,6 @@ import LinkPresentation
 
 class Episode: Comparable {
     
-     static func < (lhs: Episode, rhs: Episode) -> Bool {
-         return lhs.postedDate < rhs.postedDate
-     }
-    
-     static func == (lhs: Episode, rhs: Episode) -> Bool {
-         return lhs.postedDate == rhs.postedDate
-     }
-    
     var ID: String
     var timeSince: String
     var timeStamp: Timestamp
@@ -82,6 +74,15 @@ class Episode: Comparable {
         canonicalUrl = data["canonicalUrl"] as? String
         commentsRef = data["commentsRef"] as? CollectionReference
     }
+    
+    static func < (lhs: Episode, rhs: Episode) -> Bool {
+        return lhs.postedDate < rhs.postedDate
+    }
+    
+    static func == (lhs: Episode, rhs: Episode) -> Bool {
+        return lhs.postedDate == rhs.postedDate
+    }
+    
 }
 
 class DraftEpisode {

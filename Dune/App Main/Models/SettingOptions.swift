@@ -85,6 +85,16 @@ class SettingOptions {
         Setting(name: "Cancel", imageName: "cancel-icon"),
     ]
     
+    
+    static let programSettingsPrivateOn: [Setting] = [
+        Setting(name: "Report", imageName: nil),
+        Setting(name: "Remove", imageName: nil),
+        Setting(name: "Share via...", imageName: "native-share-icon"),
+        Setting(name: "Share on Facebook", imageName: "facebook-friend-icon"),
+        Setting(name: "Share on Twitter", imageName: "twitter-friend-icon"),
+        Setting(name: "Cancel", imageName: "cancel-icon"),
+    ]
+    
     static let ownEpisode: [Setting] = [
         Setting(name: "Delete", imageName: "trash-icon"),
         Setting(name: "Edit", imageName: "edit-icon"),

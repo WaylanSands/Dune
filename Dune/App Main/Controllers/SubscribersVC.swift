@@ -12,8 +12,15 @@ class SubscribersVC: UIViewController {
   
     var programID: String!
     var programName: String!
+    var subChannel: Program?
     var programIDs: [String]!
     var subscriberIDs: [String]!
+    
+    var requestDelegate: RequestsDelegate!
+  
+    var isPublic = true
+    var reportingChannel = false
+    var removingChannel = false
     
     var currentlyFetching = false
     var fetchedIDs = [String]()
@@ -30,6 +37,9 @@ class SubscribersVC: UIViewController {
     var selectedProgramCellRow: Int?
     
     let programSettings = SettingsLauncher(options: SettingOptions.programSettings, type: .program)
+    let programSettingsPrivateOn = SettingsLauncher(options: SettingOptions.programSettingsPrivateOn, type: .program)
+
+    let removingSubscriberAlert = CustomAlertView(alertType: .removingSubscriber)
     let noIntroRecordedAlert = CustomAlertView(alertType: .noIntroRecorded)
     let reportProgramAlert = CustomAlertView(alertType: .reportProgram)
    
@@ -42,8 +52,8 @@ class SubscribersVC: UIViewController {
     let customNavBar: CustomNavBar = {
         let nav = CustomNavBar()
         nav.leftButton.isHidden = true
-        nav.backgroundColor = .white
-        nav.alpha = 0.9
+        nav.titleLabel.text = "Subscribers"
+        nav.backgroundColor = CustomStyle.blackNavBar
         return nav
     }()
     
@@ -88,8 +98,7 @@ class SubscribersVC: UIViewController {
         self.programID = programID
         self.programName = programName
         self.programIDs = programIDs
-        self.subscriberIDs = subscriberIDs
-        self.title = "Subscribers"
+        self.subscriberIDs = subscriberIDs.filter({!programIDs.contains($0)})
     }
     
     required init?(coder: NSCoder) {
@@ -107,14 +116,32 @@ class SubscribersVC: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         configureSubscribeButton()
         fetchSubscribers()
+        configureNavBar()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         introPlayer.finishSession()
     }
     
+    func configureNavBar() {
+        navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
+        navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
+        navigationController?.navigationBar.backIndicatorTransitionMaskImage = #imageLiteral(resourceName: "back-button-white")
+        navigationController?.navigationBar.prefersLargeTitles = false
+        navigationController?.navigationBar.backIndicatorImage = #imageLiteral(resourceName: "back-button-white")
+        navigationController?.navigationBar.isTranslucent = true
+        navigationController?.navigationBar.shadowImage = nil
+        navigationController?.navigationBar.barStyle = .black
+        navigationController?.navigationBar.shadowImage = UIImage()
+        navigationController?.navigationBar.tintColor = .white
+        navigationController?.navigationBar.isHidden = false
+        navigationItem.largeTitleDisplayMode = .never
+    }
+    
     func configureDelegates() {
         tableView.register(ProgramCell.self, forCellReuseIdentifier: "programCell")
+        programSettingsPrivateOn.settingsDelegate = self
+        removingSubscriberAlert.alertDelegate = self
         programSettings.settingsDelegate = self
         reportProgramAlert.alertDelegate = self
         introPlayer.playbackDelegate = self
@@ -160,6 +187,9 @@ class SubscribersVC: UIViewController {
         emptyTableView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20).isActive = true
         emptyTableView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20).isActive = true
         emptyTableView.heightAnchor.constraint(equalToConstant: 150).isActive = true
+        tableView.backgroundColor = CustomStyle.secondShade
+        tableView.tableFooterView = UIView()
+        tableView.addTopBounceAreaView()
         
         emptyTableView.addSubview(noSubscribersLabel)
         noSubscribersLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -189,13 +219,11 @@ class SubscribersVC: UIViewController {
         loadingView.bottomAnchor.constraint(equalTo: tableView.bottomAnchor).isActive = true
         
         view.addSubview(introPlayer)
-        introPlayer.frame = CGRect(x: 0, y: view.frame.height, width: view.frame.width, height: 70)
+        introPlayer.frame = CGRect(x: 0, y: view.frame.height, width: view.frame.width, height: 64)
         introPlayer.addBottomSection()
         
-        if !CurrentProgram.programsIDs().contains(programID) {
-            view.addSubview(customNavBar)
-            customNavBar.pinNavBarTo(view)
-        }
+        view.addSubview(customNavBar)
+        customNavBar.pinNavBarTo(view)
     }
     
     func fetchSubscribers() {
@@ -300,6 +328,10 @@ extension SubscribersVC: UITableViewDataSource, UITableViewDelegate {
 }
 
 extension SubscribersVC: DuneAudioPlayerDelegate {
+    
+    func fetchMoreEpisodes() {
+        print("Should fetch more episodes: Needs implementation")
+    }
    
     func updateProgressBarWith(percentage: CGFloat, forType: PlayBackType, episodeID: String) {
         if lastPlayedID != episodeID {
@@ -345,7 +377,6 @@ extension SubscribersVC: ProgramCellDelegate {
     }
     
     func playProgramIntro(cell: ProgramCell) {
-        introPlayer.isProgramPageIntro = false
         activeProgram = cell.program
         
         cell.program.hasBeenPlayed = true
@@ -382,7 +413,11 @@ extension SubscribersVC: ProgramCellDelegate {
     
     func showSettings(cell: ProgramCell) {
         selectedProgramCellRow = downloadedPrograms.firstIndex(where: { $0.ID == cell.program.ID })
-        programSettings.showSettings()
+        if isPublic {
+            programSettingsPrivateOn.showSettings()
+        } else {
+            programSettings.showSettings()
+        }
     }
     
     func visitProfile(program: Program) {
@@ -419,7 +454,11 @@ extension SubscribersVC: SettingsLauncherDelegate {
     func selectionOf(setting: String) {
         switch setting {
         case "Report":
+            reportingChannel = true
             view.addSubview(reportProgramAlert)
+        case "Remove":
+             removingChannel = true
+            view.addSubview(removingSubscriberAlert)
         default:
             break
         }
@@ -429,15 +468,31 @@ extension SubscribersVC: SettingsLauncherDelegate {
 }
 
 extension SubscribersVC: CustomAlertDelegate {
+   
     func primaryButtonPress() {
-        if let row = selectedProgramCellRow {
+        guard let row = selectedProgramCellRow else { return }
+        if reportingChannel {
+            reportingChannel = false
             let program = downloadedPrograms[row]
             FireStoreManager.reportProgramWith(programID: program.ID)
+        } else if removingChannel {
+            removingChannel = false
+            if subChannel != nil {
+                subChannel!.subscriberCount -= 1
+                let ID = downloadedPrograms[row].ID
+                subChannel!.deniedChannels.append(ID)
+                subChannel!.subscriberIDs.removeAll(where: {$0 == ID})
+                FireStoreManager.removedChannelWith(ID, for: programID)
+            } else {
+                let ID = downloadedPrograms[row].ID
+                FireStoreManager.removedChannelWith(ID)
+            }
         }
     }
     
     func cancelButtonPress() {
-        //
+        reportingChannel = false
+        removingChannel = false
     }
     
 }

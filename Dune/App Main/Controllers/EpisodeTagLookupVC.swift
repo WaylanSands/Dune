@@ -12,10 +12,10 @@ import AVFoundation
 
 class EpisodeTagLookupVC: UIViewController {
     
-    var pushedForward = false
+    var pushingContent = false
 
     let tableView = UITableView()
-    var audioPlayer = DuneAudioPlayer()
+    var audioPlayer = DunePlayBar()
    
     var pushingComment = false
     var audioIDs = [String]()
@@ -25,11 +25,19 @@ class EpisodeTagLookupVC: UIViewController {
     var activeCell: EpisodeCell?
     var selectedCellRow: Int?
 
-    let loadingView = TVLoadingAnimationView(topHeight: 150)
+    let loadingView = TVLoadingAnimationView(topHeight: 20)
 
     let subscriptionSettings = SettingsLauncher(options: SettingOptions.subscriptionEpisode, type: .subscriptionEpisode)
     let ownEpisodeSettings = SettingsLauncher(options: SettingOptions.ownEpisode, type: .ownEpisode)
     let reportEpisodeAlert = CustomAlertView(alertType: .reportEpisode)
+    
+    let customNavBar: CustomNavBar = {
+        let nav = CustomNavBar()
+        nav.leftButton.isHidden = true
+        nav.rightButton.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
+        nav.backgroundColor = CustomStyle.blackNavBar
+        return nav
+    }()
 
     let episodeNumberLabel: UILabel = {
         let label = UILabel()
@@ -58,12 +66,10 @@ class EpisodeTagLookupVC: UIViewController {
     
     func configureEpisodeLabelWith(count: Int) {
         var eps = "Episodes"
-        
         if count == 1 {
             eps = "Episode"
         }
-        
-       episodeNumberLabel.text = "\(count) \(eps)"
+         customNavBar.rightButton.setTitle("\(count) \(eps)", for: .normal)
     }
     
     required init?(coder: NSCoder) {
@@ -87,10 +93,6 @@ class EpisodeTagLookupVC: UIViewController {
         if !pushingComment {
             audioPlayer.finishSession()
         }
-        
-//        if pushedForward == false {
-//            navigationController?.popToRootViewController(animated: true)
-//        }
 
         FileManager.removeAudioFilesFromDocumentsDirectory() {
             print("Audio removed")
@@ -114,14 +116,17 @@ class EpisodeTagLookupVC: UIViewController {
     }
 
     func configureNavigation() {
-        UINavigationBar.appearance().titleTextAttributes = CustomStyle.blackNavBarAttributes
         navigationItem.title = tag
-        navigationController?.navigationBar.prefersLargeTitles = false
+        navigationController?.isNavigationBarHidden = false
         navigationController?.navigationBar.isHidden = false
-        navigationController?.navigationBar.setBackgroundImage(nil, for: .default)
-        navigationController?.navigationBar.barStyle = .default
-        navigationController?.navigationBar.tintColor = .black
-
+        navigationController?.navigationBar.barStyle = .black
+        navigationController?.navigationBar.tintColor = .white
+        navigationController?.navigationBar.isTranslucent = true
+        navigationController?.navigationBar.shadowImage = UIImage()
+        navigationController?.navigationBar.prefersLargeTitles = false
+        navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
+        navigationController?.navigationBar.titleTextAttributes = [.foregroundColor: UIColor.white]
+        
         let imgBackArrow = #imageLiteral(resourceName: "back-button-white")
         navigationController?.navigationBar.backIndicatorImage = imgBackArrow
         navigationController?.navigationBar.backIndicatorTransitionMaskImage = imgBackArrow
@@ -131,10 +136,12 @@ class EpisodeTagLookupVC: UIViewController {
     func addLoadingView() {
         view.addSubview(loadingView)
         loadingView.translatesAutoresizingMaskIntoConstraints = false
-        loadingView.topAnchor.constraint(equalTo: tableView.topAnchor).isActive = true
+        loadingView.topAnchor.constraint(equalTo: tableView.topAnchor, constant: UIDevice.current.navBarHeight()).isActive = true
         loadingView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         loadingView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         loadingView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+        
+        view.bringSubviewToFront(customNavBar)
     }
 
     func configureViews() {
@@ -153,6 +160,9 @@ class EpisodeTagLookupVC: UIViewController {
 
         view.addSubview(audioPlayer)
         audioPlayer.frame = CGRect(x: 0, y: view.frame.height, width: view.frame.width, height: 70)
+        
+        view.addSubview(customNavBar)
+        customNavBar.pinNavBarTo(view)
     }
     
 }
@@ -165,12 +175,14 @@ extension EpisodeTagLookupVC: UITableViewDataSource, UITableViewDelegate {
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let episodeCell = tableView.dequeueReusableCell(withIdentifier: "episodeCell") as! EpisodeCell
-        episodeCell.moreButton.addTarget(episodeCell, action: #selector(EpisodeCell.moreUnwrap), for: .touchUpInside)
-        episodeCell.playEpisodeButton.addTarget(episodeCell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
-        episodeCell.programImageButton.addTarget(episodeCell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
+        
         episodeCell.episodeSettingsButton.addTarget(episodeCell, action: #selector(EpisodeCell.showSettings), for: .touchUpInside)
-        episodeCell.likeButton.addTarget(episodeCell, action: #selector(EpisodeCell.likeButtonPress), for: .touchUpInside)
+        episodeCell.programImageButton.addTarget(episodeCell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
+        episodeCell.playEpisodeButton.addTarget(episodeCell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
         episodeCell.usernameButton.addTarget(episodeCell, action: #selector(EpisodeCell.visitProfile), for: .touchUpInside)
+        episodeCell.likeButton.addTarget(episodeCell, action: #selector(EpisodeCell.likeButtonPress), for: .touchUpInside)
+        episodeCell.commentButton.addTarget(episodeCell, action: #selector(EpisodeCell.showComments), for: .touchUpInside)
+        episodeCell.moreButton.addTarget(episodeCell, action: #selector(EpisodeCell.moreUnwrap), for: .touchUpInside)
 
         let episode = downloadedEpisodes[indexPath.row]
         episodeCell.episode = episode
@@ -210,9 +222,31 @@ extension EpisodeTagLookupVC: UITableViewDataSource, UITableViewDelegate {
 
 extension EpisodeTagLookupVC: EpisodeCellDelegate {
     
+    func visitLinkWith(url: URL) {
+        pushingContent = true
+        let webView = WebVC(url: url)
+        webView.delegate = self
+        
+        switch audioPlayer.currentState {
+        case .loading:
+             webView.currentStatus = .ready
+        case .ready:
+             webView.currentStatus = .ready
+        case .playing:
+             webView.currentStatus = .playing
+        case .paused:
+             webView.currentStatus = .paused
+        case .fetching:
+            webView.currentStatus = .ready
+        }
+        
+        audioPlayer.audioPlayerDelegate = webView
+        navigationController?.present(webView, animated: true, completion: nil)
+    }
+    
     func episodeTagSelected(tag: String) {
         let tagSelectedVC = EpisodeTagLookupVC(tag: tag)
-        pushedForward = true
+        pushingContent = true
         navigationController?.pushViewController(tagSelectedVC, animated: true)
     }
 
@@ -338,6 +372,10 @@ extension EpisodeTagLookupVC: EpisodeEditorDelegate {
 
 extension EpisodeTagLookupVC: DuneAudioPlayerDelegate {
     
+    func fetchMoreEpisodes() {
+        print("Should fetch more episodes: Needs implementation")
+    }
+    
     func showCommentsFor(episode: Episode) {
         pushingComment = true
         if audioPlayer.audioPlayer != nil {
@@ -380,4 +418,15 @@ extension EpisodeTagLookupVC: CustomAlertDelegate {
     }
 
 }
+
+extension EpisodeTagLookupVC: WebViewDelegate {
+    
+    func playOrPauseEpisode() {
+        if let cell = activeCell {
+            audioPlayer.playOrPauseEpisodeWith(audioID: cell.episode.audioID)
+        }
+    }
+    
+}
+
 

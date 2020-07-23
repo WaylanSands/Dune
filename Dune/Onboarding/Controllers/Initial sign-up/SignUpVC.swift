@@ -29,7 +29,7 @@ class SignUpVC: UIViewController {
     let deviceType = UIDevice.current.deviceType
     var rootVC : UIViewController?
     
-    var provider = OAuthProvider(providerID: "twitter.com")
+    let provider = OAuthProvider(providerID: "twitter.com")
    
     let networkingIndicator = NetworkingProgress()
    
@@ -47,11 +47,12 @@ class SignUpVC: UIViewController {
     fileprivate var currentNonce: String?
     
     override var preferredStatusBarStyle: UIStatusBarStyle {
-        return .lightContent
+      return .lightContent
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        view.backgroundColor = CustomStyle.onBoardingBlack
         styleButtons()
         styleForScreens()
         configureNavigation()
@@ -62,15 +63,14 @@ class SignUpVC: UIViewController {
             print("Adding indicator")
             self.networkingIndicator.taskLabel.text = "Fetching details"
             UIApplication.shared.keyWindow!.addSubview(self.networkingIndicator)
+            view.addSubview(self.networkingIndicator)
+
         } 
-    }
-    
-    override func viewWillDisappear(_ animated: Bool) {
-        networkingIndicator.removeFromSuperview()
     }
     
     func configureNavigation() {
         navigationController?.isNavigationBarHidden = true
+        networkingIndicator.removeFromSuperview()
         tabBarController?.tabBar.isHidden = true
     }
     
@@ -120,7 +120,7 @@ class SignUpVC: UIViewController {
                 self.socialSignup = false
             } else {
                 
-                Auth.auth().signIn(with: credential!) { authResult, error in
+                Auth.auth().signIn(with: credential!) { [unowned self] authResult, error in
                     
                     if error != nil {
                         print("Error attempting Twitter sign up")
@@ -135,18 +135,18 @@ class SignUpVC: UIViewController {
                         let username = info!["screen_name"] as? String
                         let summary = info!["description"] as? String
                         let name = info!["name"] as? String
-                        
+
                         User.socialSignUp = true
                         User.username = username
                         User.ID = authResult!.user.uid
                         CurrentProgram.imagePath = imagePath
-                        
+
                         CurrentProgram.name = name
                         CurrentProgram.summary = summary
                         CurrentProgram.username = username
                         CurrentProgram.imagePath = imagePath
                         CurrentProgram.ID = authResult!.user.uid
-                        
+
                         self.attemptToStoreProgramImage()
                         
                         if let accountTypeVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "accountTypeController") as? AccountTypeVC {
@@ -162,7 +162,7 @@ class SignUpVC: UIViewController {
         if CurrentProgram.imagePath != nil && CurrentProgram.imagePath != ""  {
             FileManager.fetchImageFrom(url: CurrentProgram.imagePath!) { image in
                 if image != nil {
-                    FileManager.storeInitialProgramImage(image: image!, programID: CurrentProgram.ID!)
+                    FileManager.storeTwitterProgramImage(image: image!)
                 }
             }
         }
@@ -174,17 +174,7 @@ class SignUpVC: UIViewController {
             startSignInWithAppleFlow()
             socialSignup = true
         } else {
-            UIApplication.shared.keyWindow!.addSubview(self.featureUnavailableAlert)
-        }
-    }
-    
-    
-    
-    @available(iOS 13.0, *)
-    func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
-        for URLContext in URLContexts {
-            let url = URLContext.url
-            Auth.auth().canHandle(url)
+            view.addSubview(self.featureUnavailableAlert)
         }
     }
     
@@ -325,7 +315,7 @@ extension SignUpVC: ASAuthorizationControllerDelegate, ASAuthorizationController
             }
             
             self.networkingIndicator.taskLabel.text = "Fetching details"
-            UIApplication.shared.keyWindow!.addSubview(self.networkingIndicator)
+            self.view.addSubview(self.networkingIndicator)
 
             let credential = OAuthProvider.credential(withProviderID: "apple.com", idToken: idTokenString, rawNonce: nonce)
 
@@ -365,7 +355,9 @@ extension SignUpVC: ASAuthorizationControllerDelegate, ASAuthorizationController
                                 }
                             }
                         } else {
-                            UIApplication.shared.keyWindow!.addSubview(self.appleNameFailAlert)
+                            self.networkingIndicator.removeFromSuperview()
+                            self.view.addSubview(self.appleNameFailAlert)
+                            self.socialSignup = false
                         }
                     }
                 }
@@ -378,7 +370,6 @@ extension SignUpVC: ASAuthorizationControllerDelegate, ASAuthorizationController
         let randomInt = Int.random(in: 1...1000)
         let randomNumberString = String(randomInt)
         return name + randomNumberString
-        
     }
     
     func moveToAccountTypeVC(with name: String) {
@@ -394,30 +385,8 @@ extension SignUpVC: ASAuthorizationControllerDelegate, ASAuthorizationController
     }
     
     func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
-        // Handle error.
         print("Sign in with Apple errored: \(error)")
+        self.socialSignup = false
     }
     
 }
-
-#if DEBUG
-import SwiftUI
-
-struct InfoVCRepresentable: UIViewControllerRepresentable {
-    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
-        // leave this empty
-    }
-    
-    @available(iOS 13.0.0, *)
-    func makeUIViewController(context: Context) -> UIViewController {
-        SignUpVC()
-    }
-}
-
-@available(iOS 13.0, *)
-struct InfoVCPreview: PreviewProvider {
-    static var previews: some View {
-       InfoVCRepresentable()
-    }
-}
-#endif

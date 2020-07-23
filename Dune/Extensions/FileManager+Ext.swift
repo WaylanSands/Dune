@@ -61,7 +61,8 @@ extension FileManager {
         let possibleURL = cacheURL.appendingPathComponent(imageID)
         
         if FileManager.default.fileExists(atPath: possibleURL.path) {
-            if let image = UIImage(contentsOfFile: possibleURL.path) {
+            let imageData = try! Data(contentsOf: possibleURL)
+            if let image = UIImage(data: imageData) {
                 completion(image)
             } else {
                 print("Error getting the image from cache")
@@ -237,16 +238,12 @@ extension FileManager {
                 let directoryContents = try FileManager.default.contentsOfDirectory(at: documentsUrl, includingPropertiesForKeys: nil)
                 
                 for each in directoryContents {
-                    print(each.lastPathComponent)
                     if each.lastPathComponent != "user" && each.pathExtension != "png" && each.pathExtension != "jpg"  {
                         do {
                             try fileManager.removeItem(at: each)
-                            print("Removing \(each.lastPathComponent).\(each.pathExtension) from documents")
                         } catch {
-                            print("Error removing \(each.lastPathComponent).\(each.pathExtension) from documents")
                         }
                     }
-                    
                     if directoryContents.count == 1 {
                         completion()
                     }
@@ -300,22 +297,6 @@ extension FileManager {
         }
     }
     
-//    static func storeSelectedListener(image: UIImage) {
-//
-//        if let data = image.jpegData(compressionQuality: 0.5) {
-//            let documentsURL = getDocumentsDirectory()
-//            let folderURL = documentsURL.appendingPathComponent("user/image", isDirectory: true)
-//            let url = folderURL.appendingPathComponent(User.imageID!)
-//
-//            do {
-//                try data.write(to: url)
-//            }
-//            catch {
-//                print("Unable to Write Data to Disk (\(error))")
-//            }
-//        }
-//    }
-    
     static func checkTempDirectoryForAudioFileWith(audioID: String, completion: (URL?) -> ()) {
         let tempDirectory = FileManager.default.temporaryDirectory
         let fileURL = tempDirectory.appendingPathComponent(audioID)
@@ -356,7 +337,7 @@ extension FileManager {
         
         let fileManager = FileManager.default
         
-        let imageID = imageID ?? NSUUID().uuidString
+        let imageID = imageID ?? NSUUID().uuidString + ".jpg"
         
         if CurrentProgram.ID != programID {
             let program = CurrentProgram.subPrograms?.first(where: { $0.ID == programID })
@@ -391,42 +372,10 @@ extension FileManager {
         }
     }
     
-//    static func storeSelectedUserImage(image: UIImage, imageID: String?) {
-//        
-//        let fileManager = FileManager.default
-//        
-//        let imageID = imageID ?? NSUUID().uuidString
-//        
-//        if let data = image.jpegData(compressionQuality: 0.5) {
-//           
-//            let cacheURL = getCacheDirectory()
-//            let fileURL = cacheURL.appendingPathComponent(imageID)
-//            
-//            if fileManager.fileExists(atPath: fileURL.path) {
-//                do {
-//                    try fileManager.removeItem(at: fileURL)
-//                } catch {
-//                    print("Unable to remove file from cache \(error)")
-//                }
-//            } else {
-//                print("There is no data with that fileName")
-//            }
-//
-//            do {
-//                try data.write(to: fileURL)
-//                print("Adding image to cache")
-//                FireStorageManager.storeUserImage(image: image)
-//            }
-//            catch {
-//                print("Unable to add Image to cache: (\(error))")
-//            }
-//        }
-//    }
-    
     static func storeInitialProgramImage(image: UIImage, programID: String) {
         
         let fileManager = FileManager.default
-        let imageID = NSUUID().uuidString
+        let imageID = NSUUID().uuidString + ".jpg"
         CurrentProgram.imageID = imageID
         CurrentProgram.image = image
 
@@ -457,6 +406,39 @@ extension FileManager {
         }
     }
     
+    static func storeTwitterProgramImage(image: UIImage) {
+        
+        let fileManager = FileManager.default
+        let imageID = NSUUID().uuidString + ".jpg"
+        CurrentProgram.imageID = imageID
+        CurrentProgram.image = image
+        DispatchQueue.global(qos: .background).async {
+            if let data = image.jpegData(compressionQuality: 0.5) {
+                
+                let cacheURL = getCacheDirectory()
+                
+                let fileURL = cacheURL.appendingPathComponent(imageID)
+                
+                if fileManager.fileExists(atPath: fileURL.path) {
+                    do {
+                        try fileManager.removeItem(at: fileURL)
+                    } catch {
+                        print("Unable to remove file from cache \(error)")
+                    }
+                }
+                
+                do {
+                    try data.write(to: fileURL)
+                    print("Adding image to cache")
+                    FireStorageManager.storeCachedTwitter(image: image, with: imageID)
+                }
+                catch {
+                    print("Unable to add Image to cache: (\(error))")
+                }
+            }
+        }
+    }
+    
     
     // Check image isn't already in cache, if not download and store there
     static func getImageWith(imageID: String, completion: @escaping (UIImage) -> ()) {
@@ -466,7 +448,8 @@ extension FileManager {
         
         DispatchQueue.global().async {
             if FileManager.default.fileExists(atPath: fileURL.path) {
-                if let image = UIImage(contentsOfFile: fileURL.path) {
+                let imageData = try! Data(contentsOf: fileURL)
+                if let image = UIImage(data: imageData) {
                     completion(image)
                 } else {
                     print("Failed to turn file into an Image")
@@ -487,7 +470,8 @@ extension FileManager {
         
         DispatchQueue.global().async {
             if FileManager.default.fileExists(atPath: fileURL.path) {
-                if let image = UIImage(contentsOfFile: fileURL.path) {
+                let imageData = try! Data(contentsOf: fileURL)
+                if let image = UIImage(data: imageData) {
                     completion(image)
                 } else {
                     print("Failed to turn file into an Image")
@@ -500,7 +484,7 @@ extension FileManager {
         }
     }
     
-     // Check music isn't already in cache, if not download and store there.
+    // Check music isn't already in cache, if not download and store there.
     static func getMusicURLWith(audioID: String, completion: @escaping (URL) -> ()) {
         
         let cacheURL = FileManager.getCacheDirectory()
@@ -515,6 +499,22 @@ extension FileManager {
                 FireStorageManager.downloadBackgroundMusicToCache(audioID: audioID) { url in
                     completion(url)
                 }
+                
+            }
+        }
+    }
+    
+    // Check music isn't already in cache, if not download and store there.
+    static func getMusicURLWith(audioID: String) {
+        
+        let cacheURL = FileManager.getCacheDirectory()
+        let fileURL = cacheURL.appendingPathComponent(audioID)
+        
+        DispatchQueue.global().async {
+            
+            if !FileManager.default.fileExists(atPath: fileURL.path) {
+                print("Downloading low-audio to cache")
+                FireStorageManager.downloadLowAudioToCache(audioID: audioID)
             }
         }
     }

@@ -42,7 +42,9 @@ class SubProgramAccountVC: UIViewController {
     let ownEpisodeSettings = SettingsLauncher(options: SettingOptions.ownEpisode, type: .ownEpisode)
     
     let introPlayer = DuneIntroPlayer()
-    let audioPlayer = DuneAudioPlayer()
+    let audioPlayer = DunePlayBar()
+    
+    var pushingContent = false
             
     let programView: UIView = {
         let view = UIView()
@@ -149,11 +151,10 @@ class SubProgramAccountVC: UIViewController {
         return view
     }()
     
-    lazy var subscriberCountLabel: UILabel = {
+    let subscriberCountLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
         label.textColor = CustomStyle.sixthShade
-        label.text = "\(program.subscriberCount.roundedWithAbbreviations)"
         return label
     }()
     
@@ -192,7 +193,7 @@ class SubProgramAccountVC: UIViewController {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
         label.textColor = CustomStyle.fourthShade
-        label.text = "Rep"
+        label.text = "Cred"
         return label
     }()
     
@@ -206,7 +207,7 @@ class SubProgramAccountVC: UIViewController {
     let editProgramButton: AccountButton = {
         let button = AccountButton()
         button.setImage(UIImage(named: "edit-account-icon"), for: .normal)
-        button.setTitle("Edit Program", for: .normal)
+        button.setTitle("Edit Channel", for: .normal)
         button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 0)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
         button.addTarget(self, action: #selector(editProgramButtonPress), for: .touchUpInside)
@@ -257,8 +258,13 @@ class SubProgramAccountVC: UIViewController {
         button.layer.cornerRadius = 13
         return button
     }()
-
     
+    let requestButton: UIButton = {
+        let button = UIButton()
+        button.setImage(UIImage(named: "requests-pending"), for: .normal)
+        button.contentEdgeInsets  = UIEdgeInsets(top: 0, left: 5, bottom: 0, right: 0)
+        return button
+    }()
     
     init(program: Program) {
         super.init(nibName: nil, bundle: nil)
@@ -280,15 +286,17 @@ class SubProgramAccountVC: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         episodeTV.setScrollBarToTopLeft()
         configureIntroButton()
+        pushingContent = false
         setupTopBar()
         addWebLink()
         
-        mainImage.image = program.image
         nameLabel.text = program.name
-        usernameLabel.text = "@\(program.username)"
-        categoryLabel.text = program.primaryCategory
+        mainImage.image = program.image
         summaryTextView.text = program.summary
         repCountLabel.text = String(program.rep)
+        usernameLabel.text = "@\(program.username)"
+        categoryLabel.text = program.primaryCategory
+        subscriberCountLabel.text = "\(program.subscriberCount.roundedWithAbbreviations)"
         
         fetchEpisodeIDs()
         
@@ -322,8 +330,10 @@ class SubProgramAccountVC: UIViewController {
     override func viewWillDisappear(_ animated: Bool) {
         websiteLinkButton.removeConstraints(websiteLinkButton.constraints)
         websiteLinkButton.removeFromSuperview()
+        if !pushingContent {
+            audioPlayer.finishSession()
+        }
         introPlayer.finishSession()
-        audioPlayer.finishSession()
     }
     
     func configureDelegates() {
@@ -340,13 +350,22 @@ class SubProgramAccountVC: UIViewController {
     func setupTopBar() {
         let navBar = navigationController?.navigationBar
         navigationController?.isNavigationBarHidden = false
-        navBar?.setBackgroundImage(nil, for: .default)
-        navBar?.barStyle = .default
+        navBar?.setBackgroundImage(UIImage(), for: .default)
+        navBar?.tintColor = CustomStyle.primaryBlack
         navBar?.shadowImage = UIImage()
-        navBar?.tintColor = .black
+        navBar?.barStyle = .default
         
         navBar?.titleTextAttributes = CustomStyle.blackNavBarAttributes
-        navigationItem.rightBarButtonItem = UIBarButtonItem(image: #imageLiteral(resourceName: "white-settings-icon"), style: .plain, target: self, action: #selector(settingsButtonPress))
+        let settingsButton = UIBarButtonItem(image: #imageLiteral(resourceName: "white-settings-icon"), style: .plain, target: self, action: #selector(settingsButtonPress))
+        let requestsButton = UIBarButtonItem(image: privacyImage(), style: .plain, target: self, action: #selector(viewPendingRequests))
+        
+        navigationItem.rightBarButtonItems = nil
+        switch program.channelState {
+        case .madePublic:
+            navigationItem.rightBarButtonItem = settingsButton
+        case .madePrivate:
+            navigationItem.rightBarButtonItems = [settingsButton, requestsButton]
+        }
         
         let imgBackArrow = #imageLiteral(resourceName: "back-button-white")
         navBar?.backIndicatorImage = imgBackArrow
@@ -354,17 +373,24 @@ class SubProgramAccountVC: UIViewController {
         navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
     }
     
+    func privacyImage() -> UIImage {
+        if CurrentProgram.pendingChannels!.isEmpty {
+            return UIImage(named: "no-requests-pending")!
+        } else {
+           return UIImage(named: "requests-pending")!
+        }
+    }
+    
+    
     func fetchEpisodeIDs() {
         FireStoreManager.fetchEpisodesItemsWith(with: [program!.ID]) { items in
             DispatchQueue.main.async {
                 if items.isEmpty {
-                    self.episodeTV.isHidden = true
                     self.loadingView.isHidden = true
                     self.emptyTableView.isHidden = false
                 } else {
                     if items != self.episodeItems {
                         self.emptyTableView.isHidden = true
-                        self.loadingView.isHidden = true
                         self.episodeItems = items
                         self.fetchEpisodes()
                     }
@@ -374,7 +400,7 @@ class SubProgramAccountVC: UIViewController {
     }
     
     func fetchEpisodes() {
-        if downloadedEpisodes.count != program.episodeIDs.count {
+        if downloadedEpisodes.count != episodeItems.count {
             var endIndex = 10
             
             if program.episodeIDs.count - downloadedEpisodes.count < endIndex {
@@ -395,9 +421,10 @@ class SubProgramAccountVC: UIViewController {
                         self.episodeTV.reloadData()
                         self.loadingView.isHidden = true
                         self.isFetchingEpisodes = false
+                        self.emptyTableView.isHidden = true
                     }  else {
                         self.emptyTableView.isHidden = false
-                        self.episodeTV.isHidden = true
+                        self.loadingView.isHidden = true
                     }
                 }
             }
@@ -546,6 +573,9 @@ class SubProgramAccountVC: UIViewController {
         episodeTV.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         episodeTV.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         episodeTV.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+        episodeTV.backgroundColor = CustomStyle.secondShade
+        episodeTV.tableFooterView = UIView()
+        episodeTV.addTopBounceAreaView()
         
         view.addSubview(emptyTableView)
         emptyTableView.translatesAutoresizingMaskIntoConstraints = false
@@ -586,10 +616,10 @@ class SubProgramAccountVC: UIViewController {
         
         
         view.addSubview(introPlayer)
-        introPlayer.frame = CGRect(x: 0, y: view.frame.height, width: view.frame.width, height: 70)
+        introPlayer.frame = CGRect(x: 0, y: view.frame.height, width: view.frame.width, height: 64)
         
         view.addSubview(audioPlayer)
-        audioPlayer.frame = CGRect(x: 0, y: view.frame.height, width: view.frame.width, height: 70)
+        audioPlayer.frame = CGRect(x: 0, y: view.frame.height, width: view.frame.width, height: 600)
     }
     
     func addWebLink() {
@@ -641,7 +671,6 @@ class SubProgramAccountVC: UIViewController {
     }
     
     @objc func moreUnwrap() {
-        print("Wammy")
         unwrapped = true
         summaryTextView.textContainer.maximumNumberOfLines = 0
         summaryTextView.text = "\(program.summary) "
@@ -665,9 +694,11 @@ class SubProgramAccountVC: UIViewController {
     }
     
     @objc func pushSubscribersVC() {
-        print("Selected")
-        let subscribersVC = SubscribersVC(programName: program.name, programID: program.ID, programIDs: program.programIDs!, subscriberIDs: program.subscriberIDs)
+        let subscribersVC = SubscribersVC(programName: program.name, programID: program.ID, programIDs: program.programsIDs(), subscriberIDs: program.subscriberIDs)
         subscribersVC.hidesBottomBarWhenPushed = true
+        subscribersVC.isPublic = program.isPrivate
+        subscribersVC.requestDelegate = self
+        subscribersVC.subChannel = program
         navigationController?.pushViewController(subscribersVC, animated: true)
     }
     
@@ -682,24 +713,16 @@ class SubProgramAccountVC: UIViewController {
         }
     }
     
+    @objc func viewPendingRequests() {
+        let requests = PendingRequestsVC(pendingIDs: program.pendingChannels)
+        requests.requestDelegate = self
+        requests.subChannel = program
+        navigationController?.pushViewController(requests, animated: true)
+    }
+    
 }
 
 extension SubProgramAccountVC: UIScrollViewDelegate {
-    
-    public func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        
-        let fadeTextAnimation = CATransition()
-        fadeTextAnimation.duration = 0.5
-        fadeTextAnimation.type = CATransitionType.fade
-        
-        
-        if scrollView.contentOffset.y >= -45.5 {
-            navigationController?.navigationBar.layer.add(fadeTextAnimation, forKey: "fadeText")
-            navigationItem.title = User.username
-        } else {
-            navigationItem.title = ""
-        }
-    }
     
     func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
         
@@ -762,6 +785,28 @@ extension SubProgramAccountVC: UITableViewDataSource, UITableViewDelegate {
 
 extension SubProgramAccountVC :EpisodeCellDelegate {
     
+    func visitLinkWith(url: URL) {
+        pushingContent = true
+        let webView = WebVC(url: url)
+        webView.delegate = self
+        
+        switch audioPlayer.currentState {
+        case .loading:
+             webView.currentStatus = .ready
+        case .ready:
+             webView.currentStatus = .ready
+        case .playing:
+             webView.currentStatus = .playing
+        case .paused:
+             webView.currentStatus = .paused
+        case .fetching:
+            webView.currentStatus = .ready
+        }
+        
+        audioPlayer.audioPlayerDelegate = webView
+        navigationController?.present(webView, animated: true, completion: nil)
+    }
+    
     func episodeTagSelected(tag: String) {
         let tagSelectedVC = EpisodeTagLookupVC(tag: tag)
         navigationController?.pushViewController(tagSelectedVC, animated: true)
@@ -822,7 +867,6 @@ extension SubProgramAccountVC :EpisodeCellDelegate {
     }
     
     func showSettings(cell: EpisodeCell) {
-        
         selectedCellRow = downloadedEpisodes.firstIndex(where: { $0.ID == cell.episode.ID })
         ownEpisodeSettings.showSettings()
     }
@@ -876,13 +920,16 @@ extension SubProgramAccountVC: SettingsLauncherDelegate {
         
         if downloadedEpisodes.count == 0 {
             emptyTableView.isHidden = false
-            episodeTV.isHidden = true
         }
         audioPlayer.transitionOutOfView()
     }
 }
 
 extension SubProgramAccountVC: DuneAudioPlayerDelegate {
+    
+    func fetchMoreEpisodes() {
+        print("Should fetch more episodes: Needs implementation")
+    }
     
     func showCommentsFor(episode: Episode) {
         dismiss(animated: true) {
@@ -934,6 +981,24 @@ extension SubProgramAccountVC: DuneAudioPlayerDelegate {
         downloadedEpisodes[index] = episode
     }
     
+}
+
+extension SubProgramAccountVC: WebViewDelegate {
+    
+    func playOrPauseEpisode() {
+        if let cell = activeCell {
+            audioPlayer.playOrPauseEpisodeWith(audioID: cell.episode.audioID)
+        }
+    }
+    
+}
+
+extension SubProgramAccountVC: RequestsDelegate {
+    
+    func updateChannelWith(_ channel: Program) {
+        program = channel
+    }
+
 }
 
 

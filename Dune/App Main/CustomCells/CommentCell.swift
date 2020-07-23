@@ -28,18 +28,25 @@ class CommentCell: UITableViewCell {
     
     let userNotFoundAlert = CustomAlertView(alertType: .userNotFound)
     
-    var profileImageButton: UIButton = {
+    let profileImageButton: UIButton = {
         let button = UIButton()
         button.clipsToBounds = true
         button.layer.cornerRadius = 7
         return button
     }()
     
-    let usernameLabel: UILabel = {
-        let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 14, weight: .bold)
-        label.textColor = CustomStyle.primaryBlack
-        return label
+//    let usernameLabel: UILabel = {
+//        let label = UILabel()
+//        label.font = UIFont.systemFont(ofSize: 14, weight: .bold)
+//        label.textColor = CustomStyle.primaryBlack
+//        return label
+//    }()
+    
+    let usernameButton: UIButton = {
+        let button = UIButton()
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .bold)
+        button.setTitleColor(CustomStyle.primaryBlack, for: .normal)
+        return button
     }()
     
     lazy var activeCommentLabel: ActiveLabel = {
@@ -125,7 +132,10 @@ class CommentCell: UITableViewCell {
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
+        self.preservesSuperviewLayoutMargins = false
         self.selectionStyle = .none
+        self.separatorInset = .zero
+        self.layoutMargins = .zero
         styleForScreens()
         configureViews()
     }
@@ -137,7 +147,8 @@ class CommentCell: UITableViewCell {
     func normalSetUp(comment: Comment) {
         self.comment = comment
         self.dateLabel.text = comment.timeSince
-        self.usernameLabel.text = comment.username
+//        self.usernameLabel.text = comment.username
+        self.usernameButton.setTitle(comment.username, for: .normal)
         self.activeCommentLabel.text = comment.comment
         self.voteCountLabel.text = dynamicVotesTextWith(votes: 0)
         
@@ -219,16 +230,16 @@ class CommentCell: UITableViewCell {
         profileImageButton.heightAnchor.constraint(equalToConstant: 40).isActive = true
         profileImageButton.widthAnchor.constraint(equalToConstant: 40).isActive = true
         
-        self.addSubview(usernameLabel)
-        usernameLabel.translatesAutoresizingMaskIntoConstraints = false
-        usernameLabel.topAnchor.constraint(equalTo: profileImageButton.topAnchor, constant: -2).isActive = true
-        usernameLabel.leadingAnchor.constraint(equalTo: profileImageButton.trailingAnchor, constant: 7).isActive = true
-        usernameLabel.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -32).isActive = true
+        self.addSubview(usernameButton)
+        usernameButton.translatesAutoresizingMaskIntoConstraints = false
+        usernameButton.topAnchor.constraint(equalTo: profileImageButton.topAnchor, constant: -2).isActive = true
+        usernameButton.leadingAnchor.constraint(equalTo: profileImageButton.trailingAnchor, constant: 7).isActive = true
+        usernameButton.heightAnchor.constraint(equalToConstant: usernameButton.titleLabel!.font.lineHeight).isActive = true
         
         self.addSubview(activeCommentLabel)
         activeCommentLabel.translatesAutoresizingMaskIntoConstraints = false
-        activeCommentLabel.topAnchor.constraint(equalTo: usernameLabel.bottomAnchor).isActive = true
-        activeCommentLabel.leadingAnchor.constraint(equalTo: usernameLabel.leadingAnchor).isActive = true
+        activeCommentLabel.topAnchor.constraint(equalTo: usernameButton.bottomAnchor).isActive = true
+        activeCommentLabel.leadingAnchor.constraint(equalTo: usernameButton.leadingAnchor).isActive = true
         activeCommentLabel.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -32).isActive = true
         activeCommentLabel.heightAnchor.constraint(greaterThanOrEqualToConstant: activeCommentLabel.font!.lineHeight).isActive = true
         
@@ -299,7 +310,7 @@ class CommentCell: UITableViewCell {
     
     @objc func voteDownPress() {
         if voteDownButton.imageView?.image == UIImage(named: "votedDown-arrow") {
-            FireBaseComments.removeUpVoted(comment: comment)
+            FireBaseComments.removeDownVoted(comment: comment)
             voteDownButton.setImage(UIImage(named: "voteDown-arrow"), for: .normal)
             if userDownVoted{
                voteCountLabel.text = dynamicVotesTextWith(votes: 1)

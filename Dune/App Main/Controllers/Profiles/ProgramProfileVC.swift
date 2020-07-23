@@ -214,7 +214,7 @@ class ProgramProfileVC: UIViewController {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
         label.textColor = CustomStyle.fourthShade
-        label.text = "Rep"
+        label.text = "Cred"
         return label
     }()
 
@@ -227,8 +227,7 @@ class ProgramProfileVC: UIViewController {
 
     let subscribeButton: AccountButton = {
         let button = AccountButton()
-        button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 0)
-        button.addTarget(self, action: #selector(subscribeButtonPress), for: .touchUpInside)
+        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 7, bottom: 0, right: 0)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
         return button
     }()
@@ -237,8 +236,9 @@ class ProgramProfileVC: UIViewController {
         let button = AccountButton()
         button.setImage(UIImage(named: "share-account-icon"), for: .normal)
         button.addTarget(self, action: #selector(shareButtonPress), for: .touchUpInside)
+        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 7, bottom: 0, right: 0)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
-        button.setTitle("Share Program", for: .normal)
+        button.setTitle("Share Channel", for: .normal)
         return button
     }()
 
@@ -251,7 +251,7 @@ class ProgramProfileVC: UIViewController {
         let label = UILabel()
         label.textColor = CustomStyle.primaryBlack
         label.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
-        label.text = "Sub-programs"
+        label.text = "Sub-channels"
         return label
     }()
 
@@ -331,14 +331,13 @@ class ProgramProfileVC: UIViewController {
         setupTopBar()
         addWebLink()
 
-        nameLabel.text = program.name
-        mainImage.image = program.image!
-        usernameLabel.text = "@\(program.username)"
+        multipleProgramsSubLabel.text = "Channels brought to you by @\(program.username)"
         categoryLabel.text = program.primaryCategory
-        summaryTextView.text = program.summary
+        usernameLabel.text = "@\(program.username)"
         repCountLabel.text = String(program.rep)
-        
-        multipleProgramsSubLabel.text = "Programs brought to you by @\(program.username)"
+        summaryTextView.text = program.summary
+        mainImage.image = program.image!
+        nameLabel.text = program.name
 
         if  unwrapped {
             summaryTextView.textContainer.maximumNumberOfLines = 3
@@ -385,12 +384,14 @@ class ProgramProfileVC: UIViewController {
         headerHeight = (minHeight)...headerHeightCalculated()
         prepareSetup()
         updateScrollContent()
+        configureIfPrivate()
         if summaryTextView.lineCount() > 3 {
             addMoreButton()
         }
     }
 
     override func viewDidDisappear(_ animated: Bool) {
+        navigationController?.interactivePopGestureRecognizer?.isEnabled = true
         for each in programsScrollView.subviews {
             if each is UILabel {
                 each.removeFromSuperview()
@@ -402,6 +403,15 @@ class ProgramProfileVC: UIViewController {
                 each.setImage(UIImage(), for: .normal)
                 each.removeTarget(self, action: #selector(programSelection(sender:)), for: .touchUpInside)
             }
+    }
+    
+    func configureIfPrivate() {
+        if program.isPrivate && !CurrentProgram.subscriptionIDs!.contains(program.ID) {
+            subscriptionsButton.isEnabled = false
+            subscribersButton.isEnabled = false
+            episodesButton.isEnabled = false
+            mentionsButton.isEnabled = false
+        }
     }
     
     func prepareSetup() {
@@ -446,18 +456,18 @@ class ProgramProfileVC: UIViewController {
     }
     
     func setupTopBar() {
+        navigationController?.navigationBar.titleTextAttributes = [.foregroundColor: CustomStyle.primaryBlack]
         navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
         navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
         navigationController?.navigationBar.backIndicatorTransitionMaskImage = #imageLiteral(resourceName: "back-button-white")
         navigationController?.navigationBar.tintColor = CustomStyle.primaryBlack
+        navigationController?.interactivePopGestureRecognizer?.isEnabled = false
+        navigationController?.navigationBar.prefersLargeTitles = false
         navigationController?.navigationBar.backIndicatorImage = #imageLiteral(resourceName: "back-button-white")
-        navigationController?.navigationBar.prefersLargeTitles = true
-        navigationController?.navigationBar.isTranslucent = true
-        navigationController?.navigationBar.isHidden = false
-        navigationController?.navigationBar.shadowImage = nil
-        navigationController?.navigationBar.barStyle = .default
         navigationController?.navigationBar.shadowImage = UIImage()
-        navigationController?.navigationBar.tintColor = .black
+        navigationController?.navigationBar.isTranslucent = true
+        navigationController?.navigationBar.barStyle = .default
+        navigationController?.navigationBar.isHidden = false
         navigationItem.largeTitleDisplayMode = .never
         navigationItem.rightBarButtonItem = UIBarButtonItem(image: #imageLiteral(resourceName: "white-settings-icon"), style: .plain, target: self, action: #selector(settingsButtonPress))
     }
@@ -746,16 +756,6 @@ class ProgramProfileVC: UIViewController {
     
     // MARK: Play Intro
     @objc func playIntro() {
-        
-        let offset = self.scrollView.contentOffset.y + unwrapDifference
-        let difference = UIScreen.main.bounds.height - headerHeight.upperBound
-        let position = (difference - tabBarController!.tabBar.frame.height - 70) + offset
-        
-        if !accountBottomVC.introPlayer.isInPosition {
-            accountBottomVC.introPlayer.yPosition = position
-        } else {
-            accountBottomVC.introPlayer.updateYPositionWith(value: position)
-        }
         accountBottomVC.playIntro()
     }
     
@@ -788,12 +788,34 @@ class ProgramProfileVC: UIViewController {
     }
     
     func configureSubscribeButton() {
-        if !CurrentProgram.subscriptionIDs!.contains(program.ID) {
-            subscribeButton.setTitle("Subscribe", for: .normal)
-            subscribeButton.setImage(UIImage(named: "subscribe-icon"), for: .normal)
+        if program.channelState == .madePublic {
+            subscribeButton.removeTarget(nil, action: nil, for: .allEvents)
+            subscribeButton.addTarget(self, action: #selector(subscribeButtonPress), for: .touchUpInside)
+            if !CurrentProgram.subscriptionIDs!.contains(program.ID) {
+                subscribeButton.setTitle("Subscribe", for: .normal)
+                subscribeButton.setImage(UIImage(named: "subscribe-icon"), for: .normal)
+            } else {
+                subscribeButton.setTitle("Subscribed", for: .normal)
+                subscribeButton.setImage(UIImage(named: "subscribed-icon"), for: .normal)
+            }
         } else {
-            subscribeButton.setTitle("Subscribed", for: .normal)
-            subscribeButton.setImage(UIImage(named: "subscribed-icon"), for: .normal)
+            subscribeButton.removeTarget(nil, action: nil, for: .allEvents)
+            subscribeButton.addTarget(self, action: #selector(requestInvite), for: .touchUpInside)
+            if program.pendingChannels.contains(CurrentProgram.ID!) {
+                subscribeButton.titleEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
+                subscribeButton.setImage(UIImage(named: "pending-invite"), for: .normal)
+                subscribeButton.setTitle("Pending invite", for: .normal)
+            }  else if program.deniedChannels.contains(CurrentProgram.ID!) {
+                subscribeButton.titleEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
+                subscribeButton.setImage(UIImage(named: "pending-invite"), for: .normal)
+                subscribeButton.setTitle("Pending invite", for: .normal)
+            } else if CurrentProgram.subscriptionIDs!.contains(program.ID) {
+               subscribeButton.setTitle("Subscribed", for: .normal)
+               subscribeButton.setImage(UIImage(named: "subscribed-icon"), for: .normal)
+            } else {
+                subscribeButton.setTitle("Request invite", for: .normal)
+                subscribeButton.setImage(UIImage(named: "request-invite"), for: .normal)
+            }
         }
     }
 
@@ -814,6 +836,22 @@ class ProgramProfileVC: UIViewController {
             program.subscriberCount += 1
             subscribeButton.setTitle("Subscribed", for: .normal)
             subscribeButton.setImage(UIImage(named: "subscribed-icon"), for: .normal)
+            configureProgramStats()
+        }
+    }
+    
+    @objc func requestInvite() {
+        if subscribeButton.titleLabel?.text == "Request invite" {
+            subscribeButton.setImage(UIImage(named: "pending-invite"), for: .normal)
+            subscribeButton.setTitle("Pending invite", for: .normal)
+            FireStoreManager.requestInviteFor(channelID: program.ID)
+        } else if subscribeButton.titleLabel?.text == "Subscribed" {
+            FireStoreManager.removeSubscriptionFromProgramWith(programID: program.ID)
+            FireStoreManager.unsubscribeFromProgramWith(programID: program.ID)
+            CurrentProgram.subscriptionIDs!.removeAll(where: {$0 == program.ID})
+            program.subscriberCount -= 1
+            subscribeButton.setTitle("Request invite", for: .normal)
+            subscribeButton.setImage(UIImage(named: "request-invite"), for: .normal)
             configureProgramStats()
         }
     }
@@ -903,10 +941,11 @@ class ProgramProfileVC: UIViewController {
     }
     
     @objc func pushSubscribersVC() {
-         let subscribersVC = SubscribersVC(programName: program.name, programID: program.ID, programIDs: program.programIDs!, subscriberIDs: program.subscriberIDs)
-         subscribersVC.hidesBottomBarWhenPushed = true
-         navigationController?.pushViewController(subscribersVC, animated: true)
-     }
+        let subscribersVC = SubscribersVC(programName: program.name, programID: program.ID, programIDs: program.programsIDs(), subscriberIDs: program.subscriberIDs)
+        subscribersVC.hidesBottomBarWhenPushed = true
+        subscribersVC.isPublic = program.isPrivate
+        navigationController?.pushViewController(subscribersVC, animated: true)
+    }
 
 }
 

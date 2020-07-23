@@ -13,7 +13,8 @@ struct MusicOption: Equatable {
     var color: UIColor
     var artist: String
     var title: String
-    var audioID: String
+    var loudAudioID: String
+    var lowAudioID: String
     var time: String
     var duration: Double
 }

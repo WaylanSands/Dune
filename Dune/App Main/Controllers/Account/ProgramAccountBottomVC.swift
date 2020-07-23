@@ -17,7 +17,7 @@ class ProgramAccountBottomVC: UIViewController {
     var unwrapDifference: CGFloat = 0
     var scrollContentDelegate: updateProgramAccountScrollDelegate!
 
-    var pushingComment = true
+    var pushingContent = true
     
     var programsOwnIDs = [String]()
     
@@ -64,7 +64,7 @@ class ProgramAccountBottomVC: UIViewController {
     let introPlayer = DuneIntroPlayer()
     var activeProgramCell: ProgramCell?
 
-    let audioPlayer = DuneAudioPlayer()
+    let audioPlayer = DunePlayBar()
     var activeEpisodeCell: EpisodeCell?
     
     let playerMask: UIView = {
@@ -124,13 +124,13 @@ class ProgramAccountBottomVC: UIViewController {
         setupModalCommentObserver()        
         subscriptionTV.isHidden = true
         mentionTV.isHidden = true
-        pushingComment = false
+        pushingContent = false
         fetchEpisodeIDs()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         removeModalCommentObserver()
-        if !pushingComment {
+        if !pushingContent {
          audioPlayer.finishSession()
         }
         introPlayer.finishSession()
@@ -243,8 +243,9 @@ class ProgramAccountBottomVC: UIViewController {
         loadingView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         loadingView.bottomAnchor.constraint(equalTo: episodeTV.bottomAnchor).isActive = true
         
-        view.addSubview(introPlayer)
-        introPlayer.frame = CGRect(x: 0, y: vFrame.height, width: vFrame.width, height: 70)
+        navigationController?.visibleViewController?.view.addSubview(introPlayer)
+        introPlayer.frame = CGRect(x: 0, y: vFrame.height, width: vFrame.width, height: 64)
+        introPlayer.offset = 64
                 
         navigationController?.visibleViewController?.view.addSubview(audioPlayer)
         audioPlayer.frame = CGRect(x: 0, y: vFrame.height, width: vFrame.width, height: 600)
@@ -260,6 +261,8 @@ class ProgramAccountBottomVC: UIViewController {
             emptyButton.isHidden = false
             pageIndex = 2
         case subscriptionTV:
+            resetSubscriptionTV()
+            subscriptionTV.reloadData()
             emptyHeadingLabel.text = "Subscribe to programs"
             emptySubLabel.text = "You will be able to manage your subscriptions here."
             emptyButton.setTitle("Visit Search", for: .normal)
@@ -293,6 +296,7 @@ class ProgramAccountBottomVC: UIViewController {
                     if items != self.episodeItems {
                         self.emptyTableView.isHidden = true
                         self.loadingView.isHidden = true
+                        self.resetTableView()
                         self.episodeItems = items
                         self.fetchEpisodes()
                     }
@@ -429,13 +433,17 @@ class ProgramAccountBottomVC: UIViewController {
         return activeTV
     }
     
+    // MARK: Play account's intro
+    
     @objc func playIntro() {
-        introPlayer.isProgramPageIntro = true
         if !audioPlayer.isOutOfPosition {
             audioPlayer.finishSession()
         }
-        self.introPlayer.setProgramDetailsWith(name: CurrentProgram.name!, username: CurrentProgram.username!, image: CurrentProgram.image!)
-        self.introPlayer.playOrPauseIntroWith(audioID: CurrentProgram.introID!)
+        
+        introPlayer.yPosition = UIScreen.main.bounds.height - self.tabBarController!.tabBar.frame.height
+        
+        introPlayer.setProgramDetailsWith(name: CurrentProgram.name!, username: CurrentProgram.username!, image: CurrentProgram.image!)
+        introPlayer.playOrPauseIntroWith(audioID: CurrentProgram.introID!)
     }
     
     @objc func continueToView() {
@@ -526,6 +534,8 @@ extension ProgramAccountBottomVC: UITableViewDelegate, UITableViewDataSource {
         case mentionTV:
             let mentionCell = tableView.dequeueReusableCell(withIdentifier: "mentionCell") as! MentionCell
             mentionCell.actionButton.addTarget(mentionCell, action: #selector(MentionCell.actionButtonPress), for: .touchUpInside)
+            mentionCell.profileImageButton.addTarget(mentionCell, action: #selector(MentionCell.visitProfile), for: .touchUpInside)
+            mentionCell.usernameButton.addTarget(mentionCell, action: #selector(MentionCell.visitProfile), for: .touchUpInside)
             let mention = downloadedMentions[indexPath.row]
             mentionCell.cellDelegate = self
             mentionCell.cellSetup(mention: mention)
@@ -606,8 +616,12 @@ extension ProgramAccountBottomVC: EpisodeEditorDelegate {
 // MARK: PlaybackBar Delegate
 extension ProgramAccountBottomVC: DuneAudioPlayerDelegate {
     
+    func fetchMoreEpisodes() {
+        print("Should fetch more episodes: Needs implementation")
+    }
+    
     func showCommentsFor(episode: Episode) {
-        pushingComment = true
+        pushingContent = true
         audioPlayer.pauseSession()
         let commentVC = CommentThreadVC(episode: episode)
         commentVC.hidesBottomBarWhenPushed = true
@@ -716,8 +730,9 @@ extension ProgramAccountBottomVC: ProgramCellDelegate, MentionCellDelegate {
         }
     }
     
+    //MARK: Play program's cell
+    
     func playProgramIntro(cell: ProgramCell) {
-        introPlayer.isProgramPageIntro = false
         activeProgramCell = cell
         
         if !audioPlayer.isOutOfPosition {
@@ -728,11 +743,13 @@ extension ProgramAccountBottomVC: ProgramCellDelegate, MentionCellDelegate {
             cell.playbackBarView.setupPlaybackBar()
         }
         
-        let difference = UIScreen.main.bounds.height - headerHeight! + unwrapDifference
-        let position = difference - tabBarController!.tabBar.frame.height - 70
-        let offset = position + (yOffset ?? 0)
-
-        introPlayer.yPosition = offset
+//        let difference = UIScreen.main.bounds.height - headerHeight! + unwrapDifference
+//        let position = difference - tabBarController!.tabBar.frame.height - 70
+//        let offset = position + (yOffset ?? 0)
+//
+//        introPlayer.yPosition = offset
+        
+        introPlayer.yPosition = UIScreen.main.bounds.height - self.tabBarController!.tabBar.frame.height
         
         let image = cell.programImageButton.imageView!.image!
         let audioID = cell.program.introID
@@ -756,6 +773,28 @@ extension ProgramAccountBottomVC: ProgramCellDelegate, MentionCellDelegate {
 
 // MARK: EpisodeCell Delegate
 extension ProgramAccountBottomVC :EpisodeCellDelegate {
+   
+    func visitLinkWith(url: URL) {
+        pushingContent = true
+        let webView = WebVC(url: url)
+        webView.delegate = self
+        
+        switch audioPlayer.currentState {
+        case .loading:
+             webView.currentStatus = .ready
+        case .ready:
+             webView.currentStatus = .ready
+        case .playing:
+             webView.currentStatus = .playing
+        case .paused:
+             webView.currentStatus = .paused
+        case .fetching:
+            webView.currentStatus = .ready
+        }
+        
+        audioPlayer.audioPlayerDelegate = webView
+        navigationController?.present(webView, animated: true, completion: nil)
+    }
     
     func episodeTagSelected(tag: String) {
         let tagSelectedVC = EpisodeTagLookupVC(tag: tag)
@@ -831,6 +870,16 @@ extension ProgramAccountBottomVC: CustomAlertDelegate {
         selectedProgramSetting = false
         selectedEpisodeSetting = false
     } 
+    
+}
+
+extension ProgramAccountBottomVC: WebViewDelegate {
+    
+    func playOrPauseEpisode() {
+        if let cell = activeEpisodeCell {
+            audioPlayer.playOrPauseEpisodeWith(audioID: cell.episode.audioID)
+        }
+    }
     
 }
 

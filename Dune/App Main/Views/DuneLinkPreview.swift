@@ -13,7 +13,7 @@ class DuneLinkPreview: UIView {
     
     let imageButton: UIButton = {
         let button = UIButton()
-        button.backgroundColor = .white
+        button.backgroundColor = CustomStyle.secondShade
         button.imageView!.contentMode = .scaleAspectFill
         button.isOpaque = true
         return button

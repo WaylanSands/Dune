@@ -10,10 +10,10 @@ import UIKit
 import Firebase
 
 class SingleProgramProfileVC: UIViewController {
-
+    
     let minHeight = UIDevice.current.navBarHeight() + 40
     let navHeight = UIDevice.current.navBarHeight()
-
+    
     var largeImageSize: CGFloat = 80.0
     var fontNameSize: CGFloat = 16
     var fontIDSize: CGFloat = 14
@@ -34,7 +34,7 @@ class SingleProgramProfileVC: UIViewController {
     lazy var headerBarButtons: [UIButton] = [episodesButton, subscriptionsButton, mentionsButton]
     
     lazy var accountBottomVC = ProgramProfileBottomVC(program: program)
-
+    
     let settingsLauncher = SettingsLauncher(options: SettingOptions.sharing, type: .sharing)
     let programSettings = SettingsLauncher(options: SettingOptions.programSettings, type: .program)
     
@@ -47,7 +47,7 @@ class SingleProgramProfileVC: UIViewController {
         nav.alpha = 0.9
         return nav
     }()
-
+    
     let scrollView: UIScrollView = {
         let view = UIScrollView()
         view.backgroundColor = .clear
@@ -78,7 +78,7 @@ class SingleProgramProfileVC: UIViewController {
         let view = UIView()
         return view
     }()
-
+    
     lazy var mainImage: UIImageView = {
         let imageView = UIImageView()
         imageView.layer.cornerRadius = 7
@@ -87,14 +87,14 @@ class SingleProgramProfileVC: UIViewController {
         imageView.contentMode = .scaleAspectFill
         return imageView
     }()
-
+    
     let topMiddleStackedView: UIStackView = {
         let view = UIStackView()
         view.axis = .vertical
         view.spacing = 3
         return view
     }()
-
+    
     let nameLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
@@ -103,21 +103,21 @@ class SingleProgramProfileVC: UIViewController {
         label.numberOfLines = 2
         return label
     }()
-
+    
     let usernameLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 14, weight: .regular)
         label.textColor = CustomStyle.primaryBlue
         return label
     }()
-
+    
     let categoryLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 14, weight: .regular)
         label.textColor = CustomStyle.fourthShade
         return label
     }()
-
+    
     // Intro button
     let playIntroButton: UIButton = {
         let button = UIButton()
@@ -125,7 +125,7 @@ class SingleProgramProfileVC: UIViewController {
         button.titleLabel?.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
         return button
     }()
-
+    
     let summaryTextView: UITextView = {
         let view = UITextView()
         view.isScrollEnabled = false
@@ -139,7 +139,7 @@ class SingleProgramProfileVC: UIViewController {
         view.backgroundColor = .clear
         return view
     }()
-
+    
     let moreButton: UIButton = {
         let button = UIButton()
         button.setTitle("more", for: .normal)
@@ -173,14 +173,14 @@ class SingleProgramProfileVC: UIViewController {
         let view = UIView()
         return view
     }()
-
+    
     let subscriberCountLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
         label.textColor = CustomStyle.sixthShade
         return label
     }()
-
+    
     let subscribersButton: ExtendedButton = {
         let button = ExtendedButton()
         button.titleLabel!.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
@@ -189,14 +189,14 @@ class SingleProgramProfileVC: UIViewController {
         button.padding = 10
         return button
     }()
-
+    
     let episodeCountLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
         label.textColor = CustomStyle.sixthShade
         return label
     }()
-
+    
     let episodesLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
@@ -215,34 +215,35 @@ class SingleProgramProfileVC: UIViewController {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
         label.textColor = CustomStyle.fourthShade
-        label.text = "Rep"
+        label.text = "Cred"
         return label
     }()
-
+    
     let buttonsStackedView: UIStackView = {
         let view = UIStackView()
         view.distribution = .fillEqually
         view.spacing = 10.0
         return view
     }()
-
+    
     let subscribeButton: AccountButton = {
         let button = AccountButton()
-        button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 0)
-        button.addTarget(self, action: #selector(subscribeButtonPress), for: .touchUpInside)
+        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 7, bottom: 0, right: 0)
+        //        button.addTarget(self, action: #selector(subscribeButtonPress), for: .touchUpInside)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
         return button
     }()
-
+    
     let shareProgramButton: AccountButton = {
         let button = AccountButton()
         button.setImage(UIImage(named: "share-account-icon"), for: .normal)
         button.addTarget(self, action: #selector(shareButtonPress), for: .touchUpInside)
+        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 7, bottom: 0, right: 0)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
-        button.setTitle("Share Program", for: .normal)
+        button.setTitle("Share Channel", for: .normal)
         return button
     }()
-
+    
     let tableViewButtons: UIView = {
         let view = UIView()
         return view
@@ -297,12 +298,13 @@ class SingleProgramProfileVC: UIViewController {
         styleForScreens()
         configureViews()
     }
-
+    
     override func viewWillAppear(_ animated: Bool) {
         scrollView.setScrollBarToTopLeft()
         configureSubscribeButton()
         configureProgramStats()
         configureIntroButton()
+        configureIfPrivate()
         setupTopBar()
         addWebLink()
         
@@ -319,6 +321,15 @@ class SingleProgramProfileVC: UIViewController {
         }
     }
     
+    func configureIfPrivate() {
+        if program.isPrivate && !CurrentProgram.subscriptionIDs!.contains(program.ID) {
+            subscriptionsButton.isEnabled = false
+            subscribersButton.isEnabled = false
+            episodesButton.isEnabled = false
+            mentionsButton.isEnabled = false
+        }
+    }
+    
     func setMainImage() {
         if program.imageID != nil {
             FileManager.getImageWith(imageID: program.imageID!) { image in
@@ -327,7 +338,7 @@ class SingleProgramProfileVC: UIViewController {
                 }
             }
         } else {
-           mainImage.image = #imageLiteral(resourceName: "missing-image-large")
+            mainImage.image = #imageLiteral(resourceName: "missing-image-large")
         }
     }
     
@@ -342,20 +353,20 @@ class SingleProgramProfileVC: UIViewController {
         
         let episodes = program.episodeIDs
         let subscribers = program.subscriberCount
-
+        
         if episodes.count == 1 {
             episodesLabel.text = "Episode"
         } else {
             episodesLabel.text = "Episodes"
         }
-
+        
         if subscribers == 1 {
             subscribersButton.setTitle("Subscriber", for: .normal)
         } else {
             subscribersButton.setTitle("Subscribers", for: .normal)
         }
     }
-
+    
     override func viewDidAppear(_ animated: Bool) {
         headerHeight = (minHeight)...headerHeightCalculated()
         prepareSetup()
@@ -364,22 +375,22 @@ class SingleProgramProfileVC: UIViewController {
             addMoreButton()
         }
     }
-
+    
     override func viewDidDisappear(_ animated: Bool) {
-        //
+        navigationController?.interactivePopGestureRecognizer?.isEnabled = true
     }
     
     func prepareSetup() {
         headerView.frame = CGRect(x: viewFrame.minX, y: CGFloat(0), width: viewFrame.width, height: CGFloat(headerHeight.upperBound))
         scrollView.contentSize = CGSize.init(width: viewFrame.width, height: viewFrame.height + CGFloat(headerHeight.upperBound))
-       
+        
         overlayScrollView.frame = CGRect(x: viewFrame.minX, y: viewFrame.minY, width: viewFrame.width, height: viewFrame.height)
         overlayScrollView.contentSize = self.scrollView.contentSize
         overlayScrollView.layer.zPosition = 999
         overlayScrollView.delegate = self
         
         self.add(accountBottomVC, to: scrollView, frame:  CGRect(x: viewFrame.minX, y: headerHeight.upperBound, width: viewFrame.width, height: viewFrame.height))
-
+        
         self.tableViews[currentIndex] = accountBottomVC.activeTableView()
         if let scrollView = self.tableViews[currentIndex] as? UIScrollView {
             scrollView.panGestureRecognizer.require(toFail: self.overlayScrollView.panGestureRecognizer)
@@ -394,7 +405,7 @@ class SingleProgramProfileVC: UIViewController {
             }
         }
     }
-
+    
     func headerHeightCalculated() -> CGFloat {
         var height: CGFloat = 76 + navHeight
         
@@ -411,23 +422,22 @@ class SingleProgramProfileVC: UIViewController {
     }
     
     func setupTopBar() {
+        navigationController?.navigationBar.titleTextAttributes = [.foregroundColor: CustomStyle.primaryBlack]
         navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
         navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
         navigationController?.navigationBar.backIndicatorTransitionMaskImage = #imageLiteral(resourceName: "back-button-white")
         navigationController?.navigationBar.tintColor = CustomStyle.primaryBlack
+        navigationController?.interactivePopGestureRecognizer?.isEnabled = false
+        navigationController?.navigationBar.prefersLargeTitles = false
         navigationController?.navigationBar.backIndicatorImage = #imageLiteral(resourceName: "back-button-white")
-        navigationController?.navigationBar.prefersLargeTitles = true
-        navigationController?.navigationBar.isTranslucent = true
-        navigationController?.navigationBar.isHidden = false
-        navigationController?.navigationBar.shadowImage = nil
-        navigationController?.navigationBar.barStyle = .default
         navigationController?.navigationBar.shadowImage = UIImage()
-        navigationController?.navigationBar.tintColor = .black
+        navigationController?.navigationBar.isTranslucent = true
+        navigationController?.navigationBar.barStyle = .default
+        navigationController?.navigationBar.isHidden = false
         navigationItem.largeTitleDisplayMode = .never
-    
         navigationItem.rightBarButtonItem = UIBarButtonItem(image: #imageLiteral(resourceName: "white-settings-icon"), style: .plain, target: self, action: #selector(settingsButtonPress))
     }
-
+    
     func styleForScreens() {
         switch UIDevice.current.deviceType {
         case .iPhone4S:
@@ -450,7 +460,7 @@ class SingleProgramProfileVC: UIViewController {
             break
         }
     }
-
+    
     func configureIntroButton() {
         if program.hasIntro == true {
             playIntroButton.setTitle("Play Intro", for: .normal)
@@ -464,7 +474,7 @@ class SingleProgramProfileVC: UIViewController {
             playIntroButton.isHidden = true
         }
     }
-
+    
     func configureViews() {
         view.addSubview(overlayScrollView)
         view.addSubview(scrollView)
@@ -555,7 +565,7 @@ class SingleProgramProfileVC: UIViewController {
         
         buttonsStackedView.addArrangedSubview(subscribeButton)
         buttonsStackedView.addArrangedSubview(shareProgramButton)
-                        
+        
         headerView.addSubview(tableViewButtons)
         tableViewButtons.translatesAutoresizingMaskIntoConstraints = false
         tableViewButtons.topAnchor.constraint(equalTo: buttonsStackedView.bottomAnchor, constant: 10).isActive = true
@@ -584,7 +594,7 @@ class SingleProgramProfileVC: UIViewController {
         tableViewButtonsLine.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         tableViewButtonsLine.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         tableViewButtonsLine.heightAnchor.constraint(equalToConstant: 1).isActive = true
-            
+        
         view.addSubview(customNavBar)
         customNavBar.pinNavBarTo(view)
     }
@@ -604,15 +614,6 @@ class SingleProgramProfileVC: UIViewController {
     }
     
     @objc func playIntro() {
-        let offset = self.scrollView.contentOffset.y + unwrapDifference
-        let difference = UIScreen.main.bounds.height - headerHeight.upperBound
-        let position = (difference - tabBarController!.tabBar.frame.height - 70) + offset
-        
-        if !accountBottomVC.introPlayer.isInPosition {
-            accountBottomVC.introPlayer.yPosition = position
-        } else {
-            accountBottomVC.introPlayer.updateYPositionWith(value: position)
-        }
         accountBottomVC.playIntro()
     }
     
@@ -645,17 +646,49 @@ class SingleProgramProfileVC: UIViewController {
     }
     
     func configureSubscribeButton() {
-        if !CurrentProgram.subscriptionIDs!.contains(program.ID) {
-            subscribeButton.setTitle("Subscribe", for: .normal)
-            subscribeButton.setImage(UIImage(named: "subscribe-icon"), for: .normal)
+        if program.channelState == .madePublic {
+            subscribeButton.removeTarget(nil, action: nil, for: .allEvents)
+            subscribeButton.addTarget(self, action: #selector(subscribeButtonPress), for: .touchUpInside)
+            if !CurrentProgram.subscriptionIDs!.contains(program.ID) {
+                subscribeButton.setTitle("Subscribe", for: .normal)
+                subscribeButton.setImage(UIImage(named: "subscribe-icon"), for: .normal)
+            } else {
+                subscribeButton.setTitle("Subscribed", for: .normal)
+                subscribeButton.setImage(UIImage(named: "subscribed-icon"), for: .normal)
+            }
         } else {
-            subscribeButton.setTitle("Subscribed", for: .normal)
-            subscribeButton.setImage(UIImage(named: "subscribed-icon"), for: .normal)
+            subscribeButton.removeTarget(nil, action: nil, for: .allEvents)
+            subscribeButton.addTarget(self, action: #selector(requestInvite), for: .touchUpInside)
+            if program.pendingChannels.contains(CurrentProgram.ID!) {
+                subscribeButton.titleEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
+                subscribeButton.setImage(UIImage(named: "pending-invite"), for: .normal)
+                subscribeButton.setTitle("Pending invite", for: .normal)
+            }  else if program.deniedChannels.contains(CurrentProgram.ID!) {
+                subscribeButton.titleEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
+                subscribeButton.setImage(UIImage(named: "pending-invite"), for: .normal)
+                subscribeButton.setTitle("Pending invite", for: .normal)
+            } else if CurrentProgram.subscriptionIDs!.contains(program.ID) {
+               subscribeButton.setTitle("Subscribed", for: .normal)
+               subscribeButton.setImage(UIImage(named: "subscribed-icon"), for: .normal)
+            } else {
+                subscribeButton.setTitle("Request invite", for: .normal)
+                subscribeButton.setImage(UIImage(named: "request-invite"), for: .normal)
+            }
         }
     }
-
+    
+    @objc func requestInvite() {
+        if subscribeButton.titleLabel?.text == "Request invite" {
+            subscribeButton.titleEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
+            subscribeButton.setImage(UIImage(named: "pending-invite"), for: .normal)
+            subscribeButton.setTitle("Pending invite", for: .normal)
+            FireStoreManager.requestInviteFor(channelID: program.ID)
+        }
+    }
+    
     // MARK: Subscribe button press
     @objc func subscribeButtonPress() {
+        print("Trigger")
         if CurrentProgram.subscriptionIDs!.contains(program.ID) {
             FireStoreManager.removeSubscriptionFromProgramWith(programID: program.ID)
             FireStoreManager.unsubscribeFromProgramWith(programID: program.ID)
@@ -674,13 +707,13 @@ class SingleProgramProfileVC: UIViewController {
             configureProgramStats()
         }
     }
-
+    
     @objc func shareButtonPress() {
         settingsLauncher.showSettings()
     }
     
     @objc func settingsButtonPress() {
-         programSettings.showSettings()
+        programSettings.showSettings()
     }
     
     @objc func moreUnwrap() {
@@ -710,10 +743,10 @@ class SingleProgramProfileVC: UIViewController {
     
     func addWebLink() {
         if program.webLink != nil && program.webLink != "" {
-        linkAndStatsStackedView.insertArrangedSubview(websiteLinkButton, at: 0)
-        websiteLinkButton.setTitle(program.webLink?.lowercased(), for: .normal)
-        websiteLinkButton.widthAnchor.constraint(equalToConstant: websiteLinkButton.intrinsicContentSize.width + 15).isActive = true
-        websiteLinkButton.heightAnchor.constraint(equalToConstant: 15).isActive = true
+            linkAndStatsStackedView.insertArrangedSubview(websiteLinkButton, at: 0)
+            websiteLinkButton.setTitle(program.webLink?.lowercased(), for: .normal)
+            websiteLinkButton.widthAnchor.constraint(equalToConstant: websiteLinkButton.intrinsicContentSize.width + 15).isActive = true
+            websiteLinkButton.heightAnchor.constraint(equalToConstant: 15).isActive = true
         }
     }
     
@@ -723,22 +756,22 @@ class SingleProgramProfileVC: UIViewController {
         for each in nonSelectedButtons {
             each.setTitleColor(CustomStyle.thirdShade, for: .normal)
         }
-
-         let title = sender.titleLabel!.text!
-         accountBottomVC.updateTableViewWith(title: title)
         
-         switch title {
-         case "Episodes":
-             currentIndex = 0
-         case "Subscriptions":
-             currentIndex = 1
-         case "Mentions":
-             currentIndex = 2
-         default:
-             break
-         }
+        let title = sender.titleLabel!.text!
+        accountBottomVC.updateTableViewWith(title: title)
         
-         updateScrollContent()
+        switch title {
+        case "Episodes":
+            currentIndex = 0
+        case "Subscriptions":
+            currentIndex = 1
+        case "Mentions":
+            currentIndex = 2
+        default:
+            break
+        }
+        
+        updateScrollContent()
     }
     
     @objc func websiteButtonPress() {
@@ -757,17 +790,18 @@ class SingleProgramProfileVC: UIViewController {
     }
     
     @objc func pushSubscribersVC() {
-         let subscribersVC = SubscribersVC(programName: program.name, programID: program.ID, programIDs: program.programIDs!, subscriberIDs: program.subscriberIDs)
-         subscribersVC.hidesBottomBarWhenPushed = true
-         navigationController?.pushViewController(subscribersVC, animated: true)
-     }
-
+        let subscribersVC = SubscribersVC(programName: program.name, programID: program.ID, programIDs: program.programsIDs(), subscriberIDs: program.subscriberIDs)
+        subscribersVC.hidesBottomBarWhenPushed = true
+        subscribersVC.isPublic = program.isPrivate
+        navigationController?.pushViewController(subscribersVC, animated: true)
+    }
+    
 }
 
 extension SingleProgramProfileVC: UIScrollViewDelegate {
-   
+    
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
-                
+        
         let topHeight = CGFloat(headerHeight.upperBound) - CGFloat(headerHeight.lowerBound)
         
         if scrollView.contentOffset.y < topHeight {
@@ -775,15 +809,15 @@ extension SingleProgramProfileVC: UIScrollViewDelegate {
             accountBottomVC.activeTV.contentOffset.y = 0
         } else {
             self.scrollView.contentOffset.y = CGFloat(headerHeight.upperBound) - CGFloat(headerHeight.lowerBound)
-             (self.tableViews[currentIndex] as? UIScrollView)?.contentOffset.y = scrollView.contentOffset.y - self.scrollView.contentOffset.y
+            (self.tableViews[currentIndex] as? UIScrollView)?.contentOffset.y = scrollView.contentOffset.y - self.scrollView.contentOffset.y
         }
-
+        
         if scrollView.contentOffset.y < 0{
             headerView.frame = CGRect(x: headerView.frame.minX,
                                       y: min(topHeight, scrollView.contentOffset.y),
                                       width: headerView.frame.width,
                                       height: max(CGFloat(headerHeight.lowerBound), CGFloat(headerHeight.upperBound) + -scrollView.contentOffset.y))
-
+            
         } else {
             headerView.frame = CGRect(x: headerView.frame.minX,
                                       y: 0,
@@ -791,18 +825,18 @@ extension SingleProgramProfileVC: UIScrollViewDelegate {
                                       height: CGFloat(headerHeight.upperBound))
         }
         
-//        let offset = self.scrollView.contentOffset.y + unwrapDifference
-//        let difference = UIScreen.main.bounds.height - headerHeight.upperBound
-//        
-//        guard let tabBarHeight = tabBarController?.tabBar.frame.height else { return }
-//
-//        let introPosition = (difference - tabBarHeight - 70) + offset
-//        let audioPosition = (difference - tabBarHeight) + offset
-//        
-//        accountBottomVC.yOffset = self.scrollView.contentOffset.y
-//        accountBottomVC.introPlayer.updateYPositionWith(value: introPosition)
-//        accountBottomVC.audioPlayer.updateYPositionWith(value: audioPosition)
-
+        //        let offset = self.scrollView.contentOffset.y + unwrapDifference
+        //        let difference = UIScreen.main.bounds.height - headerHeight.upperBound
+        //
+        //        guard let tabBarHeight = tabBarController?.tabBar.frame.height else { return }
+        //
+        //        let introPosition = (difference - tabBarHeight - 70) + offset
+        //        let audioPosition = (difference - tabBarHeight) + offset
+        //
+        //        accountBottomVC.yOffset = self.scrollView.contentOffset.y
+        //        accountBottomVC.introPlayer.updateYPositionWith(value: introPosition)
+        //        accountBottomVC.audioPlayer.updateYPositionWith(value: audioPosition)
+        
         let progress = self.scrollView.contentOffset.y / topHeight
         
         let fadeTextAnimation = CATransition()
@@ -843,11 +877,11 @@ extension SingleProgramProfileVC: UIScrollViewDelegate {
 }
 
 extension SingleProgramProfileVC: SettingsLauncherDelegate {
-   
+    
     func selectionOf(setting: String) {
         switch setting {
         case "Report":
-          UIApplication.shared.windows.last?.addSubview(reportProgramAlert)
+            UIApplication.shared.windows.last?.addSubview(reportProgramAlert)
         default:
             break
         }
@@ -855,7 +889,7 @@ extension SingleProgramProfileVC: SettingsLauncherDelegate {
 }
 
 extension SingleProgramProfileVC: CustomAlertDelegate {
-  
+    
     func primaryButtonPress() {
         FireStoreManager.reportProgramWith(programID: program.ID)
     }

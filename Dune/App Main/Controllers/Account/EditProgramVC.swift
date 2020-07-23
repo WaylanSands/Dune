@@ -30,7 +30,7 @@ class EditProgramVC: UIViewController {
     let customNavBar: CustomNavBar = {
         let nav = CustomNavBar()
         nav.leftButton.isHidden = true
-        nav.alpha = 0
+        nav.titleLabel.text = "Edit Channel"
         return nav
     }()
     
@@ -64,7 +64,7 @@ class EditProgramVC: UIViewController {
     
     let changeImageButton: UIButton = {
         let button = UIButton()
-        button.setTitle("Change program image", for: .normal)
+        button.setTitle("Update channel's image", for: .normal)
         button.setTitleColor(hexStringToUIColor(hex: "#4875FF"), for: .normal)
         button.setTitleColor(hexStringToUIColor(hex: "#4875FF").withAlphaComponent(0.8), for: .highlighted)
         button.addTarget(self, action: #selector(changeImageButtonPress), for: .touchUpInside)
@@ -96,7 +96,7 @@ class EditProgramVC: UIViewController {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 15, weight: .regular)
         label.textColor = CustomStyle.primaryBlack
-        label.text = "Program Name"
+        label.text = "Channel Name"
         return label
     }()
     
@@ -173,7 +173,7 @@ class EditProgramVC: UIViewController {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 15, weight: .regular)
         label.textColor = CustomStyle.primaryBlack
-        label.text = "Program tags"
+        label.text = "Channel tags"
         return label
     }()
     
@@ -230,6 +230,12 @@ class EditProgramVC: UIViewController {
         return button
     }()
     
+    let tagsOverlayButton: UIButton = {
+        let button = UIButton()
+        button.addTarget(self, action: #selector(updateProgramDetails), for: .touchUpInside)
+        return button
+    }()
+    
     let primaryGenreUnderlineView: UIView = {
         let view = UIView()
         view.backgroundColor = CustomStyle.thirdShade
@@ -240,7 +246,7 @@ class EditProgramVC: UIViewController {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 15, weight: .regular)
         label.textColor = CustomStyle.primaryBlack
-        label.text = "Program Intro"
+        label.text = "Channel Intro"
         return label
     }()
     
@@ -293,6 +299,10 @@ class EditProgramVC: UIViewController {
         return view
     }()
     
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+      return .lightContent
+    } 
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         checkIfPrimaryProgram()
@@ -336,7 +346,6 @@ class EditProgramVC: UIViewController {
     
     func configureDelegates() {
         settingsLauncher.settingsDelegate = self
-        scrollView.delegate = self
     }
     
     func checkIfPrimaryProgram() {
@@ -350,22 +359,19 @@ class EditProgramVC: UIViewController {
     }
     
     func configureNavBar() {
-        navigationItem.title = "Edit Program"
-        navigationController?.isNavigationBarHidden = false
-        
-        let navBar = navigationController?.navigationBar
-        navBar?.prefersLargeTitles = false
-        navigationItem.largeTitleDisplayMode = .never
-        navBar?.barStyle = .black
-        navBar?.setBackgroundImage(UIImage(), for: .default)
-        navBar?.shadowImage = UIImage()
-        navBar?.titleTextAttributes = [.foregroundColor: UIColor.white]
-        navBar?.tintColor = .white
-        
-        let imgBackArrow = #imageLiteral(resourceName: "back-button-white")
-        navBar?.backIndicatorImage = imgBackArrow
-        navBar?.backIndicatorTransitionMaskImage = imgBackArrow
         navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
+        navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
+        navigationController?.navigationBar.backIndicatorTransitionMaskImage = #imageLiteral(resourceName: "back-button-white")
+        navigationController?.navigationBar.prefersLargeTitles = false
+        navigationController?.navigationBar.backIndicatorImage = #imageLiteral(resourceName: "back-button-white")
+        navigationController?.navigationBar.isTranslucent = true
+        navigationController?.navigationBar.shadowImage = nil
+        navigationController?.navigationBar.barStyle = .black
+        navigationController?.navigationBar.shadowImage = UIImage()
+        navigationController?.navigationBar.tintColor = .white
+        navigationController?.navigationBar.isHidden = false
+        navigationController?.isNavigationBarHidden = false
+        navigationItem.largeTitleDisplayMode = .never
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -380,8 +386,8 @@ class EditProgramVC: UIViewController {
             imageViewTopConstant = 90
             scrollPadding = 140
         case .iPhone8:
-            headerViewHeightConstant = 280
-            imageViewTopConstant = 100
+            headerViewHeightConstant = 260
+            imageViewTopConstant = 90
         case .iPhone8Plus:
             imageViewTopConstant = 110
         case .iPhone11:
@@ -589,11 +595,16 @@ class EditProgramVC: UIViewController {
     
     // Program tag creation
     func createTagButtons() {
-        tagContainingStackView.removeAllArrangedSubviewsCompletely()
+        tagContainingStackView.removeAllArrangedSubviews()
         for eachTag in CurrentProgram.tags! {
             let button = tagButton(with: eachTag)
             button.addTarget(self, action: #selector(updateProgramDetails), for: .touchUpInside)
             tagContainingStackView.addArrangedSubview(button)
+        }
+        if  CurrentProgram.tags?.count == 0 {
+            tagContainingStackView.addArrangedSubview(tagsOverlayButton)
+            tagsOverlayButton.translatesAutoresizingMaskIntoConstraints = false
+            tagsOverlayButton.widthAnchor.constraint(equalToConstant: 200).isActive = true
         }
     }
     
@@ -638,7 +649,7 @@ class EditProgramVC: UIViewController {
     
     @objc func removeIntroButtonPress () {
         deleteIntroAlert.alertDelegate = self
-        UIApplication.shared.windows.last?.addSubview(deleteIntroAlert)
+        UIApplication.shared.keyWindow!.addSubview(deleteIntroAlert)
     }
     
     @objc func nameFieldChanged() {
@@ -665,7 +676,7 @@ class EditProgramVC: UIViewController {
     @objc func saveChanges() {
         if programNameTextView.text != CurrentProgram.name && programNameTextView.text != "" {
             programNameTextView.textColor = CustomStyle.fourthShade
-            CurrentProgram.name = programNameTextView.text
+            CurrentProgram.name = programNameTextView.text?.trimmingTrailingSpaces
             FireStoreManager.updatePrimaryProgramName()
         }
         
@@ -689,16 +700,6 @@ class EditProgramVC: UIViewController {
         programNameTextView.resignFirstResponder()
         websiteTextView.resignFirstResponder()
         navigationItem.rightBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: nil, action: nil)
-    }
-    
-}
-
-// Manage Navbar Opacity while scrolling
-extension EditProgramVC: UIScrollViewDelegate {
-    
-    func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        let y: CGFloat = scrollView.contentOffset.y
-        customNavBar.alpha = y / 100
     }
     
 }

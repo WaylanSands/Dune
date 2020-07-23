@@ -57,8 +57,13 @@ class DeleteAccount: UIViewController {
         return button
     }()
     
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+      return .lightContent
+    } 
+    
     override func viewDidLoad() {
         navigationItem.title = "Delete account"
+        navigationController?.navigationBar.titleTextAttributes = [.foregroundColor: UIColor.white]
         view.backgroundColor = .white
         styleForScreens()
         configureViews()
@@ -147,6 +152,8 @@ class DeleteAccount: UIViewController {
                             print("Success user has been deleted")
                             self.networkingIndicator.removeFromSuperview()
                             if let signupScreen = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "signUpVC") as? SignUpVC {
+                                User.signOutUser()
+                                CurrentProgram.signOutProgram()
                                 UserDefaults.standard.set(false, forKey: "loggedIn")
                                 self.navigationController?.pushViewController(signupScreen, animated: false)
                             }

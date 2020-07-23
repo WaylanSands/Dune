@@ -235,7 +235,7 @@ extension FireStoreManager {
         
         let programsRef = db.collection("programs")
                             .whereField("primaryCategory", isEqualTo: category)
-                            .order(by: "subscriberCount")
+                            .order(by: "subscriberCount", descending: true)
                             .limit(to: limit)
         
         programsRef.getDocuments { snapshot, error in
@@ -255,7 +255,7 @@ extension FireStoreManager {
         
         let programsRef = db.collection("programs")
                             .whereField("primaryCategory", isEqualTo: category)
-                            .order(by: "subscriberCount")
+                            .order(by: "subscriberCount", descending: true)
                             .start(afterDocument: lastSnapshot)
                             .limit(to: limit)
         

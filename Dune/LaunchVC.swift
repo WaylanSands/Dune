@@ -11,6 +11,7 @@ import UIKit
 class LaunchVC: UIViewController {
     
     let loggedIn = UserDefaults.standard.bool(forKey: "loggedIn")
+    let completedIntro = UserDefaults.standard.bool(forKey: "completedIntro")
     let appDelegate = UIApplication.shared.delegate as! AppDelegate
     var style:UIStatusBarStyle = .lightContent
     var rootVC : UIViewController?
@@ -43,11 +44,17 @@ class LaunchVC: UIViewController {
         super.viewDidLoad()
         view.backgroundColor = CustomStyle.onBoardingBlack
         configureView()
-
-        if loggedIn {
-            getUserData()
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        if completedIntro {
+            if loggedIn {
+                getUserData()
+            } else {
+                sendToSignUp()
+            }
         } else {
-            sendToSignUp()
+            sendToIntro()
         }
     }
     
@@ -100,8 +107,18 @@ class LaunchVC: UIViewController {
     }
     
     func sendToSignUp() {
-        print("Sending to signup")
         rootVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "mainNavController") as! UINavigationController
+        
+        if #available(iOS 13.0, *) {
+            let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
+             sceneDelegate.window?.rootViewController = rootVC
+        } else {
+             appDelegate.window?.rootViewController = rootVC
+        }
+    }
+    
+    func sendToIntro() {
+        rootVC = IntroVC()
         
         if #available(iOS 13.0, *) {
             let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate

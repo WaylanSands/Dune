@@ -15,6 +15,8 @@ class InvitePeopleVC: UIViewController {
     let customNavBar: CustomNavBar = {
         let nav = CustomNavBar()
         nav.leftButton.isHidden = true
+        nav.backgroundColor = CustomStyle.blackNavBar
+        nav.titleLabel.text = "Promote Dune"
         return nav
     }()
     
@@ -86,7 +88,6 @@ class InvitePeopleVC: UIViewController {
         super.viewDidLoad()
         styleForScreens()
         configureViews()
-        self.title = "Invite Friends"
     }
     
     func styleForScreens() {

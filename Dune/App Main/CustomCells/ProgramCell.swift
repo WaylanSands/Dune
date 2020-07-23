@@ -39,6 +39,7 @@ class ProgramCell: UITableViewCell {
     
     // For screen-size adjustment
     var usernameSize: CGFloat = 14
+    var playBarWidth: CGFloat = 50
     var imageSize:CGFloat = 50.0
     var nameSize: CGFloat = 14
     
@@ -78,6 +79,7 @@ class ProgramCell: UITableViewCell {
     lazy var programNameLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: nameSize, weight: .bold)
+        label.allowsDefaultTighteningForTruncation = true
         return label
     }()
     
@@ -170,10 +172,22 @@ class ProgramCell: UITableViewCell {
         button.titleLabel!.font = UIFont.systemFont(ofSize: 12, weight: .medium)
         button.setTitleColor(CustomStyle.primaryBlack, for: .normal)
         button.backgroundColor = CustomStyle.primaryYellow
-        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 15, bottom: 1, right: 15)
+        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 18, bottom: 1, right: 13)
+        button.imageEdgeInsets = UIEdgeInsets(top: 1, left: -10, bottom: 0, right: 0)
         button.layer.cornerRadius = 12
         return button
     }()
+    
+//    let visitButton: UIButton = {
+//        let button = UIButton()
+//        button.setTitle("Visit", for: .normal)
+//        button.titleLabel!.font = UIFont.systemFont(ofSize: 12, weight: .medium)
+//        button.setTitleColor(CustomStyle.secondShade, for: .normal)
+//        button.backgroundColor = CustomStyle.linkBlue
+//        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 15, bottom: 1, right: 15)
+//        button.layer.cornerRadius = 12
+//        return button
+//    }()
     
     let programStatsLabel: UILabel = {
         let label = UILabel()
@@ -189,8 +203,11 @@ class ProgramCell: UITableViewCell {
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         self.layer.rasterizationScale = UIScreen.main.scale
+        self.preservesSuperviewLayoutMargins = false
         self.layer.shouldRasterize = true
         self.selectionStyle = .none
+        self.separatorInset = .zero
+        self.layoutMargins = .zero
         styleForScreens()
         configureViews()
     }
@@ -214,16 +231,9 @@ class ProgramCell: UITableViewCell {
             self.programImageButton.setImage(#imageLiteral(resourceName: "missing-image-large"), for: .normal)
         }
         
-        if let programIDs = CurrentProgram.programIDs {
-            if programIDs.contains(program.ID) || program.ID == CurrentProgram.ID {
-                subscribeButton.isHidden = true
-            } else {
-                configureSubscribeButton()
-                subscribeButton.isHidden = false
-            }
-            
-        } else if CurrentProgram.ID == program.ID {
+        if CurrentProgram.programsIDs().contains(program.ID) {
             subscribeButton.isHidden = true
+//            subscribeButton.setTitle("Visit", for: .normal)
         } else {
             configureSubscribeButton()
             subscribeButton.isHidden = false
@@ -286,26 +296,68 @@ class ProgramCell: UITableViewCell {
         programStatsLabel.text = "\(subscribers) \(subs)  |  \(episodes.count) \(eps) |  Rep \(program.rep)"
     }
     
+//    func configureSubscribeButton() {
+//        if CurrentProgram.subscriptionIDs!.contains(program.ID) {
+//            setupUnsubscribeButton()
+//        } else {
+//            setupSubscribeButton()
+//        }
+//    }
+    
     func configureSubscribeButton() {
-        if CurrentProgram.subscriptionIDs!.contains(program.ID) {
-            setupUnsubscribeButton()
+        if program.channelState == .madePublic {
+            subscribeButton.removeTarget(nil, action: nil, for: .allEvents)
+            subscribeButton.addTarget(self, action: #selector(subscribeButtonPress), for: .touchUpInside)
+            if !CurrentProgram.subscriptionIDs!.contains(program.ID) {
+                subscribeButton.setTitle("Subscribe", for: .normal)
+                subscribeButton.setImage(UIImage(named: "subscribe-pill-icon"), for: .normal)
+                subscribeButton.backgroundColor = CustomStyle.primaryYellow
+                subscribeButton.setTitleColor(CustomStyle.primaryBlack, for: .normal)
+            } else {
+                subscribeButton.setTitle("Subscribed", for: .normal)
+                subscribeButton.setImage(UIImage(named: "subscribed-pill-icon"), for: .normal)
+                subscribeButton.backgroundColor = CustomStyle.sixthShade
+                subscribeButton.setTitleColor(.white, for: .normal)
+            }
         } else {
-            setupSubscribeButton()
+            subscribeButton.removeTarget(nil, action: nil, for: .allEvents)
+            subscribeButton.addTarget(self, action: #selector(requestInvite), for: .touchUpInside)
+            if program.pendingChannels.contains(CurrentProgram.ID!) {
+                subscribeButton.setImage(UIImage(named: "pending-invite"), for: .normal)
+                subscribeButton.setTitle("Pending invite", for: .normal)
+                subscribeButton.backgroundColor = CustomStyle.secondShade
+                subscribeButton.setTitleColor(CustomStyle.primaryBlack, for: .normal)
+            }  else if program.deniedChannels.contains(CurrentProgram.ID!) {
+                subscribeButton.setImage(UIImage(named: "pending-invite"), for: .normal)
+                subscribeButton.setTitle("Pending invite", for: .normal)
+                subscribeButton.backgroundColor = CustomStyle.secondShade
+                subscribeButton.setTitleColor(CustomStyle.primaryBlack, for: .normal)
+            } else if CurrentProgram.subscriptionIDs!.contains(program.ID) {
+               subscribeButton.setTitle("Subscribed", for: .normal)
+               subscribeButton.setImage(UIImage(named: "subscribed-pill-icon"), for: .normal)
+                subscribeButton.backgroundColor = CustomStyle.sixthShade
+                subscribeButton.setTitleColor(.white, for: .normal)
+            } else {
+                subscribeButton.setTitle("Request invite", for: .normal)
+                subscribeButton.setImage(UIImage(named: "request-invite"), for: .normal)
+                subscribeButton.backgroundColor = CustomStyle.primaryYellow
+                subscribeButton.setTitleColor(CustomStyle.primaryBlack, for: .normal)
+            }
         }
     }
     
-    func setupSubscribeButton() {
-        subscribeButton.setTitle("Subscribe", for: .normal)
-        subscribeButton.backgroundColor = CustomStyle.primaryYellow
-        subscribeButton.setTitleColor(CustomStyle.primaryBlack, for: .normal)
-    }
-    
-    func setupUnsubscribeButton() {
-        subscribeButton.setTitle("Subscribed", for: .normal)
-        subscribeButton.backgroundColor = CustomStyle.sixthShade
-        subscribeButton.setTitleColor(.white, for: .normal)
-        subscribeButton.contentEdgeInsets = UIEdgeInsets(top: 0, left: 4, bottom: 0, right: 4)
-    }
+//    func setupSubscribeButton() {
+//        subscribeButton.setTitle("Subscribe", for: .normal)
+//        subscribeButton.backgroundColor = CustomStyle.primaryYellow
+//        subscribeButton.setTitleColor(CustomStyle.primaryBlack, for: .normal)
+//    }
+//
+//    func setupUnsubscribeButton() {
+//        subscribeButton.setTitle("Subscribed", for: .normal)
+//        subscribeButton.backgroundColor = CustomStyle.sixthShade
+//        subscribeButton.setTitleColor(.white, for: .normal)
+//        subscribeButton.contentEdgeInsets = UIEdgeInsets(top: 0, left: 4, bottom: 0, right: 4)
+//    }
     
     func styleForScreens() {
         switch deviceType {
@@ -313,6 +365,7 @@ class ProgramCell: UITableViewCell {
             break
         case .iPhoneSE:
             usernameSize = 14
+            playBarWidth = 40
             imageSize = 45.0
             nameSize = 14
         case .iPhone8:
@@ -343,7 +396,7 @@ class ProgramCell: UITableViewCell {
         playbackBarView.centerXAnchor.constraint(equalTo: programImageButton.centerXAnchor).isActive = true
         playbackBarView.topAnchor.constraint(equalTo: programImageButton.bottomAnchor, constant: 10).isActive = true
         playbackBarView.heightAnchor.constraint(equalToConstant: 5).isActive = true
-        playbackBarView.widthAnchor.constraint(equalToConstant: imageSize - 5).isActive = true
+        playbackBarView.widthAnchor.constraint(equalToConstant: playBarWidth).isActive = true
         
         self.addSubview(playProgramButton)
         playProgramButton.translatesAutoresizingMaskIntoConstraints = false
@@ -360,9 +413,9 @@ class ProgramCell: UITableViewCell {
         self.addSubview(subscribeButton)
         subscribeButton.translatesAutoresizingMaskIntoConstraints = false
         subscribeButton.topAnchor.constraint(equalTo: programImageButton.topAnchor).isActive = true
-        subscribeButton.trailingAnchor.constraint(equalTo: programSettingsButton.trailingAnchor, constant: -20).isActive = true
+        subscribeButton.trailingAnchor.constraint(equalTo: programSettingsButton.trailingAnchor, constant: -15).isActive = true
         subscribeButton.heightAnchor.constraint(equalToConstant: 24).isActive = true
-        subscribeButton.widthAnchor.constraint(equalToConstant: subscribeButton.intrinsicContentSize.width + 5).isActive = true
+//        subscribeButton.widthAnchor.constraint(equalToConstant: subscribeButton.intrinsicContentSize.width + 5).isActive = true
 
         self.addSubview(programNameLabel)
         programNameLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -470,7 +523,7 @@ class ProgramCell: UITableViewCell {
     }
     
     func createTagButtons() {
-        tagContainingStackView.removeAllArrangedSubviewsCompletely()
+        tagContainingStackView.removeAllArrangedSubviews()
         for eachTag in programTags {
             let button = tagButton(with: eachTag)
             tagContainingStackView.addArrangedSubview(button)
@@ -525,22 +578,61 @@ class ProgramCell: UITableViewCell {
         cellDelegate?.showSettings(cell: self )
     }
     
+//    @objc func subscribeButtonPress() {
+//        if CurrentProgram.subscriptionIDs!.contains(program.ID) {
+//            setupSubscribeButton()
+//            CurrentProgram.subscriptionIDs!.removeAll(where: { $0 == program.ID })
+//            FireStoreManager.removeSubscriptionFromProgramWith(programID: program.ID)
+//            FireStoreManager.unsubscribeFromProgramWith(programID: program.ID)
+//            cellDelegate.unsubscribeFrom(program: program)
+//            program.subscriberCount -= 1
+//            configureStats()
+//        } else {
+//            setupUnsubscribeButton()
+//            CurrentProgram.subscriptionIDs!.append(program.ID)
+//            FireStoreManager.addSubscriptionToProgramWith(programID: program.ID)
+//            FireStoreManager.subscribeToProgramWith(programID: program.ID)
+//            program.subscriberCount += 1
+//            configureStats()
+//        }
+//    }
+    
     @objc func subscribeButtonPress() {
         if CurrentProgram.subscriptionIDs!.contains(program.ID) {
-            setupSubscribeButton()
-            CurrentProgram.subscriptionIDs!.removeAll(where: { $0 == program.ID })
             FireStoreManager.removeSubscriptionFromProgramWith(programID: program.ID)
             FireStoreManager.unsubscribeFromProgramWith(programID: program.ID)
-            cellDelegate.unsubscribeFrom(program: program)
+            CurrentProgram.subscriptionIDs!.removeAll(where: {$0 == program.ID})
             program.subscriberCount -= 1
             configureStats()
+            subscribeButton.setTitle("Subscribe", for: .normal)
+            subscribeButton.setImage(UIImage(named: "subscribe-pill-icon"), for: .normal)
         } else {
-            setupUnsubscribeButton()
-            CurrentProgram.subscriptionIDs!.append(program.ID)
             FireStoreManager.addSubscriptionToProgramWith(programID: program.ID)
             FireStoreManager.subscribeToProgramWith(programID: program.ID)
+            CurrentProgram.subscriptionIDs!.append(program.ID)
             program.subscriberCount += 1
             configureStats()
+            subscribeButton.setTitle("Subscribed", for: .normal)
+            subscribeButton.setImage(UIImage(named: "subscribed-pill-icon"), for: .normal)
+        }
+    }
+    
+    @objc func requestInvite() {
+        if subscribeButton.titleLabel?.text == "Request invite" {
+            subscribeButton.setImage(UIImage(named: "pending-invite"), for: .normal)
+            subscribeButton.setTitle("Pending invite", for: .normal)
+            FireStoreManager.requestInviteFor(channelID: program.ID)
+            program.pendingChannels.append(CurrentProgram.ID!)
+        } else if subscribeButton.titleLabel?.text == "Subscribed" {
+            FireStoreManager.removeSubscriptionFromProgramWith(programID: program.ID)
+            FireStoreManager.unsubscribeFromProgramWith(programID: program.ID)
+            CurrentProgram.subscriptionIDs!.removeAll(where: {$0 == program.ID})
+            program.subscriberCount -= 1
+            configureStats()
+            subscribeButton.setTitle("Request invite", for: .normal)
+            subscribeButton.setImage(UIImage(named: "request-invite"), for: .normal)
+            subscribeButton.backgroundColor = CustomStyle.primaryYellow
+            subscribeButton.setTitleColor(CustomStyle.primaryBlack, for: .normal)
         }
     }
     

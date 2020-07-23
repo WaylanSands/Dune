@@ -25,6 +25,7 @@ class StudioVC: UIViewController {
     var downloadingIndexes = [Int]()
     var initialLoad: Bool = true
     var selectedProgramName: String?
+    var fetchingDraft = false
     
     let notAPublisherAlert = CustomAlertView(alertType: .notAPublisher)
     
@@ -35,7 +36,7 @@ class StudioVC: UIViewController {
         nav.rightButton.setTitle("Record", for: .normal)
         nav.leftButton.addTarget(self, action: #selector(selectDocument), for: .touchUpInside)
         nav.rightButton.addTarget(self, action: #selector(recordButtonPress), for: .touchUpInside)
-        nav.titleLabel.font = UIFont.systemFont(ofSize: 18, weight: .bold)
+//        nav.titleLabel.font = UIFont.systemFont(ofSize: 16, weight: .bold)
         return nav
     }()
     
@@ -71,8 +72,8 @@ class StudioVC: UIViewController {
     }()
     
     override var preferredStatusBarStyle: UIStatusBarStyle {
-        return .lightContent
-    }
+      return .lightContent
+    } 
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -123,7 +124,6 @@ class StudioVC: UIViewController {
 
     func setupNavigationBar() {
         let imgBackArrow = #imageLiteral(resourceName: "back-button-white")
-        navigationController?.navigationBar.barStyle = .black
         navigationController?.navigationBar.backIndicatorImage = imgBackArrow
         navigationController?.navigationBar.backIndicatorTransitionMaskImage = imgBackArrow
         navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
@@ -326,25 +326,28 @@ class StudioVC: UIViewController {
     
     func editDraftEpisode(for row: Int) {
         let draft = downloadedDrafts[row]
-
-        FileManager.getAudioURLFromTempDirectory(fileName: draft.fileName) { url in
-            
-            let editingVC = EditingBoothVC()
-            editingVC.recordingURL = url
-            editingVC.fileName = draft.fileName
-            editingVC.startTime = draft.startTime
-            editingVC.endTime = draft.endTime
-            editingVC.wasTrimmed = draft.wasTrimmed
-            editingVC.caption = draft.caption
-            editingVC.tags = draft.tags
-            editingVC.draftID = draft.ID
-            editingVC.isDraft = true
-            
-            if draft.programName != CurrentProgram.name {
-                let program = CurrentProgram.subPrograms?.first(where: {$0.name == draft.programName})
-                editingVC.selectedProgram = program
+        if !fetchingDraft {
+            fetchingDraft = true
+            FileManager.getAudioURLFromTempDirectory(fileName: draft.fileName) { url in
+                
+                let editingVC = EditingBoothVC()
+                editingVC.recordingURL = url
+                editingVC.fileName = draft.fileName
+                editingVC.startTime = draft.startTime
+                editingVC.endTime = draft.endTime
+                editingVC.wasTrimmed = draft.wasTrimmed
+                editingVC.caption = draft.caption
+                editingVC.tags = draft.tags
+                editingVC.draftID = draft.ID
+                editingVC.isDraft = true
+                
+                if draft.programName != CurrentProgram.name {
+                    let program = CurrentProgram.subPrograms?.first(where: {$0.name == draft.programName})
+                    editingVC.selectedProgram = program
+                }
+                self.navigationController?.pushViewController(editingVC, animated: true)
+                self.fetchingDraft = false
             }
-            self.navigationController?.pushViewController(editingVC, animated: true)
         }
     }
     
@@ -482,9 +485,7 @@ extension StudioVC: UIDocumentPickerDelegate,UINavigationControllerDelegate {
         }
     
     @objc func selectDocument() {
-        
         if User.isPublisher! && CurrentProgram.imageID != nil {
-            
             let types = [kUTTypeAudio]
             let importMenu = UIDocumentPickerViewController(documentTypes: types as [String], in: .import)
             

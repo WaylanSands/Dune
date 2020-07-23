@@ -31,8 +31,8 @@ class EditAccountVC: UIViewController {
     
     let customNavBar: CustomNavBar = {
         let nav = CustomNavBar()
-        nav.alpha = 0
         nav.leftButton.isHidden = true
+        nav.titleLabel.text = "Edit Account"
         return nav
     }()
     
@@ -268,7 +268,6 @@ class EditAccountVC: UIViewController {
         styleForScreens()
         configureViews()
         configureDelegates()
-        navigationItem.title = "Edit Account"
     }
     
     
@@ -277,15 +276,22 @@ class EditAccountVC: UIViewController {
         bdayTextButton.setTitle(User.birthDate, for: .normal)
         profileImageView.image = CurrentProgram.image
         emailLabelButton.text = User.email
-        
+
         let placeholder = NSAttributedString(string: CurrentProgram.name!, attributes: [NSAttributedString.Key.foregroundColor : CustomStyle.fourthShade])
         nameTextField.attributedPlaceholder = placeholder
-        
+
         navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
-        self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
-        self.navigationController?.navigationBar.shadowImage = UIImage()
-        self.navigationController?.navigationBar.isTranslucent = true
-        self.navigationController?.view.backgroundColor = .clear
+        navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
+        navigationController?.navigationBar.backIndicatorTransitionMaskImage = #imageLiteral(resourceName: "back-button-white")
+        navigationController?.navigationBar.prefersLargeTitles = false
+        navigationController?.navigationBar.backIndicatorImage = #imageLiteral(resourceName: "back-button-white")
+        navigationController?.navigationBar.isTranslucent = true
+        navigationController?.navigationBar.shadowImage = nil
+        navigationController?.navigationBar.barStyle = .black
+        navigationController?.navigationBar.shadowImage = UIImage()
+        navigationController?.navigationBar.tintColor = .white
+        navigationController?.navigationBar.isHidden = false
+        navigationItem.largeTitleDisplayMode = .never
     }
     
     // Save changed fields
@@ -300,7 +306,6 @@ class EditAccountVC: UIViewController {
 
     
     func configureDelegates() {
-        scrollView.delegate = self
         datePicker.delegate = self
         nameTextField.delegate = self
         changingDisplayName.alertDelegate = self
@@ -582,15 +587,6 @@ extension EditAccountVC: UITextFieldDelegate {
                 UIApplication.shared.windows.last?.addSubview(self.changingDisplayName)
             }
         }
-    }
-}
-
-
-// Change Navbar Opacity while scrolling
-extension EditAccountVC: UIScrollViewDelegate {
-    func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        let y: CGFloat = scrollView.contentOffset.y
-        customNavBar.alpha = y / 100
     }
 }
 

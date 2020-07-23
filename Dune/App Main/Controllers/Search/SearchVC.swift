@@ -48,6 +48,9 @@ class SearchVC: UIViewController {
     
 //    lazy var tabButtons = [programButton]
     
+    // Deep link navigation
+    var programToPush: Program?
+    
     
     let searchScrollView: UIScrollView = {
         let view = UIScrollView()
@@ -98,7 +101,6 @@ class SearchVC: UIViewController {
         super.viewDidLoad()
         self.definesPresentationContext = true
         view.backgroundColor = CustomStyle.darkestBlack
-//        setNeedsStatusBarAppearanceUpdate
         createCategoryPills()
         configureDelegates()
         configureViews()
@@ -107,11 +109,14 @@ class SearchVC: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         searchScrollView.setScrollBarToTopLeft()
-        tableView.setScrollBarToTopLeft()
         setupModalCommentObserver()
         setupSearchController()
         isGoingForward = false
         fetchTopPrograms()
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        checkToPushLinkedProgram()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -123,6 +128,15 @@ class SearchVC: UIViewController {
             pillsHeightConstraint.constant = 0
         }
         searchController.isActive = false
+        resetAllSelection()
+    }
+    
+    func checkToPushLinkedProgram() {
+        if programToPush != nil {
+            isGoingForward = true
+            visitProfile(program: programToPush!)
+            programToPush = nil
+        }
     }
     
     func setupModalCommentObserver() {
@@ -140,16 +154,16 @@ class SearchVC: UIViewController {
         NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: "modalCommentPush"), object: nil)
     }
     
-    override var preferredStatusBarStyle: UIStatusBarStyle {
-        return .lightContent
-    }
-    
     func setupSearchController() {
         searchController.hidesNavigationBarDuringPresentation = false
         searchController.obscuresBackgroundDuringPresentation = false
         searchController.searchBar.placeholder = "Search"
-        searchController.searchBar.searchTextField.textColor = CustomStyle.primaryBlack
-        searchController.searchBar.searchTextField.backgroundColor = .white
+        if #available(iOS 13.0, *) {
+            searchController.searchBar.searchTextField.textColor = CustomStyle.primaryBlack
+            searchController.searchBar.searchTextField.backgroundColor = .white
+        } else {
+            // Fallback on earlier versions
+        }
         searchController.searchBar.barStyle = .black
         navigationItem.titleView = searchController.searchBar
         navigationController?.isNavigationBarHidden = false
@@ -160,6 +174,10 @@ class SearchVC: UIViewController {
         navigationController?.navigationBar.tintColor = CustomStyle.primaryBlue
         navigationController?.navigationBar.barStyle = .black
         navigationController?.navigationBar.shadowImage = UIImage()
+        
+        tabBarController?.tabBar.backgroundImage = UIImage()
+        tabBarController?.tabBar.backgroundColor = hexStringToUIColor(hex: "F4F7FB")
+        
         let searchBarTextField = searchController.searchBar.value(forKey: "searchField") as? UITextField
         searchBarTextField?.textColor = CustomStyle.sixthShade
         searchBarTextField?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
@@ -200,7 +218,6 @@ class SearchVC: UIViewController {
      filteredPrograms = downloadedPrograms.filter { program -> Bool in
         return program.name.lowercased().contains(searchText.lowercased())
       }
-      
       tableView.reloadData()
     }
     
@@ -211,13 +228,14 @@ class SearchVC: UIViewController {
         initialSnapshot = []
         lastSnapshot = nil
         moreToLoad = true
+        tableView.reloadData()
     }
     
     func fetchTopPrograms() {
-        FireStoreManager.fetchProgramsOrderedBySubscriptions(limit: 10) { snapshot in
+        FireStoreManager.fetchProgramsOrderedBySubscriptions(limit: 10) { [weak self] snapshot in
+            guard let self = self else { return }
             
             if self.initialSnapshot != snapshot {
-                
                 self.resetTableView()
                 self.initialSnapshot = snapshot
                 self.lastSnapshot = snapshot.last!
@@ -261,12 +279,10 @@ class SearchVC: UIViewController {
                     counter += 1
                     
                     let data = eachDocument.data()
-                    let documentID = eachDocument.documentID
                     let imageID = data["imageID"] as? String
+
                     
-                    if User.isPublisher! && documentID == CurrentProgram.ID! {
-                        print("Skipping program")
-                    } else if imageID != nil {
+                    if imageID != nil {
                         let program = Program(data: data)
                         self.downloadedPrograms.append(program)
                     }
@@ -373,11 +389,13 @@ class SearchVC: UIViewController {
         tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         tableView.contentInset = UIEdgeInsets(top: 0.0, left: 0.0, bottom: 67.0, right: 0.0)
+        tableView.backgroundColor = CustomStyle.secondShade
+        tableView.addTopBounceAreaView()
         
         view.bringSubviewToFront(searchScrollView)
         
         view.addSubview(introPlayer)
-        introPlayer.frame = CGRect(x: 0, y: view.frame.height, width: view.frame.width, height: 70)
+        introPlayer.frame = CGRect(x: 0, y: view.frame.height, width: view.frame.width, height: 64)
     }
     
     func addBottomLoadingSpinner() {
@@ -473,7 +491,6 @@ class SearchVC: UIViewController {
                     let imageID = data["imageID"] as? String
                     
                     if User.isPublisher! && documentID == CurrentProgram.ID! {
-                        print("Skipping program")
                     } else if imageID != nil {
                          let program = Program(data: data)
                         if !self.downloadedPrograms.contains(where: { $0.ID == program.ID }) {
@@ -602,7 +619,6 @@ extension SearchVC: ProgramCellDelegate {
     }
     
     func playProgramIntro(cell: ProgramCell) {
-        introPlayer.isProgramPageIntro = false
         activeProgram = cell.program
         
         cell.program.hasBeenPlayed = true
@@ -639,12 +655,16 @@ extension SearchVC: ProgramCellDelegate {
     }
     
     func noIntroAlert() {
-         UIApplication.shared.windows.last?.addSubview(noIntroRecordedAlert)
+        UIApplication.shared.keyWindow!.addSubview(noIntroRecordedAlert)
     }
 
 }
 
 extension SearchVC: DuneAudioPlayerDelegate {
+    
+    func fetchMoreEpisodes() {
+        print("Should fetch more episodes: Needs implementation")
+    }
     
     func showCommentsFor(episode: Episode) {
         let commentVC = CommentThreadVC(episode: episode)
@@ -692,6 +712,15 @@ extension SearchVC: DuneAudioPlayerDelegate {
         categoryButtons[0].setTitleColor(CustomStyle.primaryBlack, for: .normal)
         currentMode = .all
         fetchTopPrograms()
+    }
+    
+    @objc func resetAllSelection() {
+        resetCategoryButtons()
+        if categoryButtons.count > 0  {
+            categoryButtons[0].backgroundColor = CustomStyle.white
+            categoryButtons[0].setTitleColor(CustomStyle.primaryBlack, for: .normal)
+        }
+        currentMode = .all
     }
     
     func resetCategoryButtons() {

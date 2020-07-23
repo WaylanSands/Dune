@@ -30,10 +30,9 @@ class CommentThreadVC: UIViewController {
     let customNavBar: CustomNavBar = {
         let nav = CustomNavBar()
         nav.leftButton.isHidden = true
-        nav.backgroundColor = .black
+        nav.backgroundColor = CustomStyle.blackNavBar
         nav.titleLabel.text = "Comments"
         nav.titleLabel.textColor = .white
-        nav.alpha = 0.8
         return nav
     }()
 
@@ -45,6 +44,7 @@ class CommentThreadVC: UIViewController {
     override func viewDidLoad() {
         configureKeyboardTracking()
         configureDelegates()
+        styleForScreens()
         addInitialCell()
         configureViews()
         fetchComments()
@@ -53,6 +53,15 @@ class CommentThreadVC: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         configureNavigation()
         checkIfModallyPresented()
+    }
+    
+    func styleForScreens() {
+        switch UIDevice.current.deviceType {
+        case .iPhoneSE, .iPhone8Plus, .iPhone8, .iPhone4S:
+            homeIndicatorHeight = 0
+        default:
+            break
+        }
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -89,9 +98,8 @@ class CommentThreadVC: UIViewController {
     navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
     navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
     navigationController?.navigationBar.backIndicatorTransitionMaskImage = #imageLiteral(resourceName: "back-button-white")
-    navigationController?.navigationBar.tintColor = CustomStyle.primaryBlack
+    navigationController?.navigationBar.prefersLargeTitles = false
     navigationController?.navigationBar.backIndicatorImage = #imageLiteral(resourceName: "back-button-white")
-    navigationController?.navigationBar.prefersLargeTitles = true
     navigationController?.navigationBar.isTranslucent = true
     navigationController?.navigationBar.shadowImage = nil
     navigationController?.navigationBar.barStyle = .black
@@ -102,7 +110,7 @@ class CommentThreadVC: UIViewController {
     }
     
     func configureViews() {
-        view.backgroundColor = CustomStyle.sixthShade
+        view.backgroundColor = CustomStyle.onBoardingBlack
         view.addSubview(tableView)
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
@@ -190,6 +198,7 @@ extension CommentThreadVC: UITableViewDataSource, UITableViewDelegate {
         
         commentCell.replyCountButton.addTarget(commentCell, action: #selector(PrimaryCommentCell.viewRepliesPress), for: .touchUpInside)
         commentCell.profileImageButton.addTarget(commentCell, action: #selector(CommentCell.visitCommenter), for: .touchUpInside)
+        commentCell.usernameButton.addTarget(commentCell, action: #selector(CommentCell.visitCommenter), for: .touchUpInside)
         commentCell.voteDownButton.addTarget(commentCell, action: #selector(CommentCell.voteDownPress), for: .touchUpInside)
         commentCell.voteUpButton.addTarget(commentCell, action: #selector(CommentCell.voteUpPress), for: .touchUpInside)
         commentCell.replyButton.addTarget(commentCell, action: #selector(CommentCell.replyPress), for: .touchUpInside)
@@ -306,9 +315,7 @@ extension CommentThreadVC: UITextViewDelegate {
                 replyIsAttributed = false
                 attributedCharCount = 0
             }
-            
         }
-        
         return true
     }
     
@@ -402,7 +409,7 @@ extension CommentThreadVC: commentTextViewDelegate {
     func append(comment: Comment, primaryID: String?) {
         DispatchQueue.main.async {
             self.commentTextView.commentView.resignFirstResponder()
-            self.commentTextView.frame.size = CGSize(width: self.commentTextView.backgroundView.frame.width , height: self.commentTextView.backgroundView.frame.height)
+            self.commentTextView.frame.size = CGSize(width: self.commentTextView.backgroundView.frame.width , height: 48)
             self.commentTextView.frame.origin.y = self.view.frame.height - (self.commentTextView.frame.height + self.homeIndicatorHeight)
             self.tableViewBottomConstraint.constant = -self.homeIndicatorHeight
             self.keyboardUp = false
@@ -437,6 +444,7 @@ extension CommentThreadVC: commentTextViewDelegate {
     
     func dismissKeyBoard() {
         DispatchQueue.main.async {
+            print("dismissKeyBoard")
             self.keyboardUp = false
             self.commentTextView.frame.size = CGSize(width: self.commentTextView.backgroundView.frame.width , height: self.commentTextView.backgroundView.frame.height)
             self.commentTextView.frame.origin.y = self.view.frame.height - (self.commentTextView.frame.height + self.homeIndicatorHeight)

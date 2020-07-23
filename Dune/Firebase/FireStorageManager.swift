@@ -13,7 +13,7 @@ struct FireStorageManager {
     
     static func storeSubProgram(image: UIImage, to programID: String) {
         
-        let imageID = NSUUID().uuidString
+        let imageID = NSUUID().uuidString + ".jpg"
 
         DispatchQueue.global(qos: .userInitiated).async {
             
@@ -323,6 +323,25 @@ struct FireStorageManager {
         }
     }
     
+    static func downloadLowAudioToCache(audioID: String) {
+        
+        DispatchQueue.global(qos: .background).async {
+            
+            let storageRef = Storage.storage().reference().child("backgroundMusic/\(audioID)")
+            let cacheURL = FileManager.getCacheDirectory()
+            let audioURL = cacheURL.appendingPathComponent(audioID)
+            
+            storageRef.write(toFile: audioURL) { (url, error) in
+                
+                if error != nil {
+                    print(error!)
+                } else {
+                    print("Added low audio to cache")
+                }
+            }
+        }
+    }
+    
     // Download draft episode from Firebase Storage
     static func downloadDraftEpisodeAudio(audioID: String, completion: @escaping (URL) -> ()) {
         
@@ -348,18 +367,20 @@ struct FireStorageManager {
     static func downloadAccountImage(imageID: String, completion: @escaping (UIImage) -> ()) {
         
         DispatchQueue.global(qos: .userInitiated).async {
-            
             let storageRef = Storage.storage().reference().child("images/\(imageID)")
             let cacheURL = FileManager.getCacheDirectory()
             let imageURL = cacheURL.appendingPathComponent(imageID)
             storageRef.write(toFile: imageURL) { (url, error) in
                 if error != nil {
                     print(error!)
-                } else {
-                    if let image = UIImage(contentsOfFile: url!.path) {
+                    if let image = UIImage(named: "missing-image-large") {
                         completion(image)
-                    } else {
-                        print("Failed to return Firebase file into an image")
+                    }
+                } else {
+                    if let data = try? Data(contentsOf: url!) {
+                        if let image = UIImage(data: data) {
+                            completion(image)
+                        }
                     }
                 }
             }
@@ -378,7 +399,8 @@ struct FireStorageManager {
                 if error != nil {
                     print(error!)
                 } else {
-                    if let image = UIImage(contentsOfFile: url!.path) {
+                    let imageData = try! Data(contentsOf: url!)
+                    if let image = UIImage(data: imageData) {
                         completion(image)
                     } else {
                         print("Failed to return Firebase file into an image")
@@ -410,6 +432,26 @@ struct FireStorageManager {
                                 FireStoreManager.addImagePathToProgram(with: programID, imagePath: url!.path, imageID: ID)
                             }
                         }
+                    }
+                })
+            }
+        }
+    }
+    
+    static func storeCachedTwitter(image: UIImage, with ID: String) {
+        
+        DispatchQueue.global(qos: .userInitiated).async {
+            
+            let storageRef = Storage.storage().reference().child("images/\(ID)")
+            
+            if let image = image.jpegData(compressionQuality: .zero) {
+                
+                storageRef.putData(image, metadata: nil, completion: { (metadata, error) in
+                    
+                    if let errorMessage = error {
+                        print("There has was an error adding the image \(errorMessage)")
+                    } else {
+                        print("Image added to Firebase Storage")
                     }
                 })
             }

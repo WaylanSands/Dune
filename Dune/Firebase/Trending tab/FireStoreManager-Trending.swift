@@ -15,6 +15,7 @@ extension FireStoreManager {
     static let hourInterval: TimeInterval = 60.0 * minuteInterval
     static let dayInterval: TimeInterval = 24 * hourInterval
     static let weekInterval: TimeInterval = 7 * dayInterval
+    static let monthInterval: TimeInterval = 2 * weekInterval
     
     // Fetch first batch of trending episodes from last week, ordered by likes
     static func fetchTrendingEpisodesWith(limit: Int, completion: @escaping ([QueryDocumentSnapshot]) -> ()) {
@@ -40,6 +41,32 @@ extension FireStoreManager {
                 }
                 
                 completion(sortedByLikes)
+            }
+        }
+    }
+    
+    static func fetchTrendingEpisodes(completion: @escaping ([Episode]) -> ()) {
+        
+        let components = Calendar.current.dateComponents([.year, .month, .day], from: Date())
+        let start = Calendar.current.date(from: components)
+        let end = Calendar.current.date(byAdding: .day, value: -30, to: start!)
+        
+        var episodes = [Episode]()
+        
+        let episodesRef = db.collection("episodes").whereField("postedAt", isGreaterThan: end!)
+        
+        episodesRef.getDocuments { snapshot, error in
+            if error != nil {
+                print("Error: \(error!.localizedDescription)")
+            } else {
+                let documents = snapshot!.documents
+                
+                for eachDoc in documents {
+                    let data = eachDoc.data()
+                    episodes.append(Episode(data: data))
+                }
+                print(episodes.count)
+                completion(episodes)
             }
         }
     }

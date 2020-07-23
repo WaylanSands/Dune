@@ -13,7 +13,7 @@ class DuneSquareLinkPreview: UIView {
     
     let imageButton: UIButton = {
         let button = UIButton()
-        button.backgroundColor = .white
+        button.backgroundColor = CustomStyle.secondShade
         button.imageView!.contentMode = .scaleAspectFill
         button.layer.shouldRasterize = true
         button.isOpaque = true

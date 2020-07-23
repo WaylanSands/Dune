@@ -11,13 +11,14 @@ import FirebaseFirestore
 
 class TrendingVC: UIViewController {
     
-    let loadingView = TVLoadingAnimationView(topHeight: 150)
+    let loadingView = TVLoadingAnimationView(topHeight: 20)
     var initialSnapshot = [QueryDocumentSnapshot]()
     var downloadedEpisodes = [Episode]()
     var lastSnapshot: DocumentSnapshot?
+    var pushingContent = false
     var moreToLoad = true
     
-    var audioPlayer = DuneAudioPlayer()
+    var audioPlayer = DunePlayBar()
     
     var activeCell: EpisodeCell?
     var selectedCellRow: Int?
@@ -33,11 +34,10 @@ class TrendingVC: UIViewController {
     
     let tableView = UITableView()
     
-    let currentDateLabel: UILabel = {
-        let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
-        label.textColor = CustomStyle.fourthShade
-        return label
+    let navBarView: UIView = {
+        let view = UIView()
+        view.backgroundColor = CustomStyle.blackNavBar
+        return view
     }()
     
     override func viewDidLoad() {
@@ -48,13 +48,21 @@ class TrendingVC: UIViewController {
     }
     
     override func viewWillAppear(_ animated: Bool) {
-        fetchTrendingEpisodes()
+//        fetchTrendingEpisodes()
+        fetchEpisodes() 
+        pushingContent = false
         configureNavigation()
-        setCurrentDate()
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        setNeedsStatusBarAppearanceUpdate()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
-        audioPlayer.finishSession()
+        tableView.setScrollBarToTopLeft()
+        if !pushingContent {
+            audioPlayer.finishSession()
+        }
         
         FileManager.removeAudioFilesFromDocumentsDirectory() {
             print("Audio removed")
@@ -62,13 +70,17 @@ class TrendingVC: UIViewController {
     }
     
     func configureNavigation() {
-        UINavigationBar.appearance().titleTextAttributes = CustomStyle.blackNavBarAttributes
         navigationItem.title = "Trending"
-        navigationController?.navigationBar.prefersLargeTitles = true
+        navigationController?.isNavigationBarHidden = false
         navigationController?.navigationBar.isHidden = false
-        navigationController?.navigationBar.setBackgroundImage(nil, for: .default)
-        navigationController?.navigationBar.barStyle = .default
+        navigationController?.navigationBar.barStyle = .black
+        navigationController?.navigationBar.isTranslucent = true
         navigationController?.navigationBar.shadowImage = UIImage()
+        navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
+        navigationController?.navigationBar.titleTextAttributes = [.foregroundColor: UIColor.white]
+
+        tabBarController?.tabBar.backgroundImage = UIImage()
+        tabBarController?.tabBar.backgroundColor = hexStringToUIColor(hex: "F4F7FB")
         
         let imgBackArrow = #imageLiteral(resourceName: "back-button-white")
         navigationController?.navigationBar.backIndicatorImage = imgBackArrow
@@ -89,48 +101,38 @@ class TrendingVC: UIViewController {
         tableView.showsVerticalScrollIndicator = false
     }
     
-    func setCurrentDate() {
-        let date = Date()
-
-        let numberFormatter = NumberFormatter()
-        numberFormatter.numberStyle = .ordinal
-        numberFormatter.locale = Locale.current
-        
-        let monthFormatter = DateFormatter()
-        monthFormatter.dateFormat = "MMM"
-        
-        let dayFormatter = DateFormatter()
-        dayFormatter.dateFormat = "dd"
-        
-        let dayString = dayFormatter.string(from: date)
-        let monthString = monthFormatter.string(from: date)
-        
-        let dayNumber = NSNumber(value: Int(dayString)!)
-        let day = numberFormatter.string(from: dayNumber)!
-        
-        currentDateLabel.text = "\(day) \(monthString)"
-    }
-    
     func configureViews() {
         view.addSubview(tableView)
-        tableView.pinEdges(to: view)
-        
-        tableView.addSubview(currentDateLabel)
-        currentDateLabel.translatesAutoresizingMaskIntoConstraints = false
-        currentDateLabel.bottomAnchor.constraint(equalTo: tableView.topAnchor, constant: -10).isActive = true
-        currentDateLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
+        tableView.translatesAutoresizingMaskIntoConstraints = false
+        tableView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+        tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+        tableView.backgroundColor = CustomStyle.secondShade
+        tableView.tableFooterView = UIView()
+        tableView.addTopBounceAreaView()
+
         
         view.addSubview(audioPlayer)
-        audioPlayer.frame = CGRect(x: 0, y: view.frame.height, width: view.frame.width, height: 70)
+        audioPlayer.frame = CGRect(x: 0, y: view.frame.height, width: view.frame.width, height: 600)
+        
+        view.addSubview(navBarView)
+        navBarView.translatesAutoresizingMaskIntoConstraints = false
+        navBarView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+        navBarView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        navBarView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        navBarView.heightAnchor.constraint(equalToConstant: UIDevice.current.navBarHeight()).isActive = true
     }
     
     func addLoadingView() {
         view.addSubview(loadingView)
         loadingView.translatesAutoresizingMaskIntoConstraints = false
-        loadingView.topAnchor.constraint(equalTo: tableView.topAnchor).isActive = true
+        loadingView.topAnchor.constraint(equalTo: tableView.topAnchor, constant: UIDevice.current.navBarHeight()).isActive = true
         loadingView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         loadingView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         loadingView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+        
+        view.bringSubviewToFront(navBarView)
     }
     
     func resetTableView() {
@@ -141,28 +143,38 @@ class TrendingVC: UIViewController {
         moreToLoad = true
     }
     
+    func fetchEpisodes() {
+        FireStoreManager.fetchTrendingEpisodes() { episodes in
+            self.downloadedEpisodes = episodes.sortedByLikes()
+            self.audioPlayer.downloadedEpisodes = episodes.sortedByLikes()
+            self.audioPlayer.itemCount = episodes.count
+            self.tableView.reloadData()
+            self.loadingView.removeFromSuperview()
+        }
+    }
+    
     func fetchTrendingEpisodes() {
         print("Fetching trending episodes")
         FireStoreManager.fetchTrendingEpisodesWith(limit: 10) { snapshot in
-            
+
             if snapshot.count == 0 {
                 self.moreToLoad = false
             } else if self.initialSnapshot != snapshot {
-                            
+
                 self.resetTableView()
                 self.initialSnapshot = snapshot
                 self.lastSnapshot = snapshot.last!
                 var counter = 0
-                
+
                 for eachDocument in snapshot {
                     counter += 1
-                    
+
                     let data = eachDocument.data()
                     let episode = Episode(data: data)
-                    
+
                     self.downloadedEpisodes.append(episode)
                     self.audioPlayer.downloadedEpisodes.append(episode)
-                    
+
                     if counter == snapshot.count {
                         self.tableView.reloadData()
                         self.loadingView.removeFromSuperview()
@@ -171,26 +183,26 @@ class TrendingVC: UIViewController {
             }
         }
     }
-    
+
     func  fetchAnotherBatch() {
         FireStoreManager.fetchTrendingEpisodesFrom(lastSnapshot: lastSnapshot!, limit: 10) { snapshots in
-            
+
             if snapshots.count == 0 {
                 self.moreToLoad = false
             } else {
-                
+
                 self.lastSnapshot = snapshots.last!
                 var counter = 0
-                
+
                 for eachDocument in snapshots {
                     counter += 1
-                    
+
                     let data = eachDocument.data()
                     let episode = Episode(data: data)
-                    
+
                     self.downloadedEpisodes.append(episode)
                     self.audioPlayer.downloadedEpisodes.append(episode)
-                    
+
                     if counter == snapshots.count {
                         self.tableView.reloadData()
                     }
@@ -237,6 +249,7 @@ extension TrendingVC: UITableViewDelegate, UITableViewDataSource {
         episodeCell.programImageButton.addTarget(episodeCell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
         episodeCell.playEpisodeButton.addTarget(episodeCell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
         episodeCell.usernameButton.addTarget(episodeCell, action: #selector(EpisodeCell.visitProfile), for: .touchUpInside)
+        episodeCell.commentButton.addTarget(episodeCell, action: #selector(EpisodeCell.showComments), for: .touchUpInside)
         episodeCell.likeButton.addTarget(episodeCell, action: #selector(EpisodeCell.likeButtonPress), for: .touchUpInside)
         episodeCell.moreButton.addTarget(episodeCell, action: #selector(EpisodeCell.moreUnwrap), for: .touchUpInside)
         episodeCell.normalSetUp(episode: episode)
@@ -281,7 +294,7 @@ extension TrendingVC: UITableViewDelegate, UITableViewDataSource {
         // Change 10.0 to adjust the distance from bottom
         if maximumOffset - currentOffset <= 90.0 {
             if moreToLoad == true {
-                fetchAnotherBatch()
+//                fetchAnotherBatch()
             }
         }
     }
@@ -335,13 +348,37 @@ extension TrendingVC: EpisodeEditorDelegate {
 
 extension TrendingVC: EpisodeCellDelegate {
     
-    func showCommentsFor(episode: Episode) {
-        let commentVC = CommentThreadVC(episode: episode)
-        commentVC.hidesBottomBarWhenPushed = true
-        navigationController?.pushViewController(commentVC, animated: true)
+    func visitLinkWith(url: URL) {
+        pushingContent = true
+        let webView = WebVC(url: url)
+        webView.delegate = self
+        
+        switch audioPlayer.currentState {
+        case .loading:
+             webView.currentStatus = .ready
+        case .ready:
+             webView.currentStatus = .ready
+        case .playing:
+             webView.currentStatus = .playing
+        case .paused:
+             webView.currentStatus = .paused
+        case .fetching:
+            webView.currentStatus = .ready
+        }
+        
+        audioPlayer.audioPlayerDelegate = webView
+        navigationController?.present(webView, animated: true, completion: nil)
     }
     
-    func pushCommentsFor(episode: Episode) {
+    func showCommentsFor(episode: Episode) {
+        pushingContent = true
+        if audioPlayer.audioPlayer != nil {
+            audioPlayer.pauseSession()
+        } else if audioPlayer.currentState == .loading {
+            audioPlayer.cancelCurrentDownload()
+            audioPlayer.finishSession()
+        }
+        
         let commentVC = CommentThreadVC(episode: episode)
         commentVC.hidesBottomBarWhenPushed = true
         navigationController?.pushViewController(commentVC, animated: true)
@@ -442,6 +479,10 @@ extension TrendingVC: EpisodeCellDelegate {
 }
 
 extension TrendingVC: DuneAudioPlayerDelegate {
+    
+    func fetchMoreEpisodes() {
+        print("Should fetch more episodes: Needs implementation")
+    }
    
     func playedEpisode(episode: Episode) {
         episode.hasBeenPlayed = true
@@ -490,5 +531,15 @@ extension TrendingVC: DuneAudioPlayerDelegate {
     
 }
 
+
+extension TrendingVC: WebViewDelegate {
+    
+    func playOrPauseEpisode() {
+        if let cell = activeCell {
+            audioPlayer.playOrPauseEpisodeWith(audioID: cell.episode.audioID)
+        }
+    }
+    
+}
 
 

@@ -313,10 +313,6 @@ class AddEpisodeDetails: UIViewController {
         return view
     }()
     
-    override var preferredStatusBarStyle: UIStatusBarStyle {
-        return .lightContent
-    }
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         setUpTagButtonsWithTags()
@@ -1126,11 +1122,12 @@ class AddEpisodeDetails: UIViewController {
     @objc func linkTouched() {
         let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
         
-        alert.addAction(UIAlertAction(title: "Remove Link", style: .default, handler: { (_) in
+        alert.addAction(UIAlertAction(title: "Remove Link", style: .default, handler: { [weak self] (_) in
             print("User clicked remove")
+            guard let self = self else { return }
             self.richLinkPresented = false
             self.richLink = nil
-            self.linkStackedView.removeAllArrangedSubviewsCompletely()
+            self.linkStackedView.removeAllArrangedSubviews()
         }))
         
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { (_) in

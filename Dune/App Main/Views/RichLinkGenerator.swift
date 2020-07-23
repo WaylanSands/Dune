@@ -282,7 +282,6 @@ class RichLinkGenerator {
         DispatchQueue.global(qos: .userInitiated).async {
             if let imageURL = URL(string: url), let imageData = try? Data(contentsOf: imageURL), let image = UIImage(data: imageData) {
                         completion(image)
-                    
             } else {
                  completion(nil)
             }
@@ -299,8 +298,9 @@ class RichLinkGenerator {
         DispatchQueue.global(qos: .userInitiated).async {
            
             if FileManager.default.fileExists(atPath: fileURL.path) {
-                if let image = UIImage(contentsOfFile: fileURL.path) {
-                      print("fileExists")
+                let imageData = try! Data(contentsOf: fileURL)
+                if let image = UIImage(data: imageData) {
+                    print("fileExists")
                     completion(image)
                 } else {
                     print("Failed to turn file into an Image")

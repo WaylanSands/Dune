@@ -80,6 +80,7 @@ class ChangeUsernameVC: UIViewController {
         view.backgroundColor = .white
         styleForScreens()
         configureView()
+        navigationController?.navigationBar.titleTextAttributes = [.foregroundColor: UIColor.white]
         navigationItem.title = "Username"
     }
     

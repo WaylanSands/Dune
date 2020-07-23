@@ -43,6 +43,7 @@ enum alertType {
     case reportProgram
     case reportEpisode
     case noIntroRecorded
+    case removingSubscriber
 }
 
 // For implementation
@@ -152,7 +153,7 @@ class CustomAlertView: UIView {
             primaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
         case .skipAddingImage:
             headingLabel.text = "Skipping Forward"
-            bodyTextLabel.text = "You may skip this step though all programs are required to have a unique profile image before publishing episodes on Dune."
+            bodyTextLabel.text = "You may skip this step though all channel's are required to have a unique image before publishing episodes on Dune."
             primaryButton.setTitle("Skip", for: .normal)
             primaryButton.addTarget(self, action: #selector(skipForward), for: .touchUpInside)
             secondaryButton.setTitle("Dismiss", for: .normal)
@@ -173,7 +174,7 @@ class CustomAlertView: UIView {
             secondaryButton.addTarget(self, action: #selector(cancelPress), for: .touchUpInside)
         case .programChangingName:
             headingLabel.text = "Change Name"
-            bodyTextLabel.text = "Changing this will change the name of your primary program"
+            bodyTextLabel.text = "Changing this will change the name of your primary channel"
             primaryButton.setTitle("Continue", for: .normal)
             primaryButton.addTarget(self, action: #selector(primaryButtonPress), for: .touchUpInside)
             secondaryButton.setTitle("Cancel", for: .normal)
@@ -231,15 +232,15 @@ class CustomAlertView: UIView {
             secondaryButton.setTitle("Dismiss", for: .normal)
             secondaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
         case .deleteProgram:
-            headingLabel.text = "Delete program"
-            bodyTextLabel.text = "Are you sure you would like delete this program? You will not be able to get it back."
+            headingLabel.text = "Delete channel"
+            bodyTextLabel.text = "Are you sure you would like delete this channel? You will not be able to get it back."
             primaryButton.setTitle("Delete", for: .normal)
             primaryButton.addTarget(self, action: #selector(primaryButtonPress), for: .touchUpInside)
             secondaryButton.setTitle("Cancel", for: .normal)
             secondaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
         case .audioTooLong:
             headingLabel.text = "Audio too long"
-            bodyTextLabel.text = "Audio exceeds maximum duration of sixty seconds. Please trim or record another episode."
+            bodyTextLabel.text = "Audio exceeds maximum duration of 2 minutes. Please trim or record another episode."
             primaryButton.setTitle("Dismiss", for: .normal)
             primaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
         case .notAPublisher:
@@ -306,7 +307,7 @@ class CustomAlertView: UIView {
             primaryButton.setTitle("Dismiss", for: .normal)
             primaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
         case .linkNotSecure:
-            headingLabel.text = "Unsecure link"
+            headingLabel.text = "Unsecured link"
             bodyTextLabel.text = "The link you have supplied seems to be unsecure. We recommend using a link which starts in https"
             primaryButton.setTitle("Dismiss", for: .normal)
             primaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
@@ -316,8 +317,8 @@ class CustomAlertView: UIView {
             primaryButton.setTitle("Dismiss", for: .normal)
             primaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
         case .reportProgram:
-            headingLabel.text = "Report program"
-            bodyTextLabel.text = "If you believe this program has been acting inappropriately please report."
+            headingLabel.text = "Report channel"
+            bodyTextLabel.text = "If you believe this channel has been acting inappropriately please report."
             primaryButton.setTitle("Report", for: .normal)
             primaryButton.addTarget(self, action: #selector(primaryButtonPress), for: .touchUpInside)
             secondaryButton.setTitle("Cancel", for: .normal)
@@ -331,9 +332,16 @@ class CustomAlertView: UIView {
             secondaryButton.addTarget(self, action: #selector(cancelPress), for: .touchUpInside)
         case .noIntroRecorded:
             headingLabel.text = "No intro recorded"
-            bodyTextLabel.text = "Programs without a play button below them have not recorded an intro"
+            bodyTextLabel.text = "Channel's without a play button below them have not recorded an intro"
             primaryButton.setTitle("Dismiss", for: .normal)
             primaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
+        case .removingSubscriber:
+            headingLabel.text = "Remove subscriber"
+            bodyTextLabel.text = "This channel will no longer be able to access your content while your channel is set to private."
+            primaryButton.setTitle("Remove", for: .normal)
+            primaryButton.addTarget(self, action: #selector(primaryButtonPress), for: .touchUpInside)
+            secondaryButton.setTitle("Cancel", for: .normal)
+            secondaryButton.addTarget(self, action: #selector(cancelPress), for: .touchUpInside)
         }
     }
     

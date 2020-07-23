@@ -50,6 +50,8 @@
 	<string>To record eposiodes this app requires access to the microphone</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Need to write photos</string>
+	<key>OneSignal_app_groups_key</key>
+	<string>group.PMDTSY5PZ6.com.dailyune.Dune.onesignal</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
@@ -73,15 +75,18 @@
 	<array>
 		<string>audio</string>
 		<string>fetch</string>
+		<string>remote-notification</string>
 	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
-	<string>Main</string>
+	<string>LaunchScreen</string>
 	<key>UIRequiredDeviceCapabilities</key>
 	<array>
 		<string>armv7</string>
 	</array>
+	<key>UIStatusBarHidden</key>
+	<false/>
 	<key>UIStatusBarStyle</key>
 	<string>UIStatusBarStyleLightContent</string>
 	<key>UISupportedInterfaceOrientations</key>

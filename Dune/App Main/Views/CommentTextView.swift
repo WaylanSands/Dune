@@ -26,7 +26,7 @@ class CommentTextView: UIStackView {
     
     let backgroundView: UIView = {
         let view = UIView()
-        view.backgroundColor = CustomStyle.sixthShade
+        view.backgroundColor = CustomStyle.onBoardingBlack
         view.layer.shadowColor = UIColor.black.cgColor
         view.layer.shadowOpacity = 0.1
         view.layer.shadowOffset = .zero
@@ -118,14 +118,14 @@ class CommentTextView: UIStackView {
     @objc func postButtonPress() {
         if !commentView.text.isEmpty && !isReply {
             postButton.setTitle("Posting...", for: .normal)
-            FireBaseComments.postCommentForEpisode(ID: episodeID, comment: commentView.text) { comment in
+            FireBaseComments.postCommentForEpisode(ID: episodeID, comment: commentView.text.trimmingTrailingSpaces) { comment in
                 self.commentDelegate.append(comment: comment, primaryID: nil)
                 self.postButton.setTitle("Post", for: .normal)
                 self.commentView.text = ""
             }
         } else if !commentView.text.isEmpty && isReply {
             postButton.setTitle("Posting...", for: .normal)
-            FireBaseComments.postCommentReplyForEpisode(ID: episodeID, primaryID: commentID!, comment: commentView.text) { comment in
+            FireBaseComments.postCommentReplyForEpisode(ID: episodeID, primaryID: commentID!, comment: commentView.text.trimmingTrailingSpaces) { comment in
                 self.commentDelegate.append(comment: comment, primaryID: comment.primaryID)
                 self.postButton.setTitle("Post", for: .normal)
                 self.commentView.text = ""

@@ -7,7 +7,6 @@
 //
 
 import UIKit
-import WebKit
 import ActiveLabel
 
 protocol EpisodeCellDelegate {
@@ -18,6 +17,7 @@ protocol EpisodeCellDelegate {
     func episodeTagSelected(tag: String)
     func playEpisode(cell: EpisodeCell )
     func visitProfile(program: Program)
+    func visitLinkWith(url: URL)
     func updateRows()
 }
 
@@ -33,7 +33,6 @@ class EpisodeCell: UITableViewCell {
     // For various screen sizes
     var imageSize: CGFloat = 50
     var playBarWidth: CGFloat = 50
-//    var optionSpacing: CGFloat = 7
     
     let userNotFoundAlert = CustomAlertView(alertType: .userNotFound)
     let playbackBarView = PlaybackBarView()
@@ -147,6 +146,7 @@ class EpisodeCell: UITableViewCell {
         button.setTitleColor(CustomStyle.linkBlue, for: .normal)
         button.backgroundColor = .white
         button.addTarget(self, action: #selector(moreUnwrap), for: .touchUpInside)
+        button.isHidden = true
         button.padding = 10
         return button
     }()
@@ -234,8 +234,11 @@ class EpisodeCell: UITableViewCell {
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         self.layer.rasterizationScale = UIScreen.main.scale
+        self.preservesSuperviewLayoutMargins = false
         self.layer.shouldRasterize = true
         self.selectionStyle = .none
+        self.separatorInset = .zero
+        self.layoutMargins = .zero
         styleForScreens()
         configureViews()
     }
@@ -304,7 +307,6 @@ class EpisodeCell: UITableViewCell {
     func setupProgressBar() {
         if episode.hasBeenPlayed {
             playEpisodeButton.setImage(nil, for: .normal)
-            print("Made nil")
             playbackBarView.setupPlaybackBar()
             playbackBarView.setProgressWith(percentage: episode.playBackProgress)
         } else {
@@ -483,14 +485,14 @@ class EpisodeCell: UITableViewCell {
     }
     
     func createTagButtons() {
-        tagContainingStackView.removeAllArrangedSubviewsCompletely()
+        tagContainingStackView.removeAllArrangedSubviews()
         for eachTag in episodeTags {
-            let button = tagButtton(with: eachTag)
+            let button = tagButton(with: eachTag)
             tagContainingStackView.addArrangedSubview(button)
         }
     }
     
-    func tagButtton(with title: String) -> TagButton {
+    func tagButton(with title: String) -> TagButton {
         let button = TagButton(title: title)
         button.addTarget(self, action: #selector(tagSelected), for: .touchUpInside)
         return button
@@ -636,7 +638,4 @@ class EpisodeCell: UITableViewCell {
     
 }
 
-extension EpisodeCell: WKNavigationDelegate {
-    
-}
 

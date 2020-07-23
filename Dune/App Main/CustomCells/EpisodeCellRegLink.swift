@@ -240,9 +240,8 @@ class EpisodeCellRegLink: EpisodeCell {
     }
     
     @objc func linkTouched() {
-        print("link touched")
         guard let url = URL(string: episode.richLink!) else { return }
-        UIApplication.shared.open(url)
+        cellDelegate!.visitLinkWith(url: url)
     }
 
 }

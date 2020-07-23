@@ -273,7 +273,7 @@ class DraftEpisodeCell: UITableViewCell {
 //    }
     
     func createTagButtons() {
-        tagContainingStackView.removeAllArrangedSubviewsCompletely()
+        tagContainingStackView.removeAllArrangedSubviews()
         for eachTag in episodeTags {
             let button = tagButton(with: eachTag)
             tagContainingStackView.addArrangedSubview(button)

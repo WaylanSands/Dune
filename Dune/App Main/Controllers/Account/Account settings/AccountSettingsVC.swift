@@ -14,7 +14,7 @@ import AuthenticationServices
 
 class AccountSettingsVC: UIViewController {
     
-    lazy var contentViewSize = CGSize(width: view.frame.width, height: 920.0)
+    lazy var contentViewSize = CGSize(width: view.frame.width, height: 980.0)
     lazy var versionNumber = VersionControl.lastetVersion
     
     let logOutAlert = CustomAlertView(alertType: .loggingOut)
@@ -50,7 +50,7 @@ class AccountSettingsVC: UIViewController {
     
     lazy var inviteButton: UIButton = {
         let button = UIButton()
-        button.setTitle("Invite Friends", for: .normal)
+        button.setTitle("Promote Dune", for: .normal)
         button.contentHorizontalAlignment = .left
         button.setTitleColor(CustomStyle.primaryBlack, for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
@@ -67,7 +67,7 @@ class AccountSettingsVC: UIViewController {
         button.contentHorizontalAlignment = .left
         button.setTitleColor(CustomStyle.primaryBlack, for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .medium)
-        //        button.addTarget(self, action: #selector(presentInvitePeopleVC), for: .touchUpInside)
+        button.addTarget(self, action: #selector(presentHelpCentreVC), for: .touchUpInside)
         button.imageEdgeInsets = UIEdgeInsets(top: 0, left: view.frame.width - 40, bottom: 0, right: 0)
         button.titleEdgeInsets = UIEdgeInsets(top: 0, left: -6, bottom: 0, right: 0)
         button.setImage(UIImage(named: "selection-arrow"), for: .normal)
@@ -106,6 +106,34 @@ class AccountSettingsVC: UIViewController {
         let view = UIView()
         view.backgroundColor = CustomStyle.secondShade
         return view
+    }()
+    
+    // Make Private
+    
+    let privateLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Private Channel"
+        label.font = UIFont.systemFont(ofSize: 15, weight: .medium)
+        label.textColor = CustomStyle.primaryBlack
+        return label
+    }()
+    
+    let privateSubLabel: UILabel = {
+        let label = UILabel()
+        label.text = "When active only approved accounts may listen or view your episodes."
+        label.font = UIFont.systemFont(ofSize: 12, weight: .regular)
+        label.textColor = CustomStyle.fourthShade
+        label.lineBreakMode = .byWordWrapping
+        label.numberOfLines = 0
+        return label
+    }()
+    
+    let privateChannelToggle: UISwitch = {
+        let toggle = UISwitch()
+        toggle.isOn = false
+        toggle.onTintColor = CustomStyle.primaryBlue
+        toggle.addTarget(self, action: #selector(privateToggled), for: .valueChanged)
+        return toggle
     }()
     
     // Push Notifications
@@ -397,9 +425,10 @@ class AccountSettingsVC: UIViewController {
     
     // Bottom Section
     
-    let bottomStackedView: UIStackView = {
+    lazy var bottomStackedView: UIStackView = {
         let view = UIStackView()
-        view.spacing = 15
+        view.setCustomSpacing(10.0, after: privateLabel)
+        view.setCustomSpacing(20.0, after: privateSubLabel)
         view.axis = .vertical
         view.alignment = .leading
         return view
@@ -411,6 +440,7 @@ class AccountSettingsVC: UIViewController {
         button.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .medium)
         button.addTarget(self, action: #selector(logoutButtonPress), for: .touchUpInside)
         button.setTitleColor(CustomStyle.primaryBlack, for: .normal)
+        button.contentHorizontalAlignment = .left
         return button
     }()
     
@@ -420,6 +450,7 @@ class AccountSettingsVC: UIViewController {
         button.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .medium)
         button.setTitleColor(CustomStyle.primaryBlack, for: .normal)
         button.addTarget(self, action: #selector(deleteProgram), for: .touchUpInside)
+        button.contentHorizontalAlignment = .left
         return button
     }()
     
@@ -435,15 +466,15 @@ class AccountSettingsVC: UIViewController {
     
     let customNavBar: CustomNavBar = {
         let nav = CustomNavBar()
+        nav.backgroundColor = CustomStyle.blackNavBar
+        nav.titleLabel.text = "Settings"
         nav.leftButton.isHidden = true
         return nav
     }()
     
-    // Change StatusBarColor
-    
     override var preferredStatusBarStyle: UIStatusBarStyle {
-        return .lightContent
-    }
+      return .lightContent
+    } 
     
     // View Did Load
     
@@ -455,27 +486,39 @@ class AccountSettingsVC: UIViewController {
         logOutAlert.alertDelegate = self
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        configurePrivacyState()
+    }
+    
+    func  configurePrivacyState() {
+        switch CurrentProgram.privacyStatus {
+        case .madePrivate:
+            privateChannelToggle.setOn(true, animated: false)
+        case .madePublic:
+            privateChannelToggle.setOn(false, animated: false)
+        default:
+            privateChannelToggle.setOn(false, animated: false)
+        }
+    }
+    
     override func viewWillDisappear(_ animated: Bool) {
         deleteAccountPress = false
         logoutPress = false
     }
     
     func setupNavBar() {
-        navigationItem.title = "Settings"
-        navigationController?.isNavigationBarHidden = false
-        navigationController?.navigationBar.prefersLargeTitles = false
-        navigationItem.largeTitleDisplayMode = .never
-        let navBar = navigationController?.navigationBar
-        navBar?.barStyle = .black
-        navBar?.setBackgroundImage(UIImage(), for: .default)
-        navBar?.shadowImage = UIImage()
-        navBar?.titleTextAttributes = [.foregroundColor: UIColor.white]
-        navBar?.tintColor = .white
-        
-        let imgBackArrow = #imageLiteral(resourceName: "back-button-white")
-        navBar?.backIndicatorImage = imgBackArrow
-        navBar?.backIndicatorTransitionMaskImage = imgBackArrow
         navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
+        navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
+        navigationController?.navigationBar.backIndicatorTransitionMaskImage = #imageLiteral(resourceName: "back-button-white")
+        navigationController?.navigationBar.prefersLargeTitles = false
+        navigationController?.navigationBar.backIndicatorImage = #imageLiteral(resourceName: "back-button-white")
+        navigationController?.navigationBar.isTranslucent = true
+        navigationController?.navigationBar.shadowImage = nil
+        navigationController?.navigationBar.barStyle = .black
+        navigationController?.navigationBar.shadowImage = UIImage()
+        navigationController?.navigationBar.tintColor = .white
+        navigationController?.navigationBar.isHidden = false
+        navigationItem.largeTitleDisplayMode = .never
     }
     
     func styleForScreens() {
@@ -526,6 +569,7 @@ class AccountSettingsVC: UIViewController {
         lineBreakView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -16.0).isActive = true
         lineBreakView.heightAnchor.constraint(equalToConstant: 1).isActive = true
         
+        
         // Push Notifications
         
         containerView.addSubview(notificationsLabel)
@@ -536,7 +580,7 @@ class AccountSettingsVC: UIViewController {
         
         containerView.addSubview(notificationsStackedView)
         notificationsStackedView.translatesAutoresizingMaskIntoConstraints = false
-        notificationsStackedView.topAnchor.constraint(equalTo: notificationsLabel.topAnchor, constant: 50).isActive = true
+        notificationsStackedView.topAnchor.constraint(equalTo: notificationsLabel.bottomAnchor, constant: 15).isActive = true
         notificationsStackedView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 16.0).isActive = true
         notificationsStackedView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -16.0).isActive = true
         
@@ -620,7 +664,7 @@ class AccountSettingsVC: UIViewController {
         emailNotificationsLabel.addTopAndSideAnchors(to: emailLineBreakView, top: 30, leading: 0, trailing: 0)
         
         containerView.addSubview(emailMarketingStackedView)
-        emailMarketingStackedView.addTopAndSideAnchors(to: emailNotificationsLabel, top: 20, leading: 0, trailing: 0)
+        emailMarketingStackedView.addTopAndSideAnchors(to: emailNotificationsLabel, top: 15, leading: 0, trailing: 0)
         
         emailMarketingStackedView.addArrangedSubview(emailMarketingLabelsStackedView)
         emailMarketingStackedView.addArrangedSubview(emailMarketingToggle)
@@ -634,18 +678,47 @@ class AccountSettingsVC: UIViewController {
         emailMarketingSubLabel.trailingAnchor.constraint(equalTo: emailMarketingSubView.trailingAnchor).isActive = true
         emailMarketingSubLabel.topAnchor.constraint(equalTo: emailMarketingSubView.topAnchor).isActive = true
         
-        // Log out, Delete Account & Version Number
+        //  Private channel, Log out, Delete Account and Version Number
         
         containerView.addSubview(bottomLineBreakView)
         bottomLineBreakView.addTopAndSideAnchors(to: emailMarketingStackedView, top: 40, leading: 0, trailing: 0)
         bottomLineBreakView.heightAnchor.constraint(equalToConstant: 1.0).isActive = true
+            
+        containerView.addSubview(privateLabel)
+        privateLabel.translatesAutoresizingMaskIntoConstraints = false
+        privateLabel.topAnchor.constraint(equalTo: bottomLineBreakView.bottomAnchor, constant: 20).isActive = true
+        privateLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
+        privateLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
         
-        containerView.addSubview(bottomStackedView)
-        bottomStackedView.addTopAndSideAnchors(to: bottomLineBreakView, top: 20, leading: 0, trailing: 0)
+        containerView.addSubview(privateChannelToggle)
+        privateChannelToggle.translatesAutoresizingMaskIntoConstraints = false
+        privateChannelToggle.centerYAnchor.constraint(equalTo: privateLabel.centerYAnchor, constant: 15).isActive = true
+        privateChannelToggle.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
         
-        bottomStackedView.addArrangedSubview(logOutButton)
-        bottomStackedView.addArrangedSubview(deleteAccountButton)
-        bottomStackedView.addArrangedSubview(versionLabel)
+        containerView.addSubview(privateSubLabel)
+        privateSubLabel.translatesAutoresizingMaskIntoConstraints = false
+        privateSubLabel.topAnchor.constraint(equalTo: privateLabel.bottomAnchor, constant: 10).isActive = true
+        privateSubLabel.trailingAnchor.constraint(equalTo: privateChannelToggle.leadingAnchor, constant: -30).isActive = true
+        privateSubLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
+        
+        containerView.addSubview(deleteAccountButton)
+        deleteAccountButton.translatesAutoresizingMaskIntoConstraints = false
+        deleteAccountButton.topAnchor.constraint(equalTo: privateSubLabel.bottomAnchor, constant: 20).isActive = true
+        deleteAccountButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
+        deleteAccountButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
+        
+        containerView.addSubview(logOutButton)
+        logOutButton.translatesAutoresizingMaskIntoConstraints = false
+        logOutButton.topAnchor.constraint(equalTo: deleteAccountButton.bottomAnchor, constant: 20).isActive = true
+        logOutButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
+        logOutButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
+        
+        containerView.addSubview(versionLabel)
+        versionLabel.translatesAutoresizingMaskIntoConstraints = false
+        versionLabel.topAnchor.constraint(equalTo: logOutButton.bottomAnchor, constant: 20).isActive = true
+        versionLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
+        versionLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
+
         view.addSubview(customNavBar)
         customNavBar.pinNavBarTo(view)
     }
@@ -653,6 +726,11 @@ class AccountSettingsVC: UIViewController {
     @objc func presentInvitePeopleVC() {
         let inviteVC = InvitePeopleVC()
         navigationController?.pushViewController(inviteVC, animated: true)
+    }
+    
+    @objc func presentHelpCentreVC() {
+        let helpVC = HelpCentreVC()
+        navigationController?.pushViewController(helpVC, animated: true)
     }
     
     @objc func presentEditProgramVC() {
@@ -673,6 +751,17 @@ class AccountSettingsVC: UIViewController {
     
     @objc func backButtonPress() {
         navigationController?.popViewController(animated: true)
+    }
+    
+    @objc func privateToggled() {
+        switch privateChannelToggle.isOn {
+        case true:
+            FireStoreManager.changeChannel(state: .madePrivate)
+            CurrentProgram.privacyStatus = .madePrivate
+        case false:
+            FireStoreManager.changeChannel(state: .madePublic)
+            CurrentProgram.privacyStatus = .madePublic
+        }
     }
     
     @objc func sendEmail() {
@@ -788,6 +877,8 @@ extension AccountSettingsVC: CustomAlertDelegate {
                     print("Success, user has been deleted")
                     self.networkingIndicator.removeFromSuperview()
                     if let signupScreen = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "signUpVC") as? SignUpVC {
+                        User.signOutUser()
+                        CurrentProgram.signOutProgram()
                         UserDefaults.standard.set(false, forKey: "loggedIn")
                         self.navigationController?.pushViewController(signupScreen, animated: false)
                     }

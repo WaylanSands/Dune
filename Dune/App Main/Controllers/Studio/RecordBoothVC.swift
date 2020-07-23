@@ -42,7 +42,7 @@ class RecordBoothVC: UIViewController {
     var voiceURL: URL!
     
     var currentState = recordState.ready
-    var maxRecordingTime: Double = 60
+    var maxRecordingTime: Double = 120
     var minRecordingTime: Double = 10
     var recordingSnapshot: Double = 0
     var normalizedTime: CGFloat?
@@ -245,10 +245,9 @@ class RecordBoothVC: UIViewController {
     }()
     
     override var preferredStatusBarStyle: UIStatusBarStyle {
-        return .lightContent
+      return .lightContent
     }
-    
-    // MARK: View did load
+
     override func viewDidLoad() {
         super.viewDidLoad()
         addGradient()
@@ -325,7 +324,7 @@ class RecordBoothVC: UIViewController {
     
     func configureAudioSessionCategory() {
       do {
-          try audioSession.setCategory(AVAudioSession.Category.playAndRecord, mode: .spokenAudio, options: .defaultToSpeaker)
+        try audioSession.setCategory(AVAudioSession.Category.playAndRecord, mode: .spokenAudio, options: [.defaultToSpeaker, .allowBluetooth])
           try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
       } catch {
           print("error.")
@@ -357,9 +356,9 @@ class RecordBoothVC: UIViewController {
         navBar?.setBackgroundImage(UIImage(), for: .default)
         navBar?.shadowImage = UIImage()
         navBar?.tintColor = .white
-        tabBar?.isHidden = true
         tabBar!.barTintColor = .none
         tabBar?.isTranslucent = true
+        tabBar?.isHidden = true
     }
     
     func addGradient() {
@@ -627,12 +626,17 @@ class RecordBoothVC: UIViewController {
         
         if duration >= minRecordingTime {
             let addEpisodeDetails = AddEpisodeDetails()
-            addEpisodeDetails.episodeFileName = fileName
             addEpisodeDetails.recordingURL = recordingURL
             addEpisodeDetails.wasTrimmed = wasTrimmed
             addEpisodeDetails.startTime = startTime
             addEpisodeDetails.endTime = endTime
             addEpisodeDetails.duration = (recordingSnapshot - endTime)
+            
+            if currentOption != nil {
+                addEpisodeDetails.episodeFileName = mergedFileName
+            } else {
+                addEpisodeDetails.episodeFileName = fileName
+            }
             
             if selectedProgram != nil {
                 addEpisodeDetails.selectedProgram = selectedProgram
@@ -700,7 +704,7 @@ class RecordBoothVC: UIViewController {
                 trackAudio()
                 playDefaultRecording()
             } else if !hasMergedTracks {
-                FileManager.getMusicURLWith(audioID: currentOption!.audioID) { url in
+                FileManager.getMusicURLWith(audioID: currentOption!.lowAudioID) { url in
                     self.playMerge(audio1: self.recordingURL, audio2: url)
                     self.hasMergedTracks = true
                 }
@@ -849,9 +853,9 @@ class RecordBoothVC: UIViewController {
         let composition = AVMutableComposition()
         let compositionAudioTrack1:AVMutableCompositionTrack = composition.addMutableTrack(withMediaType: AVMediaType.audio, preferredTrackID: CMPersistentTrackID())!
         let compositionAudioTrack2:AVMutableCompositionTrack = composition.addMutableTrack(withMediaType: AVMediaType.audio, preferredTrackID: CMPersistentTrackID())!
-        
-        let documentDirectoryURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first! as URL
-        let destinationUrl = documentDirectoryURL.appendingPathComponent(mergedFileName + ".m4a")
+
+        let tempDirectory = FileManager.getTempDirectory()
+        let destinationUrl = tempDirectory.appendingPathComponent(mergedFileName + ".m4a")
         
         let fileManager = FileManager.default
         
@@ -884,7 +888,7 @@ class RecordBoothVC: UIViewController {
         
         let timeRange1 = CMTimeRangeMake(start: CMTime(seconds: startTime, preferredTimescale: 1), duration: trueDuration1)
         let timeRange2 = CMTimeRangeMake(start: CMTime(seconds: startTime, preferredTimescale: 1), duration: trueDuration2)
-                
+
         do {
             try compositionAudioTrack1.insertTimeRange(timeRange1, of: assetTrack1, at: CMTime.zero)
             try compositionAudioTrack2.insertTimeRange(timeRange2, of: assetTrack2, at: CMTime.zero)
@@ -941,9 +945,9 @@ extension RecordBoothVC: AVAudioRecorderDelegate, AVAudioPlayerDelegate {
         recordingURL = FileManager.getTempDirectory().appendingPathComponent(fileName + ".m4a")
         let settings = [
             AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
-            AVSampleRateKey: 12000,
-            AVNumberOfChannelsKey: 1,
-            AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
+            AVSampleRateKey: 16000,
+            AVNumberOfChannelsKey: 2,
+            AVEncoderAudioQualityKey: AVAudioQuality.max.rawValue
         ]
         do {
             audioRecorder = try AVAudioRecorder(url: recordingURL, settings: settings)

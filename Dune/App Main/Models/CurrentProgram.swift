@@ -8,6 +8,11 @@
 
 import UIKit
 
+enum PrivacyStatus: String {
+    case madePublic
+    case madePrivate
+}
+
 struct CurrentProgram {
     
     static var rep: Int?
@@ -36,6 +41,12 @@ struct CurrentProgram {
     static var episodeIDs: [[String: Any]]?
     static var subscriberIDs: [String]?
     
+    // Private Channels
+    static var privacyStatus: PrivacyStatus?
+    static var pendingChannels: [String]?
+    static var deniedChannels: [String]?
+    static var isPrivate: Bool?
+    
     static func modelProgram(data: [String: Any]) {
         ID = data["ID"] as? String
         rep = data["rep"] as? Int
@@ -59,7 +70,24 @@ struct CurrentProgram {
         episodeIDs = data["episodeIDs"] as? [[String: Any]]
         subscriberIDs = data["subscriberIDs"] as? [String]
         subscriptionIDs = data["subscriptionIDs"] as? [String]
-             
+        
+        // Private channel
+        pendingChannels = data["pendingChannels"] as? [String]
+        deniedChannels = data["deniedChannels"] as? [String]
+        
+        let state = data["channelState"] as? String
+        switch state {
+        case PrivacyStatus.madePublic.rawValue:
+            privacyStatus = .madePublic
+            isPrivate = false
+        case PrivacyStatus.madePrivate.rawValue:
+            privacyStatus = .madePrivate
+             isPrivate = true
+        default:
+            privacyStatus = .madePublic
+            isPrivate = false
+        }
+        
         if imageID != nil {
             
             FileManager.getImageWith(imageID: imageID!) { image in
@@ -75,7 +103,7 @@ struct CurrentProgram {
             FireStoreManager.fetchSubProgramsWithIDs(programIDs: programIDs!, for: nil) {
             }
         }  else {
-           subPrograms = [Program]()
+            subPrograms = [Program]()
         }
         
     }
@@ -91,35 +119,35 @@ struct CurrentProgram {
     }
     
     static func signOutProgram() {
-        ID = nil
+        pendingChannels = nil
+        deniedChannels = nil
         rep = nil
+        ID = nil
         name = nil
-        hasMentions = nil
         username = nil
         ownerID = nil
         image = nil
-        imageID = nil
-        webLink = nil
         repMethods = nil
+        subPrograms = nil
+        mentions = nil
+        subscriberCount = nil
+        privacyStatus = nil
+        hasMentions = nil
+        imageID = nil
         imagePath = nil
         hasIntro = nil
         introID = nil
         introPath = nil
         summary = nil
-        subscriberCount = nil
+        webLink = nil
         isPrimaryProgram = nil
         primaryCategory = nil
         programIDs = nil
-        subPrograms = nil
-        mentions = nil
         tags = nil
+        subscriptionIDs = nil
         episodeIDs = nil
         subscriberIDs = nil
-        subscriptionIDs = nil
     }
-
     
     
 }
-
-

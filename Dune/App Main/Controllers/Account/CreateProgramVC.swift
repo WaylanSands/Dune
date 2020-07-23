@@ -21,8 +21,8 @@ class CreateProgramVC: UIViewController {
     lazy var tagscrollViewWidth = tagScrollView.frame.width
     var homeIndicatorHeight:CGFloat = 34.0
     
-    var summaryPlaceHolder = "Add a Summary to your program"
-    var namePlaceHolder = "Name of this program"
+    var summaryPlaceHolder = "Add a Summary to your channel"
+    var namePlaceHolder = "Name of this channel"
     var tagPlaceHolder = "Add three tags"
     
     var summaryPlaceholderIsActive = true
@@ -38,6 +38,7 @@ class CreateProgramVC: UIViewController {
     let customNavBar: CustomNavBar = {
         let nav = CustomNavBar()
         nav.leftButton.isHidden = true
+        nav.backgroundColor = CustomStyle.blackNavBar
         return nav
     }()
     
@@ -157,7 +158,7 @@ class CreateProgramVC: UIViewController {
     
     let programNameBarLabel: UILabel = {
         let label = UILabel()
-        label.text = "Program Name"
+        label.text = "Channel Name"
         label.font = UIFont.systemFont(ofSize: 14, weight: .medium)
         label.textColor = CustomStyle.fifthShade
         return label
@@ -192,7 +193,7 @@ class CreateProgramVC: UIViewController {
     
     let summaryBarLabel: UILabel = {
         let label = UILabel()
-        label.text = "Program Summary"
+        label.text = "Channel Summary"
         label.font = UIFont.systemFont(ofSize: 14, weight: .medium)
         label.textColor = CustomStyle.fifthShade
         return label
@@ -227,7 +228,7 @@ class CreateProgramVC: UIViewController {
     
     let tagBarLabel: UILabel = {
         let label = UILabel()
-        label.text = "Program tags"
+        label.text = "Channel tags"
         label.font = UIFont.systemFont(ofSize: 14, weight: .medium)
         label.textColor = CustomStyle.fifthShade
         return label
@@ -253,10 +254,6 @@ class CreateProgramVC: UIViewController {
         textView.autocapitalizationType = .none
         return textView
     }()
-    
-    override var preferredStatusBarStyle: UIStatusBarStyle {
-        return .lightContent
-    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -323,7 +320,7 @@ class CreateProgramVC: UIViewController {
     }
     
     func configureNavBar() {
-        navigationItem.title = "Create Program"
+        navigationItem.title = "Create Sub-Channel"
         navigationController?.isNavigationBarHidden = false
         
         let navBar = navigationController?.navigationBar

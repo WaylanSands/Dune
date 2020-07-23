@@ -17,7 +17,7 @@ class DuneIntroPlayer: UIView {
     let playbackCircleView = PlaybackCircleView()
     let loadingCircle = LoadingAudioView()
     var playbackDelegate: DuneAudioPlayerDelegate!
-    var isProgramPageIntro: Bool?
+    var offset: CGFloat?
     
     var loadingAudioID: String?
     var currentAudioID: String?
@@ -140,7 +140,7 @@ class DuneIntroPlayer: UIView {
          playbackBottomView.topAnchor.constraint(equalTo: playbackView.bottomAnchor).isActive = true
          playbackBottomView.leadingAnchor.constraint(equalTo: playbackView.leadingAnchor).isActive = true
          playbackBottomView.trailingAnchor.constraint(equalTo: playbackView.trailingAnchor).isActive = true
-         playbackBottomView.heightAnchor.constraint(equalToConstant: 70).isActive = true
+         playbackBottomView.heightAnchor.constraint(equalToConstant: 64).isActive = true
      }
     
     func setProgramDetailsWith(program: Program, image: UIImage) {
@@ -203,6 +203,9 @@ class DuneIntroPlayer: UIView {
                     self.playAudioFrom(url: url)
                 }
             }
+        default:
+            // Only used for audio player
+            break
         }
     }
     
@@ -222,7 +225,7 @@ class DuneIntroPlayer: UIView {
         let currentTime = audioPlayer.currentTime
         let percentagePlayed = CGFloat(currentTime / duration)
         playbackCircleView.shapeLayer.strokeEnd = percentagePlayed
-        if isProgramPageIntro == false {
+        if program != nil {
             playbackDelegate.updateProgressBarWith(percentage: percentagePlayed, forType: .program, episodeID: program!.ID)
         }
     }
@@ -311,8 +314,9 @@ class DuneIntroPlayer: UIView {
     
     func animatePlayerIntoPosition() {
         isInPosition = true
+        let position = yPosition - (offset ?? 0)
         UIView.animateKeyframes(withDuration: 0.2, delay: 0, options: .beginFromCurrentState, animations: {
-        self.frame = CGRect(x: 0, y: self.yPosition, width: self.frame.width, height: 70)
+        self.frame = CGRect(x: 0, y: position, width: self.frame.width, height: 64)
         }, completion: nil)
     }
     
@@ -320,7 +324,7 @@ class DuneIntroPlayer: UIView {
         isInPosition = false
         let height =  UIScreen.main.bounds.height
         UIView.animateKeyframes(withDuration: 0.2, delay: 0, options: .beginFromCurrentState, animations: {
-            self.frame = CGRect(x: 0, y: height, width: self.frame.width, height: 70)
+            self.frame = CGRect(x: 0, y: height, width: self.frame.width, height: 64)
         }, completion: nil)
     }
     
@@ -338,11 +342,12 @@ class DuneIntroPlayer: UIView {
         }
     }
     
-    func updateYPositionWith(value: CGFloat) {
-        if isInPosition {
-            self.frame.origin.y = value
-        }
-    }
+//    func updateYPositionWith(value: CGFloat) {
+//        yPosition = value
+//        if isInPosition {
+//            self.frame.origin.y = value - playbackView.frame.height
+//        }
+//    }
     
     func duration(for resource: String) -> Double {
         let asset = AVURLAsset(url: URL(fileURLWithPath: resource))

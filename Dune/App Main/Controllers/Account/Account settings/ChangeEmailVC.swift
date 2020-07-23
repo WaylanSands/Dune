@@ -141,6 +141,7 @@ class ChangeEmailVC: UIViewController {
     
     override func viewDidLoad() {
         navigationItem.title = "Email"
+        navigationController?.navigationBar.titleTextAttributes = [.foregroundColor: UIColor.white]
         view.backgroundColor = .white
         emailTextField.keyboardType = .emailAddress
         configureDelegates()

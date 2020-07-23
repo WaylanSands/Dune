@@ -28,11 +28,18 @@ class MentionCell: UITableViewCell {
         return button
     }()
     
-    let usernameLabel: UILabel = {
-        let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 14, weight: .bold)
-        label.textColor = CustomStyle.primaryBlack
-        return label
+//    let usernameLabel: UILabel = {
+//        let label = UILabel()
+//        label.font = UIFont.systemFont(ofSize: 14, weight: .bold)
+//        label.textColor = CustomStyle.primaryBlack
+//        return label
+//    }()
+    
+    let usernameButton: UIButton = {
+        let button = UIButton()
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .bold)
+        button.setTitleColor(CustomStyle.primaryBlack, for: .normal)
+        return button
     }()
     
     let typeLabel: UILabel = {
@@ -81,7 +88,10 @@ class MentionCell: UITableViewCell {
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
+        self.preservesSuperviewLayoutMargins = false
         self.selectionStyle = .none
+        self.separatorInset = .zero
+        self.layoutMargins = .zero
         configureViews()
     }
     
@@ -92,7 +102,8 @@ class MentionCell: UITableViewCell {
     func cellSetup(mention: Mention) {
         self.mention = mention
         conFigureMentionType(type: mention.type)
-        usernameLabel.text = mention.publisherUsername
+//        usernameLabel.text = mention.publisherUsername
+        usernameButton.setTitle(mention.publisherUsername, for: .normal)
         captionLabel.text = mention.caption
         dateLabel.text = mention.timeSince
         
@@ -136,16 +147,18 @@ class MentionCell: UITableViewCell {
         nameStackView.leadingAnchor.constraint(equalTo: profileImageButton.trailingAnchor, constant: 7).isActive = true
         nameStackView.trailingAnchor.constraint(lessThanOrEqualTo: self.trailingAnchor).isActive = true
         
-        nameStackView.addArrangedSubview(usernameLabel)
-        usernameLabel.translatesAutoresizingMaskIntoConstraints = false
+        nameStackView.addArrangedSubview(usernameButton)
+        usernameButton.translatesAutoresizingMaskIntoConstraints = false
+        usernameButton.heightAnchor.constraint(equalToConstant: usernameButton.titleLabel!.font.lineHeight).isActive = true
         
         nameStackView.addArrangedSubview(typeLabel)
-        typeLabel.translatesAutoresizingMaskIntoConstraints = false
+//        typeLabel.translatesAutoresizingMaskIntoConstraints = false
+//        typeLabel.topAnchor.constraint(equalTo: nameStackView.topAnchor).isActive = true
         
         self.addSubview(captionLabel)
         captionLabel.translatesAutoresizingMaskIntoConstraints = false
-        captionLabel.topAnchor.constraint(equalTo: usernameLabel.bottomAnchor).isActive = true
-        captionLabel.leadingAnchor.constraint(equalTo: usernameLabel.leadingAnchor).isActive = true
+        captionLabel.topAnchor.constraint(equalTo: usernameButton.bottomAnchor).isActive = true
+        captionLabel.leadingAnchor.constraint(equalTo: usernameButton.leadingAnchor).isActive = true
         captionLabel.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -16).isActive = true
         
         self.addSubview(dateLabel)

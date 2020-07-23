@@ -81,7 +81,7 @@ class SignInVC: UIViewController, UITextFieldDelegate {
     }()
     
     override var preferredStatusBarStyle: UIStatusBarStyle {
-        return .lightContent
+      return .lightContent
     }
     
     override func viewDidLoad() {
@@ -106,7 +106,12 @@ class SignInVC: UIViewController, UITextFieldDelegate {
     }
     
     override func viewWillDisappear(_ animated: Bool) {
-        networkingIndicator.removeFromSuperview()
+        UIApplication.shared.keyWindow!.willRemoveSubview(networkingIndicator)
+        passwordTextField.resignFirstResponder()
+        emailTextField.resignFirstResponder()
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
         passwordTextField.resignFirstResponder()
         emailTextField.resignFirstResponder()
     }
@@ -229,16 +234,16 @@ class SignInVC: UIViewController, UITextFieldDelegate {
                     
                     switch errCode {
                     case .networkError:
-                        UIApplication.shared.windows.last?.addSubview(vc.networkIssueAlert)
+                        UIApplication.shared.keyWindow!.addSubview(vc.networkIssueAlert)
                         print("There was a networkError")
                     case .wrongPassword:
-                        UIApplication.shared.windows.last?.addSubview(vc.wrongPasswordAlert)
+                         UIApplication.shared.keyWindow!.addSubview(vc.wrongPasswordAlert)
                         print("Wrong password")
                     case .userNotFound:
-                        UIApplication.shared.windows.last?.addSubview(vc.noUserAlert)
+                         UIApplication.shared.keyWindow!.addSubview(vc.noUserAlert)
                         print("No user found")
                     case .invalidEmail:
-                        UIApplication.shared.windows.last?.addSubview(vc.invalidEmailAlert)
+                         UIApplication.shared.keyWindow!.addSubview(vc.invalidEmailAlert)
                         print("Invalid Email")
                     default:
                         print("Other error!")
@@ -281,6 +286,7 @@ class SignInVC: UIViewController, UITextFieldDelegate {
                     }
                 } else {
                     UIApplication.shared.keyWindow!.addSubview(self.socialAccountNotFoundAlert)
+                    self.networkingIndicator.removeFromSuperview()
                     self.signInButton.isHidden = false
                 }
             }
@@ -349,6 +355,8 @@ class SignInVC: UIViewController, UITextFieldDelegate {
     }
     
     @IBAction func UseApplePress() {
+        passwordTextField.resignFirstResponder()
+        emailTextField.resignFirstResponder()
         if #available(iOS 13, *) {
             startSignInWithAppleFlow()
         } else {
@@ -441,8 +449,7 @@ class SignInVC: UIViewController, UITextFieldDelegate {
 extension SignInVC: CustomAlertDelegate {
     
     func primaryButtonPress() {
-        moveToAccountTypeVC()
-        print("alert")
+        navigationController?.popViewController(animated: true)
     }
     
     func cancelButtonPress() {
@@ -499,8 +506,8 @@ extension SignInVC: ASAuthorizationControllerDelegate, ASAuthorizationController
     }
 
     func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
-      // Handle error.
       print("Sign in with Apple errored: \(error)")
+      self.socialSignup = false
     }
     
 }

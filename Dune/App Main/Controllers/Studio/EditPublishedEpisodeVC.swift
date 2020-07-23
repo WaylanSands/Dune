@@ -40,6 +40,16 @@ class EditPublishedEpisode: UIViewController {
     var scrollHeightPadding: CGFloat = 60
     
     var networkingIndicator = NetworkingProgress()
+    
+    let customNavBar: CustomNavBar = {
+        let nav = CustomNavBar()
+        nav.leftButton.isHidden = true
+        nav.backgroundColor = CustomStyle.blackNavBar
+        nav.titleLabel.text = "Edit Episode"
+        nav.rightButton.isHidden =  true
+        nav.titleLabel.textColor = .white
+        return nav
+    }()
 
     let scrollView: UIScrollView = {
         let view = UIScrollView()
@@ -206,10 +216,6 @@ class EditPublishedEpisode: UIViewController {
         textView.autocapitalizationType = .none
         return textView
     }()
-    
-    override var preferredStatusBarStyle: UIStatusBarStyle {
-        return .lightContent
-    }
         
     init(episode: Episode) {
         self.episode = episode
@@ -298,22 +304,18 @@ class EditPublishedEpisode: UIViewController {
     }
     
     func configureNavBar() {
-        navigationController?.navigationBar.prefersLargeTitles = true
-        navigationController?.navigationBar.isHidden = false
-        navigationController?.isNavigationBarHidden = false
-        navigationItem.largeTitleDisplayMode = .never
-        
-        let navBar = navigationController?.navigationBar
-        navBar?.barStyle = .default
-        navBar?.setBackgroundImage(nil, for: .default)
-        navBar?.shadowImage = UIImage()
-        navBar?.titleTextAttributes = [.foregroundColor: UIColor.black]
-        navBar?.tintColor = .black
-        
-        let imgBackArrow = #imageLiteral(resourceName: "back-button-white")
-        navBar?.backIndicatorImage = imgBackArrow
-        navBar?.backIndicatorTransitionMaskImage = imgBackArrow
         navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
+        navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
+        navigationController?.navigationBar.backIndicatorTransitionMaskImage = #imageLiteral(resourceName: "back-button-white")
+        navigationController?.navigationBar.prefersLargeTitles = false
+        navigationController?.navigationBar.backIndicatorImage = #imageLiteral(resourceName: "back-button-white")
+        navigationController?.navigationBar.isTranslucent = true
+        navigationController?.navigationBar.shadowImage = nil
+        navigationController?.navigationBar.barStyle = .black
+        navigationController?.navigationBar.shadowImage = UIImage()
+        navigationController?.navigationBar.tintColor = .white
+        navigationController?.navigationBar.isHidden = false
+        navigationItem.largeTitleDisplayMode = .never
     }
     
     func styleForScreens() {
@@ -461,6 +463,9 @@ class EditPublishedEpisode: UIViewController {
         tagTextView.topAnchor.constraint(equalTo: tagBar.bottomAnchor, constant: 10).isActive = true
         tagTextView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 13).isActive = true
         tagTextView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -13).isActive = true
+        
+        view.addSubview(customNavBar)
+        customNavBar.pinNavBarTo(view)
     }
     
     func addGradient() {
@@ -572,7 +577,7 @@ class EditPublishedEpisode: UIViewController {
     func checkIfAbleToPublish() {
         if captionPlaceholderText == false && captionTextView.text.count < maxCaptionCharacters && tagTextView.text.count < maxTagCharacters {
             navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Save", style: .plain, target: self, action: #selector(publishButtonPress))
-            navigationItem.rightBarButtonItem!.setTitleTextAttributes(CustomStyle.blackNavBarAttributes, for: .normal)
+            navigationItem.rightBarButtonItem!.setTitleTextAttributes(CustomStyle.whiteNavbarAttributes, for: .normal)
         } else {
             navigationItem.rightBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
         }

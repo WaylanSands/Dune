@@ -7,8 +7,33 @@
 //
 
 import UIKit
+import AVFoundation
 
 extension UIDevice {
+    
+    static func vibrate() {
+        print("attempt")
+        var audioPlayer: AVAudioPlayer!
+        let path = Bundle.main.path(forResource: "end.mp3", ofType: nil)!
+        let url = URL(fileURLWithPath: path)
+        
+        do {
+            audioPlayer = try AVAudioPlayer(contentsOf: url)
+        } catch {
+            print(error)
+        }
+        
+        let session = AVAudioSession.sharedInstance()
+        do{
+            try session.setCategory(AVAudioSession.Category.playback)
+        }
+        catch{
+            print("Failed")
+        }
+        
+        audioPlayer.play()
+//        AudioServicesPlayAlertSound(.init(1073))
+    }
     
     enum DeviceType: String {
         case iPhone4S

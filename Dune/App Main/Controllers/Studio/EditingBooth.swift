@@ -40,7 +40,7 @@ class EditingBoothVC: UIViewController {
     var draftID: String?
     
     var currentState = recordState.preview
-    var maxRecordingTime: Double = 60
+    var maxRecordingTime: Double = 120
     var recordingSnapshot: Double = 0
     var normalizedTime: CGFloat?
     var scrubbedTime: Double = 0
@@ -240,13 +240,7 @@ class EditingBoothVC: UIViewController {
         let view = UIView()
         return view
     }()
-    
-    override var preferredStatusBarStyle: UIStatusBarStyle {
-        return .lightContent
-    }
-    
-    // MARK: View did load
-    
+        
     override func viewDidLoad() {
         super.viewDidLoad()
         addGradient()
@@ -662,7 +656,7 @@ class EditingBoothVC: UIViewController {
                 trackAudio()
                 playDefaultRecording()
             } else if !hasMergedTracks {
-                FileManager.getMusicURLWith(audioID: currentOption!.audioID) { url in
+                FileManager.getMusicURLWith(audioID: currentOption!.lowAudioID) { url in
                     self.playMerge(audio1: self.recordingURL, audio2: url)
                     self.hasMergedTracks = true
                 }

@@ -18,14 +18,10 @@ class MainFeedVC: UIViewController {
     }
     
     let tableView = UITableView()
-    var audioPlayer = DuneAudioPlayer()
-    
-//    var batchLimit = 10
-    var pushingComment = false
     var subscriptionIDs = [String]()
-//    var episodesToFetch = [String]()
+    var pushingContent = false
     
-    var activeCell: EpisodeCell?
+    weak var activeCell: EpisodeCell?
     var selectedCellRow: Int?
     
     var lastProgress: CGFloat = 0
@@ -52,17 +48,18 @@ class MainFeedVC: UIViewController {
     var refreshControl: UIRefreshControl!
     
     // For various screen sizes
-    var tvInset: CGFloat = 1
+    var categoryInset: CGFloat = 16
     
-    let loadingView = TVLoadingAnimationView(topHeight: 20)
+    var loadingView = TVLoadingAnimationView(topHeight: 20)
+    var audioPlayer = DunePlayBar()
     
     let subscriptionSettings = SettingsLauncher(options: SettingOptions.subscriptionEpisode, type: .subscriptionEpisode)
     let ownEpisodeSettings = SettingsLauncher(options: SettingOptions.ownEpisode, type: .ownEpisode)
     let reportEpisodeAlert = CustomAlertView(alertType: .reportEpisode)
-    
+        
     let navBarView: UIView = {
         let view = UIView()
-        view.backgroundColor = hexStringToUIColor(hex: "191919").withAlphaComponent(0.9)
+        view.backgroundColor = CustomStyle.blackNavBar
         return view
     }()
     
@@ -74,9 +71,9 @@ class MainFeedVC: UIViewController {
     
     let navLogoLabel: UILabel = {
         let label = UILabel()
-        label.text = "Dune"
+        label.text = "Daily feed"
         label.textColor = .white
-        label.font = UIFont.systemFont(ofSize: 24, weight: .bold)
+        label.font = UIFont.systemFont(ofSize: 16, weight: .bold)
         return label
     }()
     
@@ -129,7 +126,7 @@ class MainFeedVC: UIViewController {
     
     let noEpisodesMainLabel: UILabel = {
         let label = UILabel()
-        label.text = "Subscribe to programs"
+        label.text = "Subscribe to channels"
         label.font = UIFont.systemFont(ofSize: 18, weight: .bold)
         label.textAlignment = .center
         label.textColor = CustomStyle.primaryBlack
@@ -149,9 +146,12 @@ class MainFeedVC: UIViewController {
         return label
     }()
     
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+      return .lightContent
+    } 
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        navigationItem.title = "Daily Feed"
         configureRefreshControl()
         configureDelegates()
         styleForScreens()
@@ -163,9 +163,10 @@ class MainFeedVC: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         subscriptionIDs = CurrentProgram.subscriptionIDs!
+        setNeedsStatusBarAppearanceUpdate()
         setupModalCommentObserver()
         fetchEpisodeIDs()
-        pushingComment = false
+        pushingContent = false
         configureNavigation()
         selectedCellRow = nil
         setCurrentDate()
@@ -174,13 +175,17 @@ class MainFeedVC: UIViewController {
     override func viewWillDisappear(_ animated: Bool) {
         searchScrollView.setScrollBarToTopLeft()
         removeModalCommentObserver()
-        if !pushingComment {
+        if !pushingContent {
             audioPlayer.finishSession()
         }
         
         FileManager.removeAudioFilesFromDocumentsDirectory() {
             print("Audio removed")
         }
+    }
+    
+    deinit {
+        print("Claiming back Main")
     }
     
     @objc func appMovedToBackground() {
@@ -257,14 +262,7 @@ class MainFeedVC: UIViewController {
         tableView.reloadData()
     }
     
-    override var preferredStatusBarStyle: UIStatusBarStyle {
-          return .lightContent
-    }
-    
     func configureNavigation() {
-        UINavigationBar.appearance().titleTextAttributes = CustomStyle.blackNavBarAttributes
-//        navigationController?.navigationBar.prefersLargeTitles = true
-//        navigationItem.largeTitleDisplayMode = .always
         navigationController?.navigationBar.isHidden = true
         navigationController?.navigationBar.setBackgroundImage(nil, for: .default)
         navigationController?.navigationBar.barStyle = .black
@@ -274,18 +272,18 @@ class MainFeedVC: UIViewController {
         navigationController?.navigationBar.backIndicatorImage = imgBackArrow
         navigationController?.navigationBar.backIndicatorTransitionMaskImage = imgBackArrow
         navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
-        self.tabBarController?.tabBar.backgroundImage = UIImage()
-        self.tabBarController?.tabBar.backgroundColor = hexStringToUIColor(hex: "F4F7FB")
+        tabBarController?.tabBar.backgroundImage = UIImage()
+        tabBarController?.tabBar.backgroundColor = hexStringToUIColor(hex: "F4F7FB")
     }
     
     func styleForScreens() {
         switch UIDevice.current.deviceType {
         case .iPhone4S, .iPhoneSE:
-            tvInset = 20
+            categoryInset = 10
         case .iPhone8:
-            tvInset = 20
+            categoryInset = 10
         case .iPhone8Plus:
-            tvInset = 20
+            categoryInset = 10
         case .iPhone11:
             break
         case .iPhone11Pro:
@@ -305,17 +303,18 @@ class MainFeedVC: UIViewController {
         navBarView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
         navBarView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         navBarView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        navBarView.heightAnchor.constraint(equalToConstant: UIDevice.current.navBarHeight()).isActive = true
+        navBarView.heightAnchor.constraint(equalToConstant: UIApplication.shared.statusBarFrame.height).isActive = true
 
-        navBarView.addSubview(navLogoLabel)
-        navLogoLabel.translatesAutoresizingMaskIntoConstraints = false
-        navLogoLabel.bottomAnchor.constraint(equalTo: navBarView.bottomAnchor, constant: -7).isActive = true
-        navLogoLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
-        
-        navBarView.addSubview(currentDateLabel)
-        currentDateLabel.translatesAutoresizingMaskIntoConstraints = false
-        currentDateLabel.centerYAnchor.constraint(equalTo: navLogoLabel.centerYAnchor, constant: 5).isActive = true
-        currentDateLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
+//        navBarView.addSubview(navLogoLabel)
+//        navLogoLabel.translatesAutoresizingMaskIntoConstraints = false
+//        navLogoLabel.bottomAnchor.constraint(equalTo: navBarView.bottomAnchor, constant: -7).isActive = true
+//        navLogoLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
+////        navLogoLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
+//
+//        navBarView.addSubview(currentDateLabel)
+//        currentDateLabel.translatesAutoresizingMaskIntoConstraints = false
+//        currentDateLabel.centerYAnchor.constraint(equalTo: navLogoLabel.centerYAnchor, constant: 0).isActive = true
+//        currentDateLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
 
         view.addSubview(noEpisodesMainLabel)
         noEpisodesMainLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -333,9 +332,11 @@ class MainFeedVC: UIViewController {
         view.sendSubviewToBack(tableView)
         tableView.pinEdges(to: view)
         tableView.backgroundColor = .white
-        tableView.contentInset = UIEdgeInsets(top: UIDevice.current.navBarHeight() + tvInset, left: 0, bottom: 64, right: 0)
+        tableView.contentInset = UIEdgeInsets(top: 45, left: 0, bottom: 64, right: 0)
         tableView.addTopBounceAreaView(color: hexStringToUIColor(hex: "191919"))
+        tableView.backgroundColor = CustomStyle.secondShade
         tableView.bringSubviewToFront(refreshControl)
+        tableView.tableFooterView = UIView()
         
         tableView.addSubview(searchScrollView)
         searchScrollView.translatesAutoresizingMaskIntoConstraints = false
@@ -348,7 +349,7 @@ class MainFeedVC: UIViewController {
         searchContentStackView.translatesAutoresizingMaskIntoConstraints = false
         searchContentStackView.centerYAnchor.constraint(equalTo: searchScrollView.centerYAnchor).isActive = true
         searchContentStackView.trailingAnchor.constraint(equalTo: searchScrollView.trailingAnchor, constant: -16).isActive = true
-        searchContentStackView.leadingAnchor.constraint(equalTo: searchScrollView.leadingAnchor, constant: 16).isActive = true
+        searchContentStackView.leadingAnchor.constraint(equalTo: searchScrollView.leadingAnchor, constant: categoryInset).isActive = true
         searchContentStackView.heightAnchor.constraint(equalToConstant: 26.0).isActive = true
         
         searchContentStackView.addArrangedSubview(allButton)
@@ -362,7 +363,6 @@ class MainFeedVC: UIViewController {
         
         view.addSubview(audioPlayer)
         audioPlayer.frame = CGRect(x: 0, y: view.frame.height, width: view.frame.width, height: 600)
-        audioPlayer.setupRemoteTransportControls()
         
         view.bringSubviewToFront(navBarView)
     }
@@ -386,8 +386,9 @@ class MainFeedVC: UIViewController {
     }
     
     func fetchEpisodeIDs() {
-        FireStoreManager.fetchEpisodesItemsWith(with: CurrentProgram.subscriptionIDs!) { items in
+        FireStoreManager.fetchEpisodesItemsWith(with: CurrentProgram.subscriptionIDs!) { [weak self] items in
             DispatchQueue.main.async {
+                guard let self = self else { return }
                 self.refreshControl.endRefreshing()
                 if items.isEmpty {
                     self.resetTableView()
@@ -398,6 +399,7 @@ class MainFeedVC: UIViewController {
                     self.navigationItem.title = ""
                 } else {
                     if items != self.episodeItems {
+                        self.audioPlayer.itemCount = items.count
                         self.loadingView.isHidden = false
                         self.tableView.isHidden = false
                         self.resetTableView()
@@ -423,7 +425,7 @@ class MainFeedVC: UIViewController {
     func fetchEpisodes() {
         if downloadedEpisodes.count != episodeItems.count {
             var endIndex = 10
-             print("Fetch eps")
+            print("fetchEpisodes")
             if episodeItems.count - downloadedEpisodes.count < endIndex {
                 endIndex = episodeItems.count - downloadedEpisodes.count
             }
@@ -443,7 +445,8 @@ class MainFeedVC: UIViewController {
             }
             addBottomLoadingSpinner()
             self.isFetchingEpisodes = true
-            FireStoreManager.fetchEpisodesWith(episodeItems: items) { episodes in
+            FireStoreManager.fetchEpisodesWith(episodeItems: items) { [weak self] episodes in
+                guard let self = self else { return }
                 DispatchQueue.main.async {
                     if !episodes.isEmpty {
                         self.audioPlayer.downloadedEpisodes += episodes
@@ -451,9 +454,9 @@ class MainFeedVC: UIViewController {
                         self.downloadedEpisodes += episodes
                         self.episodes += episodes
                         self.episodes = self.episodes.sorted(by: >)
+                        self.isFetchingEpisodes = false
                         self.tableView.reloadData()
                         self.loadingView.isHidden = true
-                        self.isFetchingEpisodes = false
                     }
                 }
             }
@@ -526,8 +529,10 @@ class MainFeedVC: UIViewController {
         } else {
             if filterMode == .all {
                 filteredEpisodeItems = episodeItems.filter({$0.category == category.titleLabel?.text})
+                self.audioPlayer.itemCount = filteredEpisodeItems.count
             } else if filterMode == .today {
                 filteredEpisodeItems = episodeItems.filter({$0.category == category.titleLabel?.text && Calendar.current.isDateInToday($0.postedDate)})
+                self.audioPlayer.itemCount = filteredEpisodeItems.count
             }
             highLightButtonWith(title: category.titleLabel!.text!)
             loadingView.isHidden = false
@@ -541,9 +546,10 @@ class MainFeedVC: UIViewController {
         if filterMode == .all {
             filteredEpisodeItems = []
             episodes = downloadedEpisodes
+            self.audioPlayer.itemCount = episodeItems.count
             tableView.reloadData()
         } else if filterMode == .today {
-
+            getTodaysEpisodes()
         }
     }
     
@@ -649,7 +655,8 @@ class MainFeedVC: UIViewController {
     
     func getTodaysEpisodes() {
         let items = episodeItems.filter({Calendar.current.isDateInToday($0.postedDate)})
-        
+        self.audioPlayer.itemCount = items.count
+
         var itemsNeeded = [EpisodeItem]()
         episodes = []
         
@@ -753,8 +760,8 @@ extension MainFeedVC: UITableViewDataSource, UITableViewDelegate {
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         let currentOffset = scrollView.contentOffset.y
         
-        if currentOffset > 0 {
-            navBarView.backgroundColor = CustomStyle.darkestBlack.withAlphaComponent(0.9)
+        if currentOffset > -45 {
+            navBarView.backgroundColor = CustomStyle.blackNavBar
         } else {
             navBarView.backgroundColor = hexStringToUIColor(hex: "191919").withAlphaComponent(0.9)
             searchScrollView.setScrollBarToTopLeft()
@@ -793,6 +800,28 @@ extension MainFeedVC: UITableViewDataSource, UITableViewDelegate {
 }
 
 extension MainFeedVC: EpisodeCellDelegate {
+    
+    func visitLinkWith(url: URL) {
+        pushingContent = true
+        let webView = WebVC(url: url)
+        webView.delegate = self
+        
+        switch audioPlayer.currentState {
+        case .loading:
+             webView.currentStatus = .ready
+        case .ready:
+             webView.currentStatus = .ready
+        case .playing:
+             webView.currentStatus = .playing
+        case .paused:
+             webView.currentStatus = .paused
+        case .fetching:
+            webView.currentStatus = .ready
+        }
+        
+        audioPlayer.audioPlayerDelegate = webView
+        navigationController?.present(webView, animated: true, completion: nil)
+    }
     
     func episodeTagSelected(tag: String) {
         let tagSelectedVC = EpisodeTagLookupVC(tag: tag)
@@ -865,7 +894,6 @@ extension MainFeedVC: EpisodeCellDelegate {
         var episode: Episode
         
         if filterMode == .all && selectedCategory == nil  {
-            print("will delete")
             episode = self.downloadedEpisodes[row]
         } else {
             episode = self.episodes[row]
@@ -924,9 +952,7 @@ extension MainFeedVC: SettingsLauncherDelegate {
     
     func selectionOf(setting: String) {
         let episode = downloadedEpisodes[selectedCellRow!]
-        let cell = tableView.cellForRow(at: IndexPath(item: selectedCellRow!, section: 0)) as! EpisodeCell
-        let image = cell.programImageButton.imageView!.image
-
+        
         switch setting {
         case "Delete":
             deleteOwnEpisode()
@@ -939,9 +965,25 @@ extension MainFeedVC: SettingsLauncherDelegate {
             episodeReported = true
             UIApplication.shared.windows.last?.addSubview(reportEpisodeAlert)
         case "Share via...":
-            let items: [Any] = [image!]
-            let ac = UIActivityViewController(activityItems: items, applicationActivities: nil)
-            present(ac, animated: true)
+            if episode.username != User.username {
+                DynamicLinkHandler.createLinkFor(episode: episode) { [weak self] url in
+                    let promoText = "Check out this episode published by \(episode.programName) on Dune."
+                    let items: [Any] = [promoText, url]
+                    let ac = UIActivityViewController(activityItems: items, applicationActivities: nil)
+                    DispatchQueue.main.async {
+                        self!.present(ac, animated: true)
+                    }
+                }
+            } else {
+                DynamicLinkHandler.createLinkFor(episode: episode) { [weak self] url in
+                    let promoText = "Have a listen to my recent episode published on Dune."
+                    let items: [Any] = [promoText, url]
+                    let ac = UIActivityViewController(activityItems: items, applicationActivities: nil)
+                    DispatchQueue.main.async {
+                        self!.present(ac, animated: true)
+                    }
+                }
+            }
         default:
             break
         }
@@ -962,8 +1004,18 @@ extension MainFeedVC: EpisodeEditorDelegate {
 
 extension MainFeedVC: DuneAudioPlayerDelegate {
     
+    func fetchMoreEpisodes() {
+        if isFetchingEpisodes == false {
+            if filterMode == .all && selectedCategory == nil {
+                fetchEpisodes()
+            } else if filterMode == .all && selectedCategory != nil {
+                fetchFilteredEpisodes()
+            }
+        }
+    }
+    
     func showCommentsFor(episode: Episode) {
-        pushingComment = true
+        pushingContent = true
         if audioPlayer.audioPlayer != nil {
             audioPlayer.pauseSession()
         } else if audioPlayer.currentState == .loading {
@@ -1006,10 +1058,11 @@ extension MainFeedVC: DuneAudioPlayerDelegate {
     func updateActiveCell(atIndex: Int, forType: PlayBackType) {
         let indexPath = IndexPath(item: atIndex, section: 0)
         if tableView.indexPathsForVisibleRows!.contains(indexPath) {
-            let cell = tableView.cellForRow(at: IndexPath(item: atIndex, section: 0)) as! EpisodeCell
-            cell.playEpisodeButton.setImage(nil, for: .normal)
-            cell.playbackBarView.setupPlaybackBar()
-            activeCell = cell
+            if let cell = tableView.cellForRow(at: IndexPath(item: atIndex, section: 0)) as? EpisodeCell {
+                cell.playEpisodeButton.setImage(nil, for: .normal)
+                cell.playbackBarView.setupPlaybackBar()
+                activeCell = cell
+            }
         }
     }
     
@@ -1035,6 +1088,16 @@ extension MainFeedVC: CustomAlertDelegate {
     
     func cancelButtonPress() {
         episodeReported = false
+    }
+    
+}
+
+extension MainFeedVC: WebViewDelegate {
+    
+    func playOrPauseEpisode() {
+        if let cell = activeCell {
+            audioPlayer.playOrPauseEpisodeWith(audioID: cell.episode.audioID)
+        }
     }
     
 }

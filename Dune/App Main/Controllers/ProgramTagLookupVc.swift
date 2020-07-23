@@ -29,7 +29,7 @@ class ProgramTagLookupVC: UIViewController {
     var lastPlayedID: String?
     var lastProgress: CGFloat = 0
 
-    let loadingView = TVLoadingAnimationView(topHeight: UIDevice.current.navBarHeight() + 20)
+    let loadingView = TVLoadingAnimationView(topHeight: 20)
     
     var selectedProgramCellRow: Int?
 
@@ -41,8 +41,8 @@ class ProgramTagLookupVC: UIViewController {
     let customNavBar: CustomNavBar = {
         let nav = CustomNavBar()
         nav.leftButton.isHidden = true
-        nav.backgroundColor = .white
-        nav.alpha = 0.9
+        nav.rightButton.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
+        nav.backgroundColor = CustomStyle.blackNavBar
         return nav
     }()
 
@@ -67,13 +67,13 @@ class ProgramTagLookupVC: UIViewController {
     }
     
     func configureProgramLabelWith(count: Int) {
-        var programs = "Programs"
+        var programs = "Channels"
         
         if count == 1 {
-            programs = "Program"
+            programs = "Channel"
         }
         
-       programNumberLabel.text = "\(count) \(programs)"
+        customNavBar.rightButton.setTitle("\(count) \(programs)", for: .normal)
     }
     
     required init?(coder: NSCoder) {
@@ -83,21 +83,19 @@ class ProgramTagLookupVC: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         configureNavigation()
-        configureViews()
         configureDelegates()
+        configureViews()
         addLoadingView()
     }
 
     override func viewWillAppear(_ animated: Bool) {
+        navigationController?.interactivePopGestureRecognizer?.isEnabled = false
         selectedCellRow = nil
     }
 
     override func viewWillDisappear(_ animated: Bool) {
+        navigationController?.interactivePopGestureRecognizer?.isEnabled = true
         introPlayer.finishSession()
-        
-//        if pushedForward == false {
-//            navigationController?.popToRootViewController(animated: true)
-//        }
 
         FileManager.removeAudioFilesFromDocumentsDirectory() {
             print("Audio removed")
@@ -120,15 +118,16 @@ class ProgramTagLookupVC: UIViewController {
     }
 
     func configureNavigation() {
-        UINavigationBar.appearance().titleTextAttributes = CustomStyle.blackNavBarAttributes
         navigationItem.title = tag
-        navigationController?.navigationBar.isTranslucent = true
         navigationController?.isNavigationBarHidden = false
-        navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
-        navigationController?.navigationBar.barStyle = .default
+        navigationController?.navigationBar.isHidden = false
+        navigationController?.navigationBar.barStyle = .black
+        navigationController?.navigationBar.tintColor = .white
+        navigationController?.navigationBar.isTranslucent = true
         navigationController?.navigationBar.shadowImage = UIImage()
-        navigationController?.navigationBar.tintColor = .black
-
+        navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
+        navigationController?.navigationBar.titleTextAttributes = [.foregroundColor: UIColor.white]
+        
         let imgBackArrow = #imageLiteral(resourceName: "back-button-white")
         navigationController?.navigationBar.backIndicatorImage = imgBackArrow
         navigationController?.navigationBar.backIndicatorTransitionMaskImage = imgBackArrow
@@ -138,10 +137,12 @@ class ProgramTagLookupVC: UIViewController {
     func addLoadingView() {
         view.addSubview(loadingView)
         loadingView.translatesAutoresizingMaskIntoConstraints = false
-        loadingView.topAnchor.constraint(equalTo: tableView.topAnchor).isActive = true
+        loadingView.topAnchor.constraint(equalTo: tableView.topAnchor, constant: UIDevice.current.navBarHeight()).isActive = true
         loadingView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         loadingView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         loadingView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+        
+        view.bringSubviewToFront(customNavBar)
     }
 
     func configureViews() {
@@ -158,7 +159,7 @@ class ProgramTagLookupVC: UIViewController {
         programNumberLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
 
         view.addSubview(introPlayer)
-        introPlayer.frame = CGRect(x: 0, y: view.frame.height, width: view.frame.width, height: 70)
+        introPlayer.frame = CGRect(x: 0, y: view.frame.height, width: view.frame.width, height: 64)
         
         view.addSubview(customNavBar)
         customNavBar.pinNavBarTo(view)
@@ -264,7 +265,6 @@ extension ProgramTagLookupVC: ProgramCellDelegate {
     }
     
     func playProgramIntro(cell: ProgramCell) {
-              introPlayer.isProgramPageIntro = false
               activeProgram = cell.program
               
               cell.program.hasBeenPlayed = true
@@ -313,6 +313,10 @@ extension ProgramTagLookupVC: ProgramCellDelegate {
 }
 
 extension ProgramTagLookupVC: DuneAudioPlayerDelegate {
+    
+    func fetchMoreEpisodes() {
+        print("Should fetch more episodes: Needs implementation")
+    }
     
     func showCommentsFor(episode: Episode) {
         let commentVC = CommentThreadVC(episode: episode)

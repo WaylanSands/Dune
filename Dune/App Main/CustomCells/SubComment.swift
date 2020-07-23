@@ -18,16 +18,17 @@ class SubCommentCell: CommentCell {
         profileImageButton.heightAnchor.constraint(equalToConstant: 30).isActive = true
         profileImageButton.widthAnchor.constraint(equalToConstant: 30).isActive = true
         
-        self.addSubview(usernameLabel)
-        usernameLabel.translatesAutoresizingMaskIntoConstraints = false
-        usernameLabel.topAnchor.constraint(equalTo: profileImageButton.topAnchor, constant: -2).isActive = true
-        usernameLabel.leadingAnchor.constraint(equalTo: profileImageButton.trailingAnchor, constant: 7).isActive = true
-        usernameLabel.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -32).isActive = true
+        self.addSubview(usernameButton)
+        usernameButton.translatesAutoresizingMaskIntoConstraints = false
+        usernameButton.topAnchor.constraint(equalTo: profileImageButton.topAnchor, constant: -2).isActive = true
+        usernameButton.leadingAnchor.constraint(equalTo: profileImageButton.trailingAnchor, constant: 7).isActive = true
+        usernameButton.heightAnchor.constraint(equalToConstant: usernameButton.titleLabel!.font.lineHeight).isActive = true
+//        usernameButton.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -32).isActive = true
         
         self.addSubview(activeCommentLabel)
         activeCommentLabel.translatesAutoresizingMaskIntoConstraints = false
-        activeCommentLabel.topAnchor.constraint(equalTo: usernameLabel.bottomAnchor).isActive = true
-        activeCommentLabel.leadingAnchor.constraint(equalTo: usernameLabel.leadingAnchor).isActive = true
+        activeCommentLabel.topAnchor.constraint(equalTo: usernameButton.bottomAnchor).isActive = true
+        activeCommentLabel.leadingAnchor.constraint(equalTo: usernameButton.leadingAnchor).isActive = true
         activeCommentLabel.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -32).isActive = true
         activeCommentLabel.heightAnchor.constraint(greaterThanOrEqualToConstant: activeCommentLabel.font!.lineHeight).isActive = true
         

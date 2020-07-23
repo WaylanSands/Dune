@@ -31,6 +31,7 @@ class AddBGMusicVC: UIViewController {
     var playbackLink: CADisplayLink!
     var currentState: playerStatus = .ready
     var musicDelegate: BackgroundMusicDelegate!
+    var audioSession = AVAudioSession.sharedInstance()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -44,13 +45,23 @@ class AddBGMusicVC: UIViewController {
     
     func setupNavigationBar() {
         navigationItem.title = "Add Music"
-        navigationController?.navigationBar.backgroundColor = CustomStyle.darkestBlack.withAlphaComponent(0.9)
         navigationController?.navigationBar.prefersLargeTitles = true
         navigationController?.navigationBar.setBackgroundImage(nil, for: .default)
         navigationController?.navigationBar.isHidden = false
         navigationController?.isNavigationBarHidden = false
         navigationController?.navigationBar.tintColor = .white
-        UINavigationBar.appearance().titleTextAttributes = CustomStyle.barButtonAttributes
+        navigationController?.navigationBar.barStyle = .black
+        navigationController?.navigationBar.titleTextAttributes = [.foregroundColor: UIColor.white]
+    }
+    
+    func configureAudioSessionCategory() {
+      do {
+        try audioSession.setCategory(AVAudioSession.Category.playAndRecord, mode: .spokenAudio, options: [.defaultToSpeaker, .allowBluetooth])
+          try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+            try audioSession.setActive(true)
+      } catch {
+          print("error.")
+      }
     }
     
     func resetSelectedCell() {
@@ -162,9 +173,10 @@ extension AddBGMusicVC: UITableViewDelegate, UITableViewDataSource {
         cell.activate()
         activeCell = cell
         
-        let audioID = cell.track.audioID
+        let loudAudioID = cell.track.loudAudioID
+        let lowAudioID = cell.track.lowAudioID
         
-        determineAudioPlayerAction(for: audioID, for: cell)
+        determineAudioPlayerAction(for: loudAudioID, withLowID: lowAudioID, for: cell)
         
         if cell == selectedCell {
             navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Remove", style: .plain, target: self, action: #selector(removeButtonPress))
@@ -175,7 +187,7 @@ extension AddBGMusicVC: UITableViewDelegate, UITableViewDataSource {
         }
     }
     
-    func determineAudioPlayerAction(for audioID: String,for cell: BackgroundMusicCell) {
+    func determineAudioPlayerAction(for audioID: String, withLowID: String, for cell: BackgroundMusicCell) {
         
         if currentState == .playing {
             currentState = .paused
@@ -186,6 +198,7 @@ extension AddBGMusicVC: UITableViewDelegate, UITableViewDataSource {
             FileManager.getMusicURLWith(audioID: audioID) { url in
                 self.playMusicWith(url: url, for: cell)
             }
+            FileManager.getMusicURLWith(audioID: withLowID)
         }
     }
     

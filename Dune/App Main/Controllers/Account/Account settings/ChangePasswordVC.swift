@@ -78,6 +78,7 @@ class ChangePasswordVC: UIViewController {
     
     override func viewDidLoad() {
         navigationItem.title = "Password"
+        navigationController?.navigationBar.titleTextAttributes = [.foregroundColor: UIColor.white]
         view.backgroundColor = .white
         configureDelegates()
         styleForScreens()

@@ -8,6 +8,7 @@
 
 import UIKit
 import FirebaseAuth
+import OneSignal
 import FirebaseFirestore
 
 class AccountTypeVC: UIViewController {
@@ -25,7 +26,7 @@ class AccountTypeVC: UIViewController {
     var fastTrack = false
     
     override var preferredStatusBarStyle: UIStatusBarStyle {
-        return .lightContent
+      return .lightContent
     }
     
     override func viewDidLoad() {
@@ -102,17 +103,8 @@ class AccountTypeVC: UIViewController {
         } else {
            createNewUser()
         }
+        print("Hit")
     }
-   
-//    func attemptToStoreProgramImage() {
-//        if CurrentProgram.imagePath != nil && CurrentProgram.imagePath != ""  {
-//            FileManager.fetchImageFrom(url: CurrentProgram.imagePath!) { image in
-//                if image != nil {
-//                    FileManager.storeInitialProgramImage(image: image!, programID: CurrentProgram.ID!)
-//                }
-//            }
-//        }
-//    }
     
     func createNewUser() {
         DispatchQueue.global(qos: .userInitiated).async {
@@ -133,7 +125,6 @@ class AccountTypeVC: UIViewController {
                         "ID" : User.ID!,
                         "email": User.email!,
                         "username": User.username!,
-                        "birthDate": User.birthDate!,
                         "displayName": User.username!,
                         "completedOnBoarding" : false,
                         "isPublisher": User.isPublisher!,
@@ -154,13 +145,13 @@ class AccountTypeVC: UIViewController {
     
     func fastTrackAccount() {
             DispatchQueue.global(qos: .userInitiated).async {
-                
+                OneSignal.sendTags(["onboarded" : true])
                 let programID = NSUUID().uuidString
                 guard let uid = Auth.auth().currentUser?.uid else { return }
                 
                 User.ID = uid
                 CurrentProgram.rep = 0
-                CurrentProgram.image = #imageLiteral(resourceName: "missing-image-large")
+                CurrentProgram.image = (CurrentProgram.image ?? #imageLiteral(resourceName: "missing-image-large"))
                 CurrentProgram.summary = ""
                 CurrentProgram.tags = [String]()
                 User.completedOnBoarding = true
@@ -177,7 +168,16 @@ class AccountTypeVC: UIViewController {
                 CurrentProgram.episodeIDs = [[String:Any]]()
                 User.programID = CurrentProgram.ID ?? programID
                 CurrentProgram.ID = CurrentProgram.ID ?? programID
-                CurrentProgram.subscriptionIDs = [CurrentProgram.ID ?? programID]
+                if User.recommendedProgram == nil {
+                   CurrentProgram.subscriptionIDs = [CurrentProgram.ID ?? programID]
+                } else {
+                    CurrentProgram.subscriptionIDs?.append(CurrentProgram.ID ?? programID)
+                }
+                
+                // Private channel
+                CurrentProgram.privacyStatus = .madePublic
+                CurrentProgram.pendingChannels = [String]()
+                CurrentProgram.deniedChannels = [String]()
 
                 // Ready to move
                 self.presentSearchVC()
@@ -196,14 +196,21 @@ class AccountTypeVC: UIViewController {
                     } else {
                         print("Successfully added channel ID")
                         
+                        if CurrentProgram.imageID != nil {
+                            programRef.setData(["imageID" : CurrentProgram.imageID!])
+                        }
+                        
                         programRef.setData([
                             "subscriptionIDs" : CurrentProgram.subscriptionIDs!,
                             "episodeIDs" : CurrentProgram.episodeIDs!,
                             "summary": CurrentProgram.summary ?? "",
+                            "privacyStatus" : "madePublic",
                             "username" : User.username!,
                             "isPrimaryProgram" : true,
                             "ID" : CurrentProgram.ID!,
                             "name" : User.username!,
+                            "pendingChannels": [],
+                            "deniedChannels" : [],
                             "subscriberCount" : 0,
                             "hasMentions" : false,
                             "ownerID" : User.ID!,
@@ -236,6 +243,12 @@ class AccountTypeVC: UIViewController {
             self.networkingIndicator.removeFromSuperview()
             let tabBar = MainTabController()
             tabBar.selectedIndex = 1
+            
+            if User.recommendedProgram != nil {
+                let searchNav = tabBar.selectedViewController as! UINavigationController
+                let searchVC = searchNav.viewControllers[0] as! SearchVC
+                searchVC.programToPush = User.recommendedProgram!
+            }
             
             if #available(iOS 13.0, *) {
                 let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
@@ -320,7 +333,8 @@ class AccountTypeVC: UIViewController {
     
     func fastTrackSocialAccount() {
             DispatchQueue.global(qos: .userInitiated).async {
-                print("Social")
+                OneSignal.sendTags(["onboarded" : true])
+                
                 CurrentProgram.rep = 0
                 User.completedOnBoarding = true
                 CurrentProgram.hasIntro = false
@@ -335,8 +349,18 @@ class AccountTypeVC: UIViewController {
                 CurrentProgram.episodeIDs = [[String:Any]]()
                 User.programID = CurrentProgram.ID
                 CurrentProgram.image = CurrentProgram.image ?? #imageLiteral(resourceName: "missing-image-large")
-                CurrentProgram.subscriptionIDs = [CurrentProgram.ID!]
                 CurrentProgram.summary = (CurrentProgram.summary ?? "")
+               
+                // Private channel
+                CurrentProgram.privacyStatus = .madePublic
+                CurrentProgram.pendingChannels = [String]()
+                CurrentProgram.deniedChannels = [String]()
+                
+                if User.recommendedProgram == nil {
+                   CurrentProgram.subscriptionIDs = [CurrentProgram.ID!]
+                } else {
+                    CurrentProgram.subscriptionIDs?.append(CurrentProgram.ID!)
+                }
                                 
                 // Ready to move
                 self.presentSearchVC()
@@ -355,15 +379,20 @@ class AccountTypeVC: UIViewController {
                     } else {
                         print("Successfully added channel ID")
                         
+                        if CurrentProgram.imageID != nil {
+                            programRef.setData(["imageID" : CurrentProgram.imageID!])
+                        }
+                        
                         programRef.setData([
                             "subscriptionIDs" :  CurrentProgram.subscriptionIDs!,
                             "episodeIDs" : CurrentProgram.episodeIDs!,
-//                            "imagePath" : (CurrentProgram.imagePath ?? nil)!,
                             "summary": CurrentProgram.summary!,
+                            "privacyStatus" : "madePublic",
                             "name" : CurrentProgram.name!,
                             "username" : User.username!,
                             "isPrimaryProgram" : true,
-                            "ID" : User.ID!,
+                            "pendingChannels": [],
+                            "deniedChannels" : [],
                             "hasMentions" : false,
                             "subscriberCount" : 0,
                             "ownerID" : User.ID!,
@@ -371,6 +400,7 @@ class AccountTypeVC: UIViewController {
                             "programIDs" : [],
                             "hasIntro" : false,
                             "repMethods" : [],
+                            "ID" : User.ID!,
                             "tags": [],
                             "rep": 0
                         ]) { (error) in

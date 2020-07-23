@@ -290,6 +290,7 @@ struct FireBaseComments {
     
     static func upVote(comment: Comment, by votes: Int) {
         let vote = Double(votes)
+        User.downVotedComments?.removeAll(where: { $0 == comment.ID })
         User.upVotedComments?.append(comment.ID)
         
         if comment.isSubComment {
@@ -319,6 +320,7 @@ struct FireBaseComments {
     
     static func downVote(comment: Comment, by votes: Int) {
         let vote = Double(votes)
+        User.upVotedComments?.removeAll(where: { $0 == comment.ID })
         User.downVotedComments?.append(comment.ID)
         
         if comment.isSubComment {
@@ -348,9 +350,7 @@ struct FireBaseComments {
     
     static func removeUpVoted(comment: Comment) {
         let vote: Double = -1
-        if let index = User.upVotedComments?.firstIndex(of: comment.ID) {
-            User.upVotedComments?.remove(at: index)
-        }
+        User.upVotedComments?.removeAll(where: { $0 == comment.ID })
         
         if comment.isSubComment {
             db.collection("episodes").document(comment.episodeID)
@@ -378,9 +378,7 @@ struct FireBaseComments {
     
     static func removeDownVoted(comment: Comment) {
         let vote: Double = 1
-        if let index = User.downVotedComments?.firstIndex(of: comment.ID) {
-            User.upVotedComments?.remove(at: index)
-        }
+        User.downVotedComments?.removeAll(where: { $0 == comment.ID })
         
         if comment.isSubComment {
             db.collection("episodes").document(comment.episodeID)

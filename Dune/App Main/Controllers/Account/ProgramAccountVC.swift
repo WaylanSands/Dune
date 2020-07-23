@@ -32,15 +32,17 @@ class ProgramAccountVC : UIViewController {
     
     let accountBottomVC = ProgramAccountBottomVC()
    
-    let settingsLauncher = SettingsLauncher(options: SettingOptions.sharing, type: .sharing)
+    let settingsLauncher = SettingsLauncher(options: SettingOptions.sharing, type: .sharing)    
     let nonPublisherAlert = CustomAlertView(alertType: .notAPublisher)
     
     lazy var headerBarButtons: [UIButton] = [episodesButton, subscriptionsButton, mentionsButton]
     
-    let navBarView: UIView = {
-        let view = UIView()
-        view.backgroundColor = .white
-        return view
+    let customNavBar: CustomNavBar = {
+        let nav = CustomNavBar()
+        nav.leftButton.isHidden = true
+        nav.backgroundColor = .white
+        nav.alpha = 0.9
+        return nav
     }()
     
     let scrollView: UIScrollView = {
@@ -120,6 +122,15 @@ class ProgramAccountVC : UIViewController {
         return button
     }()
     
+//    let requestButton: UIButton = {
+//        let button = UIButton(type: .custom)
+//        button.setImage(UIImage(named: "requests-pending"), for: .normal)
+//        button.contentEdgeInsets  = UIEdgeInsets(top: 0, left: 5, bottom: 0, right: 0)
+//        button.addTarget(self, action: #selector(viewPendingRequests), for: .touchUpInside)
+//        button.isUserInteractionEnabled = true
+//        return button
+//    }()
+    
     let summaryTextView: UITextView = {
         let view = UITextView()
         view.isScrollEnabled = false
@@ -168,11 +179,10 @@ class ProgramAccountVC : UIViewController {
         return view
     }()
     
-    lazy var subscriberCountLabel: UILabel = {
+    let subscriberCountLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
         label.textColor = CustomStyle.sixthShade
-        label.text = "\(CurrentProgram.subscriberCount!.roundedWithAbbreviations)"
         return label
     }()
     
@@ -212,7 +222,7 @@ class ProgramAccountVC : UIViewController {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
         label.textColor = CustomStyle.fourthShade
-        label.text = "Rep"
+        label.text = "Cred"
         return label
     }()
     
@@ -226,8 +236,8 @@ class ProgramAccountVC : UIViewController {
     let editProgramButton: AccountButton = {
         let button = AccountButton()
         button.setImage(UIImage(named: "edit-account-icon"), for: .normal)
-        button.setTitle("Edit Program", for: .normal)
-        button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 0)
+        button.setTitle("Edit Channel", for: .normal)
+        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 0)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
         button.addTarget(self, action: #selector(editProgramButtonPress), for: .touchUpInside)
         return button
@@ -237,8 +247,9 @@ class ProgramAccountVC : UIViewController {
         let button = AccountButton()
         button.setImage(UIImage(named: "share-account-icon"), for: .normal)
         button.addTarget(self, action: #selector(shareButtonPress), for: .touchUpInside)
+        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 7, bottom: 0, right: 0)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
-        button.setTitle("Share Program", for: .normal)
+        button.setTitle("Share Channel", for: .normal)
         return button
     }()
     
@@ -251,7 +262,7 @@ class ProgramAccountVC : UIViewController {
         let label = UILabel()
         label.textColor = CustomStyle.primaryBlack
         label.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
-        label.text = "Multiple programs"
+        label.text = "Multiple channels"
         return label
     }()
     
@@ -259,7 +270,7 @@ class ProgramAccountVC : UIViewController {
         let label = UILabel()
         label.textColor = CustomStyle.primaryBlack
         label.font = UIFont.systemFont(ofSize: 12, weight: .regular)
-        label.text = "Create multiple programs for @\(User.username!)"
+        label.text = "Create sub-channels for @\(User.username!)"
         return label
     }()
     
@@ -339,16 +350,18 @@ class ProgramAccountVC : UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         programsScrollView.setScrollBarToTopLeft()
         overlayScrollView.setScrollBarToTopLeft()
+        configurePrivacyState()
         configureSubAccounts()
         configureIntroButton()
         setupNavigationBar()
         addWebLink()
 
-        mainImage.image = CurrentProgram.image!
         nameLabel.text = CurrentProgram.name
+        mainImage.image = CurrentProgram.image!
         usernameLabel.text = "@\(User.username!)"
-        categoryLabel.text = CurrentProgram.primaryCategory
         repCountLabel.text = String(CurrentProgram.rep!)
+        categoryLabel.text = CurrentProgram.primaryCategory
+        subscriberCountLabel.text = "\(CurrentProgram.subscriberCount!.roundedWithAbbreviations)"
         
         configureSummary()
         configureEpisodeLabel()
@@ -359,8 +372,26 @@ class ProgramAccountVC : UIViewController {
         }
     }
     
+    func  configurePrivacyState() {
+        switch CurrentProgram.privacyStatus {
+        case .madePrivate:
+            navigationItem.leftBarButtonItem = UIBarButtonItem(image: privacyImage(), style: .plain, target: self, action: #selector(viewPendingRequests))
+        case .madePublic:
+            navigationItem.leftBarButtonItem = nil
+        default:
+            navigationItem.leftBarButtonItem = nil
+        }
+    }
     
-    override func viewDidAppear(_ animated: Bool) {
+    func privacyImage() -> UIImage {
+        if CurrentProgram.pendingChannels!.isEmpty {
+            return UIImage(named: "no-requests-pending")!
+        } else {
+           return UIImage(named: "requests-pending")!
+        }
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {        
         headerHeight = (minHeight)...headerHeightCalculated()
         prepareSetup()
         updateScrollContent()
@@ -397,21 +428,21 @@ class ProgramAccountVC : UIViewController {
     }
     
     func setupNavigationBar() {
-        let navBar = navigationController?.navigationBar
-        navigationController?.isNavigationBarHidden = false
-        navBar?.isHidden = false
-        navBar?.setBackgroundImage(UIImage(), for: .default)
-        navBar?.barStyle = .default
-        navBar?.shadowImage = UIImage()
-        navBar?.tintColor = .black
-        
-        navBar?.titleTextAttributes = CustomStyle.blackNavBarAttributes
-        navigationItem.rightBarButtonItem = UIBarButtonItem(image: #imageLiteral(resourceName: "white-settings-icon"), style: .plain, target: self, action: #selector(settingsButtonPress))
-        
-        let imgBackArrow = #imageLiteral(resourceName: "back-button-white")
-        navBar?.backIndicatorImage = imgBackArrow
-        navBar?.backIndicatorTransitionMaskImage = imgBackArrow
+        tabBarController?.tabBar.backgroundImage = UIImage()
+        tabBarController?.tabBar.backgroundColor = hexStringToUIColor(hex: "F4F7FB")
+        navigationController?.navigationBar.titleTextAttributes = [.foregroundColor: CustomStyle.primaryBlack]
         navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
+        navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
+        navigationController?.navigationBar.backIndicatorTransitionMaskImage = #imageLiteral(resourceName: "back-button-white")
+        navigationController?.navigationBar.tintColor = CustomStyle.primaryBlack
+        navigationController?.navigationBar.prefersLargeTitles = false
+        navigationController?.navigationBar.backIndicatorImage = #imageLiteral(resourceName: "back-button-white")
+        navigationController?.navigationBar.shadowImage = UIImage()
+        navigationController?.navigationBar.isTranslucent = true
+        navigationController?.navigationBar.barStyle = .default
+        navigationController?.navigationBar.isHidden = false
+        navigationItem.largeTitleDisplayMode = .never
+        navigationItem.rightBarButtonItem = UIBarButtonItem(image: #imageLiteral(resourceName: "white-settings-icon"), style: .plain, target: self, action: #selector(settingsButtonPress))
     }
     
     func configureEpisodeLabel() {
@@ -511,12 +542,12 @@ class ProgramAccountVC : UIViewController {
         scrollView.addSubview(headerView)
         scrollView.addGestureRecognizer(overlayScrollView.panGestureRecognizer)
         
-        view.addSubview(navBarView)
-        navBarView.translatesAutoresizingMaskIntoConstraints = false
-        navBarView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
-        navBarView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-        navBarView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        navBarView.heightAnchor.constraint(equalToConstant: UIDevice.current.navBarHeight()).isActive = true
+//        view.addSubview(navBarView)
+//        navBarView.translatesAutoresizingMaskIntoConstraints = false
+//        navBarView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+//        navBarView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+//        navBarView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+//        navBarView.heightAnchor.constraint(equalToConstant: UIDevice.current.navBarHeight()).isActive = true
         
         headerView.addSubview(topDetailsView)
         topDetailsView.translatesAutoresizingMaskIntoConstraints = false
@@ -665,7 +696,8 @@ class ProgramAccountVC : UIViewController {
         
         createProgramButtons()
         
-        view.bringSubviewToFront(navBarView)
+        view.addSubview(customNavBar)
+        customNavBar.pinNavBarTo(view)
     }
     
     func addWebLink() {
@@ -763,6 +795,7 @@ class ProgramAccountVC : UIViewController {
         
         let program = programs[index]
         
+//        let subProgramVC = SingleProgramProfileVC(program: program)
         let subProgramVC = SubProgramAccountVC(program: program)
         navigationController?.pushViewController(subProgramVC, animated: true)
     }
@@ -817,7 +850,7 @@ class ProgramAccountVC : UIViewController {
     
     @objc func createProgram() {
         if !User.isPublisher! {
-            UIApplication.shared.windows.last?.addSubview(nonPublisherAlert)
+            UIApplication.shared.keyWindow!.addSubview(nonPublisherAlert)
         } else {
             let createProgramVC = CreateProgramVC()
             createProgramVC.hidesBottomBarWhenPushed = true
@@ -843,15 +876,6 @@ class ProgramAccountVC : UIViewController {
     
     // MARK: Play Intro
     @objc func playIntro() {
-        let offset = self.scrollView.contentOffset.y + unwrapDifference
-        let difference = UIScreen.main.bounds.height - headerHeight.upperBound
-        let position = (difference - tabBarController!.tabBar.frame.height - 70) + offset
-       
-        if !accountBottomVC.introPlayer.isInPosition {
-            accountBottomVC.introPlayer.yPosition = position
-        } else {
-            accountBottomVC.introPlayer.updateYPositionWith(value: position)
-        }
         accountBottomVC.playIntro()
     }
     
@@ -977,10 +1001,15 @@ class ProgramAccountVC : UIViewController {
     }
     
     @objc func pushSubscribersVC() {
-        print("hit")
-        let subscribersVC = SubscribersVC(programName: CurrentProgram.name!, programID: CurrentProgram.ID!, programIDs: CurrentProgram.programIDs!, subscriberIDs: CurrentProgram.subscriberIDs!)
+        let subscribersVC = SubscribersVC(programName: CurrentProgram.name!, programID: CurrentProgram.ID!, programIDs: CurrentProgram.programsIDs(), subscriberIDs: CurrentProgram.subscriberIDs!)
         subscribersVC.hidesBottomBarWhenPushed = true
+        subscribersVC.isPublic = CurrentProgram.isPrivate!
         navigationController?.pushViewController(subscribersVC, animated: true)
+    }
+    
+    @objc func viewPendingRequests() {
+        let requests = PendingRequestsVC(pendingIDs: CurrentProgram.pendingChannels!)
+        navigationController?.pushViewController(requests, animated: true)
     }
     
 }
@@ -1043,6 +1072,12 @@ extension ProgramAccountVC: UIScrollViewDelegate {
             navigationItem.title = User.username
         } else {
             navigationItem.title = ""
+        }
+        
+        if progress > 0.97 {
+            customNavBar.alpha = 1
+        } else {
+            customNavBar.alpha = 0.9
         }
     }
     

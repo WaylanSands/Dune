@@ -207,10 +207,6 @@ class UpdateProgramDetails: UIViewController {
         return textView
     }()
     
-    override var preferredStatusBarStyle: UIStatusBarStyle {
-        return .lightContent
-    }
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         summaryTextView.delegate = self

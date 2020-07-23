@@ -58,7 +58,7 @@ class NetworkingProgress: UIView {
         UIView.animate(withDuration: 1,
                                    delay: 0.0,
                                    options: [.curveEaseOut, .repeat],
-                                   animations: { () -> Void in
+                                   animations: {
                                    self.downloadProgressBar.frame = CGRect(x: xPosition, y: yPosition, width: width, height: height)
 
         }, completion: { (finished: Bool) -> Void in
