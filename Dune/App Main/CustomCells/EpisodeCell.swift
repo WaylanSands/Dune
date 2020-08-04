@@ -47,10 +47,24 @@ class EpisodeCell: UITableViewCell {
         return button
     }()
     
-    lazy var playEpisodeButton: UIButton = {
+//    lazy var playEpisodeButton: UIButton = {
+//        let button = UIButton()
+//        button.setImage(UIImage(named: "play-episode-btn"), for: .normal)
+//        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: -imageSize + 15, bottom: 0, right: 0)
+//        return button
+//    }()
+    
+    let playEpisodeImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.image = UIImage(named: "play-episode-btn")
+        return imageView
+    }()
+    
+    let playBarButton: UIButton = {
         let button = UIButton()
-        button.setImage(UIImage(named: "play-episode-btn"), for: .normal)
-        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: -imageSize + 15, bottom: 0, right: 0)
+        button.backgroundColor = CustomStyle.thirdShade
+        button.isUserInteractionEnabled = false
+        button.layer.cornerRadius = 2
         return button
     }()
     
@@ -306,15 +320,18 @@ class EpisodeCell: UITableViewCell {
     
     func setupProgressBar() {
         if episode.hasBeenPlayed {
-            playEpisodeButton.setImage(nil, for: .normal)
+            playEpisodeImageView.isHidden = true
+            playBarButton.isHidden = true
             playbackBarView.setupPlaybackBar()
             playbackBarView.setProgressWith(percentage: episode.playBackProgress)
         } else {
-            playEpisodeButton.setImage(UIImage(named: "play-episode-btn"), for: .normal)
+            playEpisodeImageView.isHidden = false
+            playBarButton.isHidden = false
         }
         
         if episode.hasBeenPlayed == false && playbackBarView.playbackBarIsSetup  {
-            playEpisodeButton.setImage(UIImage(named: "play-episode-btn"), for: .normal)
+            playEpisodeImageView.isHidden = false
+            playBarButton.isHidden = false
             playbackBarView.resetPlaybackBar()
         }
     }
@@ -326,20 +343,36 @@ class EpisodeCell: UITableViewCell {
         programImageButton.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 16).isActive = true
         programImageButton.heightAnchor.constraint(equalToConstant: imageSize).isActive = true
         programImageButton.widthAnchor.constraint(equalToConstant: imageSize).isActive = true
-        
+
         self.addSubview(playbackBarView)
         playbackBarView.translatesAutoresizingMaskIntoConstraints = false
         playbackBarView.centerXAnchor.constraint(equalTo: programImageButton.centerXAnchor).isActive = true
-        playbackBarView.topAnchor.constraint(equalTo: programImageButton.bottomAnchor, constant: 10).isActive = true
+        playbackBarView.topAnchor.constraint(equalTo: programImageButton.bottomAnchor, constant: 7).isActive = true
         playbackBarView.heightAnchor.constraint(equalToConstant: 5).isActive = true
         playbackBarView.widthAnchor.constraint(equalToConstant: playBarWidth).isActive = true
         
-        self.addSubview(playEpisodeButton)
-        playEpisodeButton.translatesAutoresizingMaskIntoConstraints = false
-        playEpisodeButton.centerXAnchor.constraint(equalTo: programImageButton.centerXAnchor).isActive = true
-        playEpisodeButton.topAnchor.constraint(equalTo: programImageButton.bottomAnchor, constant: 3).isActive = true
-        playEpisodeButton.widthAnchor.constraint(equalTo: programImageButton.widthAnchor).isActive = true
-        playEpisodeButton.heightAnchor.constraint(equalToConstant: 20).isActive = true
+        self.addSubview(playEpisodeImageView)
+        playEpisodeImageView.translatesAutoresizingMaskIntoConstraints = false
+        playEpisodeImageView.leadingAnchor.constraint(equalTo: programImageButton.leadingAnchor, constant: 0).isActive = true
+        playEpisodeImageView.centerYAnchor.constraint(equalTo: playbackBarView.centerYAnchor).isActive = true
+        playEpisodeImageView.widthAnchor.constraint(equalToConstant: 7).isActive = true
+        playEpisodeImageView.heightAnchor.constraint(equalToConstant: 7).isActive = true
+        
+        self.addSubview(playBarButton)
+        playBarButton.translatesAutoresizingMaskIntoConstraints = false
+        playBarButton.leadingAnchor.constraint(equalTo: playEpisodeImageView.trailingAnchor, constant: 4).isActive = true
+        playBarButton.trailingAnchor.constraint(equalTo: programImageButton.trailingAnchor, constant: -1).isActive = true
+        playBarButton.centerYAnchor.constraint(equalTo: playbackBarView.centerYAnchor).isActive = true
+        playBarButton.heightAnchor.constraint(equalToConstant: 4).isActive = true
+
+        
+//        self.addSubview(playEpisodeButton)
+//        playEpisodeButton.translatesAutoresizingMaskIntoConstraints = false
+//        playEpisodeButton.centerXAnchor.constraint(equalTo: programImageButton.centerXAnchor).isActive = true
+//        playEpisodeButton.topAnchor.constraint(equalTo: programImageButton.bottomAnchor, constant: 3).isActive = true
+//        playEpisodeButton.widthAnchor.constraint(equalTo: programImageButton.widthAnchor).isActive = true
+//        playEpisodeButton.heightAnchor.constraint(equalToConstant: 20).isActive = true
+//        playEpisodeButton.backgroundColor = .blue
         
         self.addSubview(programNameStackedView)
         programNameStackedView.translatesAutoresizingMaskIntoConstraints = false
@@ -609,7 +642,9 @@ class EpisodeCell: UITableViewCell {
     
     @objc func playEpisode() {
         cellDelegate?.playEpisode(cell: self )
-        playEpisodeButton.setImage(nil, for: .normal)
+        playEpisodeImageView.isHidden = true
+        playBarButton.isHidden = true
+//        playEpisodeButton.setImage(nil, for: .normal)
     }
     
     @objc func showSettings() {

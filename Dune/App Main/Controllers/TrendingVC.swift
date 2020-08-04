@@ -49,6 +49,7 @@ class TrendingVC: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
 //        fetchTrendingEpisodes()
+//        audioPlayer.continueState()
         fetchEpisodes() 
         pushingContent = false
         configureNavigation()
@@ -133,6 +134,7 @@ class TrendingVC: UIViewController {
         loadingView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
         
         view.bringSubviewToFront(navBarView)
+        view.bringSubviewToFront(audioPlayer)
     }
     
     func resetTableView() {
@@ -247,7 +249,7 @@ extension TrendingVC: UITableViewDelegate, UITableViewDataSource {
         episodeCell.episode = episode
         episodeCell.episodeSettingsButton.addTarget(episodeCell, action: #selector(EpisodeCell.showSettings), for: .touchUpInside)
         episodeCell.programImageButton.addTarget(episodeCell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
-        episodeCell.playEpisodeButton.addTarget(episodeCell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
+//        episodeCell.playEpisodeButton.addTarget(episodeCell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
         episodeCell.usernameButton.addTarget(episodeCell, action: #selector(EpisodeCell.visitProfile), for: .touchUpInside)
         episodeCell.commentButton.addTarget(episodeCell, action: #selector(EpisodeCell.showComments), for: .touchUpInside)
         episodeCell.likeButton.addTarget(episodeCell, action: #selector(EpisodeCell.likeButtonPress), for: .touchUpInside)
@@ -390,7 +392,7 @@ extension TrendingVC: EpisodeCellDelegate {
     }
     
     func visitProfile(program: Program) {
-        if User.isPublisher! && CurrentProgram.programsIDs().contains(program.ID) {
+        if CurrentProgram.programsIDs().contains(program.ID) {
              let tabBar = MainTabController()
              tabBar.selectedIndex = 4
              if #available(iOS 13.0, *) {
@@ -516,7 +518,7 @@ extension TrendingVC: DuneAudioPlayerDelegate {
         let indexPath = IndexPath(item: atIndex, section: 0)
         if tableView.indexPathsForVisibleRows!.contains(indexPath) {
             let cell = tableView.cellForRow(at: IndexPath(item: atIndex, section: 0)) as! EpisodeCell
-            cell.playEpisodeButton.setImage(nil, for: .normal)
+//            cell.playEpisodeButton.setImage(nil, for: .normal)
             cell.playbackBarView.setupPlaybackBar()
             activeCell = cell
         }

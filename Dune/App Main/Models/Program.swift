@@ -18,6 +18,7 @@ public class Program: Comparable {
     var summary: String
     var webLink: String?
     var hasMentions: Bool
+    var isPublisher: Bool
     var repMethods: [String]
     var isPrimaryProgram: Bool
     var tags: [String]
@@ -48,6 +49,7 @@ public class Program: Comparable {
         rep = data["rep"] as! Int
         ID = data["ID"] as! String
         name = data["name"] as! String
+        isPublisher = data["isPublisher"] as! Bool
         hasMentions = data["hasMentions"] as! Bool
         username = data["username"] as! String
         summary = data["summary"] as! String

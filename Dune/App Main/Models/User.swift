@@ -17,7 +17,8 @@ struct User {
     static var socialSignUp: Bool?
     static var password: String?
     static var birthDate: String?
-    static var isPublisher: Bool?
+    static var isSetUp: Bool?
+    static var interests: [String]?
     static var programID: String?
     static var programIDs: [String]?
     static var likedEpisodes: [String]?
@@ -31,11 +32,12 @@ struct User {
     
     static func modelUser(data: [String: Any]) {
         ID = data["ID"] as? String
-        username = data["username"] as? String
         email = data["email"] as? String
+        isSetUp = data["isSetUp"] as? Bool
+        username = data["username"] as? String
         birthDate = data["birthDate"] as? String
-        isPublisher = data["isPublisher"] as? Bool
         programID = data["programID"] as? String
+        interests = data["interests"] as? [String]
         programIDs = data["programIDs"] as? [String]
         likedEpisodes = data["likedEpisodes"] as? [String]
         sharedEpisodes = data["sharedEpisodes"] as? [String]
@@ -49,10 +51,11 @@ struct User {
     static func signOutUser() {
         username = nil
         email = nil
+        isSetUp = nil
+        interests = nil
         socialSignUp = nil
         password = nil
         birthDate = nil
-        isPublisher = nil
         programID = nil
         programIDs = nil
         likedEpisodes = nil

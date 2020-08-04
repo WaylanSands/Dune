@@ -193,7 +193,7 @@ extension ProgramTagLookupVC: UITableViewDataSource, UITableViewDelegate {
         programCell.program = program
         programCell.subscribeButton.addTarget(programCell, action: #selector(ProgramCell.subscribeButtonPress), for: .touchUpInside)
         programCell.programImageButton.addTarget(programCell, action: #selector(ProgramCell.playProgramIntro), for: .touchUpInside)
-        programCell.playProgramButton.addTarget(programCell, action: #selector(ProgramCell.playProgramIntro), for: .touchUpInside)
+//        programCell.playProgramButton.addTarget(programCell, action: #selector(ProgramCell.playProgramIntro), for: .touchUpInside)
         programCell.programSettingsButton.addTarget(programCell, action: #selector(ProgramCell.showSettings), for: .touchUpInside)
         programCell.usernameButton.addTarget(programCell, action: #selector(ProgramCell.visitProfile), for: .touchUpInside)
         programCell.moreButton.addTarget(programCell, action: #selector(ProgramCell.moreUnwrap), for: .touchUpInside)
@@ -242,7 +242,7 @@ extension ProgramTagLookupVC: ProgramCellDelegate {
     }
     
     func visitProfile(program: Program) {
-        if User.isPublisher! && CurrentProgram.programsIDs().contains(program.ID) {
+        if CurrentProgram.programsIDs().contains(program.ID) {
              let tabBar = MainTabController()
              tabBar.selectedIndex = 4
              if #available(iOS 13.0, *) {

@@ -28,7 +28,7 @@ class PlaybackBarView: UIView {
         playbackBarIsSetup = true
         trackView.frame = endSize
         trackView.layer.cornerRadius = 2
-        trackView.backgroundColor = UIColor.black.withAlphaComponent(0.1)
+        trackView.backgroundColor = CustomStyle.thirdShade
         self.addSubview(trackView)
         
         progressView.frame = startSize

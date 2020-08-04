@@ -61,16 +61,30 @@ class EpisodeCellSmlLink: EpisodeCell {
         self.addSubview(playbackBarView)
         playbackBarView.translatesAutoresizingMaskIntoConstraints = false
         playbackBarView.centerXAnchor.constraint(equalTo: programImageButton.centerXAnchor).isActive = true
-        playbackBarView.topAnchor.constraint(equalTo: programImageButton.bottomAnchor, constant: 10).isActive = true
+        playbackBarView.topAnchor.constraint(equalTo: programImageButton.bottomAnchor, constant: 7).isActive = true
         playbackBarView.heightAnchor.constraint(equalToConstant: 5).isActive = true
         playbackBarView.widthAnchor.constraint(equalToConstant: playBarWidth).isActive = true
         
-        self.addSubview(playEpisodeButton)
-        playEpisodeButton.translatesAutoresizingMaskIntoConstraints = false
-        playEpisodeButton.centerXAnchor.constraint(equalTo: programImageButton.centerXAnchor).isActive = true
-        playEpisodeButton.topAnchor.constraint(equalTo: programImageButton.bottomAnchor, constant: 3).isActive = true
-        playEpisodeButton.widthAnchor.constraint(equalTo: programImageButton.widthAnchor).isActive = true
-        playEpisodeButton.heightAnchor.constraint(equalToConstant: 20).isActive = true
+        self.addSubview(playEpisodeImageView)
+        playEpisodeImageView.translatesAutoresizingMaskIntoConstraints = false
+        playEpisodeImageView.leadingAnchor.constraint(equalTo: programImageButton.leadingAnchor, constant: 0).isActive = true
+        playEpisodeImageView.centerYAnchor.constraint(equalTo: playbackBarView.centerYAnchor).isActive = true
+        playEpisodeImageView.widthAnchor.constraint(equalToConstant: 7).isActive = true
+        playEpisodeImageView.heightAnchor.constraint(equalToConstant: 7).isActive = true
+        
+        self.addSubview(playBarButton)
+        playBarButton.translatesAutoresizingMaskIntoConstraints = false
+        playBarButton.leadingAnchor.constraint(equalTo: playEpisodeImageView.trailingAnchor, constant: 4).isActive = true
+        playBarButton.trailingAnchor.constraint(equalTo: programImageButton.trailingAnchor, constant: -1).isActive = true
+        playBarButton.centerYAnchor.constraint(equalTo: playbackBarView.centerYAnchor).isActive = true
+        playBarButton.heightAnchor.constraint(equalToConstant: 4).isActive = true
+        
+//        self.addSubview(playEpisodeButton)
+//        playEpisodeButton.translatesAutoresizingMaskIntoConstraints = false
+//        playEpisodeButton.centerXAnchor.constraint(equalTo: programImageButton.centerXAnchor).isActive = true
+//        playEpisodeButton.topAnchor.constraint(equalTo: programImageButton.bottomAnchor, constant: 3).isActive = true
+//        playEpisodeButton.widthAnchor.constraint(equalTo: programImageButton.widthAnchor).isActive = true
+//        playEpisodeButton.heightAnchor.constraint(equalToConstant: 20).isActive = true
         
         self.addSubview(programNameStackedView)
         programNameStackedView.translatesAutoresizingMaskIntoConstraints = false

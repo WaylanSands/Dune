@@ -8,16 +8,17 @@
 
 import UIKit
 import Firebase
+import MobileCoreServices
 
 protocol updateProgramAccountScrollDelegate {
     func updateScrollContent()
 }
 
 class ProgramAccountVC : UIViewController {
-        
+    
     let minHeight = UIDevice.current.navBarHeight() + 40
     let navHeight = UIDevice.current.navBarHeight()
-
+    
     var imageSize: CGFloat = 80.0
     var subProgramSize: CGFloat = 64
     let maxPrograms = 10
@@ -30,10 +31,16 @@ class ProgramAccountVC : UIViewController {
     var tableViews: [Int: UIView] = [:]
     var currentIndex: Int = 0
     
+    // CustomAlert called
+    var createProgramPress = false
+    
     let accountBottomVC = ProgramAccountBottomVC()
-   
+    
     let settingsLauncher = SettingsLauncher(options: SettingOptions.sharing, type: .sharing)    
-    let nonPublisherAlert = CustomAlertView(alertType: .notAPublisher)
+    let uploadIntroOptionAlert = CustomAlertView(alertType: .uploadIntroOption)
+    let nonPublisherAlert = CustomAlertView(alertType: .publisherNotSetUp)
+    
+    
     
     lazy var headerBarButtons: [UIButton] = [episodesButton, subscriptionsButton, mentionsButton]
     
@@ -76,13 +83,13 @@ class ProgramAccountVC : UIViewController {
         return view
     }()
     
-    lazy var mainImage: UIImageView = {
-        let imageView = UIImageView()
-        imageView.layer.cornerRadius = 7
-        imageView.clipsToBounds = true
-        imageView.frame.size = CGSize(width: 74, height: 74)
-        imageView.contentMode = .scaleAspectFill
-        return imageView
+    let mainImageButton: UIButton = {
+        let button = UIButton()
+        button.layer.cornerRadius = 7
+        button.clipsToBounds = true
+        button.contentMode = .scaleAspectFill
+        button.addTarget(self, action: #selector(changeImageButtonPress), for: .touchUpInside)
+        return button
     }()
     
     let topMiddleStackedView: UIStackView = {
@@ -122,15 +129,6 @@ class ProgramAccountVC : UIViewController {
         return button
     }()
     
-//    let requestButton: UIButton = {
-//        let button = UIButton(type: .custom)
-//        button.setImage(UIImage(named: "requests-pending"), for: .normal)
-//        button.contentEdgeInsets  = UIEdgeInsets(top: 0, left: 5, bottom: 0, right: 0)
-//        button.addTarget(self, action: #selector(viewPendingRequests), for: .touchUpInside)
-//        button.isUserInteractionEnabled = true
-//        return button
-//    }()
-    
     let summaryTextView: UITextView = {
         let view = UITextView()
         view.isScrollEnabled = false
@@ -150,7 +148,7 @@ class ProgramAccountVC : UIViewController {
         button.setTitle("more", for: .normal)
         button.titleLabel!.font = UIFont.systemFont(ofSize: 14, weight: .regular)
         button.setTitleColor(CustomStyle.linkBlue, for: .normal)
-                    button.addTarget(self, action: #selector(moreUnwrap), for: .touchUpInside)
+        button.addTarget(self, action: #selector(moreUnwrap), for: .touchUpInside)
         return button
     }()
     
@@ -214,7 +212,7 @@ class ProgramAccountVC : UIViewController {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
         label.textColor = CustomStyle.sixthShade
-        label.text = "\(CurrentProgram.rep!)"
+        label.text = CurrentProgram.rep!.roundedWithAbbreviations
         return label
     }()
     
@@ -342,7 +340,7 @@ class ProgramAccountVC : UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         self.hidesBottomBarWhenPushed = false
-        nonPublisherAlert.alertDelegate = self
+        configureDelegates()
         styleForScreens()
         configureViews()
     }
@@ -355,21 +353,26 @@ class ProgramAccountVC : UIViewController {
         configureIntroButton()
         setupNavigationBar()
         addWebLink()
-
+        
         nameLabel.text = CurrentProgram.name
-        mainImage.image = CurrentProgram.image!
         usernameLabel.text = "@\(User.username!)"
-        repCountLabel.text = String(CurrentProgram.rep!)
         categoryLabel.text = CurrentProgram.primaryCategory
+        repCountLabel.text = CurrentProgram.rep!.roundedWithAbbreviations
+        mainImageButton.setBackgroundImage(CurrentProgram.image!, for: .normal)
         subscriberCountLabel.text = "\(CurrentProgram.subscriberCount!.roundedWithAbbreviations)"
         
         configureSummary()
         configureEpisodeLabel()
-
+        
         if unwrapped {
             summaryTextView.textContainer.maximumNumberOfLines = 3
             unwrapped = false
         }
+    }
+    
+    func configureDelegates() {
+        uploadIntroOptionAlert.alertDelegate = self
+        nonPublisherAlert.alertDelegate = self
     }
     
     func  configurePrivacyState() {
@@ -387,7 +390,7 @@ class ProgramAccountVC : UIViewController {
         if CurrentProgram.pendingChannels!.isEmpty {
             return UIImage(named: "no-requests-pending")!
         } else {
-           return UIImage(named: "requests-pending")!
+            return UIImage(named: "requests-pending")!
         }
     }
     
@@ -412,19 +415,19 @@ class ProgramAccountVC : UIViewController {
         websiteLinkButton.removeFromSuperview()
         createLabel.removeFromSuperview()
         addIconView.removeFromSuperview()
-
+        
         for each in programsScrollView.subviews {
             if each is UILabel {
                 each.removeFromSuperview()
             }
         }
-
+        
         let buttons = programsStackView.subviews as! [UIButton]
-            for each in buttons {
-                each.setImage(UIImage(), for: .normal)
-                each.removeTarget(self, action: #selector(programSelection(sender:)), for: .touchUpInside)
-                each.removeTarget(self, action: #selector(createProgram), for: .touchUpInside)
-            }
+        for each in buttons {
+            each.setImage(UIImage(), for: .normal)
+            each.removeTarget(self, action: #selector(programSelection(sender:)), for: .touchUpInside)
+            each.removeTarget(self, action: #selector(createProgram), for: .touchUpInside)
+        }
     }
     
     func setupNavigationBar() {
@@ -448,13 +451,13 @@ class ProgramAccountVC : UIViewController {
     func configureEpisodeLabel() {
         let episodes = CurrentProgram.episodeIDs
         let subscribers = CurrentProgram.subscriberCount
-
+        
         if episodes!.count == 1 {
             episodesLabel.text = "Episode"
         } else {
             episodesLabel.text = "Episodes"
         }
-
+        
         if subscribers == 1 {
             subscribersButton.setTitle("Subscriber", for: .normal)
         } else {
@@ -464,24 +467,24 @@ class ProgramAccountVC : UIViewController {
     
     func configureSummary() {
         if CurrentProgram.summary != "" {
-           summaryTextView.text = CurrentProgram.summary
+            summaryTextView.text = CurrentProgram.summary
         } else {
-             summaryTextView.text = "Include a program summary. Why should people subscribe, what insights do you offer?"
+            summaryTextView.text = "Include a program summary. Why should people subscribe, what insights do you offer?"
         }
-       
+        
     }
     
     func prepareSetup() {
         headerView.frame = CGRect(x: viewFrame.minX, y: CGFloat(0), width: viewFrame.width, height: CGFloat(headerHeight.upperBound))
         scrollView.contentSize = CGSize.init(width: viewFrame.width, height: viewFrame.height + CGFloat(headerHeight.upperBound))
-       
+        
         overlayScrollView.frame = CGRect(x: viewFrame.minX, y: viewFrame.minY, width: viewFrame.width, height: viewFrame.height)
         overlayScrollView.contentSize = self.scrollView.contentSize
         overlayScrollView.layer.zPosition = 999
         overlayScrollView.delegate = self
         
         self.add(accountBottomVC, to: scrollView, frame:  CGRect(x: viewFrame.minX, y: headerHeight.upperBound, width: viewFrame.width, height: viewFrame.height))
-
+        
         self.tableViews[currentIndex] = accountBottomVC.activeTableView()
         if let scrollView = self.tableViews[currentIndex] as? UIScrollView {
             scrollView.panGestureRecognizer.require(toFail: self.overlayScrollView.panGestureRecognizer)
@@ -496,7 +499,7 @@ class ProgramAccountVC : UIViewController {
             }
         }
     }
-
+    
     func headerHeightCalculated() -> CGFloat {
         var height: CGFloat = 120 + navHeight
         
@@ -507,7 +510,7 @@ class ProgramAccountVC : UIViewController {
         if headerView.subviews.contains(moreButton) {
             height -= moreButton.frame.height
         }
-            
+        
         accountBottomVC.headerHeight = height
         return height
     }
@@ -542,12 +545,12 @@ class ProgramAccountVC : UIViewController {
         scrollView.addSubview(headerView)
         scrollView.addGestureRecognizer(overlayScrollView.panGestureRecognizer)
         
-//        view.addSubview(navBarView)
-//        navBarView.translatesAutoresizingMaskIntoConstraints = false
-//        navBarView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
-//        navBarView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-//        navBarView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-//        navBarView.heightAnchor.constraint(equalToConstant: UIDevice.current.navBarHeight()).isActive = true
+        //        view.addSubview(navBarView)
+        //        navBarView.translatesAutoresizingMaskIntoConstraints = false
+        //        navBarView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+        //        navBarView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        //        navBarView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        //        navBarView.heightAnchor.constraint(equalToConstant: UIDevice.current.navBarHeight()).isActive = true
         
         headerView.addSubview(topDetailsView)
         topDetailsView.translatesAutoresizingMaskIntoConstraints = false
@@ -556,12 +559,12 @@ class ProgramAccountVC : UIViewController {
         topDetailsView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
         topDetailsView.heightAnchor.constraint(equalToConstant: 80).isActive = true
         
-        topDetailsView.addSubview(mainImage)
-        mainImage.translatesAutoresizingMaskIntoConstraints = false
-        mainImage.topAnchor.constraint(equalTo:topDetailsView.topAnchor, constant: 0).isActive = true
-        mainImage.leadingAnchor.constraint(equalTo:topDetailsView.leadingAnchor).isActive = true
-        mainImage.widthAnchor.constraint(equalToConstant: imageSize).isActive = true
-        mainImage.heightAnchor.constraint(equalToConstant: imageSize).isActive = true
+        topDetailsView.addSubview(mainImageButton)
+        mainImageButton.translatesAutoresizingMaskIntoConstraints = false
+        mainImageButton.topAnchor.constraint(equalTo:topDetailsView.topAnchor, constant: 0).isActive = true
+        mainImageButton.leadingAnchor.constraint(equalTo:topDetailsView.leadingAnchor).isActive = true
+        mainImageButton.widthAnchor.constraint(equalToConstant: imageSize).isActive = true
+        mainImageButton.heightAnchor.constraint(equalToConstant: imageSize).isActive = true
         
         topDetailsView.addSubview(playIntroButton)
         playIntroButton.translatesAutoresizingMaskIntoConstraints = false
@@ -572,7 +575,7 @@ class ProgramAccountVC : UIViewController {
         topDetailsView.addSubview(topMiddleStackedView)
         topMiddleStackedView.translatesAutoresizingMaskIntoConstraints = false
         topMiddleStackedView.topAnchor.constraint(equalTo: topDetailsView.topAnchor).isActive = true
-        topMiddleStackedView.leadingAnchor.constraint(equalTo: mainImage.trailingAnchor, constant: 10).isActive = true
+        topMiddleStackedView.leadingAnchor.constraint(equalTo: mainImageButton.trailingAnchor, constant: 10).isActive = true
         topMiddleStackedView.trailingAnchor.constraint(lessThanOrEqualTo: playIntroButton.leadingAnchor, constant: -20).isActive = true
         topMiddleStackedView.addArrangedSubview(nameLabel)
         topMiddleStackedView.addArrangedSubview(usernameLabel)
@@ -702,10 +705,10 @@ class ProgramAccountVC : UIViewController {
     
     func addWebLink() {
         if CurrentProgram.webLink != nil && CurrentProgram.webLink != "" {
-        linkAndStatsStackedView.insertArrangedSubview(websiteLinkButton, at: 0)
-        websiteLinkButton.setTitle(CurrentProgram.webLink?.lowercased(), for: .normal)
-        websiteLinkButton.widthAnchor.constraint(equalToConstant: websiteLinkButton.intrinsicContentSize.width + 15).isActive = true
-        websiteLinkButton.heightAnchor.constraint(equalToConstant: 15).isActive = true
+            linkAndStatsStackedView.insertArrangedSubview(websiteLinkButton, at: 0)
+            websiteLinkButton.setTitle(CurrentProgram.webLink?.lowercased(), for: .normal)
+            websiteLinkButton.widthAnchor.constraint(equalToConstant: websiteLinkButton.intrinsicContentSize.width + 15).isActive = true
+            websiteLinkButton.heightAnchor.constraint(equalToConstant: 15).isActive = true
         }
     }
     
@@ -722,7 +725,7 @@ class ProgramAccountVC : UIViewController {
             self.summaryTextView.textContainer.exclusionPaths = [path]
         }
     }
-
+    
     func configureIntroButton() {
         if CurrentProgram.hasIntro == true {
             playIntroButton.setTitle("Play Intro", for: .normal)
@@ -795,7 +798,7 @@ class ProgramAccountVC : UIViewController {
         
         let program = programs[index]
         
-//        let subProgramVC = SingleProgramProfileVC(program: program)
+        //        let subProgramVC = SingleProgramProfileVC(program: program)
         let subProgramVC = SubProgramAccountVC(program: program)
         navigationController?.pushViewController(subProgramVC, animated: true)
     }
@@ -849,7 +852,8 @@ class ProgramAccountVC : UIViewController {
     }
     
     @objc func createProgram() {
-        if !User.isPublisher! {
+        if !User.isSetUp! {
+            createProgramPress = true
             UIApplication.shared.keyWindow!.addSubview(nonPublisherAlert)
         } else {
             let createProgramVC = CreateProgramVC()
@@ -880,9 +884,7 @@ class ProgramAccountVC : UIViewController {
     }
     
     @objc func recordIntro() {
-        let recordBoothVC = RecordBoothVC()
-        recordBoothVC.currentScope = .intro
-        navigationController?.pushViewController(recordBoothVC, animated: true)
+        UIApplication.shared.keyWindow!.addSubview(uploadIntroOptionAlert)
     }
     
     
@@ -893,9 +895,9 @@ class ProgramAccountVC : UIViewController {
         for each in nonSelectedButtons {
             each.setTitleColor(CustomStyle.thirdShade, for: .normal)
         }
-
-         let title = sender.titleLabel!.text!
-         accountBottomVC.updateTableViewWith(title: title)
+        
+        let title = sender.titleLabel!.text!
+        accountBottomVC.updateTableViewWith(title: title)
         
         switch title {
         case "Episodes":
@@ -907,12 +909,12 @@ class ProgramAccountVC : UIViewController {
         default:
             break
         }
-         updateScrollContent()
+        updateScrollContent()
     }
     
     @objc func websiteButtonPress() {
         let link = linkWithPrefix(urlString: CurrentProgram.webLink!)
-    
+        
         if let url = URL(string: link) {
             UIApplication.shared.open(url, options: [:])
         }
@@ -958,7 +960,7 @@ class ProgramAccountVC : UIViewController {
             return CGSize.init(width: bottomView.frame.width, height: bottomHeight + CGFloat(headerHeight.upperBound))
         }
     }
- 
+    
     @objc func settingsButtonPress() {
         let settingsVC = AccountSettingsVC()
         settingsVC.hidesBottomBarWhenPushed = true
@@ -1012,6 +1014,13 @@ class ProgramAccountVC : UIViewController {
         navigationController?.pushViewController(requests, animated: true)
     }
     
+    @objc func changeImageButtonPress() {
+        let imagePicker = UIImagePickerController()
+        imagePicker.delegate = self
+        imagePicker.allowsEditing = true
+        present(imagePicker, animated: true, completion: nil)
+    }
+    
 }
 
 public extension UIScrollView{
@@ -1023,9 +1032,9 @@ public extension UIScrollView{
 }
 
 extension ProgramAccountVC: UIScrollViewDelegate {
-   
+    
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
-                
+        
         let topHeight = CGFloat(headerHeight.upperBound) - CGFloat(headerHeight.lowerBound)
         
         if scrollView.contentOffset.y < topHeight {
@@ -1033,15 +1042,15 @@ extension ProgramAccountVC: UIScrollViewDelegate {
             accountBottomVC.activeTV.contentOffset.y = 0
         } else {
             self.scrollView.contentOffset.y = CGFloat(headerHeight.upperBound) - CGFloat(headerHeight.lowerBound)
-             (self.tableViews[currentIndex] as? UIScrollView)?.contentOffset.y = scrollView.contentOffset.y - self.scrollView.contentOffset.y
+            (self.tableViews[currentIndex] as? UIScrollView)?.contentOffset.y = scrollView.contentOffset.y - self.scrollView.contentOffset.y
         }
-
+        
         if scrollView.contentOffset.y < 0{
             headerView.frame = CGRect(x: headerView.frame.minX,
                                       y: min(topHeight, scrollView.contentOffset.y),
                                       width: headerView.frame.width,
                                       height: max(CGFloat(headerHeight.lowerBound), CGFloat(headerHeight.upperBound) + -scrollView.contentOffset.y))
-
+            
         } else {
             headerView.frame = CGRect(x: headerView.frame.minX,
                                       y: 0,
@@ -1049,18 +1058,18 @@ extension ProgramAccountVC: UIScrollViewDelegate {
                                       height: CGFloat(headerHeight.upperBound))
         }
         
-//        let offset = self.scrollView.contentOffset.y + unwrapDifference
-//        let difference = UIScreen.main.bounds.height - headerHeight.upperBound
-//
-//        guard let tabBarHeight = tabBarController?.tabBar.frame.height else { return }
-//
-//        let introPosition = (difference - tabBarHeight - 70) + offset
-//        let audioPosition = (difference - tabBarHeight) + offset
-//
-//        accountBottomVC.yOffset = self.scrollView.contentOffset.y
-//        accountBottomVC.introPlayer.updateYPositionWith(value: introPosition)
-//        accountBottomVC.audioPlayer.updateYPositionWith(value: audioPosition)
-//
+        //        let offset = self.scrollView.contentOffset.y + unwrapDifference
+        //        let difference = UIScreen.main.bounds.height - headerHeight.upperBound
+        //
+        //        guard let tabBarHeight = tabBarController?.tabBar.frame.height else { return }
+        //
+        //        let introPosition = (difference - tabBarHeight - 70) + offset
+        //        let audioPosition = (difference - tabBarHeight) + offset
+        //
+        //        accountBottomVC.yOffset = self.scrollView.contentOffset.y
+        //        accountBottomVC.introPlayer.updateYPositionWith(value: introPosition)
+        //        accountBottomVC.audioPlayer.updateYPositionWith(value: audioPosition)
+        //
         let progress = self.scrollView.contentOffset.y / topHeight
         
         let fadeTextAnimation = CATransition()
@@ -1101,16 +1110,109 @@ extension ProgramAccountVC: UIScrollViewDelegate {
 }
 
 extension ProgramAccountVC: CustomAlertDelegate {
-   
+    
     func primaryButtonPress() {
-        editProgramButtonPress()
+        if !createProgramPress {
+            selectDocument()
+        } else {
+            editProgramButtonPress()
+        }
     }
     
     func cancelButtonPress() {
-        //
+        if createProgramPress {
+            createProgramPress = false
+        } else {
+            let recordBoothVC = RecordBoothVC()
+            recordBoothVC.currentScope = .intro
+            navigationController?.pushViewController(recordBoothVC, animated: true)
+        }
     }
     
+    @objc func selectDocument() {
+        let types = [kUTTypeAudio]
+        let importMenu = UIDocumentPickerViewController(documentTypes: types as [String], in: .import)
+        
+        if #available(iOS 11.0, *) {
+            importMenu.allowsMultipleSelection = false
+        }
+        
+        importMenu.delegate = self
+        importMenu.modalPresentationStyle = .fullScreen
+        
+        present(importMenu, animated: true)
+    }
     
+}
+
+extension ProgramAccountVC: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+    
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+        
+        var selectedImageFromPicker: UIImage?
+        
+        if let editedImage = info[.editedImage] as? UIImage {
+            selectedImageFromPicker = editedImage
+        } else if let originalImage = info[.originalImage] as? UIImage {
+            selectedImageFromPicker = originalImage
+        }
+        
+        if let selectedImage = selectedImageFromPicker {
+            CurrentProgram.image = selectedImage
+            mainImageButton.setBackgroundImage(selectedImage, for: .normal)
+            
+            FileManager.storeSelectedProgramImage(image: selectedImage, imageID: CurrentProgram.imageID, programID: CurrentProgram.ID!)
+            dismiss(animated: true, completion: nil)
+        }
+    }
+    
+}
+
+extension ProgramAccountVC: UIDocumentPickerDelegate {
+    
+    func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]){
+        
+        guard let url = urls.first else { return }
+        let fileExtension = ".\(url.pathExtension)"
+        
+        print("The file extension \(fileExtension)")
+        
+        let fileName = NSUUID().uuidString + fileExtension
+        
+        var newURL = FileManager.getTempDirectory()
+        newURL.appendPathComponent(fileName)
+        do {
+            
+            if FileManager.default.fileExists(atPath: newURL.path) {
+                try FileManager.default.removeItem(atPath: newURL.path)
+            }
+            try FileManager.default.moveItem(atPath: url.path, toPath: newURL.path)
+            editUploadedEpisode(url: newURL, fileName: fileName)
+        } catch {
+            print(error.localizedDescription)
+        }
+    }
+    
+    func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
+        print("view was cancelled")
+        dismiss(animated: true, completion: nil)
+    }
+    
+    func editUploadedEpisode(url: URL, fileName: String) {
+        let editingVC = EditingBoothVC()
+        
+        editingVC.recordingURL = url
+        editingVC.fileName = fileName
+        editingVC.startTime = 0
+        editingVC.endTime = 0
+        editingVC.wasTrimmed = false
+        editingVC.caption = ""
+        editingVC.tags = []
+        editingVC.isDraft = false
+        
+        editingVC.currentScope = .intro
+        navigationController?.pushViewController(editingVC, animated: true)
+    }
     
 }
 

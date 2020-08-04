@@ -440,13 +440,15 @@ class AddEpisodeDetails: UIViewController {
         navBar?.titleTextAttributes = [.foregroundColor: UIColor.white]
         navBar?.tintColor = .white
         
-        let imgBackArrow = #imageLiteral(resourceName: "back-button-white")
-        navBar?.backIndicatorImage = imgBackArrow
-        navBar?.backIndicatorTransitionMaskImage = imgBackArrow
-        navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
+        navigationItem.leftBarButtonItem = UIBarButtonItem(image: #imageLiteral(resourceName: "back-button-white"), style: .plain, target: self, action: #selector(popVC))
         navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Save", style: .plain, target: self, action: #selector(saveButtonPress))
         navigationItem.rightBarButtonItem!.setTitleTextAttributes(CustomStyle.barButtonAttributes, for: .normal)
     }
+    
+    @objc func popVC() {
+        navigationController?.popViewController(animated: true)
+    }
+     
     
     func styleForScreens() {
         switch UIDevice.current.deviceType {
@@ -989,7 +991,6 @@ class AddEpisodeDetails: UIViewController {
         } else {
             appDelegate.window?.rootViewController = tabBar
         }
-        
     }
     
     @objc func publishButtonPress() {

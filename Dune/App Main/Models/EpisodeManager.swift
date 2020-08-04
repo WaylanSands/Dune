@@ -1,43 +1,33 @@
-////
-////  DuneAudioPlayer.swift
-////  Dune
-////
-////  Created by Waylan Sands on 21/7/20.
-////  Copyright © 2020 Waylan Sands. All rights reserved.
-////
 //
-//import UIKit
-//import AVFoundation
+//  DuneAudioPlayer.swift
+//  Dune
 //
-//class EpisodeManager {
-//    
-//    var downloadedEpisodes: [Episode] = [] {
-//        willSet {
-//            index = downloadedEpisodes.count
-//        }
-//        didSet {
-//            if currentState == .fetching {
-//                currentState = .ready
-//                episode = downloadedEpisodes[index]
-//                playOrPauseEpisodeWith(audioID: episode.audioID)
-//            }
-//        }
-//    }
-//    
-//    func playAudioFrom(url: URL) {
-//        animateToPositionIfNeeded()
-//        playbackButton.setImage(UIImage(named: "pause-episode-icon"), for: .normal)
-//        playPauseButton.setImage(UIImage(named: "pause-audio-icon"), for: .normal)
-//        playbackButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
-//        audioPlayer = try! AVAudioPlayer(contentsOf: url)
-//        playPauseButton.backgroundColor = .white
-//        audioPlayer.delegate = self
-//        audioPlayer.volume = 1.0
-//        currentState = .playing
-//        trackEpisodePlayback()
-//        prefetchNextEpisode()
-//        audioPlayer.play()
-//        setupNowPlaying()
-//    }
-// 
-//}
+//  Created by Waylan Sands on 21/7/20.
+//  Copyright © 2020 Waylan Sands. All rights reserved.
+//
+
+import UIKit
+import AVFoundation
+
+struct EpisodeManager {
+    
+    static var currentState: playerStatus = .ready
+    static var downloadedEpisodes = [Episode]()
+    static var currentEpisode: Episode!
+    static var currentAudioID: String?
+    static var loadingAudioID: String?
+    static var itemCount = 0
+    static var index = 0
+    static var yPosition: CGFloat = 0
+    
+    static var isOutOfPosition = true
+    
+    static var likedEpisode = false
+    static var episodeIndex: Int!
+    static var episodeID: String!
+    static var image: UIImage!
+    
+    static var scrubbedTime: Double = 0
+    static var sliderStatus: sliderStatus = .unchanged
+    
+}

@@ -51,7 +51,7 @@ class ProgramAccountBottomVC: UIViewController {
     var listenCountUpdated = false
     
     let loadingView = TVLoadingAnimationView(topHeight: 15)
-    var pageIndex:Int = 1
+    var pageIndex:Int = 3
     
     let ownEpisodeSettings = SettingsLauncher(options: SettingOptions.ownEpisode, type: .ownEpisode)
     let programSettings = SettingsLauncher(options: SettingOptions.programSettings, type: .program)
@@ -121,7 +121,8 @@ class ProgramAccountBottomVC: UIViewController {
         subscriptionTV.setScrollBarToTopLeft()
         episodeTV.setScrollBarToTopLeft()
         mentionTV.setScrollBarToTopLeft()
-        setupModalCommentObserver()        
+        setupModalCommentObserver()
+//        audioPlayer.continueState()
         subscriptionTV.isHidden = true
         mentionTV.isHidden = true
         pushingContent = false
@@ -267,7 +268,7 @@ class ProgramAccountBottomVC: UIViewController {
             emptySubLabel.text = "You will be able to manage your subscriptions here."
             emptyButton.setTitle("Visit Search", for: .normal)
             emptyButton.isHidden = false
-            pageIndex = 1
+            pageIndex = 3
         case mentionTV:
             emptyHeadingLabel.text = "View mentions"
             emptySubLabel.text = "Episodes and comments which you have been tagged in will appear here."
@@ -489,7 +490,7 @@ extension ProgramAccountBottomVC: UITableViewDelegate, UITableViewDataSource {
             episodeCell.episode = episode
             episodeCell.episodeSettingsButton.addTarget(episodeCell, action: #selector(EpisodeCell.showSettings), for: .touchUpInside)
             episodeCell.programImageButton.addTarget(episodeCell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
-            episodeCell.playEpisodeButton.addTarget(episodeCell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
+//            episodeCell.playEpisodeButton.addTarget(episodeCell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
             episodeCell.usernameButton.addTarget(episodeCell, action: #selector(EpisodeCell.visitProfile), for: .touchUpInside)
             episodeCell.commentButton.addTarget(episodeCell, action: #selector(EpisodeCell.showComments), for: .touchUpInside)
             episodeCell.likeButton.addTarget(episodeCell, action: #selector(EpisodeCell.likeButtonPress), for: .touchUpInside)
@@ -520,7 +521,7 @@ extension ProgramAccountBottomVC: UITableViewDelegate, UITableViewDataSource {
             let programCell = tableView.dequeueReusableCell(withIdentifier: "programCell") as! ProgramCell
             programCell.subscribeButton.addTarget(programCell, action: #selector(ProgramCell.subscribeButtonPress), for: .touchUpInside)
             programCell.programImageButton.addTarget(programCell, action: #selector(ProgramCell.playProgramIntro), for: .touchUpInside)
-            programCell.playProgramButton.addTarget(programCell, action: #selector(ProgramCell.playProgramIntro), for: .touchUpInside)
+//            programCell.playProgramButton.addTarget(programCell, action: #selector(ProgramCell.playProgramIntro), for: .touchUpInside)
             programCell.programSettingsButton.addTarget(programCell, action: #selector(ProgramCell.showSettings), for: .touchUpInside)
             programCell.usernameButton.addTarget(programCell, action: #selector(ProgramCell.visitProfile), for: .touchUpInside)
             programCell.moreButton.addTarget(programCell, action: #selector(ProgramCell.moreUnwrap), for: .touchUpInside)
@@ -672,7 +673,7 @@ extension ProgramAccountBottomVC: DuneAudioPlayerDelegate {
         case .episode:
             if episodeTV.indexPathsForVisibleRows!.contains(indexPath) {
                 let cell = episodeTV.cellForRow(at: IndexPath(item: atIndex, section: 0)) as! EpisodeCell
-                cell.playEpisodeButton.setImage(nil, for: .normal)
+//                cell.playEpisodeButton.setImage(nil, for: .normal)
                 cell.playbackBarView.setupPlaybackBar()
                 activeEpisodeCell = cell
             }

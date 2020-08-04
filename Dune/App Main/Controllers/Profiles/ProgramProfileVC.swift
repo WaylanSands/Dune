@@ -332,9 +332,9 @@ class ProgramProfileVC: UIViewController {
         addWebLink()
 
         multipleProgramsSubLabel.text = "Channels brought to you by @\(program.username)"
+        repCountLabel.text = program.rep.roundedWithAbbreviations
         categoryLabel.text = program.primaryCategory
         usernameLabel.text = "@\(program.username)"
-        repCountLabel.text = String(program.rep)
         summaryTextView.text = program.summary
         mainImage.image = program.image!
         nameLabel.text = program.name
@@ -345,7 +345,7 @@ class ProgramProfileVC: UIViewController {
         }
     }
     
-    func  configureDelegates() {
+    func configureDelegates() {
         programSettings.settingsDelegate = self
         reportProgramAlert.alertDelegate = self
     }
@@ -740,7 +740,7 @@ class ProgramProfileVC: UIViewController {
 
     func subProgramButton() -> UIButton {
         let button = UIButton()
-        button.backgroundColor = CustomStyle.secondShade
+        button.backgroundColor = CustomStyle.white
         button.layer.cornerRadius = 10
         button.clipsToBounds = true
         return button
@@ -944,6 +944,7 @@ class ProgramProfileVC: UIViewController {
         let subscribersVC = SubscribersVC(programName: program.name, programID: program.ID, programIDs: program.programsIDs(), subscriberIDs: program.subscriberIDs)
         subscribersVC.hidesBottomBarWhenPushed = true
         subscribersVC.isPublic = program.isPrivate
+        subscribersVC.program = program
         navigationController?.pushViewController(subscribersVC, animated: true)
     }
 
@@ -1015,7 +1016,10 @@ extension ProgramProfileVC: UIScrollViewDelegate {
         if maximumOffset - currentOffset <= 90.0 {
             switch accountBottomVC.activeTV {
             case accountBottomVC.episodeTV:
-                accountBottomVC.fetchProgramsEpisodes()
+                if !accountBottomVC.isFetchingEpisodes {
+                    print(accountBottomVC.episodeItems.count)
+                    accountBottomVC.fetchProgramsEpisodes()
+                }
             case accountBottomVC.mentionTV:
                 print("mentionTV")
             case accountBottomVC.subscriptionTV:

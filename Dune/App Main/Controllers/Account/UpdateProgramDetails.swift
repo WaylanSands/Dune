@@ -25,8 +25,8 @@ class UpdateProgramDetails: UIViewController {
     var tagsUsed = [String]()
     var tagCount: Int = 0
     
-    let summaryPlaceHolder = "What insights do you offer?"
-    let tagsPlaceHolder = "Add three tags, each separated by a space"
+    let summaryPlaceHolder = "Why should people subscribe, what insights do you offer?"
+    let tagsPlaceHolder = "Add three topics, each separated by a space"
     
     lazy var screenHeight = view.frame.height
     lazy var tagButtons: [UIButton] = [firstTagButton, secondTagButton, thirdTagButton]
@@ -149,7 +149,7 @@ class UpdateProgramDetails: UIViewController {
     
     let summaryBarLabel: UILabel = {
         let label = UILabel()
-        label.text = "Program Summary"
+        label.text = "Channel Summary"
         label.font = UIFont.systemFont(ofSize: 14, weight: .medium)
         label.textColor = CustomStyle.fifthShade
         return label
@@ -181,7 +181,7 @@ class UpdateProgramDetails: UIViewController {
     
     let tagBarLabel: UILabel = {
         let label = UILabel()
-        label.text = "Program tags"
+        label.text = "Topics"
         label.font = UIFont.systemFont(ofSize: 14, weight: .medium)
         label.textColor = CustomStyle.fifthShade
         return label
@@ -303,7 +303,7 @@ class UpdateProgramDetails: UIViewController {
     }
     
     func configureNavBar() {
-        navigationItem.title = "Program Details"
+        navigationItem.title = "Channel Details"
         navigationController?.isNavigationBarHidden = false
         
         let navBar = navigationController?.navigationBar
@@ -312,11 +312,11 @@ class UpdateProgramDetails: UIViewController {
         navBar?.shadowImage = UIImage()
         navBar?.titleTextAttributes = [.foregroundColor: UIColor.white]
         navBar?.tintColor = .white
-        
-        let imgBackArrow = #imageLiteral(resourceName: "back-button-white")
-        navBar?.backIndicatorImage = imgBackArrow
-        navBar?.backIndicatorTransitionMaskImage = imgBackArrow
-        navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
+        navigationItem.leftBarButtonItem = UIBarButtonItem(image: #imageLiteral(resourceName: "back-button-white"), style: .plain, target: self, action: #selector(popVC))
+    }
+    
+    @objc func popVC() {
+        navigationController?.popViewController(animated: true)
     }
     
     func styleForScreens() {
@@ -563,14 +563,6 @@ class UpdateProgramDetails: UIViewController {
         navigationController?.popViewController(animated: true)
     }
     
-}
-
-extension UINavigationController {
-  func popToViewController(ofClass: AnyClass, animated: Bool = true) {
-    if let vc = viewControllers.last(where: { $0.isKind(of: ofClass) }) {
-      popToViewController(vc, animated: animated)
-    }
-  }
 }
 
 extension UpdateProgramDetails: UITextViewDelegate {

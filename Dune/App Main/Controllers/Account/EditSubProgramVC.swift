@@ -688,13 +688,27 @@ class EditSubProgramVC: UIViewController {
     @objc func privacySelection() {
         switch privateSegment.selectedSegmentIndex {
         case 0:
+            subscribeCurrentInvites()
             FireStoreManager.changeSubChannelWith(channelID: program.ID, to: .madePublic)
-            program.channelState = .madePublic
+            FireStoreManager.revertChannelToPublicWith(ID: program.ID) { [unowned self] in
+                self.program.pendingChannels = []
+                self.program.deniedChannels = []
+                self.program.channelState = .madePublic
+                print("Success reverting")
+            }
         case 1:
             FireStoreManager.changeSubChannelWith(channelID: program.ID, to: .madePrivate)
             program.channelState = .madePrivate
         default:
             break
+        }
+    }
+    
+    func subscribeCurrentInvites() {
+        let inviteIDs = program.pendingChannels + program.deniedChannels
+        for each in inviteIDs {
+            program.subscriberIDs.append(each)
+            program.subscriberCount += 1
         }
     }
     

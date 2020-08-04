@@ -53,7 +53,7 @@ public extension UIViewController {
     }
     
     func presentProgram(program: Program, isGoingForward: inout Bool?) {
-        if User.isPublisher! && CurrentProgram.programsIDs().contains(program.ID) {
+        if CurrentProgram.programsIDs().contains(program.ID) {
             let tabBar = MainTabController()
             tabBar.selectedIndex = 4
             if #available(iOS 13.0, *) {

@@ -157,6 +157,7 @@ class ProgramNameVC: UIViewController {
             
             User.ID = uid
             CurrentProgram.rep = 0
+            CurrentProgram.isPublisher = true
             CurrentProgram.hasMentions = false
             CurrentProgram.repMethods = [String]()
             CurrentProgram.username = User.username
@@ -198,6 +199,7 @@ class ProgramNameVC: UIViewController {
                         "deniedChannels" : [],
                         "subscriberCount" : 0,
                         "hasMentions" : false,
+                        "isPublisher" : true,
                         "ownerID" : User.ID!,
                         "subscriberIDs": [],
                         "programIDs" : [],

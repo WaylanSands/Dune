@@ -27,6 +27,9 @@ class EditProgramVC: UIViewController {
     var headerViewHeightConstant: CGFloat = 300
     var scrollPadding: CGFloat = 100
     
+    var switchedAccount = false
+    var switchedFromStudio = false
+    
     let customNavBar: CustomNavBar = {
         let nav = CustomNavBar()
         nav.leftButton.isHidden = true
@@ -173,7 +176,7 @@ class EditProgramVC: UIViewController {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 15, weight: .regular)
         label.textColor = CustomStyle.primaryBlack
-        label.text = "Channel tags"
+        label.text = "Topics"
         return label
     }()
     
@@ -335,14 +338,13 @@ class EditProgramVC: UIViewController {
     }
     
     override func viewWillDisappear(_ animated: Bool) {
-        if !User.isPublisher! && CurrentProgram.summary != "" && CurrentProgram.name != "" && CurrentProgram.primaryCategory != "" && CurrentProgram.tags?.count != 0 && CurrentProgram.image != #imageLiteral(resourceName: "missing-image-large") {
-            User.isPublisher = true
-            FireStoreManager.updateUserToPublisher()
+        if !User.isSetUp! && CurrentProgram.summary != "" && CurrentProgram.name != "" && CurrentProgram.primaryCategory != nil && CurrentProgram.tags?.count != 0 && CurrentProgram.image != #imageLiteral(resourceName: "missing-image-large") {
+            User.isSetUp = true
+            FireStoreManager.updateUserSetUpTo(true)
             FireStoreManager.updateProgramRep(programID: CurrentProgram.ID!, repMethod: "accountSetup", rep: 15)
             CurrentProgram.rep! += 15
         }
     }
-    
     
     func configureDelegates() {
         settingsLauncher.settingsDelegate = self
@@ -359,7 +361,7 @@ class EditProgramVC: UIViewController {
     }
     
     func configureNavBar() {
-        navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
+        navigationItem.leftBarButtonItem = UIBarButtonItem(image: UIImage(named: "back-button-white"), style: .plain, target: self, action: #selector(popToCorrectVC))
         navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
         navigationController?.navigationBar.backIndicatorTransitionMaskImage = #imageLiteral(resourceName: "back-button-white")
         navigationController?.navigationBar.prefersLargeTitles = false
@@ -376,6 +378,34 @@ class EditProgramVC: UIViewController {
     
     override func viewDidAppear(_ animated: Bool) {
         addGradient()
+    }
+    
+    @objc func popToCorrectVC() {
+        let tabBar = MainTabController()
+        
+        if switchedAccount {
+            tabBar.selectedIndex = 4
+            switchedAccount = false
+            if #available(iOS 13.0, *) {
+                let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
+                sceneDelegate.window?.rootViewController = tabBar
+            } else {
+                let appDelegate = UIApplication.shared.delegate as! AppDelegate
+                appDelegate.window?.rootViewController = tabBar
+            }
+        } else if switchedFromStudio {
+            tabBar.selectedIndex = 2
+            switchedFromStudio = false
+            if #available(iOS 13.0, *) {
+                let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
+                sceneDelegate.window?.rootViewController = tabBar
+            } else {
+                let appDelegate = UIApplication.shared.delegate as! AppDelegate
+                appDelegate.window?.rootViewController = tabBar
+            }
+        } else {
+            navigationController?.popViewController(animated: true)
+        }
     }
     
     func styleForScreens() {

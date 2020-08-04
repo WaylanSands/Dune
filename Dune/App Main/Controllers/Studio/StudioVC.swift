@@ -27,7 +27,8 @@ class StudioVC: UIViewController {
     var selectedProgramName: String?
     var fetchingDraft = false
     
-    let notAPublisherAlert = CustomAlertView(alertType: .notAPublisher)
+    let publisherNotSetUpAlert = CustomAlertView(alertType: .publisherNotSetUp)
+    let notAPublisherAlert = CustomAlertView(alertType: .switchToPublisher)
     
     var customNav: CustomNavBar = {
         let nav = CustomNavBar()
@@ -36,7 +37,6 @@ class StudioVC: UIViewController {
         nav.rightButton.setTitle("Record", for: .normal)
         nav.leftButton.addTarget(self, action: #selector(selectDocument), for: .touchUpInside)
         nav.rightButton.addTarget(self, action: #selector(recordButtonPress), for: .touchUpInside)
-//        nav.titleLabel.font = UIFont.systemFont(ofSize: 16, weight: .bold)
         return nav
     }()
     
@@ -102,8 +102,8 @@ class StudioVC: UIViewController {
         tabBar!.backgroundColor = .clear
 
         tabBar!.items?[0].image = UIImage(named: "feed-icon-selected")
-        tabBar!.items?[1].image =  UIImage(named: "search-icon-selected")
-        tabBar!.items?[3].image =  UIImage(named: "trending-icon-selected")
+        tabBar!.items?[1].image =  UIImage(named: "trending-icon-selected")
+        tabBar!.items?[3].image =  UIImage(named: "search-icon-selected")
         tabBar!.items?[4].image =  UIImage(named: "account-icon-selected")
     }
     
@@ -116,9 +116,9 @@ class StudioVC: UIViewController {
         tabBar!.backgroundImage = .none
         tabBar!.backgroundColor = hexStringToUIColor(hex: "F4F7FB")
         tabBar!.items?[0].image = UIImage(named: "feed-icon")
-        tabBar!.items?[1].image =  UIImage(named: "search-icon")
+        tabBar!.items?[1].image =  UIImage(named: "trending-icon")
         tabBar!.items?[2].image =  UIImage(named: "studio-icon")
-        tabBar!.items?[3].image =  UIImage(named: "trending-icon")
+        tabBar!.items?[3].image =  UIImage(named: "search-icon")
         tabBar!.items?[4].image =  UIImage(named: "account-icon")
     }
 
@@ -131,6 +131,7 @@ class StudioVC: UIViewController {
     
     func configureDelegates() {
         tableView.register(DraftEpisodeCell.self, forCellReuseIdentifier: "draftEpisodeCell")
+        publisherNotSetUpAlert.alertDelegate = self
         notAPublisherAlert.alertDelegate = self
         tableView.dataSource = self
         tableView.delegate = self
@@ -170,7 +171,7 @@ class StudioVC: UIViewController {
     }
     
     func configureProgramToggle() {
-        if User.isPublisher! && !CurrentProgram.programIDs!.isEmpty {
+        if !CurrentProgram.programIDs!.isEmpty {
             programNameButton.isHidden = false
             customNav.titleLabel.text = ""
         } else {
@@ -278,7 +279,7 @@ class StudioVC: UIViewController {
     
     @objc func recordButtonPress() {
         
-        if User.isPublisher! && CurrentProgram.imageID != nil {
+        if CurrentProgram.isPublisher! && User.isSetUp! {
             recordingSession = AVAudioSession.sharedInstance()
             do {
                 try recordingSession.setCategory(.playAndRecord, mode: .default)
@@ -296,7 +297,9 @@ class StudioVC: UIViewController {
             } catch {
                 print("Unable to start recording \(error)")
             }
-        } else {
+        } else  if CurrentProgram.isPublisher! && !User.isSetUp! {
+            view.addSubview(publisherNotSetUpAlert)
+        } else if !CurrentProgram.isPublisher! {
             view.addSubview(notAPublisherAlert)
         }
     }
@@ -453,7 +456,7 @@ extension StudioVC: UITableViewDelegate, UITableViewDataSource {
 
 }
 
-extension StudioVC: UIDocumentPickerDelegate,UINavigationControllerDelegate {
+extension StudioVC: UIDocumentPickerDelegate, UINavigationControllerDelegate {
     
     func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]){
                 
@@ -472,7 +475,6 @@ extension StudioVC: UIDocumentPickerDelegate,UINavigationControllerDelegate {
                     try FileManager.default.removeItem(atPath: newURL.path)
                 }
                 try FileManager.default.moveItem(atPath: url.path, toPath: newURL.path)
-                               
                 editUploadedEpisode(url: newURL, fileName: fileName)
             } catch {
                 print(error.localizedDescription)
@@ -485,7 +487,7 @@ extension StudioVC: UIDocumentPickerDelegate,UINavigationControllerDelegate {
         }
     
     @objc func selectDocument() {
-        if User.isPublisher! && CurrentProgram.imageID != nil {
+        if CurrentProgram.isPublisher! && User.isSetUp! {
             let types = [kUTTypeAudio]
             let importMenu = UIDocumentPickerViewController(documentTypes: types as [String], in: .import)
             
@@ -497,7 +499,11 @@ extension StudioVC: UIDocumentPickerDelegate,UINavigationControllerDelegate {
             importMenu.modalPresentationStyle = .fullScreen
             
             present(importMenu, animated: true)
-        } else {
+        } else if CurrentProgram.isPublisher! && !User.isSetUp! {
+            print("1")
+            view.addSubview(publisherNotSetUpAlert)
+        } else if !CurrentProgram.isPublisher! {
+            print("2")
             view.addSubview(notAPublisherAlert)
         }
     }
@@ -517,6 +523,15 @@ extension StudioVC: CustomAlertDelegate {
    
     func primaryButtonPress() {
         let editProgramVC = EditProgramVC()
+        
+        if !CurrentProgram.isPublisher! {
+            User.isSetUp = false
+            CurrentProgram.isPublisher = true
+            FireStoreManager.updateUserSetUpTo(false)
+            FireStoreManager.updateProgramToPublisher()
+        }
+        
+        editProgramVC.switchedFromStudio = true
         editProgramVC.hidesBottomBarWhenPushed = true
         navigationController?.pushViewController(editProgramVC, animated: true)
     }

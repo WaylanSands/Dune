@@ -157,7 +157,7 @@ class SearchVC: UIViewController {
     func setupSearchController() {
         searchController.hidesNavigationBarDuringPresentation = false
         searchController.obscuresBackgroundDuringPresentation = false
-        searchController.searchBar.placeholder = "Search"
+        searchController.searchBar.placeholder = "Search channels by name"
         if #available(iOS 13.0, *) {
             searchController.searchBar.searchTextField.textColor = CustomStyle.primaryBlack
             searchController.searchBar.searchTextField.backgroundColor = .white
@@ -490,7 +490,7 @@ class SearchVC: UIViewController {
                     let documentID = eachDocument.documentID
                     let imageID = data["imageID"] as? String
                     
-                    if User.isPublisher! && documentID == CurrentProgram.ID! {
+                    if CurrentProgram.isPublisher! && documentID == CurrentProgram.ID! {
                     } else if imageID != nil {
                          let program = Program(data: data)
                         if !self.downloadedPrograms.contains(where: { $0.ID == program.ID }) {
@@ -531,7 +531,7 @@ extension SearchVC: UITableViewDelegate, UITableViewDataSource {
         programCell.program = program
         programCell.moreButton.addTarget(programCell, action: #selector(ProgramCell.moreUnwrap), for: .touchUpInside)
         programCell.programImageButton.addTarget(programCell, action: #selector(ProgramCell.playProgramIntro), for: .touchUpInside)
-        programCell.playProgramButton.addTarget(programCell, action: #selector(ProgramCell.playProgramIntro), for: .touchUpInside)
+//        programCell.playProgramButton.addTarget(programCell, action: #selector(ProgramCell.playProgramIntro), for: .touchUpInside)
         programCell.programSettingsButton.addTarget(programCell, action: #selector(ProgramCell.showSettings), for: .touchUpInside)
         programCell.subscribeButton.addTarget(programCell, action: #selector(ProgramCell.subscribeButtonPress), for: .touchUpInside)
         programCell.usernameButton.addTarget(programCell, action: #selector(ProgramCell.visitProfile), for: .touchUpInside)
@@ -595,7 +595,7 @@ extension SearchVC: ProgramCellDelegate {
     }
     
     func visitProfile(program: Program) {
-        if User.isPublisher! && CurrentProgram.programsIDs().contains(program.ID) {
+        if CurrentProgram.programsIDs().contains(program.ID) {
             let tabBar = MainTabController()
             tabBar.selectedIndex = 4
             if #available(iOS 13.0, *) {

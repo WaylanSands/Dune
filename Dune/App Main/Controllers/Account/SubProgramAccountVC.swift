@@ -374,7 +374,7 @@ class SubProgramAccountVC: UIViewController {
     }
     
     func privacyImage() -> UIImage {
-        if CurrentProgram.pendingChannels!.isEmpty {
+        if program.pendingChannels.isEmpty {
             return UIImage(named: "no-requests-pending")!
         } else {
            return UIImage(named: "requests-pending")!
@@ -698,7 +698,7 @@ class SubProgramAccountVC: UIViewController {
         subscribersVC.hidesBottomBarWhenPushed = true
         subscribersVC.isPublic = program.isPrivate
         subscribersVC.requestDelegate = self
-        subscribersVC.subChannel = program
+        subscribersVC.program = program
         navigationController?.pushViewController(subscribersVC, animated: true)
     }
     
@@ -813,7 +813,7 @@ extension SubProgramAccountVC :EpisodeCellDelegate {
     }
     
     func visitProfile(program: Program) {
-        if User.isPublisher! && CurrentProgram.programsIDs().contains(program.ID) {
+        if CurrentProgram.programsIDs().contains(program.ID) {
             let tabBar = MainTabController()
             tabBar.selectedIndex = 4
             if #available(iOS 13.0, *) {
@@ -968,7 +968,7 @@ extension SubProgramAccountVC: DuneAudioPlayerDelegate {
         let indexPath = IndexPath(item: atIndex, section: 0)
         if episodeTV.indexPathsForVisibleRows!.contains(indexPath) {
             let cell = episodeTV.cellForRow(at: IndexPath(item: atIndex, section: 0)) as! EpisodeCell
-            cell.playEpisodeButton.setImage(nil, for: .normal)
+//            cell.playEpisodeButton.setImage(nil, for: .normal)
             cell.playbackBarView.setupPlaybackBar()
             activeCell = cell
         }

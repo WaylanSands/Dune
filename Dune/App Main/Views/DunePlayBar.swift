@@ -76,7 +76,7 @@ class DunePlayBar: UIView {
     var yPosition: CGFloat!
     
     var likedEpisode = false
-    var episodeIndex: Int!
+//    var episodeIndex: Int!
     var episodeID: String!
     var image: UIImage!
     var likeCount = 0
@@ -106,7 +106,7 @@ class DunePlayBar: UIView {
     
     let pullView: UIView = {
         let view = UIView()
-        view.backgroundColor = CustomStyle.white.withAlphaComponent(0.2)
+        view.backgroundColor = CustomStyle.white.withAlphaComponent(0.3)
         view.layer.cornerRadius = 2.5
         return view
     }()
@@ -831,6 +831,8 @@ class DunePlayBar: UIView {
      }
     
     func setEpisodeDetailsWith(episode: Episode, image: UIImage) {
+        EpisodeManager.image = image
+        EpisodeManager.currentEpisode = episode
         audioPlayerDelegate.playedEpisode(episode: episode)
         setupLikeButtonAndCounterFor(episode: episode)
         programNameLabel.text = episode.programName
@@ -840,6 +842,21 @@ class DunePlayBar: UIView {
         programImageView.image = image
         largeImageView.image = image
         self.episode = episode
+    }
+    
+    func continueState() {
+        guard let image = EpisodeManager.image else { return }
+        guard let episode = EpisodeManager.currentEpisode else { return }
+        audioPlayerDelegate.playedEpisode(episode: episode)
+        setupLikeButtonAndCounterFor(episode: episode)
+        programNameLabel.text = episode.programName
+        largeNameLabel.text = "@\(episode.username)"
+        captionTextView.text = episode.caption
+        captionLabel.text = episode.caption
+        programImageView.image = image
+        largeImageView.image = image
+        self.episode = episode
+        fastTrackToPosition()
     }
     
     func playOrPauseEpisodeWith(audioID: String) {
@@ -1167,9 +1184,21 @@ class DunePlayBar: UIView {
         isClosed = true
         isOpen = false
         let position = yPosition - 64
+        EpisodeManager.yPosition = yPosition
         UIView.animateKeyframes(withDuration: 0.2, delay: 0, options: .beginFromCurrentState, animations: {
             self.frame = CGRect(x: 0, y: position, width: self.frame.width, height: self.playerHeight)
         }, completion: nil)
+    }
+    
+    func fastTrackToPosition() {
+        animatingEpisode = false
+        isOutOfPosition = false
+        isTransitioning = false
+        panningAllowed = true
+        isClosed = true
+        isOpen = false
+        let position = EpisodeManager.yPosition - 64
+        self.frame = CGRect(x: 0, y: position, width: self.frame.width, height: self.playerHeight)
     }
     
     func transitionOutOfView() {

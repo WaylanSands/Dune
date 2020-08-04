@@ -28,7 +28,6 @@ class SingleProgramProfileVC: UIViewController {
     var currentIndex: Int = 0
     
     var selectedCellRow: Int?
-    var subAccounts = [Program]()
     var program: Program!
     
     lazy var headerBarButtons: [UIButton] = [episodesButton, subscriptionsButton, mentionsButton]
@@ -309,10 +308,10 @@ class SingleProgramProfileVC: UIViewController {
         addWebLink()
         
         nameLabel.text = program.name
-        usernameLabel.text = "@\(program.username)"
+        repCountLabel.text = program.rep.roundedWithAbbreviations
         categoryLabel.text = program.primaryCategory
+        usernameLabel.text = "@\(program.username)"
         summaryTextView.text = program.summary
-        repCountLabel.text = String(program.rep)
         setMainImage()
         
         if  unwrapped {
@@ -793,6 +792,7 @@ class SingleProgramProfileVC: UIViewController {
         let subscribersVC = SubscribersVC(programName: program.name, programID: program.ID, programIDs: program.programsIDs(), subscriberIDs: program.subscriberIDs)
         subscribersVC.hidesBottomBarWhenPushed = true
         subscribersVC.isPublic = program.isPrivate
+        subscribersVC.program = program
         navigationController?.pushViewController(subscribersVC, animated: true)
     }
     
@@ -864,7 +864,9 @@ extension SingleProgramProfileVC: UIScrollViewDelegate {
         if maximumOffset - currentOffset <= 90.0 {
             switch accountBottomVC.activeTV {
             case accountBottomVC.episodeTV:
-                accountBottomVC.fetchProgramsEpisodes()
+                if !accountBottomVC.isFetchingEpisodes {
+                    accountBottomVC.fetchProgramsEpisodes()
+                }
             case accountBottomVC.mentionTV:
                 print("mentionTV")
             case accountBottomVC.subscriptionTV:

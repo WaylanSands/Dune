@@ -157,7 +157,7 @@ class CreateUserVC: UIViewController {
         noThanksButton.heightAnchor.constraint(equalToConstant: 40).isActive = true
         noThanksButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
         noThanksButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
-        noThanksButton.bottomAnchor.constraint(equalTo: nextButton.topAnchor, constant: -10).isActive = true
+        noThanksButton.topAnchor.constraint(equalTo: nextButton.bottomAnchor, constant: 10).isActive = true
 
         view.bringSubviewToFront(progressBar)
         

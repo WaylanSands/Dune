@@ -20,7 +20,7 @@ class RecordBoothVC: UIViewController {
         case paused
     }
     
-    enum recordingScope {
+    enum RecordingScope {
         case intro
         case episode
     }
@@ -34,7 +34,7 @@ class RecordBoothVC: UIViewController {
     var audioRecorder: AVAudioRecorder!
     var audioPlayer: AVAudioPlayer!
 
-    var currentScope: recordingScope!
+    var currentScope: RecordingScope!
     
     let mergedFileName = NSUUID().uuidString
     let fileName = NSUUID().uuidString
@@ -66,6 +66,7 @@ class RecordBoothVC: UIViewController {
     
     var networkingIndicator = NetworkingProgress()
     
+    let boothBackOutAlert = CustomAlertView(alertType: .boothBackOut)
     let nextVersionAlert = CustomAlertView(alertType: .nextVersion)
 
     lazy var tabBar = navigationController?.tabBarController?.tabBar
@@ -257,6 +258,7 @@ class RecordBoothVC: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         navigationController?.interactivePopGestureRecognizer?.isEnabled = false
+        boothBackOutAlert.alertDelegate = self
         configureAudioSessionCategory()
         setupNavigationBar()
         resetEditingModes()
@@ -318,7 +320,16 @@ class RecordBoothVC: UIViewController {
         }
         
         if currentScope == .intro {
-         resetTabBar()
+            resetTabBar()
+        }
+    }
+    
+    @objc func popVC() {
+        if currentState != .ready {
+            view.addSubview(boothBackOutAlert)
+        } else {
+            resetViews()
+            navigationController?.popViewController(animated: true)
         }
     }
     
@@ -349,7 +360,9 @@ class RecordBoothVC: UIViewController {
         let imgBackArrow = #imageLiteral(resourceName: "back-button-white")
         navigationController?.navigationBar.backIndicatorImage = imgBackArrow
         navigationController?.navigationBar.backIndicatorTransitionMaskImage = imgBackArrow
-        navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: #selector(resetViews))
+//        navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: #selector(resetViews))
+        
+        navigationItem.leftBarButtonItem = UIBarButtonItem(image: UIImage(named: "back-button-white"), style: .plain, target: self, action: #selector(popVC))
         
         let navBar = navigationController?.navigationBar
         navBar?.barStyle = .black
@@ -551,7 +564,17 @@ class RecordBoothVC: UIViewController {
             
             print("Storing episode on Firebase")
             let fileExtension = ".\(recordingURL.pathExtension)"
-            let audioTrack = FileManager.getAudioFileFromTempDirectory(fileName: fileName, fileExtension: fileExtension)
+            
+            var name: String
+            
+            if currentOption != nil {
+                name = mergedFileName
+            } else {
+                name = fileName
+            }
+            
+            
+            let audioTrack = FileManager.getAudioFileFromTempDirectory(fileName: name, fileExtension: fileExtension)
             
             guard let episode = audioTrack else { return }
 
@@ -654,11 +677,6 @@ class RecordBoothVC: UIViewController {
         musicView.isHidden = false
     }
     
-    func animateToRecordingState() {
-        UIView.animate(withDuration: 4, delay: 0, options: .curveEaseInOut, animations: {
-        }, completion: nil)
-    }
-    
     
     // MARK: Record button press
    @objc func recordButtonPress() {
@@ -670,7 +688,6 @@ class RecordBoothVC: UIViewController {
             recordButton.setImage(nil, for: .normal)
             startRecording()
             recordingSnapshot = 0
-            animateToRecordingState()
             navigationItem.rightBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
         case .recording:
             currentState = .preview
@@ -688,7 +705,7 @@ class RecordBoothVC: UIViewController {
             rightHandLabel.isHidden = false
             leftHandLabel.isHidden = false
             updatePlaybackSliderTimeLabels()
-            if currentScope == .intro{
+            if currentScope == .intro {
                 navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Use", style: .plain, target: self, action: #selector(saveIntroAndReturnToProfile))
                 navigationItem.rightBarButtonItem!.setTitleTextAttributes(CustomStyle.barButtonAttributes, for: .normal)
             } else {
@@ -945,7 +962,7 @@ extension RecordBoothVC: AVAudioRecorderDelegate, AVAudioPlayerDelegate {
         recordingURL = FileManager.getTempDirectory().appendingPathComponent(fileName + ".m4a")
         let settings = [
             AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
-            AVSampleRateKey: 16000,
+            AVSampleRateKey: 12000,
             AVNumberOfChannelsKey: 2,
             AVEncoderAudioQualityKey: AVAudioQuality.max.rawValue
         ]
@@ -1152,5 +1169,17 @@ extension RecordBoothVC: BackgroundMusicDelegate {
         startTime = 0
         endTime = 0
     }
+}
+
+extension RecordBoothVC: CustomAlertDelegate {
+    
+    func primaryButtonPress() {
+        navigationController?.popViewController(animated: true)
+    }
+    
+    func cancelButtonPress() {
+        //
+    }
+
 }
 

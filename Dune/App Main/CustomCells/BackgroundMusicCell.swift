@@ -13,6 +13,7 @@ class BackgroundMusicCell: UITableViewCell {
     
     var track: MusicOption!
     var isSelectedCell = false
+    var spinner = UIActivityIndicatorView(style: .white)
     
     let playPauseButton: UIButton = {
        let button = UIButton()
@@ -113,14 +114,20 @@ class BackgroundMusicCell: UITableViewCell {
         trackTime.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -20).isActive = true
         trackTime.centerYAnchor.constraint(equalTo: self.centerYAnchor).isActive = true
         trackTime.widthAnchor.constraint(equalToConstant: 50).isActive = true
+
+        cellContentButton.addSubview(spinner)
+        spinner.translatesAutoresizingMaskIntoConstraints = false
+        spinner.centerYAnchor.constraint(equalTo: trackTime.centerYAnchor).isActive = true
+        spinner.centerXAnchor.constraint(equalTo: trackTime.centerXAnchor).isActive = true
+        spinner.heightAnchor.constraint(equalToConstant: 20).isActive = true
+        spinner.widthAnchor.constraint(equalToConstant: 20).isActive = true
+        spinner.startAnimating()
+        spinner.isHidden = true
     }
     
     func activate() {
         playPauseButton.setImage(UIImage(named: "pause-music-icon"), for: .normal)
-//        cellContentButton.backgroundColor = CustomStyle.secondShade
-//        trackArtistLabel.textColor = CustomStyle.primaryblack
-//        trackTitleLabel.textColor = CustomStyle.primaryblack
-//        trackTime.textColor = CustomStyle.primaryblack
+        trackTime.textColor = .white
     }
     
     func deactivateCell() {

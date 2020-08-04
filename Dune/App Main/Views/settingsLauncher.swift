@@ -149,6 +149,8 @@ extension SettingsLauncher: UICollectionViewDelegateFlowLayout, UICollectionView
                   self.settingsDelegate!.selectionOf(setting: setting.name)
             case .program:
                 self.settingsDelegate!.selectionOf(setting: setting.name)
+            default:
+                 self.settingsDelegate!.selectionOf(setting: setting.name)
             }
         }
         handleDismiss()

@@ -285,7 +285,7 @@ class ProgramProfileBottomVC: UIViewController {
             if episodeItems.count - downloadedEpisodes.count < endIndex {
                 endIndex = episodeItems.count - downloadedEpisodes.count
             }
-            
+
             endIndex += epsStartingIndex
             let items = Array(episodeItems[epsStartingIndex..<endIndex])
             epsStartingIndex = downloadedEpisodes.count + items.count
@@ -452,7 +452,7 @@ extension ProgramProfileBottomVC: UITableViewDelegate, UITableViewDataSource {
             episodeCell.episode = episode
             episodeCell.episodeSettingsButton.addTarget(episodeCell, action: #selector(EpisodeCell.showSettings), for: .touchUpInside)
             episodeCell.programImageButton.addTarget(episodeCell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
-            episodeCell.playEpisodeButton.addTarget(episodeCell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
+//            episodeCell.playEpisodeButton.addTarget(episodeCell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
             episodeCell.usernameButton.addTarget(episodeCell, action: #selector(EpisodeCell.visitProfile), for: .touchUpInside)
             episodeCell.commentButton.addTarget(episodeCell, action: #selector(EpisodeCell.showComments), for: .touchUpInside)
             episodeCell.likeButton.addTarget(episodeCell, action: #selector(EpisodeCell.likeButtonPress), for: .touchUpInside)
@@ -483,7 +483,7 @@ extension ProgramProfileBottomVC: UITableViewDelegate, UITableViewDataSource {
             let programCell = tableView.dequeueReusableCell(withIdentifier: "programCell") as! ProgramCell
             programCell.subscribeButton.addTarget(programCell, action: #selector(ProgramCell.subscribeButtonPress), for: .touchUpInside)
             programCell.programImageButton.addTarget(programCell, action: #selector(ProgramCell.playProgramIntro), for: .touchUpInside)
-            programCell.playProgramButton.addTarget(programCell, action: #selector(ProgramCell.playProgramIntro), for: .touchUpInside)
+//            programCell.playProgramButton.addTarget(programCell, action: #selector(ProgramCell.playProgramIntro), for: .touchUpInside)
             programCell.programSettingsButton.addTarget(programCell, action: #selector(ProgramCell.showSettings), for: .touchUpInside)
             programCell.usernameButton.addTarget(programCell, action: #selector(ProgramCell.visitProfile), for: .touchUpInside)
             programCell.moreButton.addTarget(programCell, action: #selector(ProgramCell.moreUnwrap), for: .touchUpInside)
@@ -611,7 +611,7 @@ extension ProgramProfileBottomVC: DuneAudioPlayerDelegate {
         case .episode:
             if episodeTV.indexPathsForVisibleRows!.contains(indexPath) {
                 let cell = episodeTV.cellForRow(at: IndexPath(item: atIndex, section: 0)) as! EpisodeCell
-                cell.playEpisodeButton.setImage(nil, for: .normal)
+//                cell.playEpisodeButton.setImage(nil, for: .normal)
                 cell.playbackBarView.setupPlaybackBar()
                 activeEpisodeCell = cell
             }
@@ -733,7 +733,7 @@ extension ProgramProfileBottomVC: ProgramCellDelegate, MentionCellDelegate {
             return
         }
         
-        if User.isPublisher! && CurrentProgram.programsIDs().contains(program.ID) {
+        if CurrentProgram.programsIDs().contains(program.ID) {
             let tabBar = MainTabController()
             tabBar.selectedIndex = 4
             if #available(iOS 13.0, *) {

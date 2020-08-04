@@ -40,6 +40,7 @@ struct CurrentProgram {
     static var subscriptionIDs: [String]?
     static var episodeIDs: [[String: Any]]?
     static var subscriberIDs: [String]?
+    static var isPublisher: Bool?
     
     // Private Channels
     static var privacyStatus: PrivacyStatus?
@@ -70,6 +71,7 @@ struct CurrentProgram {
         episodeIDs = data["episodeIDs"] as? [[String: Any]]
         subscriberIDs = data["subscriberIDs"] as? [String]
         subscriptionIDs = data["subscriptionIDs"] as? [String]
+        isPublisher = data["isPublisher"] as? Bool
         
         // Private channel
         pendingChannels = data["pendingChannels"] as? [String]
@@ -121,6 +123,7 @@ struct CurrentProgram {
     static func signOutProgram() {
         pendingChannels = nil
         deniedChannels = nil
+        isPublisher = nil
         rep = nil
         ID = nil
         name = nil

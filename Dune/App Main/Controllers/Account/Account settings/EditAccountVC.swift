@@ -581,7 +581,7 @@ extension EditAccountVC: CustomDatePickerDelegate {
 // Alert publishers about changing name
 extension EditAccountVC: UITextFieldDelegate {
     func textFieldDidBeginEditing(_ textField: UITextField) {
-        if textField == nameTextField && User.isPublisher! {
+        if textField == nameTextField && CurrentProgram.isPublisher! {
             activeTextField = "displayName"
             DispatchQueue.main.async {
                 UIApplication.shared.windows.last?.addSubview(self.changingDisplayName)

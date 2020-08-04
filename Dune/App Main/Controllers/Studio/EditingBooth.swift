@@ -20,11 +20,18 @@ class EditingBoothVC: UIViewController {
         case paused
     }
     
+    enum RecordingScope {
+        case intro
+        case episode
+    }
+    
     var selectedProgram: Program?
     var duration: Double?
     var caption: String?
     var tags: [String]?
     
+    var currentScope: RecordingScope!
+
     var recordingWaveFeedbackLink: CADisplayLink!
     var playbackLink: CADisplayLink!
     
@@ -65,9 +72,10 @@ class EditingBoothVC: UIViewController {
 
     lazy var tabBar = navigationController?.tabBarController?.tabBar
    
-    let nextVersionAlert = CustomAlertView(alertType: .nextVersion)
-    
+    let boothBackOutAlert = CustomAlertView(alertType: .boothBackOut)
     let tooShortAlert = CustomAlertView(alertType: .shortAudioLength)
+    let introTooShortAlert = CustomAlertView(alertType: .shortIntroLength)
+    let nextVersionAlert = CustomAlertView(alertType: .nextVersion)
     let audioTooLong = CustomAlertView(alertType: .audioTooLong)
     
     let responsiveSoundWave: ResponsiveWaveformView = {
@@ -220,7 +228,7 @@ class EditingBoothVC: UIViewController {
     
     let redoButton: UIButton = {
         let button = UIButton()
-        button.setImage(UIImage(named: "switch-account-icon"), for: .normal)
+        button.setImage(UIImage(named: "redo-icon"), for: .normal)
         button.layer.cornerRadius = 24
         button.clipsToBounds = true
         button.addTarget(self, action: #selector(recordAgainButtonPress), for: .touchUpInside)
@@ -252,6 +260,7 @@ class EditingBoothVC: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         navigationController?.interactivePopGestureRecognizer?.isEnabled = false
+        boothBackOutAlert.alertDelegate = self
         setupNavigationBar()
         resetEditingModes()
         setProgramImage()
@@ -295,7 +304,15 @@ class EditingBoothVC: UIViewController {
             rightHandLabel.isHidden = false
             leftHandLabel.isHidden = false
             updatePlaybackSliderTimeLabels()
-            navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Next", style: .plain, target: self, action: #selector(continueButtonPress))
+            
+            if currentScope == .intro {
+                navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Use", style: .plain, target: self, action: #selector(saveIntroAndReturnToProfile))
+                navigationItem.rightBarButtonItem!.setTitleTextAttributes(CustomStyle.barButtonAttributes, for: .normal)
+            } else {
+                navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Next", style: .plain, target: self, action: #selector(continueButtonPress))
+                navigationItem.rightBarButtonItem!.setTitleTextAttributes(CustomStyle.barButtonAttributes, for: .normal)
+            }
+            
             navigationItem.rightBarButtonItem!.setTitleTextAttributes(CustomStyle.barButtonAttributes, for: .normal)
             
             if wasTrimmed {
@@ -334,6 +351,20 @@ class EditingBoothVC: UIViewController {
         if audioPlayer != nil {
             audioPlayer.stop()
         }
+        
+        if currentScope == .intro {
+            resetTabBar()
+        }
+    }
+    
+    @objc func popVC() {
+        if currentState != .ready {
+            view.addSubview(boothBackOutAlert)
+        } else {
+            resetViews()
+            print("popViewController")
+            navigationController?.popViewController(animated: true)
+        }
     }
     
     @objc func resetViews() {
@@ -354,7 +385,7 @@ class EditingBoothVC: UIViewController {
         let imgBackArrow = #imageLiteral(resourceName: "back-button-white")
         navigationController?.navigationBar.backIndicatorImage = imgBackArrow
         navigationController?.navigationBar.backIndicatorTransitionMaskImage = imgBackArrow
-        navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: #selector(resetViews))
+        navigationItem.leftBarButtonItem = UIBarButtonItem(image: UIImage(named: "back-button-white"), style: .plain, target: self, action: #selector(popVC))
         
         let navBar = navigationController?.navigationBar
         navBar?.barStyle = .black
@@ -387,6 +418,74 @@ class EditingBoothVC: UIViewController {
             programImageView.image = selectedProgram?.image
             view.backgroundColor = selectedProgram!.image!.averageColor
         }
+    }
+    
+    @objc func saveIntroAndReturnToProfile() {
+        
+        if recordingSnapshot >= 10 {
+            view.addSubview(networkingIndicator)
+            networkingIndicator.taskLabel.text = "Uploading Intro"
+            
+            print("Storing episode on Firebase")
+            let fileExtension = ".\(recordingURL.pathExtension)"
+            
+            var name: String
+            
+            if currentOption != nil {
+                name = mergedFileName
+            } else {
+                name = fileName
+            }
+            
+            let audioTrack = FileManager.getAudioFileFromTempDirectory(fileName: name, fileExtension: fileExtension)
+            
+            guard let episode = audioTrack else { return }
+
+            FireStorageManager.storeIntroAudio(fileName: fileName + fileExtension, data: episode) { url in
+                
+                if self.selectedProgram == nil {
+                    CurrentProgram.hasIntro = true
+                    CurrentProgram.introPath = url.path
+                    CurrentProgram.introID = self.fileName + fileExtension
+                    
+                    if !CurrentProgram.repMethods!.contains("intro") {
+                        FireStoreManager.updateProgramRep(programID: CurrentProgram.ID!, repMethod: "intro", rep: 10)
+                        CurrentProgram.repMethods?.append("intro")
+                        CurrentProgram.rep! += 10
+                    }
+                    
+                    DispatchQueue.global(qos: .userInitiated).async {
+                        FireStoreManager.addIntroToProgram(programID: CurrentProgram.ID!, introID: self.fileName + fileExtension, introPath: url.path)
+                    }
+                } else {
+                    let program = self.getSelectedProgram()
+                    program.introID = self.fileName + fileExtension
+                    program.introPath = url.path
+                    program.hasIntro = true
+                    DispatchQueue.global(qos: .userInitiated).async {
+                        FireStoreManager.addIntroToProgram(programID: program.ID, introID: self.fileName + fileExtension, introPath: url.path)
+                    }
+                    if !program.repMethods.contains("intro") {
+                        FireStoreManager.updateProgramRep(programID: program.ID, repMethod: "intro", rep: 10)
+                        FireStoreManager.updateProgramMethodsUsed(programID: program.ID, repMethod: "intro")
+                        program.rep += 10
+                        guard let index = CurrentProgram.subPrograms?.firstIndex(where: { $0.ID == program.ID }) else { return }
+                        CurrentProgram.subPrograms![index] = program
+                    }
+                }
+                
+                self.networkingIndicator.removeFromSuperview()
+                self.resetTabBar()
+                self.navigationController?.popToRootViewController(animated: true)
+            }
+        } else {
+            view.addSubview(introTooShortAlert)
+        }
+    }
+    
+    func getSelectedProgram() -> Program {
+        let program = CurrentProgram.subPrograms?.first(where: { $0.ID == selectedProgram?.ID })
+        return program!
     }
     
     func styleForScreens() {
@@ -646,7 +745,15 @@ class EditingBoothVC: UIViewController {
             rightHandLabel.isHidden = false
             leftHandLabel.isHidden = false
             updatePlaybackSliderTimeLabels()
-            navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Next", style: .plain, target: self, action: #selector(continueButtonPress))
+            
+            if currentScope == .intro {
+                navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Use", style: .plain, target: self, action: #selector(saveIntroAndReturnToProfile))
+                navigationItem.rightBarButtonItem!.setTitleTextAttributes(CustomStyle.barButtonAttributes, for: .normal)
+            } else {
+                navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Next", style: .plain, target: self, action: #selector(continueButtonPress))
+                navigationItem.rightBarButtonItem!.setTitleTextAttributes(CustomStyle.barButtonAttributes, for: .normal)
+            }
+            
             navigationItem.rightBarButtonItem!.setTitleTextAttributes(CustomStyle.barButtonAttributes, for: .normal)
         case .preview:
             currentState = .playing
@@ -805,8 +912,8 @@ class EditingBoothVC: UIViewController {
         let compositionAudioTrack1:AVMutableCompositionTrack = composition.addMutableTrack(withMediaType: AVMediaType.audio, preferredTrackID: CMPersistentTrackID())!
         let compositionAudioTrack2:AVMutableCompositionTrack = composition.addMutableTrack(withMediaType: AVMediaType.audio, preferredTrackID: CMPersistentTrackID())!
         
-        let documentDirectoryURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first! as URL
-        let destinationUrl = documentDirectoryURL.appendingPathComponent(mergedFileName + ".m4a")
+        let tempDirectory = FileManager.getTempDirectory()
+        let destinationUrl = tempDirectory.appendingPathComponent(mergedFileName + ".m4a")
         
         let fileManager = FileManager.default
         
@@ -898,8 +1005,8 @@ extension EditingBoothVC: AVAudioRecorderDelegate, AVAudioPlayerDelegate {
         let settings = [
             AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
             AVSampleRateKey: 12000,
-            AVNumberOfChannelsKey: 1,
-            AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
+            AVNumberOfChannelsKey: 2,
+            AVEncoderAudioQualityKey: AVAudioQuality.max.rawValue
         ]
         do {
             audioRecorder = try AVAudioRecorder(url: recordingURL, settings: settings)
@@ -1110,5 +1217,17 @@ extension EditingBoothVC: BackgroundMusicDelegate {
         startTime = 0
         endTime = 0
     }
+}
+
+extension EditingBoothVC: CustomAlertDelegate {
+    
+    func primaryButtonPress() {
+        navigationController?.popViewController(animated: true)
+    }
+    
+    func cancelButtonPress() {
+        //
+    }
+
 }
 

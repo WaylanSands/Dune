@@ -25,7 +25,8 @@ class CommentThreadVC: UIViewController {
     lazy var passThoughView = PassThoughView(frame: CGRect(x: 0, y: 0, width: view.frame.width, height: view.frame.height))
     var commentTextView = CommentTextView()
     let appDelegate = UIApplication.shared.delegate as! AppDelegate
-    let nonPublisherAlert = CustomAlertView(alertType: .notAPublisher)
+    let publisherNotSetUpAlert = CustomAlertView(alertType: .publisherNotSetUp)
+    let listenerNotSetUpAlert = CustomAlertView(alertType: .listenerNotSetUp)
 
     let customNavBar: CustomNavBar = {
         let nav = CustomNavBar()
@@ -89,7 +90,8 @@ class CommentThreadVC: UIViewController {
         tableView.register(CommentCell.self, forCellReuseIdentifier: "commentCell")
         commentTextView.commentView.delegate = self
         commentTextView.commentDelegate = self
-        nonPublisherAlert.alertDelegate = self
+        publisherNotSetUpAlert.alertDelegate = self
+        listenerNotSetUpAlert.alertDelegate = self
         tableView.dataSource = self
         tableView.delegate = self
     }
@@ -277,8 +279,14 @@ extension CommentThreadVC: UITextViewDelegate {
     }
     
     func textViewDidChange(_ textView: UITextView) {
-        if !User.isPublisher! || CurrentProgram.imagePath == nil {
-            UIApplication.shared.windows.last?.addSubview(nonPublisherAlert)
+        
+//        if !User.isPublisher! || CurrentProgram.imagePath == nil {
+//            UIApplication.shared.windows.last?.addSubview(nonPublisherAlert)
+//            textView.text = ""
+//        }
+        
+        if !User.isSetUp! {
+            UIApplication.shared.windows.last?.addSubview(publisherNotSetUpAlert)
             textView.text = ""
         }
         
@@ -324,26 +332,29 @@ extension CommentThreadVC: UITextViewDelegate {
 extension CommentThreadVC: CommentCellDelegate {
   
     func visitProfile(program: Program) {
-        if User.isPublisher! && CurrentProgram.programsIDs().contains(program.ID) {
-             let tabBar = MainTabController()
-             tabBar.selectedIndex = 4
-             if #available(iOS 13.0, *) {
-                 let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
-                  sceneDelegate.window?.rootViewController = tabBar
-             } else {
+        if CurrentProgram.programsIDs().contains(program.ID) {
+            let tabBar = MainTabController()
+            tabBar.selectedIndex = 4
+            if #available(iOS 13.0, *) {
+                let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
+                sceneDelegate.window?.rootViewController = tabBar
+            } else {
                 let appDelegate = UIApplication.shared.delegate as! AppDelegate
-                  appDelegate.window?.rootViewController = tabBar
-             }
-         } else {
-             if program.isPrimaryProgram && !program.programIDs!.isEmpty  {
-                 let programVC = ProgramProfileVC()
-                 programVC.program = program
-                 navigationController?.pushViewController(programVC, animated: true)
-             } else {
-                 let programVC = SingleProgramProfileVC(program: program)
-                 navigationController?.pushViewController(programVC, animated: true)
-             }
-         }
+                appDelegate.window?.rootViewController = tabBar
+            }
+        } else if program.isPublisher {
+            if program.isPrimaryProgram && !program.programIDs!.isEmpty  {
+                let programVC = ProgramProfileVC()
+                programVC.program = program
+                navigationController?.pushViewController(programVC, animated: true)
+            } else {
+                let programVC = SingleProgramProfileVC(program: program)
+                navigationController?.pushViewController(programVC, animated: true)
+            }
+        } else {
+            let programVC = ListenerProfileVC(program: program)
+            navigationController?.pushViewController(programVC, animated: true)
+        }
     }
    
     func fetchSubCommentsFor(comment: Comment) {
@@ -464,9 +475,15 @@ extension CommentThreadVC: commentTextViewDelegate {
 extension CommentThreadVC: CustomAlertDelegate {
    
     func primaryButtonPress() {
-        let editProgramVC = EditProgramVC()
-        editProgramVC.hidesBottomBarWhenPushed = true
-        navigationController?.pushViewController(editProgramVC, animated: true)
+        if CurrentProgram.isPublisher! {
+            let editProgramVC = EditProgramVC()
+            editProgramVC.hidesBottomBarWhenPushed = true
+            navigationController?.pushViewController(editProgramVC, animated: true)
+        } else {
+            let editListenerVC = EditListenerVC()
+            editListenerVC.hidesBottomBarWhenPushed = true
+            navigationController?.pushViewController(editListenerVC, animated: true)
+        }
     }
     
     func cancelButtonPress() {

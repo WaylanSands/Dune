@@ -128,11 +128,14 @@ class AccountSettingsVC: UIViewController {
         return label
     }()
     
-    let privateChannelToggle: UISwitch = {
+    lazy var privateChannelToggle: UISwitch = {
         let toggle = UISwitch()
         toggle.isOn = false
         toggle.onTintColor = CustomStyle.primaryBlue
         toggle.addTarget(self, action: #selector(privateToggled), for: .valueChanged)
+        if !CurrentProgram.isPublisher! {
+            toggle.isEnabled = false
+        }
         return toggle
     }()
     
@@ -756,11 +759,26 @@ class AccountSettingsVC: UIViewController {
     @objc func privateToggled() {
         switch privateChannelToggle.isOn {
         case true:
+            print("was true")
             FireStoreManager.changeChannel(state: .madePrivate)
             CurrentProgram.privacyStatus = .madePrivate
         case false:
+            subscribeCurrentInvites()
             FireStoreManager.changeChannel(state: .madePublic)
-            CurrentProgram.privacyStatus = .madePublic
+            FireStoreManager.revertChannelToPublicWith(ID: CurrentProgram.ID!) {
+                CurrentProgram.privacyStatus = .madePublic
+                CurrentProgram.pendingChannels = []
+                CurrentProgram.deniedChannels = []
+                print("Success reverting")
+            }
+        }
+    }
+    
+    func subscribeCurrentInvites() {
+        let inviteIDs = CurrentProgram.pendingChannels! + CurrentProgram.deniedChannels!
+        for each in inviteIDs {
+            CurrentProgram.subscriberIDs!.append(each)
+            CurrentProgram.subscriberCount! += 1
         }
     }
     

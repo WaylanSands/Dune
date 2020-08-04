@@ -178,7 +178,7 @@ extension EpisodeTagLookupVC: UITableViewDataSource, UITableViewDelegate {
         
         episodeCell.episodeSettingsButton.addTarget(episodeCell, action: #selector(EpisodeCell.showSettings), for: .touchUpInside)
         episodeCell.programImageButton.addTarget(episodeCell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
-        episodeCell.playEpisodeButton.addTarget(episodeCell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
+//        episodeCell.playEpisodeButton.addTarget(episodeCell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
         episodeCell.usernameButton.addTarget(episodeCell, action: #selector(EpisodeCell.visitProfile), for: .touchUpInside)
         episodeCell.likeButton.addTarget(episodeCell, action: #selector(EpisodeCell.likeButtonPress), for: .touchUpInside)
         episodeCell.commentButton.addTarget(episodeCell, action: #selector(EpisodeCell.showComments), for: .touchUpInside)
@@ -397,7 +397,7 @@ extension EpisodeTagLookupVC: DuneAudioPlayerDelegate {
 
     func updateActiveCell(atIndex: Int, forType: PlayBackType) {
         let cell = tableView.cellForRow(at: IndexPath(item: atIndex, section: 0)) as! EpisodeCell
-        cell.playEpisodeButton.setImage(nil, for: .normal)
+//        cell.playEpisodeButton.setImage(nil, for: .normal)
         cell.playbackBarView.setupPlaybackBar()
         activeCell = cell
     }

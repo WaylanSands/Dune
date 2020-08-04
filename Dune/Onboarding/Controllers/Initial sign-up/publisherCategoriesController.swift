@@ -29,7 +29,6 @@ class publisherCategoriesVC: UIViewController {
     let customNavBar: CustomNavBar = {
         let navBar = CustomNavBar()
         navBar.titleLabel.text = ""
-        navBar.rightButton.isHidden = true
         navBar.leftButton.addTarget(self, action: #selector(backButtonPress), for: .touchUpInside)
         return navBar
     }()

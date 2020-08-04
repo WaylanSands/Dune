@@ -16,7 +16,7 @@ class PublisherAddSummaryVC: UIViewController {
     let maxTagCharacters = 45
     
     let summaryPlaceholder = "Why should people subscribe, what insights do you offer?"
-    let tagPlaceholder = "Add three tags, each separated by a space"
+    let tagPlaceholder = "Add three topics, each separated by a space"
     
     var scrollContentHeightConstraint: NSLayoutConstraint!
     var tagContentWidthConstraint: NSLayoutConstraint!
@@ -163,7 +163,7 @@ class PublisherAddSummaryVC: UIViewController {
         textView.text = summaryPlaceholder
         textView.font = UIFont.systemFont(ofSize: 15, weight: .regular)
         textView.textContainer.maximumNumberOfLines = 12
-        textView.isUserInteractionEnabled = false
+//        textView.isUserInteractionEnabled = false
         textView.isScrollEnabled = false
         textView.textColor = CustomStyle.fourthShade
         textView.keyboardType = .twitter
@@ -179,7 +179,7 @@ class PublisherAddSummaryVC: UIViewController {
     
     let tagBarLabel: UILabel = {
         let label = UILabel()
-        label.text = "Channel tags"
+        label.text = "Channel topics"
         label.font = UIFont.systemFont(ofSize: 14, weight: .medium)
         label.textColor = CustomStyle.fifthShade
         return label
@@ -666,7 +666,7 @@ class PublisherAddSummaryVC: UIViewController {
             OneSignal.sendTags([ "onboarded" : true ])
             programRef.updateData([
                 "summary" :  CurrentProgram.summary!,
-                "tags" :  CurrentProgram.tags!
+                "tags" :  CurrentProgram.tags!,
             ]) { (error) in
                 if let error = error {
                     print("Error adding program Tags: \(error.localizedDescription)")
@@ -685,7 +685,7 @@ class PublisherAddSummaryVC: UIViewController {
 
     func presentSearchView() {
         let tabBar = MainTabController()
-        tabBar.selectedIndex = 1
+        tabBar.selectedIndex = 3
         
         if User.recommendedProgram != nil {
             let searchNav = tabBar.selectedViewController as! UINavigationController

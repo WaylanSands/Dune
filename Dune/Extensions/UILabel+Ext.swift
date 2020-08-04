@@ -20,7 +20,7 @@ extension UILabel {
         return Int(ceil(CGFloat(labelSize.height) / self.font!.lineHeight))
     }
     
-    func addlineSpacing(spacingValue: CGFloat = 2) {
+    func addLineSpacing(spacingValue: CGFloat = 2) {
 
         guard let textString = text else { return }
        
@@ -28,6 +28,7 @@ extension UILabel {
         let paragraphStyle = NSMutableParagraphStyle()
 
         paragraphStyle.lineSpacing = spacingValue
+        paragraphStyle.alignment = .center
 
         attributedString.addAttribute(
             .paragraphStyle,

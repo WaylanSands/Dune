@@ -20,6 +20,7 @@ class AccountTypeVC: UIViewController {
     
     let networkingIndicator = NetworkingProgress()
     let appDelegate = UIApplication.shared.delegate as! AppDelegate
+    let completionAlert = CustomAlertView(alertType: .finishSetup)
     let customNavBar = CustomNavBar()
     let db = Firestore.firestore()
     let device = UIDevice()
@@ -32,6 +33,7 @@ class AccountTypeVC: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         removeBackButtonIfRootView()
+        completionAlert.alertDelegate = self
         configureNavigation()
         styleForScreens()
         configureViews()
@@ -83,37 +85,40 @@ class AccountTypeVC: UIViewController {
     }
     
     @IBAction func accountTypeButtonPress(_ sender: UIButton) {
-        let loggedIn = UserDefaults.standard.bool(forKey: "loggedIn")
         
         if sender.titleLabel?.text == "Finish Setup" {
-            User.isPublisher = true
-            presentProgramNameVC()
+            view.addSubview(completionAlert)
         } else if sender.titleLabel?.text == "Start Listening" {
             networkingIndicator.taskLabel.text = "Fast tracking account"
             UIApplication.shared.keyWindow!.addSubview(self.networkingIndicator)
-
-            User.isPublisher = false
+            CurrentProgram.isPublisher = false
+            User.isSetUp = false
             fastTrack = true
+            updateOrCreateUser()
         }
         
+    }
+    
+    func updateOrCreateUser() {
+        let loggedIn = UserDefaults.standard.bool(forKey: "loggedIn")
+
         if loggedIn {
             updateReturningUser()
         } else if User.socialSignUp == true {
             signUpSocialUser()
         } else {
-           createNewUser()
+            createNewUser()
         }
-        print("Hit")
     }
     
     func createNewUser() {
         DispatchQueue.global(qos: .userInitiated).async {
-            print("creating new User")
+            print("creating new user")
             
-            Auth.auth().createUser(withEmail: User.email!, password: User.password!) { (result, error) in
+            Auth.auth().createUser(withEmail: User.email!, password: User.password!) { result, error in
                 
                 if error != nil {
-                    print("Theres been an Auth error\(error.debugDescription)")
+                    print("Theres been an Auth error\(error!.localizedDescription)")
                 } else {
                     
                     UserDefaults.standard.set(true, forKey: "loggedIn")
@@ -124,10 +129,10 @@ class AccountTypeVC: UIViewController {
                     self.db.collection("users").document(uid).setData([
                         "ID" : User.ID!,
                         "email": User.email!,
+                        "isSetUp" : User.isSetUp!,
                         "username": User.username!,
                         "displayName": User.username!,
                         "completedOnBoarding" : false,
-                        "isPublisher": User.isPublisher!,
                     ]) { err in
                         if let err = err {
                             print("Error creating new user document: \(err)")
@@ -157,6 +162,7 @@ class AccountTypeVC: UIViewController {
                 User.completedOnBoarding = true
                 CurrentProgram.hasIntro = false
                 CurrentProgram.hasMentions = false
+                CurrentProgram.isPublisher = false
                 CurrentProgram.programIDs = [String]()
                 CurrentProgram.name = User.username!
                 CurrentProgram.isPrimaryProgram = true
@@ -185,6 +191,8 @@ class AccountTypeVC: UIViewController {
                 let db = Firestore.firestore()
                 let userRef = db.collection("users").document(User.ID!)
                 let programRef = db.collection("programs").document(User.programID!)
+                    
+                    
                 
                 userRef.updateData([
                     "programID": User.programID!,
@@ -202,6 +210,7 @@ class AccountTypeVC: UIViewController {
                         
                         programRef.setData([
                             "subscriptionIDs" : CurrentProgram.subscriptionIDs!,
+                            "isPublisher" : CurrentProgram.isPublisher!,
                             "episodeIDs" : CurrentProgram.episodeIDs!,
                             "summary": CurrentProgram.summary ?? "",
                             "privacyStatus" : "madePublic",
@@ -238,6 +247,12 @@ class AccountTypeVC: UIViewController {
         }
     }
     
+    func presentDisplayNameVC() {
+        if let displayNameVC = UIStoryboard(name: "OnboardingPublisher", bundle: nil).instantiateViewController(withIdentifier: "displayNameVC") as? DisplayNameVC {
+            navigationController?.pushViewController(displayNameVC, animated: true)
+        }
+    }
+    
     func presentSearchVC() {
         DispatchQueue.main.async {
             self.networkingIndicator.removeFromSuperview()
@@ -269,7 +284,7 @@ class AccountTypeVC: UIViewController {
             let userRef = self.db.collection("users").document(User.ID!)
             
             userRef.updateData([
-                "isPublisher": User.isPublisher!
+                "isSetUp" : User.isSetUp!
             ]) { err in
                 if let err = err {
                     print("Error adding publisher type for returning user: \(err)")
@@ -287,7 +302,6 @@ class AccountTypeVC: UIViewController {
                     print("Error getting returing user's snapshot \(error!)")
                 }
                 
-                // Create a user singleton with the user's previous data
                 guard let data = snapshot?.data() else { return }
                 User.modelUser(data: data)
                 
@@ -314,9 +328,9 @@ class AccountTypeVC: UIViewController {
             
             userRef.setData([
                 "ID" : User.ID!,
+                "isSetUp" : User.isSetUp!,
                 "username" : User.username!,
                 "completedOnBoarding" : false,
-                "isPublisher" : User.isPublisher!,
                 ]) { error in
                 if error != nil {
                     print("Error attempting to signup Twitter user: \(error!.localizedDescription)")
@@ -338,6 +352,7 @@ class AccountTypeVC: UIViewController {
                 CurrentProgram.rep = 0
                 User.completedOnBoarding = true
                 CurrentProgram.hasIntro = false
+                CurrentProgram.isPublisher = false
                 CurrentProgram.hasMentions = false
                 CurrentProgram.tags = [String]()
                 CurrentProgram.repMethods = [String]()
@@ -385,6 +400,7 @@ class AccountTypeVC: UIViewController {
                         
                         programRef.setData([
                             "subscriptionIDs" :  CurrentProgram.subscriptionIDs!,
+                            "isPublisher" : CurrentProgram.isPublisher!,
                             "episodeIDs" : CurrentProgram.episodeIDs!,
                             "summary": CurrentProgram.summary!,
                             "privacyStatus" : "madePublic",
@@ -419,5 +435,24 @@ class AccountTypeVC: UIViewController {
     @objc func backButtonPress() {
         navigationController?.popViewController(animated: true)
     }
+    
+}
+
+extension AccountTypeVC: CustomAlertDelegate {
+    
+    func primaryButtonPress() {
+        presentProgramNameVC()
+        CurrentProgram.isPublisher = true
+        User.isSetUp = false
+        updateOrCreateUser()
+    }
+    
+    func cancelButtonPress() {
+        presentDisplayNameVC()
+        CurrentProgram.isPublisher =  false
+        User.isSetUp = false
+        updateOrCreateUser()
+    }
+    
     
 }

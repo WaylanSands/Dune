@@ -79,6 +79,84 @@ extension FireStoreManager {
         }
     }
     
+    static func revertChannelToPublicWith(ID: String, completion: @escaping () -> ()) {
+        DispatchQueue.global(qos: .background).async {
+            let programRef = db.collection("programs").document(ID)
+            print(1)
+            
+            programRef.getDocument { snapshot, error in
+                if let error = error {
+                    print("Error reverting channel: \(error.localizedDescription)")
+                } else {
+                         print(2)
+                    guard let data = snapshot!.data() else { return }
+                    let pendingChannelIDs = data["pendingChannels"] as! [String]
+                    let deniedChannelIDs = data["deniedChannels"] as! [String]
+                    let requestedIDs = pendingChannelIDs + deniedChannelIDs
+                    //                    subscribeChannelsWith(IDs: requestedIDs, to: ID)
+                         print(3)
+                    programRef.updateData([
+                        "pendingChannels" : [],
+                        "deniedChannels" : [],
+                    ]) { (error) in
+                        if let error = error {
+                            print("Error reverting channel to public: \(error.localizedDescription)")
+                        } else {
+                 print(4)
+                            if requestedIDs.count != 0 {
+                            for eachID in requestedIDs {
+                                let channelRef = db.collection("programs").document(eachID)
+                                let currentChannelRed = db.collection("programs").document(ID)
+                                                 print(5)
+                                channelRef.updateData(["subscriptionIDs" : FieldValue.arrayUnion([ID])]) { error in
+                                    if error != nil {
+                                        print("Error")
+                                    } else {
+                                        currentChannelRed.updateData([
+                                            "subscriberIDs" : FieldValue.arrayUnion([eachID]),
+                                            "subscriberCount" : FieldValue.increment(Double(1))
+                                        ]) { error in
+                                            if error != nil {
+                                                print("Error")
+                                            } else {
+                                                currentChannelRed.updateData([
+                                                    "subscriberIDs" : FieldValue.arrayUnion([eachID]),
+                                                    "subscriberCount" : FieldValue.increment(Double(1))
+                                                ])
+                                                completion()
+                                            }
+                                        }
+                                    }
+                                }
+                                }
+                            } else {
+                                 completion()
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    static func subscribeChannelsWith(IDs: [String], to ID: String) {
+        DispatchQueue.global(qos: .background).async {
+            
+            for eachID in IDs {
+                let channelRef = db.collection("programs").document(eachID)
+                let currentChannelRed = db.collection("programs").document(ID)
+                
+                channelRef.updateData(["subscriptionIDs" : FieldValue.arrayUnion([ID])])
+                
+                currentChannelRed.updateData([
+                    "subscriberIDs" : FieldValue.arrayUnion([eachID]),
+                    "subscriberCount" : FieldValue.increment(Double(1))
+                ])
+            }
+        }
+    }
+
+    
     
     static func requestInviteFor(channelID: String) {
         DispatchQueue.global(qos: .userInitiated).async {
@@ -403,18 +481,34 @@ extension FireStoreManager {
         }
     }
     
-    static func updateUserToPublisher() {
+    static func updateProgramToPublisher() {
         DispatchQueue.global(qos: .userInitiated).async {
             
-            let userRef = db.collection("users").document(User.ID!)
+            let programRef = db.collection("programs").document(CurrentProgram.ID!)
             
-            userRef.updateData([
+            programRef.updateData([
                 "isPublisher" : true
             ]) { (error) in
                 if let error = error {
-                    print("Error updating user to publisher: \(error.localizedDescription)")
+                    print("Error updating program to publisher: \(error.localizedDescription)")
                 } else {
-                    print("Successfully updating user to publisher")
+                    print("Successfully updating program to publisher")
+                }
+            }
+        }
+    }
+    
+    static func updateUserSetUpTo(_ isSetUp: Bool) {
+        DispatchQueue.global(qos: .userInitiated).async {
+            
+            let userRef = db.collection("users").document(User.ID!)
+            userRef.updateData([
+                "isSetUp" : isSetUp
+            ]) { (error) in
+                if let error = error {
+                    print("Error updating user to setup: \(error.localizedDescription)")
+                } else {
+                    print("Successfully setup")
                 }
             }
         }
@@ -445,8 +539,8 @@ extension FireStoreManager {
                 "ID" : programID,
                 "rep" : 15,
                 "repMethods" : [],
+                "isPublisher" : true,
                 "hasMentions" : false,
-                "CurrentProgram" : false,
                 "name" : programName,
                 "ownerID" : User.ID!,
                 "summary": summary,

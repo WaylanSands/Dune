@@ -78,7 +78,7 @@ struct FireBaseComments {
                 
         DispatchQueue.global(qos: .userInitiated).async {
             let userRef = db.collection("users").whereField("username", in: users)
-                        
+                                    
             userRef.getDocuments { snapshot, error in
                 if error != nil {
                     print("Error adding mention to program")

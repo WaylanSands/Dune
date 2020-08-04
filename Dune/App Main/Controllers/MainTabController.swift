@@ -15,10 +15,23 @@ class MainTabController: UITabBarController {
         setupTabBar()
     }
     
+    let thisView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .red
+        return view
+    }()
+    
     
     func setupTabBar() {
+
+        var accountController: UINavigationController
         
-        let accountController = UINavigationController(rootViewController: ProgramAccountVC())
+        if CurrentProgram.isPublisher! {
+            accountController = UINavigationController(rootViewController: ProgramAccountVC())
+        } else {
+            accountController = UINavigationController(rootViewController: ListenerAccountVC())
+        }
+        
         let mainFeedController = UINavigationController(rootViewController: MainFeedVC())
         let trendingController = UINavigationController(rootViewController: TrendingVC())
         let searchController = UINavigationController(rootViewController: SearchVC())
@@ -46,6 +59,6 @@ class MainTabController: UITabBarController {
         accountController.tabBarItem.imageInsets = UIEdgeInsets(top: 5, left: 0, bottom: -5, right: 0)
         accountController.tabBarItem.selectedImage = UIImage(imageLiteralResourceName: "account-icon-selected")
         
-        viewControllers = [mainFeedController, searchController, studioController, trendingController, accountController]
+        viewControllers = [mainFeedController, trendingController, studioController, searchController, accountController]
     }
 }

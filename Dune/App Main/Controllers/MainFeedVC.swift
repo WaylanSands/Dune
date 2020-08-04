@@ -63,6 +63,21 @@ class MainFeedVC: UIViewController {
         return view
     }()
     
+    let fakeTitleLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Daily feed"
+        label.textColor = .white
+        label.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
+        return label
+    }()
+    
+    let fakeNavBarView: UIView = {
+        let view = UIView()
+        view.backgroundColor = CustomStyle.blackNavBar
+        view.isHidden = true
+        return view
+    }()
+    
     let navLogoImage: UIImageView = {
         let imageView = UIImageView()
         imageView.image = UIImage(named: "nav-logo")
@@ -365,6 +380,18 @@ class MainFeedVC: UIViewController {
         audioPlayer.frame = CGRect(x: 0, y: view.frame.height, width: view.frame.width, height: 600)
         
         view.bringSubviewToFront(navBarView)
+        
+        view.addSubview(fakeNavBarView)
+        fakeNavBarView.translatesAutoresizingMaskIntoConstraints = false
+        fakeNavBarView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+        fakeNavBarView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        fakeNavBarView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        fakeNavBarView.heightAnchor.constraint(equalToConstant: UIDevice.current.navBarHeight()).isActive = true
+        
+        fakeNavBarView.addSubview(fakeTitleLabel)
+        fakeTitleLabel.translatesAutoresizingMaskIntoConstraints = false
+        fakeTitleLabel.bottomAnchor.constraint(equalTo: fakeNavBarView.bottomAnchor, constant: -12).isActive = true
+        fakeTitleLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
     }
     
     func configureRefreshControl() {
@@ -386,21 +413,24 @@ class MainFeedVC: UIViewController {
     }
     
     func fetchEpisodeIDs() {
-        FireStoreManager.fetchEpisodesItemsWith(with: CurrentProgram.subscriptionIDs!) { [weak self] items in
+        FireStoreManager.fetchEpisodesItemsWith(with: CurrentProgram.subscriptionIDs!) { [unowned self] items in
             DispatchQueue.main.async {
-                guard let self = self else { return }
                 self.refreshControl.endRefreshing()
                 if items.isEmpty {
                     self.resetTableView()
                     self.tableView.isHidden = true
+                    self.navBarView.isHidden = true
                     self.loadingView.isHidden = true
+                    self.fakeNavBarView.isHidden = false
                     self.noEpisodesLabel.isHidden = false
                     self.noEpisodesMainLabel.isHidden = false
                     self.navigationItem.title = ""
                 } else {
                     if items != self.episodeItems {
                         self.audioPlayer.itemCount = items.count
+                        self.fakeNavBarView.isHidden = true
                         self.loadingView.isHidden = false
+                        self.navBarView.isHidden = false
                         self.tableView.isHidden = false
                         self.resetTableView()
                         self.episodeItems = items
@@ -719,7 +749,7 @@ extension MainFeedVC: UITableViewDataSource, UITableViewDelegate {
         episodeCell.episode = episode
         episodeCell.moreButton.addTarget(episodeCell, action: #selector(EpisodeCell.moreUnwrap), for: .touchUpInside)
         episodeCell.programImageButton.addTarget(episodeCell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
-        episodeCell.playEpisodeButton.addTarget(episodeCell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
+//        episodeCell.playEpisodeButton.addTarget(episodeCell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
         episodeCell.episodeSettingsButton.addTarget(episodeCell, action: #selector(EpisodeCell.showSettings), for: .touchUpInside)
         episodeCell.likeButton.addTarget(episodeCell, action: #selector(EpisodeCell.likeButtonPress), for: .touchUpInside)
         episodeCell.usernameButton.addTarget(episodeCell, action: #selector(EpisodeCell.visitProfile), for: .touchUpInside)
@@ -829,7 +859,7 @@ extension MainFeedVC: EpisodeCellDelegate {
     }
     
     func visitProfile(program: Program) {
-        if User.isPublisher! && CurrentProgram.programsIDs().contains(program.ID) {
+        if CurrentProgram.programsIDs().contains(program.ID) {
              let tabBar = MainTabController()
              tabBar.selectedIndex = 4
              if #available(iOS 13.0, *) {
@@ -1059,7 +1089,7 @@ extension MainFeedVC: DuneAudioPlayerDelegate {
         let indexPath = IndexPath(item: atIndex, section: 0)
         if tableView.indexPathsForVisibleRows!.contains(indexPath) {
             if let cell = tableView.cellForRow(at: IndexPath(item: atIndex, section: 0)) as? EpisodeCell {
-                cell.playEpisodeButton.setImage(nil, for: .normal)
+//                cell.playEpisodeButton.setImage(nil, for: .normal)
                 cell.playbackBarView.setupPlaybackBar()
                 activeCell = cell
             }

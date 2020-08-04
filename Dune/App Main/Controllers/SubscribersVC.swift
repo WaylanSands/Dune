@@ -12,7 +12,7 @@ class SubscribersVC: UIViewController {
   
     var programID: String!
     var programName: String!
-    var subChannel: Program?
+    var program: Program?
     var programIDs: [String]!
     var subscriberIDs: [String]!
     
@@ -38,6 +38,8 @@ class SubscribersVC: UIViewController {
     
     let programSettings = SettingsLauncher(options: SettingOptions.programSettings, type: .program)
     let programSettingsPrivateOn = SettingsLauncher(options: SettingOptions.programSettingsPrivateOn, type: .program)
+    let listenerSettings = SettingsLauncher(options: SettingOptions.listenerSettings, type: .listener)
+    let listenerSettingsPrivateOn = SettingsLauncher(options: SettingOptions.listenerSettingsPrivateOn, type: .listener)
 
     let removingSubscriberAlert = CustomAlertView(alertType: .removingSubscriber)
     let noIntroRecordedAlert = CustomAlertView(alertType: .noIntroRecorded)
@@ -140,9 +142,12 @@ class SubscribersVC: UIViewController {
     
     func configureDelegates() {
         tableView.register(ProgramCell.self, forCellReuseIdentifier: "programCell")
+        tableView.register(ListenerCell.self, forCellReuseIdentifier: "listenerCell")
         programSettingsPrivateOn.settingsDelegate = self
+        listenerSettingsPrivateOn.settingsDelegate = self
         removingSubscriberAlert.alertDelegate = self
         programSettings.settingsDelegate = self
+        listenerSettings.settingsDelegate = self
         reportProgramAlert.alertDelegate = self
         introPlayer.playbackDelegate = self
         tableView.delegate = self
@@ -257,7 +262,7 @@ class SubscribersVC: UIViewController {
         FireStoreManager.fetchProgramsSubscribersWith(subscriberIDs: subscribers) { programs in
             if programs != nil {
                 DispatchQueue.main.async {
-                    self.downloadedPrograms = programs!
+                    self.downloadedPrograms += programs!.sortedByKind().reversed()
                     self.loadingView.isHidden = true
                     self.tableView.isHidden = false
                     self.currentlyFetching = false
@@ -291,28 +296,37 @@ extension SubscribersVC: UITableViewDataSource, UITableViewDelegate {
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let programCell = tableView.dequeueReusableCell(withIdentifier: "programCell") as! ProgramCell
         let program = downloadedPrograms[indexPath.row]
-
-        programCell.program = program
-        programCell.moreButton.addTarget(programCell, action: #selector(ProgramCell.moreUnwrap), for: .touchUpInside)
-        programCell.programImageButton.addTarget(programCell, action: #selector(ProgramCell.playProgramIntro), for: .touchUpInside)
-        programCell.playProgramButton.addTarget(programCell, action: #selector(ProgramCell.playProgramIntro), for: .touchUpInside)
-        programCell.programSettingsButton.addTarget(programCell, action: #selector(ProgramCell.showSettings), for: .touchUpInside)
-        programCell.subscribeButton.addTarget(programCell, action: #selector(ProgramCell.subscribeButtonPress), for: .touchUpInside)
-        programCell.usernameButton.addTarget(programCell, action: #selector(ProgramCell.visitProfile), for: .touchUpInside)
-        programCell.normalSetUp(program: program)
-        programCell.cellDelegate = self
         
-        if lastPlayedID == program.ID {
-            activeProgram = program
+        if program.isPublisher {
+            let programCell = tableView.dequeueReusableCell(withIdentifier: "programCell") as! ProgramCell
+            programCell.program = program
+            programCell.moreButton.addTarget(programCell, action: #selector(ProgramCell.moreUnwrap), for: .touchUpInside)
+            programCell.programImageButton.addTarget(programCell, action: #selector(ProgramCell.playProgramIntro), for: .touchUpInside)
+            programCell.programSettingsButton.addTarget(programCell, action: #selector(ProgramCell.showSettings), for: .touchUpInside)
+            programCell.subscribeButton.addTarget(programCell, action: #selector(ProgramCell.subscribeButtonPress), for: .touchUpInside)
+            programCell.usernameButton.addTarget(programCell, action: #selector(ProgramCell.visitProfile), for: .touchUpInside)
+            programCell.normalSetUp(program: program)
+            programCell.cellDelegate = self
+            
+            if lastPlayedID == program.ID {
+                activeProgram = program
+            }
+            
+            if program.ID == lastPlayedID {
+                programCell.playbackBarView.setProgressWith(percentage: lastProgress)
+            }
+            
+            return programCell
+        } else {
+            let listenerCell = tableView.dequeueReusableCell(withIdentifier: "listenerCell") as! ListenerCell
+            listenerCell.moreButton.addTarget(listenerCell, action: #selector(ListenerCell.moreUnwrap), for: .touchUpInside)
+            listenerCell.settingsButton.addTarget(listenerCell, action: #selector(ListenerCell.showSettings), for: .touchUpInside)
+            listenerCell.usernameButton.addTarget(listenerCell, action: #selector(ListenerCell.visitProfile), for: .touchUpInside)
+            listenerCell.normalSetUp(program: program)
+            listenerCell.cellDelegate = self
+            return listenerCell
         }
-        
-        if program.ID == lastPlayedID {
-            programCell.playbackBarView.setProgressWith(percentage: lastProgress)
-        }
-
-        return programCell
     }
     
     func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
@@ -413,15 +427,41 @@ extension SubscribersVC: ProgramCellDelegate {
     
     func showSettings(cell: ProgramCell) {
         selectedProgramCellRow = downloadedPrograms.firstIndex(where: { $0.ID == cell.program.ID })
-        if isPublic {
-            programSettingsPrivateOn.showSettings()
+      
+        if let program = program {
+            print("program is active")
+            if program.isPrivate {
+                if cell.program.isPublisher {
+                    programSettingsPrivateOn.showSettings()
+                } else {
+                    listenerSettingsPrivateOn.showSettings()
+                }
+            } else {
+                if cell.program.isPublisher {
+                    programSettings.showSettings()
+                } else {
+                    listenerSettings.showSettings()
+                }
+            }
         } else {
-            programSettings.showSettings()
+            if isPublic {
+                if cell.program.isPublisher {
+                    programSettings.showSettings()
+                } else {
+                    listenerSettings.showSettings()
+                }
+            } else {
+                if cell.program.isPublisher {
+                    programSettingsPrivateOn.showSettings()
+                } else {
+                    listenerSettingsPrivateOn.showSettings()
+                }
+            }
         }
     }
     
     func visitProfile(program: Program) {
-        if User.isPublisher! && CurrentProgram.programsIDs().contains(program.ID) {
+        if CurrentProgram.programsIDs().contains(program.ID) {
             let tabBar = MainTabController()
             tabBar.selectedIndex = 4
             if #available(iOS 13.0, *) {
@@ -431,7 +471,7 @@ extension SubscribersVC: ProgramCellDelegate {
                 let appDelegate = UIApplication.shared.delegate as! AppDelegate
                 appDelegate.window?.rootViewController = tabBar
             }
-        } else {
+        } else if program.isPublisher {
             if program.isPrimaryProgram && !program.programIDs!.isEmpty  {
                 let programVC = ProgramProfileVC()
                 programVC.program = program
@@ -440,6 +480,9 @@ extension SubscribersVC: ProgramCellDelegate {
                 let programVC = SingleProgramProfileVC(program: program)
                 navigationController?.pushViewController(programVC, animated: true)
             }
+        } else {
+            let programVC = ListenerProfileVC(program: program)
+            navigationController?.pushViewController(programVC, animated: true)
         }
     }
     
@@ -477,11 +520,11 @@ extension SubscribersVC: CustomAlertDelegate {
             FireStoreManager.reportProgramWith(programID: program.ID)
         } else if removingChannel {
             removingChannel = false
-            if subChannel != nil {
-                subChannel!.subscriberCount -= 1
+            if program != nil {
+                program!.subscriberCount -= 1
                 let ID = downloadedPrograms[row].ID
-                subChannel!.deniedChannels.append(ID)
-                subChannel!.subscriberIDs.removeAll(where: {$0 == ID})
+                program!.deniedChannels.append(ID)
+                program!.subscriberIDs.removeAll(where: {$0 == ID})
                 FireStoreManager.removedChannelWith(ID, for: programID)
             } else {
                 let ID = downloadedPrograms[row].ID

@@ -134,8 +134,9 @@ class AddBGMusicVC: UIViewController {
     }
     
     @objc func trackPlaybackTime() {
-        activeCell!.trackTime.text = self.timeString(time: self.audioPlayer.currentTime)
-        activeCell!.trackTime.textColor = .white
+        activeCell?.trackTime.text = self.timeString(time: self.audioPlayer.currentTime)
+        activeCell?.trackTime.isHidden = false
+        activeCell?.spinner.isHidden = true
     }
     
 }
@@ -195,7 +196,10 @@ extension AddBGMusicVC: UITableViewDelegate, UITableViewDataSource {
             activeCell!.deactivateCell()
             audioPlayer.pause()
         } else if currentState == .paused || currentState == .ready {
-            FileManager.getMusicURLWith(audioID: audioID) { url in
+            activeCell?.trackTime.isHidden = true
+            activeCell?.spinner.isHidden = false
+            FileManager.getMusicURLWith(audioID: audioID) { [weak self] url in
+                guard let self = self else { return }
                 self.playMusicWith(url: url, for: cell)
             }
             FileManager.getMusicURLWith(audioID: withLowID)

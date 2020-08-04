@@ -96,7 +96,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     
     
     func visitProfile(program: Program, scene: UIScene) {
-        if User.isPublisher! && CurrentProgram.programsIDs().contains(program.ID) {
+        if CurrentProgram.programsIDs().contains(program.ID) {
             let tabBar = MainTabController()
             tabBar.selectedIndex = 4
             let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
