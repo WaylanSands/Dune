@@ -82,7 +82,6 @@ extension FireStoreManager {
     static func revertChannelToPublicWith(ID: String, completion: @escaping () -> ()) {
         DispatchQueue.global(qos: .background).async {
             let programRef = db.collection("programs").document(ID)
-            print(1)
             
             programRef.getDocument { snapshot, error in
                 if let error = error {
@@ -107,7 +106,7 @@ extension FireStoreManager {
                             for eachID in requestedIDs {
                                 let channelRef = db.collection("programs").document(eachID)
                                 let currentChannelRed = db.collection("programs").document(ID)
-                                                 print(5)
+                                
                                 channelRef.updateData(["subscriptionIDs" : FieldValue.arrayUnion([ID])]) { error in
                                     if error != nil {
                                         print("Error")

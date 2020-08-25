@@ -12,7 +12,6 @@ import UIKit
 extension UIImageView {
     
     func dropShadow() {
-//        self.layer.masksToBounds = false
         self.layer.shadowColor = UIColor.black.cgColor
         self.layer.shadowOpacity = 1
         self.layer.shadowOffset = .zero
@@ -25,7 +24,7 @@ extension UIImageView {
 
 extension UIImage {
     
-    public static func loadFrom(url: URL, completion: @escaping (_ image: UIImage?) -> ()) {
+     static func loadFrom(url: URL, completion: @escaping (_ image: UIImage?) -> ()) {
         DispatchQueue.global().async {
             if let data = try? Data(contentsOf: url) {
                 DispatchQueue.main.async {

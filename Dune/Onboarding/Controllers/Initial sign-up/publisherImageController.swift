@@ -29,6 +29,7 @@ class publisherImageVC: UIViewController {
         let navBar = CustomNavBar()
         navBar.titleLabel.text = ""
         navBar.rightButton.isHidden = true
+        navBar.leftButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: -10, bottom: 0, right: 0)
         navBar.leftButton.addTarget(self, action: #selector(backButtonPress), for: .touchUpInside)
         return navBar
     }()

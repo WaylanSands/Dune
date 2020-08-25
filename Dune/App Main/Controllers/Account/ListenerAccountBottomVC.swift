@@ -46,9 +46,7 @@ class ListenerAccountBottomVC: UIViewController {
     
     let programSettings = SettingsLauncher(options: SettingOptions.programSettings, type: .program)
     let reportProgramAlert = CustomAlertView(alertType: .reportProgram)
-    
-    let appDelegate = UIApplication.shared.delegate as! AppDelegate
-    
+        
     var emptyTableViewTopConstant: CGFloat = 50
     
     let introPlayer = DuneIntroPlayer()
@@ -71,22 +69,22 @@ class ListenerAccountBottomVC: UIViewController {
        let label = UILabel()
         label.numberOfLines = 0
         label.text = "Episodes published by @\(CurrentProgram.username!) will appear here."
-        label.font = UIFont.systemFont(ofSize: 14, weight: .regular)
-        label.textColor = CustomStyle.fourthShade
+        label.font = UIFont.systemFont(ofSize: 16, weight: .regular)
+        label.textColor = CustomStyle.subTextColor
         label.lineBreakMode = .byWordWrapping
         label.textAlignment = .center
         return label
     }()
     
     let emptyButton: UIButton = {
-       let button = UIButton()
-        button.setTitle("Publish an episode", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
-        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 15, bottom: 0, right: 15)
+        let button = UIButton()
+        button.layer.cornerRadius = 17
+        button.setTitle("Visit Search", for: .normal)
+        button.backgroundColor = CustomStyle.onBoardingBlack
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 25, bottom: 1, right: 25)
         button.addTarget(self, action: #selector(continueToView), for: .touchUpInside)
         button.setTitleColor(.white, for: .normal)
-        button.backgroundColor = CustomStyle.primaryBlue
-        button.layer.cornerRadius = 13
         return button
     }()
     
@@ -114,15 +112,15 @@ class ListenerAccountBottomVC: UIViewController {
     func styleForScreens() {
         switch UIDevice.current.deviceType {
         case .iPhone4S, .iPhoneSE:
-            emptyTableViewTopConstant = 130
+            emptyTableViewTopConstant = 40
         case .iPhone8:
-             emptyTableViewTopConstant = 130
+             emptyTableViewTopConstant = 80
         case .iPhone8Plus:
-            break
+            emptyTableViewTopConstant = 100
         case .iPhone11:
-            emptyTableViewTopConstant = 80
+            emptyTableViewTopConstant = 140
         case .iPhone11Pro:
-            break
+              emptyTableViewTopConstant = 100
         case .iPhone11ProMax:
              emptyTableViewTopConstant = 80
         case .unknown:
@@ -186,10 +184,9 @@ class ListenerAccountBottomVC: UIViewController {
         
         emptyTableView.addSubview(emptyButton)
         emptyButton.translatesAutoresizingMaskIntoConstraints = false
-        emptyButton.topAnchor.constraint(equalTo: emptySubLabel.bottomAnchor, constant: 15).isActive = true
-        emptyButton.widthAnchor.constraint(equalToConstant: emptyButton.intrinsicContentSize.width).isActive = true
+        emptyButton.topAnchor.constraint(equalTo: emptySubLabel.bottomAnchor, constant: 20).isActive = true
         emptyButton.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
-        emptyButton.heightAnchor.constraint(equalToConstant: 26).isActive = true
+        emptyButton.heightAnchor.constraint(equalToConstant: 34).isActive = true
         
         view.addSubview(loadingView)
         loadingView.translatesAutoresizingMaskIntoConstraints = false
@@ -316,12 +313,7 @@ class ListenerAccountBottomVC: UIViewController {
     @objc func continueToView() {
         let tabBar = MainTabController()
         tabBar.selectedIndex = pageIndex
-        if #available(iOS 13.0, *) {
-            let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
-            sceneDelegate.window?.rootViewController = tabBar
-        } else {
-            self.appDelegate.window?.rootViewController = tabBar
-        }
+        DuneDelegate.newRootView(tabBar)
     }
 }
 

@@ -24,6 +24,7 @@ class DisplayNameVC: UIViewController {
         let navBar = CustomNavBar()
         navBar.titleLabel.text = ""
         navBar.rightButton.isHidden = true
+        navBar.leftButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: -10, bottom: 0, right: 0)
         navBar.leftButton.addTarget(self, action: #selector(backButtonPress), for: .touchUpInside)
         return navBar
     }()
@@ -227,11 +228,9 @@ class DisplayNameVC: UIViewController {
     }
     
     func presentNextVC() {
-        
         if CurrentProgram.image != nil {
-            if let interestsVC = UIStoryboard(name: "OnboardingPublisher", bundle: nil).instantiateViewController(withIdentifier: "interestsVC") as? InterestsVC {
-                navigationController?.pushViewController(interestsVC, animated: true)
-            }
+            let listenerBioVC = ListenerAddBioVC()
+            navigationController?.pushViewController(listenerBioVC, animated: true)
         } else {
             if let profileImageVC = UIStoryboard(name: "OnboardingPublisher", bundle: nil).instantiateViewController(withIdentifier: "profileImageVC") as? ProfileImageVC {
                 navigationController?.pushViewController(profileImageVC, animated: true)

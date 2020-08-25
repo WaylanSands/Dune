@@ -120,4 +120,22 @@ class SettingOptions {
         "USA"
     ]
     
+    static let deleteListener: [Setting] = [
+        Setting(name: "Not enough quality content", imageName: nil),
+        Setting(name: "Not enough quality channels", imageName: nil),
+        Setting(name: "Poor audio quality", imageName: nil),
+        Setting(name: "Content loads slow", imageName: nil),
+        Setting(name: "Too many bugs", imageName: nil),
+        Setting(name: "Not what you expected", imageName: nil),
+    ]
+    
+    static let deletePublisher: [Setting] = [
+        Setting(name: "Not enough quality content", imageName: nil),
+        Setting(name: "Not enough listeners", imageName: nil),
+        Setting(name: "Poor audio quality", imageName: nil),
+        Setting(name: "Studio needs work", imageName: nil),
+        Setting(name: "Too many bugs", imageName: nil),
+        Setting(name: "Not what you expected", imageName: nil),
+    ]
+    
 }

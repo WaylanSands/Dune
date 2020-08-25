@@ -11,7 +11,6 @@ import FirebaseFirestore
 
 class PublisherAddSummaryVC: UIViewController {
     
-    let appDelegate = UIApplication.shared.delegate as! AppDelegate
     let maxCaptionCharacters = 240
     let maxTagCharacters = 45
     
@@ -43,6 +42,7 @@ class PublisherAddSummaryVC: UIViewController {
     let customNavBar: CustomNavBar = {
         let navBar = CustomNavBar()
         navBar.titleLabel.text = "Summary"
+        navBar.leftButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: -10, bottom: 0, right: 0)
         navBar.leftButton.addTarget(self, action: #selector(backButtonPress), for: .touchUpInside)
         return navBar
     }()
@@ -663,7 +663,6 @@ class PublisherAddSummaryVC: UIViewController {
         FireStoreManager.updateProgramRep(programID: CurrentProgram.ID!, repMethod: "signup", rep: 25)
         
         DispatchQueue.global(qos: .userInitiated).async {
-            OneSignal.sendTags([ "onboarded" : true ])
             programRef.updateData([
                 "summary" :  CurrentProgram.summary!,
                 "tags" :  CurrentProgram.tags!,
@@ -680,25 +679,19 @@ class PublisherAddSummaryVC: UIViewController {
                 }
             }
         }
-        presentSearchView()
+        presentDailyFeed()
     }
 
-    func presentSearchView() {
+    func presentDailyFeed() {
         let tabBar = MainTabController()
-        tabBar.selectedIndex = 3
+        tabBar.selectedIndex = 0
         
         if User.recommendedProgram != nil {
             let searchNav = tabBar.selectedViewController as! UINavigationController
             let searchVC = searchNav.viewControllers[0] as! SearchVC
             searchVC.programToPush = User.recommendedProgram!
         }
-        
-        if #available(iOS 13.0, *) {
-            let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
-             sceneDelegate.window?.rootViewController = tabBar
-        } else {
-             appDelegate.window?.rootViewController = tabBar
-        }
+        DuneDelegate.newRootView(tabBar)
     }
     
     // Determine if ok to confirm

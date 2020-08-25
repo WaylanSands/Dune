@@ -9,6 +9,7 @@
 import UIKit
 import Firebase
 import AVFoundation
+import UserNotifications
 
 class MainFeedVC: UIViewController {
     
@@ -21,12 +22,11 @@ class MainFeedVC: UIViewController {
     var subscriptionIDs = [String]()
     var pushingContent = false
     
-    weak var activeCell: EpisodeCell?
-    var selectedCellRow: Int?
-    
-    var lastProgress: CGFloat = 0
-    var lastPlayedID: String?
+    // Tracking episode progress
     var listenCountUpdated = false
+    var lastProgress: CGFloat = 0
+    var activeCell: EpisodeCell?
+    var lastPlayedID: String?
     
     //Episodes
     var filteredEpisodeItems = [EpisodeItem]()
@@ -37,6 +37,7 @@ class MainFeedVC: UIViewController {
     var episodes = [Episode]()
     
     // Settings
+    var selectedCellRow: Int?
     var episodeReported = false
     var programReported = false
     
@@ -45,18 +46,19 @@ class MainFeedVC: UIViewController {
     var filterMode: FilterMode = .all
     var selectedCategory: String?
     
-    var refreshControl: UIRefreshControl!
     
     // For various screen sizes
     var categoryInset: CGFloat = 16
     
+    var autoSubscribeSpinner = UIActivityIndicatorView(style: .gray)
     var loadingView = TVLoadingAnimationView(topHeight: 20)
+    var refreshControl: UIRefreshControl!
     var audioPlayer = DunePlayBar()
     
     let subscriptionSettings = SettingsLauncher(options: SettingOptions.subscriptionEpisode, type: .subscriptionEpisode)
     let ownEpisodeSettings = SettingsLauncher(options: SettingOptions.ownEpisode, type: .ownEpisode)
     let reportEpisodeAlert = CustomAlertView(alertType: .reportEpisode)
-        
+    
     let navBarView: UIView = {
         let view = UIView()
         view.backgroundColor = CustomStyle.blackNavBar
@@ -135,8 +137,15 @@ class MainFeedVC: UIViewController {
         button.titleLabel?.font = UIFont.systemFont(ofSize: 12, weight: .medium)
         button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 15, bottom: 2, right: 15)
         button.addTarget(self, action: #selector(searchModePress), for: .touchUpInside)
-        button.setTitleColor(CustomStyle.fifthShade, for: .normal)
+        button.setTitleColor(CustomStyle.fourthShade.withAlphaComponent(0.8), for: .normal)
         return button
+    }()
+    
+    let exampleChannelImages: UIImageView = {
+        let imageView = UIImageView()
+        imageView.image = UIImage(named: "example-channels")
+        imageView.contentMode = .scaleAspectFit
+        return imageView
     }()
     
     let noEpisodesMainLabel: UILabel = {
@@ -152,23 +161,48 @@ class MainFeedVC: UIViewController {
     
     let noEpisodesLabel: UILabel = {
         let label = UILabel()
-        label.text = "Search and subscribe to your interests for episodes to display here."
+        label.text = "Subscribe to your interests for recent episodes to display here."
         label.font = UIFont.systemFont(ofSize: 16, weight: .regular)
         label.textAlignment = .center
-        label.textColor = CustomStyle.fourthShade
+        label.textColor = CustomStyle.subTextColor
         label.numberOfLines = 0
         label.isHidden = true
         return label
     }()
     
+    let autoSubscribeButton: UIButton = {
+        let button = UIButton()
+        button.layer.cornerRadius = 17
+        button.setTitle("Auto Subscribe", for: .normal)
+        button.backgroundColor = CustomStyle.primaryYellow
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 25, bottom: 1, right: 25)
+        button.addTarget(self, action: #selector(autoSubscribePress), for: .touchUpInside)
+        button.setTitleColor(.black, for: .normal)
+        return button
+    }()
+    
+    let visitSearchButton: UIButton = {
+        let button = UIButton()
+        button.layer.cornerRadius = 17
+        button.setTitle("Visit Search", for: .normal)
+        button.backgroundColor = CustomStyle.onBoardingBlack
+        button.setTitleColor(.white, for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 25, bottom: 1, right: 25)
+        button.addTarget(self, action: #selector(visitSearchPress), for: .touchUpInside)
+        return button
+    }()
+    
     override var preferredStatusBarStyle: UIStatusBarStyle {
-      return .lightContent
+        return .lightContent
     } 
     
     override func viewDidLoad() {
         super.viewDidLoad()
         configureRefreshControl()
         configureDelegates()
+        configureTableView()
         styleForScreens()
         configureViews()
         
@@ -180,11 +214,10 @@ class MainFeedVC: UIViewController {
         subscriptionIDs = CurrentProgram.subscriptionIDs!
         setNeedsStatusBarAppearanceUpdate()
         setupModalCommentObserver()
-        fetchEpisodeIDs()
         pushingContent = false
-        configureNavigation()
         selectedCellRow = nil
-        setCurrentDate()
+        configureNavigation()
+        fetchEpisodeItems()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -211,59 +244,24 @@ class MainFeedVC: UIViewController {
         subscriptionSettings.settingsDelegate = self
         ownEpisodeSettings.settingsDelegate = self
         reportEpisodeAlert.alertDelegate = self
-        tableView.register(EpisodeCell.self, forCellReuseIdentifier: "episodeCell")
+        audioPlayer.audioPlayerDelegate = self
+    }
+    
+    func configureTableView() {
         tableView.register(EpisodeCellRegLink.self, forCellReuseIdentifier: "episodeCellRegLink")
         tableView.register(EpisodeCellSmlLink.self, forCellReuseIdentifier: "EpisodeCellSmlLink")
-        audioPlayer.audioPlayerDelegate = self
+        tableView.register(EpisodeCell.self, forCellReuseIdentifier: "episodeCell")
+        tableView.showsVerticalScrollIndicator = false
         tableView.dataSource = self
         tableView.delegate = self
-        tableView.showsVerticalScrollIndicator = false
     }
     
     func setupModalCommentObserver() {
         NotificationCenter.default.addObserver(self, selector: #selector(self.showCommentFromModal), name: NSNotification.Name(rawValue: "modalCommentPush"), object: nil)
     }
     
-    @objc func updateCommentCount(_ notification: Notification) {
-        let episodeID = notification.userInfo?["ID"] as! String
-        let update = notification.userInfo?["update"] as! Int
-        guard let episode = downloadedEpisodes.first(where: {$0.ID == episodeID}) else { return }
-        guard let index = downloadedEpisodes.firstIndex(where: {$0.ID == episodeID}) else { return }
-        episode.commentCount += update
-        downloadedEpisodes[index] = episode
-        tableView.reloadRows(at: [IndexPath(item: index, section: 0)], with: .fade)
-    }
-    
-    @objc func showCommentFromModal(_ notification: Notification) {
-        let episodeID = notification.userInfo?["ID"] as! String
-        guard let episode = downloadedEpisodes.first(where: {$0.ID == episodeID}) else { return }
-        showCommentsFor(episode: episode)
-    }
-    
     func removeModalCommentObserver() {
         NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: "modalCommentPush"), object: nil)
-    }
-    
-    func setCurrentDate() {
-        let date = Date()
-        
-        let numberFormatter = NumberFormatter()
-        numberFormatter.numberStyle = .ordinal
-        numberFormatter.locale = Locale.current
-        
-        let monthFormatter = DateFormatter()
-        monthFormatter.dateFormat = "MMM"
-        
-        let dayFormatter = DateFormatter()
-        dayFormatter.dateFormat = "dd"
-        
-        let dayString = dayFormatter.string(from: date)
-        let monthString = monthFormatter.string(from: date)
-        
-        let dayNumber = NSNumber(value: Int(dayString)!)
-        let day = numberFormatter.string(from: dayNumber)!
-        
-        currentDateLabel.text = "\(day) \(monthString)"
     }
     
     func resetTableView() {
@@ -278,17 +276,15 @@ class MainFeedVC: UIViewController {
     }
     
     func configureNavigation() {
-        navigationController?.navigationBar.isHidden = true
-        navigationController?.navigationBar.setBackgroundImage(nil, for: .default)
-        navigationController?.navigationBar.barStyle = .black
-        navigationController?.navigationBar.shadowImage = UIImage()
-        
-        let imgBackArrow = #imageLiteral(resourceName: "back-button-white")
-        navigationController?.navigationBar.backIndicatorImage = imgBackArrow
-        navigationController?.navigationBar.backIndicatorTransitionMaskImage = imgBackArrow
         navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
-        tabBarController?.tabBar.backgroundImage = UIImage()
+        navigationController?.navigationBar.setBackgroundImage(nil, for: .default)
+        navigationController?.navigationBar.shadowImage = UIImage()
+        navigationController?.navigationBar.backIndicatorImage = #imageLiteral(resourceName: "back-button-white")
+        navigationController?.navigationBar.barStyle = .black
+        navigationController?.navigationBar.isHidden = true
+        
         tabBarController?.tabBar.backgroundColor = hexStringToUIColor(hex: "F4F7FB")
+        tabBarController?.tabBar.backgroundImage = UIImage()
     }
     
     func styleForScreens() {
@@ -319,29 +315,45 @@ class MainFeedVC: UIViewController {
         navBarView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         navBarView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         navBarView.heightAnchor.constraint(equalToConstant: UIApplication.shared.statusBarFrame.height).isActive = true
-
-//        navBarView.addSubview(navLogoLabel)
-//        navLogoLabel.translatesAutoresizingMaskIntoConstraints = false
-//        navLogoLabel.bottomAnchor.constraint(equalTo: navBarView.bottomAnchor, constant: -7).isActive = true
-//        navLogoLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
-////        navLogoLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
-//
-//        navBarView.addSubview(currentDateLabel)
-//        currentDateLabel.translatesAutoresizingMaskIntoConstraints = false
-//        currentDateLabel.centerYAnchor.constraint(equalTo: navLogoLabel.centerYAnchor, constant: 0).isActive = true
-//        currentDateLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
-
+        
         view.addSubview(noEpisodesMainLabel)
         noEpisodesMainLabel.translatesAutoresizingMaskIntoConstraints = false
-        noEpisodesMainLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -60).isActive = true
+        noEpisodesMainLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -40).isActive = true
         noEpisodesMainLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
         noEpisodesMainLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
         
+        view.addSubview(exampleChannelImages)
+        exampleChannelImages.translatesAutoresizingMaskIntoConstraints = false
+        exampleChannelImages.bottomAnchor.constraint(equalTo: noEpisodesMainLabel.topAnchor, constant: -15).isActive = true
+        exampleChannelImages.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
+        exampleChannelImages.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
+        
         view.addSubview(noEpisodesLabel)
         noEpisodesLabel.translatesAutoresizingMaskIntoConstraints = false
-        noEpisodesLabel.topAnchor.constraint(equalTo: noEpisodesMainLabel.bottomAnchor, constant: 15).isActive = true
+        noEpisodesLabel.topAnchor.constraint(equalTo: noEpisodesMainLabel.bottomAnchor, constant: 10).isActive = true
         noEpisodesLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 40).isActive = true
         noEpisodesLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -40).isActive = true
+        
+        view.addSubview(autoSubscribeButton)
+        autoSubscribeButton.translatesAutoresizingMaskIntoConstraints = false
+        autoSubscribeButton.topAnchor.constraint(equalTo: noEpisodesLabel.bottomAnchor, constant: 20).isActive = true
+        autoSubscribeButton.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
+        autoSubscribeButton.heightAnchor.constraint(equalToConstant: 34).isActive = true
+        
+        autoSubscribeButton.addSubview(autoSubscribeSpinner)
+        autoSubscribeSpinner.translatesAutoresizingMaskIntoConstraints = false
+        autoSubscribeSpinner.centerYAnchor.constraint(equalTo: autoSubscribeButton.centerYAnchor).isActive = true
+        autoSubscribeSpinner.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
+        autoSubscribeSpinner.heightAnchor.constraint(equalToConstant: 20).isActive = true
+        autoSubscribeSpinner.widthAnchor.constraint(equalToConstant: 20).isActive = true
+        autoSubscribeSpinner.startAnimating()
+        autoSubscribeSpinner.isHidden = true
+        
+        view.addSubview(visitSearchButton)
+        visitSearchButton.translatesAutoresizingMaskIntoConstraints = false
+        visitSearchButton.topAnchor.constraint(equalTo: autoSubscribeButton.bottomAnchor, constant: 18).isActive = true
+        visitSearchButton.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
+        visitSearchButton.heightAnchor.constraint(equalToConstant: 34).isActive = true
         
         view.addSubview(tableView)
         view.sendSubviewToBack(tableView)
@@ -401,10 +413,10 @@ class MainFeedVC: UIViewController {
         refreshControl.addTarget(self, action: #selector(checkRefresh), for: .valueChanged)
         refreshControl.bounds = CGRect(x: 0, y: 50, width: refreshControl!.frame.width, height: refreshControl!.frame.height)
     }
-        
+    
     func handleRefreshControl() {
         if filterMode == .all && selectedCategory == nil {
-            fetchEpisodeIDs()
+            fetchEpisodeItems()
         } else {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
                 self.refreshControl.endRefreshing()
@@ -412,23 +424,22 @@ class MainFeedVC: UIViewController {
         }
     }
     
-    func fetchEpisodeIDs() {
+    func fetchEpisodeItems() {
         FireStoreManager.fetchEpisodesItemsWith(with: CurrentProgram.subscriptionIDs!) { [unowned self] items in
             DispatchQueue.main.async {
                 self.refreshControl.endRefreshing()
                 if items.isEmpty {
                     self.resetTableView()
-                    self.tableView.isHidden = true
-                    self.navBarView.isHidden = true
-                    self.loadingView.isHidden = true
-                    self.fakeNavBarView.isHidden = false
-                    self.noEpisodesLabel.isHidden = false
-                    self.noEpisodesMainLabel.isHidden = false
-                    self.navigationItem.title = ""
+                    self.setupEmptyTableView()
                 } else {
                     if items != self.episodeItems {
                         self.audioPlayer.itemCount = items.count
                         self.fakeNavBarView.isHidden = true
+                        self.autoSubscribeSpinner.isHidden = true
+                        self.autoSubscribeButton.setTitleColor(CustomStyle.primaryBlack, for: .normal)
+                        self.exampleChannelImages.isHidden = true
+                        self.autoSubscribeButton.isHidden = true
+                        self.visitSearchButton.isHidden = true
                         self.loadingView.isHidden = false
                         self.navBarView.isHidden = false
                         self.tableView.isHidden = false
@@ -442,6 +453,18 @@ class MainFeedVC: UIViewController {
         }
     }
     
+    func setupEmptyTableView() {
+        noEpisodesMainLabel.isHidden = false
+        exampleChannelImages.isHidden = false
+        autoSubscribeButton.isHidden = false
+        visitSearchButton.isHidden = false
+        noEpisodesLabel.isHidden = false
+        fakeNavBarView.isHidden = false
+        loadingView.isHidden = true
+        navBarView.isHidden = true
+        tableView.isHidden = true
+    }
+        
     func recreateCategoryPills() {
         for each in searchContentStackView.arrangedSubviews {
             let button = each as! UIButton
@@ -455,7 +478,6 @@ class MainFeedVC: UIViewController {
     func fetchEpisodes() {
         if downloadedEpisodes.count != episodeItems.count {
             var endIndex = 10
-            print("fetchEpisodes")
             if episodeItems.count - downloadedEpisodes.count < endIndex {
                 endIndex = episodeItems.count - downloadedEpisodes.count
             }
@@ -493,109 +515,6 @@ class MainFeedVC: UIViewController {
         }
     }
     
-    func addBottomLoadingSpinner() {
-        var spinner: UIActivityIndicatorView
-        
-        if #available(iOS 13.0, *) {
-            spinner = UIActivityIndicatorView(style: .medium)
-            spinner.color = CustomStyle.fifthShade
-        } else {
-            spinner = UIActivityIndicatorView(style: .gray)
-        }
-        spinner.startAnimating()
-        spinner.frame = CGRect(x: 0.0, y: 0.0, width: tableView.bounds.width, height: 60.0)
-        
-        self.tableView.tableFooterView = spinner
-        self.tableView.tableFooterView?.isHidden = false
-    }
-    
-    
-    func availableCategories() -> [String] {
-        var categories = [String]()
-        for eachCategory in Category.allCases {
-            if filterMode == .all {
-                if episodeItems.contains(where: { $0.category == eachCategory.rawValue }) {
-                    categories.append(eachCategory.rawValue)
-                }
-            } else if filterMode == .today {
-                if episodeItems.contains(where: { $0.category == eachCategory.rawValue && Calendar.current.isDateInToday($0.postedDate) }) {
-                    categories.append(eachCategory.rawValue)
-                }
-            }
-        }
-         return categories
-    }
-    
-    func createCategoryPills() {
-            for each in availableCategories() {
-                let button = self.categoryPill()
-                button.setTitle(each, for: .normal)
-                button.addTarget(self, action: #selector(self.categoryButtonPress), for: .touchUpInside)
-                self.searchContentStackView.addArrangedSubview(button)
-                self.categoryButtons.append(button)
-            }
-        
-        if !episodeItems.contains(where: { Calendar.current.isDateInToday($0.postedDate)}) {
-              for each in searchContentStackView.arrangedSubviews {
-                  let button = each as! UIButton
-                  if button.titleLabel?.text == "Daily" {
-                      button.removeFromSuperview()
-                  }
-              }
-        } else {
-            let buttons = searchContentStackView.arrangedSubviews as! [UIButton]
-            if !buttons.contains(where: {$0.titleLabel?.text == "Daily" }) {
-                searchContentStackView.insertArrangedSubview(todayButton, at: 1)
-            }
-        }
-    }
-    
-    @objc func categoryButtonPress(category: UIButton) {
-        if selectedCategory == category.titleLabel?.text {
-            category.backgroundColor = CustomStyle.sixthShade
-            category.setTitleColor(CustomStyle.fifthShade, for: .normal)
-            selectedCategory = nil
-            removeCategorySelection()
-        } else {
-            if filterMode == .all {
-                filteredEpisodeItems = episodeItems.filter({$0.category == category.titleLabel?.text})
-                self.audioPlayer.itemCount = filteredEpisodeItems.count
-            } else if filterMode == .today {
-                filteredEpisodeItems = episodeItems.filter({$0.category == category.titleLabel?.text && Calendar.current.isDateInToday($0.postedDate)})
-                self.audioPlayer.itemCount = filteredEpisodeItems.count
-            }
-            highLightButtonWith(title: category.titleLabel!.text!)
-            loadingView.isHidden = false
-            startingIndex = 0
-            episodes = []
-            fetchFilteredEpisodes()
-        }
-    }
-    
-    func removeCategorySelection() {
-        if filterMode == .all {
-            filteredEpisodeItems = []
-            episodes = downloadedEpisodes
-            self.audioPlayer.itemCount = episodeItems.count
-            tableView.reloadData()
-        } else if filterMode == .today {
-            getTodaysEpisodes()
-        }
-    }
-    
-    func highLightButtonWith(title: String) {
-        selectedCategory = title
-        for each in categoryButtons {
-            if each.titleLabel?.text != title {
-                each.backgroundColor = CustomStyle.sixthShade
-                each.setTitleColor(CustomStyle.fifthShade, for: .normal)
-            } else {
-                each.backgroundColor = CustomStyle.white
-                each.setTitleColor(CustomStyle.primaryBlack, for: .normal)
-            }
-        }
-    }
-    
     func fetchFilteredEpisodes() {
         if episodes.count != filteredEpisodeItems.count {
             var endIndex = 10
@@ -609,7 +528,7 @@ class MainFeedVC: UIViewController {
             startingIndex = episodes.count + items.count
             
             var itemsNeeded = [EpisodeItem]()
-
+            
             for eachItem in items  {
                 if let episode = downloadedEpisodes.first(where: {$0.ID == eachItem.id}) {
                     episodes.append(episode)
@@ -647,12 +566,115 @@ class MainFeedVC: UIViewController {
         }
     }
     
+    func addBottomLoadingSpinner() {
+        var spinner: UIActivityIndicatorView
+        
+        if #available(iOS 13.0, *) {
+            spinner = UIActivityIndicatorView(style: .medium)
+            spinner.color = CustomStyle.fifthShade
+        } else {
+            spinner = UIActivityIndicatorView(style: .gray)
+        }
+        spinner.startAnimating()
+        spinner.frame = CGRect(x: 0.0, y: 0.0, width: tableView.bounds.width, height: 60.0)
+        
+        self.tableView.tableFooterView = spinner
+        self.tableView.tableFooterView?.isHidden = false
+    }
+    
+    
+    func availableCategories() -> [String] {
+        var categories = [String]()
+        for eachCategory in Category.allCases {
+            if filterMode == .all {
+                if episodeItems.contains(where: { $0.category == eachCategory.rawValue }) {
+                    categories.append(eachCategory.rawValue)
+                }
+            } else if filterMode == .today {
+                if episodeItems.contains(where: { $0.category == eachCategory.rawValue && Calendar.current.isDateInToday($0.postedDate) }) {
+                    categories.append(eachCategory.rawValue)
+                }
+            }
+        }
+        return categories
+    }
+    
+    func createCategoryPills() {
+        for each in availableCategories() {
+            let button = self.categoryPill()
+            button.setTitle(each, for: .normal)
+            button.addTarget(self, action: #selector(self.categoryButtonPress), for: .touchUpInside)
+            self.searchContentStackView.addArrangedSubview(button)
+            self.categoryButtons.append(button)
+        }
+        
+        if !episodeItems.contains(where: { Calendar.current.isDateInToday($0.postedDate)}) {
+            for each in searchContentStackView.arrangedSubviews {
+                let button = each as! UIButton
+                if button.titleLabel?.text == "Daily" {
+                    button.removeFromSuperview()
+                }
+            }
+        } else {
+            let buttons = searchContentStackView.arrangedSubviews as! [UIButton]
+            if !buttons.contains(where: {$0.titleLabel?.text == "Daily" }) {
+                searchContentStackView.insertArrangedSubview(todayButton, at: 1)
+            }
+        }
+    }
+    
+    @objc func categoryButtonPress(category: UIButton) {
+        if selectedCategory == category.titleLabel?.text {
+            category.backgroundColor = CustomStyle.sixthShade
+            category.setTitleColor(CustomStyle.fourthShade.withAlphaComponent(0.8), for: .normal)
+            selectedCategory = nil
+            removeCategorySelection()
+        } else {
+            if filterMode == .all {
+                filteredEpisodeItems = episodeItems.filter({$0.category == category.titleLabel?.text})
+                self.audioPlayer.itemCount = filteredEpisodeItems.count
+            } else if filterMode == .today {
+                filteredEpisodeItems = episodeItems.filter({$0.category == category.titleLabel?.text && Calendar.current.isDateInToday($0.postedDate)})
+                self.audioPlayer.itemCount = filteredEpisodeItems.count
+            }
+            highLightButtonWith(title: category.titleLabel!.text!)
+            loadingView.isHidden = false
+            startingIndex = 0
+            episodes = []
+            fetchFilteredEpisodes()
+        }
+    }
+    
+    func removeCategorySelection() {
+        if filterMode == .all {
+            filteredEpisodeItems = []
+            episodes = downloadedEpisodes
+            self.audioPlayer.itemCount = episodeItems.count
+            tableView.reloadData()
+        } else if filterMode == .today {
+            getTodaysEpisodes()
+        }
+    }
+    
+    func highLightButtonWith(title: String) {
+        selectedCategory = title
+        for each in categoryButtons {
+            if each.titleLabel?.text != title {
+                each.backgroundColor = CustomStyle.sixthShade
+                each.setTitleColor(CustomStyle.fourthShade.withAlphaComponent(0.8), for: .normal)
+            } else {
+                each.backgroundColor = CustomStyle.white
+                each.setTitleColor(CustomStyle.primaryBlack, for: .normal)
+            }
+        }
+    }
+    
     func categoryPill() -> UIButton {
         let button = UIButton()
         button.backgroundColor = CustomStyle.sixthShade
         button.layer.cornerRadius = 13
         button.titleLabel?.font = UIFont.systemFont(ofSize: 12, weight: .medium)
-        button.setTitleColor(CustomStyle.fifthShade, for: .normal)
+        button.setTitleColor(CustomStyle.fourthShade.withAlphaComponent(0.8), for: .normal)
         button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 15, bottom: 2, right: 15)
         return button
     }
@@ -664,20 +686,20 @@ class MainFeedVC: UIViewController {
             allButton.backgroundColor = CustomStyle.primaryYellow
             allButton.setTitleColor(.black, for: .normal)
             todayButton.backgroundColor = CustomStyle.sixthShade
-            todayButton.setTitleColor(CustomStyle.fifthShade, for: .normal)
+            todayButton.setTitleColor(CustomStyle.fourthShade.withAlphaComponent(0.8), for: .normal)
             recreateCategoryPills()
             episodes = downloadedEpisodes.sorted(by: >)
             tableView.reloadData()
         } else if sender.titleLabel?.text == "Daily" {
             filterMode = .today
             getTodaysEpisodes()
-            allButton.setTitleColor(CustomStyle.fifthShade, for: .normal)
+            allButton.setTitleColor(CustomStyle.fourthShade.withAlphaComponent(0.8), for: .normal)
             allButton.backgroundColor = CustomStyle.sixthShade
             todayButton.backgroundColor = CustomStyle.primaryYellow
             todayButton.setTitleColor(.black, for: .normal)
             for each in categoryButtons {
                 each.backgroundColor = CustomStyle.sixthShade
-                each.setTitleColor(CustomStyle.fifthShade, for: .normal)
+                each.setTitleColor(CustomStyle.fourthShade.withAlphaComponent(0.8), for: .normal)
             }
             recreateCategoryPills()
         }
@@ -686,7 +708,7 @@ class MainFeedVC: UIViewController {
     func getTodaysEpisodes() {
         let items = episodeItems.filter({Calendar.current.isDateInToday($0.postedDate)})
         self.audioPlayer.itemCount = items.count
-
+        
         var itemsNeeded = [EpisodeItem]()
         episodes = []
         
@@ -724,7 +746,81 @@ class MainFeedVC: UIViewController {
             }
         }
     }
- 
+    
+    @objc func updateCommentCount(_ notification: Notification) {
+        let episodeID = notification.userInfo?["ID"] as! String
+        let update = notification.userInfo?["update"] as! Int
+        guard let episode = downloadedEpisodes.first(where: {$0.ID == episodeID}) else { return }
+        guard let index = downloadedEpisodes.firstIndex(where: {$0.ID == episodeID}) else { return }
+        episode.commentCount += update
+        downloadedEpisodes[index] = episode
+        tableView.reloadRows(at: [IndexPath(item: index, section: 0)], with: .fade)
+    }
+    
+    @objc func showCommentFromModal(_ notification: Notification) {
+        let episodeID = notification.userInfo?["ID"] as! String
+        guard let episode = downloadedEpisodes.first(where: {$0.ID == episodeID}) else { return }
+        showCommentsFor(episode: episode)
+    }
+    
+    // May be used later
+    func setCurrentDate() {
+        let date = Date()
+        
+        let numberFormatter = NumberFormatter()
+        numberFormatter.numberStyle = .ordinal
+        numberFormatter.locale = Locale.current
+        
+        let monthFormatter = DateFormatter()
+        monthFormatter.dateFormat = "MMM"
+        
+        let dayFormatter = DateFormatter()
+        dayFormatter.dateFormat = "dd"
+        
+        let dayString = dayFormatter.string(from: date)
+        let monthString = monthFormatter.string(from: date)
+        
+        let dayNumber = NSNumber(value: Int(dayString)!)
+        let day = numberFormatter.string(from: dayNumber)!
+        
+        currentDateLabel.text = "\(day) \(monthString)"
+    }
+    
+    @objc func autoSubscribePress() {
+//        DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+//            self.askToRegisterForNotifications()
+//        }
+        autoSubscribeSpinner.isHidden = false
+        autoSubscribeButton.setTitleColor(CustomStyle.primaryYellow, for: .normal)
+        if let interests = User.interests {
+            if interests.count >= 2 {
+                FireStoreManager.autoSubscribeToInterests() { success in
+                    if success {
+                        self.fetchEpisodeItems()
+                    } else {
+                        FireStoreManager.autoSubscribeToTop {
+                            self.fetchEpisodeItems()
+                        }
+                    }
+                }
+            } else {
+                FireStoreManager.autoSubscribeToTop {
+                    self.fetchEpisodeItems()
+                }
+            }
+        } else {
+            FireStoreManager.autoSubscribeToTop {
+                self.fetchEpisodeItems()
+            }
+        }
+    }
+    
+    @objc func visitSearchPress() {
+        let tabBar = MainTabController()
+        tabBar.selectedIndex = 3
+        DuneDelegate.newRootView(tabBar)
+    }
+    
 }
 
 extension MainFeedVC: UITableViewDataSource, UITableViewDelegate {
@@ -737,7 +833,7 @@ extension MainFeedVC: UITableViewDataSource, UITableViewDelegate {
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         var episodeCell: EpisodeCell
         let episode = episodes[indexPath.row]
-                
+        
         if episode.richLink == nil {
             episodeCell = tableView.dequeueReusableCell(withIdentifier: "episodeCell") as! EpisodeCell
         } else if episode.linkIsSmall! {
@@ -749,14 +845,13 @@ extension MainFeedVC: UITableViewDataSource, UITableViewDelegate {
         episodeCell.episode = episode
         episodeCell.moreButton.addTarget(episodeCell, action: #selector(EpisodeCell.moreUnwrap), for: .touchUpInside)
         episodeCell.programImageButton.addTarget(episodeCell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
-//        episodeCell.playEpisodeButton.addTarget(episodeCell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
         episodeCell.episodeSettingsButton.addTarget(episodeCell, action: #selector(EpisodeCell.showSettings), for: .touchUpInside)
         episodeCell.likeButton.addTarget(episodeCell, action: #selector(EpisodeCell.likeButtonPress), for: .touchUpInside)
         episodeCell.usernameButton.addTarget(episodeCell, action: #selector(EpisodeCell.visitProfile), for: .touchUpInside)
         episodeCell.commentButton.addTarget(episodeCell, action: #selector(EpisodeCell.showComments), for: .touchUpInside)
         episodeCell.normalSetUp(episode: episode)
         episodeCell.cellDelegate = self
-          
+        
         let gestureRec = UITapGestureRecognizer(target: episodeCell, action: #selector(EpisodeCell.captionPress))
         if (episodeCell.captionTextView.gestureRecognizers?.count == 0 || episodeCell.captionTextView.gestureRecognizers?.count == nil)  && !episode.caption.contains("@") {
             episodeCell.captionTextView.addGestureRecognizer(gestureRec)
@@ -817,7 +912,7 @@ extension MainFeedVC: UITableViewDataSource, UITableViewDelegate {
             }
             
         } else {
-           self.tableView.tableFooterView = nil
+            self.tableView.tableFooterView = nil
         }
     }
     
@@ -826,7 +921,7 @@ extension MainFeedVC: UITableViewDataSource, UITableViewDelegate {
             refreshControl.endRefreshing()
         }
     }
-
+    
 }
 
 extension MainFeedVC: EpisodeCellDelegate {
@@ -838,13 +933,13 @@ extension MainFeedVC: EpisodeCellDelegate {
         
         switch audioPlayer.currentState {
         case .loading:
-             webView.currentStatus = .ready
+            webView.currentStatus = .ready
         case .ready:
-             webView.currentStatus = .ready
+            webView.currentStatus = .ready
         case .playing:
-             webView.currentStatus = .playing
+            webView.currentStatus = .playing
         case .paused:
-             webView.currentStatus = .paused
+            webView.currentStatus = .paused
         case .fetching:
             webView.currentStatus = .ready
         }
@@ -860,25 +955,19 @@ extension MainFeedVC: EpisodeCellDelegate {
     
     func visitProfile(program: Program) {
         if CurrentProgram.programsIDs().contains(program.ID) {
-             let tabBar = MainTabController()
-             tabBar.selectedIndex = 4
-             if #available(iOS 13.0, *) {
-                 let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
-                  sceneDelegate.window?.rootViewController = tabBar
-             } else {
-                let appDelegate = UIApplication.shared.delegate as! AppDelegate
-                  appDelegate.window?.rootViewController = tabBar
-             }
-         } else {
-             if program.isPrimaryProgram && !program.programIDs!.isEmpty  {
-                 let programVC = ProgramProfileVC()
-                 programVC.program = program
-                 navigationController?.pushViewController(programVC, animated: true)
-             } else {
-                 let programVC = SingleProgramProfileVC(program: program)
-                 navigationController?.pushViewController(programVC, animated: true)
-             }
-         }
+            let tabBar = MainTabController()
+            tabBar.selectedIndex = 4
+            DuneDelegate.newRootView(tabBar)
+        } else {
+            if program.isPrimaryProgram && !program.programIDs!.isEmpty  {
+                let programVC = ProgramProfileVC()
+                programVC.program = program
+                navigationController?.pushViewController(programVC, animated: true)
+            } else {
+                let programVC = SingleProgramProfileVC(program: program)
+                navigationController?.pushViewController(programVC, animated: true)
+            }
+        }
     }
     
     func duration(for resource: String) -> Double {
@@ -950,7 +1039,7 @@ extension MainFeedVC: EpisodeCellDelegate {
         startingIndex -= 1
         
         if episodeItems.count == 0 {
-           fetchEpisodeIDs()
+            fetchEpisodeItems()
         }
         
         if episodes.count == 0 {
@@ -958,7 +1047,7 @@ extension MainFeedVC: EpisodeCellDelegate {
             allButton.setTitleColor(.black, for: .normal)
             todayButton.backgroundColor = CustomStyle.sixthShade
             allButton.backgroundColor = CustomStyle.primaryYellow
-            todayButton.setTitleColor(CustomStyle.fifthShade, for: .normal)
+            todayButton.setTitleColor(CustomStyle.fourthShade.withAlphaComponent(0.8), for: .normal)
             episodes = downloadedEpisodes.sorted(by: >)
             recreateCategoryPills()
             tableView.reloadData()
@@ -1089,8 +1178,8 @@ extension MainFeedVC: DuneAudioPlayerDelegate {
         let indexPath = IndexPath(item: atIndex, section: 0)
         if tableView.indexPathsForVisibleRows!.contains(indexPath) {
             if let cell = tableView.cellForRow(at: IndexPath(item: atIndex, section: 0)) as? EpisodeCell {
-//                cell.playEpisodeButton.setImage(nil, for: .normal)
                 cell.playbackBarView.setupPlaybackBar()
+                cell.removePlayIcon()
                 activeCell = cell
             }
         }
@@ -1106,13 +1195,12 @@ extension MainFeedVC: DuneAudioPlayerDelegate {
 }
 
 extension MainFeedVC: CustomAlertDelegate {
-  
+    
     func primaryButtonPress() {
-        
         if episodeReported {
-             let episode = downloadedEpisodes[selectedCellRow!]
-             FireStoreManager.reportEpisodeWith(episodeID: episode.ID)
-             episodeReported = false
+            let episode = downloadedEpisodes[selectedCellRow!]
+            FireStoreManager.reportEpisodeWith(episodeID: episode.ID)
+            episodeReported = false
         }
     }
     

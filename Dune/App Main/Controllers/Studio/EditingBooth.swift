@@ -386,6 +386,8 @@ class EditingBoothVC: UIViewController {
         navigationController?.navigationBar.backIndicatorImage = imgBackArrow
         navigationController?.navigationBar.backIndicatorTransitionMaskImage = imgBackArrow
         navigationItem.leftBarButtonItem = UIBarButtonItem(image: UIImage(named: "back-button-white"), style: .plain, target: self, action: #selector(popVC))
+        navigationItem.leftBarButtonItem?.imageInsets = UIEdgeInsets(top: 0, left: -10, bottom: 0, right: 0)
+
         
         let navBar = navigationController?.navigationBar
         navBar?.barStyle = .black
@@ -671,7 +673,7 @@ class EditingBoothVC: UIViewController {
         if duration < 10 {
             print("Too short of a recording")
             view.addSubview(tooShortAlert)
-        } else if duration > 60 {
+        } else if duration > maxRecordingTime {
             print("Greater than 60 seconds")
             view.addSubview(audioTooLong)
         } else {

@@ -362,6 +362,7 @@ class EditProgramVC: UIViewController {
     
     func configureNavBar() {
         navigationItem.leftBarButtonItem = UIBarButtonItem(image: UIImage(named: "back-button-white"), style: .plain, target: self, action: #selector(popToCorrectVC))
+        navigationItem.leftBarButtonItem?.imageInsets = UIEdgeInsets(top: 0, left: -10, bottom: 0, right: 0)
         navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
         navigationController?.navigationBar.backIndicatorTransitionMaskImage = #imageLiteral(resourceName: "back-button-white")
         navigationController?.navigationBar.prefersLargeTitles = false
@@ -386,23 +387,11 @@ class EditProgramVC: UIViewController {
         if switchedAccount {
             tabBar.selectedIndex = 4
             switchedAccount = false
-            if #available(iOS 13.0, *) {
-                let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
-                sceneDelegate.window?.rootViewController = tabBar
-            } else {
-                let appDelegate = UIApplication.shared.delegate as! AppDelegate
-                appDelegate.window?.rootViewController = tabBar
-            }
+            DuneDelegate.newRootView(tabBar)
         } else if switchedFromStudio {
             tabBar.selectedIndex = 2
             switchedFromStudio = false
-            if #available(iOS 13.0, *) {
-                let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
-                sceneDelegate.window?.rootViewController = tabBar
-            } else {
-                let appDelegate = UIApplication.shared.delegate as! AppDelegate
-                appDelegate.window?.rootViewController = tabBar
-            }
+            DuneDelegate.newRootView(tabBar)
         } else {
             navigationController?.popViewController(animated: true)
         }

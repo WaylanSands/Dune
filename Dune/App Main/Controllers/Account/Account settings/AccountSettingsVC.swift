@@ -14,16 +14,24 @@ import AuthenticationServices
 
 class AccountSettingsVC: UIViewController {
     
+    enum SignUpMethod {
+        case apple
+        case twitter
+        case email
+    }
+    
     lazy var contentViewSize = CGSize(width: view.frame.width, height: 980.0)
     lazy var versionNumber = VersionControl.lastetVersion
     
     let logOutAlert = CustomAlertView(alertType: .loggingOut)
     let deleteAccountAlert = CustomAlertView(alertType: .deleteAccount)
     var networkingIndicator = NetworkingProgress()
+    var feedbackView = DeleteSettings()
     
     var logoutPress = false
     var deleteAccountPress = false
     var provider = OAuthProvider(providerID: "twitter.com")
+    var signUpMethod: SignUpMethod!
     
     fileprivate var currentNonce: String?
     
@@ -76,7 +84,7 @@ class AccountSettingsVC: UIViewController {
     
     lazy var feedbackButton: UIButton = {
         let button = UIButton()
-        button.setTitle("Send App Feedback", for: .normal)
+        button.setTitle("Provide Feedback", for: .normal)
         button.contentHorizontalAlignment = .left
         button.setTitleColor(CustomStyle.primaryBlack, for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .medium)
@@ -122,7 +130,7 @@ class AccountSettingsVC: UIViewController {
         let label = UILabel()
         label.text = "When active only approved accounts may listen or view your episodes."
         label.font = UIFont.systemFont(ofSize: 12, weight: .regular)
-        label.textColor = CustomStyle.fourthShade
+        label.textColor = CustomStyle.subTextColor
         label.lineBreakMode = .byWordWrapping
         label.numberOfLines = 0
         return label
@@ -188,7 +196,7 @@ class AccountSettingsVC: UIViewController {
         let label = UILabel()
         label.text = "Be notified when your subscriptions post new content."
         label.font = UIFont.systemFont(ofSize: 12, weight: .regular)
-        label.textColor = CustomStyle.fourthShade
+        label.textColor = CustomStyle.subTextColor
         label.lineBreakMode = .byWordWrapping
         label.numberOfLines = 0
         return label
@@ -233,7 +241,7 @@ class AccountSettingsVC: UIViewController {
         let label = UILabel()
         label.text = "Be notified when you’re mentioned in a comment by tagging or a response."
         label.font = UIFont.systemFont(ofSize: 12, weight: .regular)
-        label.textColor = CustomStyle.fourthShade
+        label.textColor = CustomStyle.subTextColor
         label.lineBreakMode = .byWordWrapping
         label.numberOfLines = 0
         return label
@@ -278,7 +286,7 @@ class AccountSettingsVC: UIViewController {
         let label = UILabel()
         label.text = "Be notified when you’re tagged in  an episode."
         label.font = UIFont.systemFont(ofSize: 12, weight: .regular)
-        label.textColor = CustomStyle.fourthShade
+        label.textColor = CustomStyle.subTextColor
         label.lineBreakMode = .byWordWrapping
         label.numberOfLines = 0
         return label
@@ -323,7 +331,7 @@ class AccountSettingsVC: UIViewController {
         let label = UILabel()
         label.text = "Stay in the loop when there are changes in the app."
         label.font = UIFont.systemFont(ofSize: 12, weight: .regular)
-        label.textColor = CustomStyle.fourthShade
+        label.textColor = CustomStyle.subTextColor
         label.lineBreakMode = .byWordWrapping
         label.numberOfLines = 0
         return label
@@ -405,7 +413,7 @@ class AccountSettingsVC: UIViewController {
         let label = UILabel()
         label.text = "Stay in the loop when there are changes in the app."
         label.font = UIFont.systemFont(ofSize: 12, weight: .regular)
-        label.textColor = CustomStyle.fourthShade
+        label.textColor = CustomStyle.subTextColor
         label.lineBreakMode = .byWordWrapping
         label.numberOfLines = 0
         return label
@@ -461,7 +469,7 @@ class AccountSettingsVC: UIViewController {
         let label = UILabel()
         label.text = "Version \(versionNumber)"
         label.font = UIFont.systemFont(ofSize: 15, weight: .regular)
-        label.textColor = CustomStyle.fourthShade
+        label.textColor = CustomStyle.subTextColor
         return label
     }()
     
@@ -490,6 +498,7 @@ class AccountSettingsVC: UIViewController {
     }
     
     override func viewWillAppear(_ animated: Bool) {
+        feedbackView.madeSelection = addedDeletionFeedback
         configurePrivacyState()
     }
     
@@ -561,8 +570,8 @@ class AccountSettingsVC: UIViewController {
         topStackedView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -16.0).isActive = true
         
         topStackedView.addArrangedSubview(inviteButton)
-        topStackedView.addArrangedSubview(helpCentreButton)
         topStackedView.addArrangedSubview(feedbackButton)
+        topStackedView.addArrangedSubview(helpCentreButton)
         topStackedView.addArrangedSubview(editAccountButton)
         
         containerView.addSubview(lineBreakView)
@@ -824,6 +833,7 @@ extension AccountSettingsVC: CustomAlertDelegate {
             logoutPress = false
             do {
                 try Auth.auth().signOut()
+                print("Logging out")
                 UserDefaults.standard.set(false, forKey: "loggedIn")
                 if let signupScreen = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "signUpVC") as? SignUpVC {
                     User.signOutUser()
@@ -841,21 +851,11 @@ extension AccountSettingsVC: CustomAlertDelegate {
                     
                     switch userInfo.providerID {
                     case "twitter.com":
-                        reAuthenticateTwitterUser()
+                        signUpMethod = .twitter
+                        feedbackView.showFeedbackOptions()
                     case "apple.com":
-                        if #available(iOS 13.0, *) {
-                            let nonce = self.randomNonceString()
-                            currentNonce = nonce
-                            let appleIDProvider = ASAuthorizationAppleIDProvider()
-                            let request = appleIDProvider.createRequest()
-                            request.requestedOperation = .operationRefresh
-                            request.nonce = sha256(nonce)
-                            
-                            let authorizationController = ASAuthorizationController(authorizationRequests: [request])
-                            authorizationController.delegate = self
-                            authorizationController.presentationContextProvider = self
-                            authorizationController.performRequests()
-                        }
+                        signUpMethod = .apple
+                        feedbackView.showFeedbackOptions()
                     case "password":
                         let deleteAccountVC = DeleteAccount()
                         navigationController?.pushViewController(deleteAccountVC, animated: true)
@@ -865,6 +865,33 @@ extension AccountSettingsVC: CustomAlertDelegate {
                     
                 }
             }
+        }
+    }
+    
+    func addedDeletionFeedback() {
+        switch signUpMethod {
+        case .apple:
+            appleSignInAddedFeedback()
+        case .twitter:
+            reAuthenticateTwitterUser()
+        default:
+            break
+        }
+    }
+    
+    func appleSignInAddedFeedback() {
+        if #available(iOS 13.0, *) {
+            let nonce = self.randomNonceString()
+            currentNonce = nonce
+            let appleIDProvider = ASAuthorizationAppleIDProvider()
+            let request = appleIDProvider.createRequest()
+            request.requestedOperation = .operationRefresh
+            request.nonce = sha256(nonce)
+            
+            let authorizationController = ASAuthorizationController(authorizationRequests: [request])
+            authorizationController.delegate = self
+            authorizationController.presentationContextProvider = self
+            authorizationController.performRequests()
         }
     }
     
@@ -884,7 +911,7 @@ extension AccountSettingsVC: CustomAlertDelegate {
     }
     
     func deleteSocialSignUp() {
-        self.networkingIndicator.taskLabel.text = "Deleting account data"
+        networkingIndicator.taskLabel.text = "Deleting account data"
         view.addSubview(networkingIndicator)
         FireStoreManager.deleteProgram(with:  CurrentProgram.ID!, introID: CurrentProgram.introID, imageID:  CurrentProgram.imageID, isSubProgram: false) {
             

@@ -46,6 +46,11 @@ struct User {
         completedOnBoarding = data["completedOnBoarding"] as? Bool
         upVotedComments = data["upVotedComments"] as? [String]
         downVotedComments = data["downVotedComments"] as? [String]
+        
+        if let episodes = likedEpisodes {
+            print("Search")
+            FireStoreManager.topThreeInterests(with: episodes)
+        }
     }
     
     static func signOutUser() {

@@ -11,7 +11,7 @@ import UIKit
 class UpdateListenerBioVC: UIViewController {
     
     let maxCaptionCharacters = 240
-    let summaryPlaceholder = "Include a short bio, what makes you unique?"
+    let summaryPlaceholder = "Share a little information about yourself."
     
     var scrollContentHeightConstraint: NSLayoutConstraint!
     
@@ -22,8 +22,6 @@ class UpdateListenerBioVC: UIViewController {
         
     // For screen-size adjustment
     var imageViewSize:CGFloat = 55.0
-    var floatingBarHeight:CGFloat = 65.0
-    var imageBarViewSize:CGFloat = 45.0
     var scrollPadding: CGFloat = 0
         
     let customNavBar: CustomNavBar = {
@@ -44,9 +42,9 @@ class UpdateListenerBioVC: UIViewController {
         return view
     }()
     
-    let mainImage: UIImageView = {
+    lazy var mainImage: UIImageView = {
         let imageView = UIImageView()
-        imageView.layer.cornerRadius = 7
+        imageView.layer.cornerRadius = imageViewSize / 2
         imageView.clipsToBounds = true
         imageView.contentMode = .scaleAspectFill
         return imageView
@@ -94,7 +92,7 @@ class UpdateListenerBioVC: UIViewController {
     
     let summaryBarLabel: UILabel = {
         let label = UILabel()
-        label.text = "Include a bio"
+        label.text = "Include a short bio"
         label.font = UIFont.systemFont(ofSize: 14, weight: .medium)
         label.textColor = CustomStyle.fifthShade
         return label
@@ -160,7 +158,7 @@ class UpdateListenerBioVC: UIViewController {
     }
 
     func configureNavBar() {
-        navigationItem.title = "Biography"
+        navigationItem.title = "About you"
         navigationController?.isNavigationBarHidden = false
         
         let navBar = navigationController?.navigationBar
@@ -170,6 +168,7 @@ class UpdateListenerBioVC: UIViewController {
         navBar?.titleTextAttributes = [.foregroundColor: UIColor.white]
         navBar?.tintColor = .white
         navigationItem.leftBarButtonItem = UIBarButtonItem(image: #imageLiteral(resourceName: "back-button-white"), style: .plain, target: self, action: #selector(popVC))
+        navigationItem.leftBarButtonItem?.imageInsets = UIEdgeInsets(top: 0, left: -10, bottom: 0, right: 0)
     }
     
     @objc func popVC() {
@@ -242,7 +241,7 @@ class UpdateListenerBioVC: UIViewController {
            
            scrollContentView.addSubview(summaryBar)
            summaryBar.translatesAutoresizingMaskIntoConstraints = false
-           summaryBar.topAnchor.constraint(equalTo: summaryLabel.bottomAnchor, constant: 40).isActive = true
+           summaryBar.topAnchor.constraint(equalTo: summaryLabel.bottomAnchor, constant: 20).isActive = true
            summaryBar.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
            summaryBar.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
            summaryBar.heightAnchor.constraint(equalToConstant: 37.0).isActive = true

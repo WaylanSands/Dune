@@ -91,7 +91,7 @@ class ProgramProfileBottomVC: UIViewController {
         label.numberOfLines = 0
         label.text = "\(program.name) is yet to publish any episodes."
         label.font = UIFont.systemFont(ofSize: 14, weight: .regular)
-        label.textColor = CustomStyle.fifthShade
+        label.textColor = CustomStyle.subTextColor
         label.lineBreakMode = .byWordWrapping
         label.textAlignment = .center
         return label
@@ -611,8 +611,8 @@ extension ProgramProfileBottomVC: DuneAudioPlayerDelegate {
         case .episode:
             if episodeTV.indexPathsForVisibleRows!.contains(indexPath) {
                 let cell = episodeTV.cellForRow(at: IndexPath(item: atIndex, section: 0)) as! EpisodeCell
-//                cell.playEpisodeButton.setImage(nil, for: .normal)
                 cell.playbackBarView.setupPlaybackBar()
+                cell.removePlayIcon()
                 activeEpisodeCell = cell
             }
         case .program:
@@ -736,13 +736,7 @@ extension ProgramProfileBottomVC: ProgramCellDelegate, MentionCellDelegate {
         if CurrentProgram.programsIDs().contains(program.ID) {
             let tabBar = MainTabController()
             tabBar.selectedIndex = 4
-            if #available(iOS 13.0, *) {
-                let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
-                sceneDelegate.window?.rootViewController = tabBar
-            } else {
-                let appDelegate = UIApplication.shared.delegate as! AppDelegate
-                appDelegate.window?.rootViewController = tabBar
-            }
+            DuneDelegate.newRootView(tabBar)
         } else {
             if program.isPrimaryProgram && !program.programIDs!.isEmpty  {
                 let programVC = ProgramProfileVC()

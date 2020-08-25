@@ -14,12 +14,12 @@ import FirebaseFirestore
 class AccountTypeVC: UIViewController {
     
     @IBOutlet weak var headingLabel: UILabel!
+    @IBOutlet weak var subHeadlingLabel: UILabel!
     @IBOutlet weak var listenerButton: UIButton!
     @IBOutlet weak var publisherButton: UIButton!
     @IBOutlet weak var subHeadingBottomAnchor: NSLayoutConstraint!
     
     let networkingIndicator = NetworkingProgress()
-    let appDelegate = UIApplication.shared.delegate as! AppDelegate
     let completionAlert = CustomAlertView(alertType: .finishSetup)
     let customNavBar = CustomNavBar()
     let db = Firestore.firestore()
@@ -32,11 +32,24 @@ class AccountTypeVC: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        headingLabel.alpha = 0
+        subHeadlingLabel.alpha = 0
+        listenerButton.alpha = 0
+        publisherButton.alpha = 0
         removeBackButtonIfRootView()
         completionAlert.alertDelegate = self
         configureNavigation()
         styleForScreens()
         configureViews()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        UIView.animate(withDuration: 1, delay: 0, options: .curveEaseInOut, animations: {
+            self.headingLabel.alpha = 1
+            self.subHeadlingLabel.alpha = 1
+            self.listenerButton.alpha = 1
+            self.publisherButton.alpha = 1
+        }, completion: nil)
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -85,6 +98,7 @@ class AccountTypeVC: UIViewController {
     }
     
     @IBAction func accountTypeButtonPress(_ sender: UIButton) {
+        print("Tap")
         
         if sender.titleLabel?.text == "Finish Setup" {
             view.addSubview(completionAlert)
@@ -133,6 +147,7 @@ class AccountTypeVC: UIViewController {
                         "username": User.username!,
                         "displayName": User.username!,
                         "completedOnBoarding" : false,
+                        "interests" :  User.interests!,
                     ]) { err in
                         if let err = err {
                             print("Error creating new user document: \(err)")
@@ -150,7 +165,6 @@ class AccountTypeVC: UIViewController {
     
     func fastTrackAccount() {
             DispatchQueue.global(qos: .userInitiated).async {
-                OneSignal.sendTags(["onboarded" : true])
                 let programID = NSUUID().uuidString
                 guard let uid = Auth.auth().currentUser?.uid else { return }
                 
@@ -257,7 +271,7 @@ class AccountTypeVC: UIViewController {
         DispatchQueue.main.async {
             self.networkingIndicator.removeFromSuperview()
             let tabBar = MainTabController()
-            tabBar.selectedIndex = 1
+            tabBar.selectedIndex = 0
             
             if User.recommendedProgram != nil {
                 let searchNav = tabBar.selectedViewController as! UINavigationController
@@ -265,17 +279,11 @@ class AccountTypeVC: UIViewController {
                 searchVC.programToPush = User.recommendedProgram!
             }
             
-            if #available(iOS 13.0, *) {
-                let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
-                sceneDelegate.window?.rootViewController = tabBar
-            } else {
-                self.appDelegate.window?.rootViewController = tabBar
-            }
+            DuneDelegate.newRootView(tabBar)
         }
     }
     
     func updateReturningUser() {
-        print("attempting to update returning user")
         DispatchQueue.global(qos: .userInitiated).async {
             
             guard let uid = Auth.auth().currentUser?.uid else { return }
@@ -287,9 +295,9 @@ class AccountTypeVC: UIViewController {
                 "isSetUp" : User.isSetUp!
             ]) { err in
                 if let err = err {
-                    print("Error adding publisher type for returning user: \(err)")
+                    print("Error setting up returned user: \(err)")
                 } else {
-                    print("Success adding publisher type for returning user")
+                    print("Success setting up returned user")
                     if self.fastTrack {
                         self.fastTrackAccount()
                     }
@@ -299,7 +307,7 @@ class AccountTypeVC: UIViewController {
             userRef.getDocument(source: .default) { (snapshot, error) in
                 
                 if error != nil {
-                    print("Error getting returing user's snapshot \(error!)")
+                    print("Error getting returning user's snapshot \(error!)")
                 }
                 
                 guard let data = snapshot?.data() else { return }
@@ -347,7 +355,6 @@ class AccountTypeVC: UIViewController {
     
     func fastTrackSocialAccount() {
             DispatchQueue.global(qos: .userInitiated).async {
-                OneSignal.sendTags(["onboarded" : true])
                 
                 CurrentProgram.rep = 0
                 User.completedOnBoarding = true

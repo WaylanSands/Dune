@@ -26,13 +26,15 @@ class CommentTextView: UIStackView {
     
     let backgroundView: UIView = {
         let view = UIView()
-        view.backgroundColor = CustomStyle.onBoardingBlack
-        view.layer.shadowColor = UIColor.black.cgColor
-        view.layer.shadowOpacity = 0.1
-        view.layer.shadowOffset = .zero
-        view.layer.shadowRadius = 4
-        view.layer.rasterizationScale = UIScreen.main.scale
-        view.layer.shouldRasterize = true
+        view.backgroundColor = CustomStyle.primaryBlack
+//        view.layer.borderColor = CustomStyle.primaryBlack.cgColor
+//        view.layer.borderWidth = 0.25
+//        view.layer.shadowColor = UIColor.black.cgColor
+//        view.layer.shadowOpacity = 0.1
+//        view.layer.shadowOffset = .zero
+//        view.layer.shadowRadius = 4
+//        view.layer.rasterizationScale = UIScreen.main.scale
+//        view.layer.shouldRasterize = true
         return view
     }()
     

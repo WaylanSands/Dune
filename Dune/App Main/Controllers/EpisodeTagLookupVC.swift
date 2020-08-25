@@ -396,10 +396,14 @@ extension EpisodeTagLookupVC: DuneAudioPlayerDelegate {
     }
 
     func updateActiveCell(atIndex: Int, forType: PlayBackType) {
-        let cell = tableView.cellForRow(at: IndexPath(item: atIndex, section: 0)) as! EpisodeCell
-//        cell.playEpisodeButton.setImage(nil, for: .normal)
-        cell.playbackBarView.setupPlaybackBar()
-        activeCell = cell
+        let indexPath = IndexPath(item: atIndex, section: 0)
+        if tableView.indexPathsForVisibleRows!.contains(indexPath) {
+            if let cell = tableView.cellForRow(at: IndexPath(item: atIndex, section: 0)) as? EpisodeCell {
+                cell.playbackBarView.setupPlaybackBar()
+                cell.removePlayIcon()
+                activeCell = cell
+            }
+        }
     }
 
 }

@@ -54,12 +54,23 @@ class StudioVC: UIViewController {
         return button
     }()
     
+    let studioImage: UIImageView = {
+        let imageView = UIImageView()
+        imageView.image = UIImage(named: "studio-logo")
+        imageView.isHidden = true
+        return imageView
+    }()
+    
+    
     let noDraftEpisodesLabel: UILabel = {
         let label = UILabel()
-        label.text = "All of your unpublished episodes will display here"
+        label.text = """
+        Your unpublished episodes will
+        display here
+        """
         label.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         label.textAlignment = .center
-        label.textColor = CustomStyle.fifthShade
+        label.textColor = CustomStyle.subTextColor
         label.numberOfLines = 0
         label.isHidden = true
         return label
@@ -155,9 +166,14 @@ class StudioVC: UIViewController {
 
         view.addSubview(noDraftEpisodesLabel)
         noDraftEpisodesLabel.translatesAutoresizingMaskIntoConstraints = false
-        noDraftEpisodesLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: 0).isActive = true
+        noDraftEpisodesLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor).isActive = true
         noDraftEpisodesLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 40).isActive = true
         noDraftEpisodesLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -40).isActive = true
+        
+        view.addSubview(studioImage)
+        studioImage.translatesAutoresizingMaskIntoConstraints = false
+        studioImage.bottomAnchor.constraint(equalTo: noDraftEpisodesLabel.topAnchor, constant: -30).isActive = true
+        studioImage.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
         
         view.addSubview(customNav)
         customNav.pinNavBarTo(view)
@@ -183,6 +199,7 @@ class StudioVC: UIViewController {
     func getDraftEpisodeIDs() {
         if User.draftEpisodeIDs != nil && User.draftEpisodeIDs?.count != 0 {
             noDraftEpisodesLabel.isHidden = true
+            studioImage.isHidden = true
             tableView.isHidden = false
             FireStoreManager.getDraftEpisodesInOrder { (episodeIDs) in
                 if episodeIDs !=  nil {
@@ -194,6 +211,7 @@ class StudioVC: UIViewController {
         } else {
             print("No drafts to display")
             noDraftEpisodesLabel.isHidden = false
+            studioImage.isHidden = false
             tableView.isHidden = true
         }
     }
@@ -482,7 +500,6 @@ extension StudioVC: UIDocumentPickerDelegate, UINavigationControllerDelegate {
     }
 
     func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
-                print("view was cancelled")
                 dismiss(animated: true, completion: nil)
         }
     
@@ -500,10 +517,8 @@ extension StudioVC: UIDocumentPickerDelegate, UINavigationControllerDelegate {
             
             present(importMenu, animated: true)
         } else if CurrentProgram.isPublisher! && !User.isSetUp! {
-            print("1")
             view.addSubview(publisherNotSetUpAlert)
         } else if !CurrentProgram.isPublisher! {
-            print("2")
             view.addSubview(notAPublisherAlert)
         }
     }
@@ -512,7 +527,6 @@ extension StudioVC: UIDocumentPickerDelegate, UINavigationControllerDelegate {
 extension StudioVC: SettingsLauncherDelegate {
    
     func selectionOf(setting: String) {
-        print("Selection made")
         programNameButton.setTitle(setting, for: .normal)
         selectedProgramName = setting
     }

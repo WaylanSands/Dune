@@ -11,7 +11,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     var window: UIWindow?
     
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
-        print("1")
         if let userActivity = scene.userActivity {
             self.scene(scene, continue: userActivity)
         }
@@ -26,7 +25,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
     
     func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
-        print("2")
         if let url = URLContexts.first?.url {
             if let host = url.absoluteURL.host {
                 if host == "firebaseauth" {
@@ -59,7 +57,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
     
     func scene(_ scene: UIScene, continue userActivity: NSUserActivity) {
-          print("3")
         if let incomingURL = userActivity.webpageURL {
             print("Incoming URL (Scene): \(incomingURL)")
             print("Incoming URL (Scene): \(incomingURL.path)")

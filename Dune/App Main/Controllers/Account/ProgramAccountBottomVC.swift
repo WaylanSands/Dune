@@ -90,22 +90,22 @@ class ProgramAccountBottomVC: UIViewController {
        let label = UILabel()
         label.numberOfLines = 0
         label.text = "Episodes published by @\(CurrentProgram.username!) will appear here."
-        label.font = UIFont.systemFont(ofSize: 14, weight: .regular)
-        label.textColor = CustomStyle.fourthShade
+        label.font = UIFont.systemFont(ofSize: 16, weight: .regular)
+        label.textColor = CustomStyle.subTextColor
         label.lineBreakMode = .byWordWrapping
         label.textAlignment = .center
         return label
     }()
     
     let emptyButton: UIButton = {
-       let button = UIButton()
-        button.setTitle("Publish an episode", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
-        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 15, bottom: 0, right: 15)
+        let button = UIButton()
+        button.layer.cornerRadius = 17
+        button.setTitle("Visit The Studio", for: .normal)
+        button.backgroundColor = CustomStyle.onBoardingBlack
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 25, bottom: 1, right: 25)
         button.addTarget(self, action: #selector(continueToView), for: .touchUpInside)
         button.setTitleColor(.white, for: .normal)
-        button.backgroundColor = CustomStyle.primaryBlue
-        button.layer.cornerRadius = 13
         return button
     }()
     
@@ -232,10 +232,9 @@ class ProgramAccountBottomVC: UIViewController {
         
         emptyTableView.addSubview(emptyButton)
         emptyButton.translatesAutoresizingMaskIntoConstraints = false
-        emptyButton.topAnchor.constraint(equalTo: emptySubLabel.bottomAnchor, constant: 15).isActive = true
-        emptyButton.widthAnchor.constraint(equalToConstant: emptyButton.intrinsicContentSize.width).isActive = true
+        emptyButton.topAnchor.constraint(equalTo: emptySubLabel.bottomAnchor, constant: 20).isActive = true
         emptyButton.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
-        emptyButton.heightAnchor.constraint(equalToConstant: 26).isActive = true
+        emptyButton.heightAnchor.constraint(equalToConstant: 34).isActive = true
         
         view.addSubview(loadingView)
         loadingView.translatesAutoresizingMaskIntoConstraints = false
@@ -257,7 +256,7 @@ class ProgramAccountBottomVC: UIViewController {
         case episodeTV:
             emptyHeadingLabel.text = "Published episodes"
             emptySubLabel.text = "Episodes published by @\(CurrentProgram.username!) will appear here."
-            emptyButton.setTitle("Publish an episode", for: .normal)
+            emptyButton.setTitle("Visit The Studio", for: .normal)
             loadingView.isHidden = true
             emptyButton.isHidden = false
             pageIndex = 2
@@ -450,12 +449,7 @@ class ProgramAccountBottomVC: UIViewController {
     @objc func continueToView() {
         let tabBar = MainTabController()
         tabBar.selectedIndex = pageIndex
-        if #available(iOS 13.0, *) {
-            let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
-            sceneDelegate.window?.rootViewController = tabBar
-        } else {
-            self.appDelegate.window?.rootViewController = tabBar
-        }
+        DuneDelegate.newRootView(tabBar)
     }
 }
 
@@ -673,8 +667,8 @@ extension ProgramAccountBottomVC: DuneAudioPlayerDelegate {
         case .episode:
             if episodeTV.indexPathsForVisibleRows!.contains(indexPath) {
                 let cell = episodeTV.cellForRow(at: IndexPath(item: atIndex, section: 0)) as! EpisodeCell
-//                cell.playEpisodeButton.setImage(nil, for: .normal)
                 cell.playbackBarView.setupPlaybackBar()
+                cell.removePlayIcon()
                 activeEpisodeCell = cell
             }
         case .program:

@@ -39,7 +39,7 @@ class RecordBoothVC: UIViewController {
     let mergedFileName = NSUUID().uuidString
     let fileName = NSUUID().uuidString
     var recordingURL: URL!
-    var voiceURL: URL!
+    var voiceURL: URL?
     
     var currentState = recordState.ready
     var maxRecordingTime: Double = 120
@@ -361,8 +361,9 @@ class RecordBoothVC: UIViewController {
         navigationController?.navigationBar.backIndicatorImage = imgBackArrow
         navigationController?.navigationBar.backIndicatorTransitionMaskImage = imgBackArrow
 //        navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: #selector(resetViews))
-        
+
         navigationItem.leftBarButtonItem = UIBarButtonItem(image: UIImage(named: "back-button-white"), style: .plain, target: self, action: #selector(popVC))
+        navigationItem.leftBarButtonItem?.imageInsets = UIEdgeInsets(top: 0, left: -10, bottom: 0, right: 0)
         
         let navBar = navigationController?.navigationBar
         navBar?.barStyle = .black
@@ -680,6 +681,7 @@ class RecordBoothVC: UIViewController {
     
     // MARK: Record button press
    @objc func recordButtonPress() {
+    print("Current state is \(currentState)")
         switch currentState {
         case .ready:
             circleTimerView.animate()
@@ -721,6 +723,7 @@ class RecordBoothVC: UIViewController {
                 trackAudio()
                 playDefaultRecording()
             } else if !hasMergedTracks {
+                print("This path")
                 FileManager.getMusicURLWith(audioID: currentOption!.lowAudioID) { url in
                     self.playMerge(audio1: self.recordingURL, audio2: url)
                     self.hasMergedTracks = true
@@ -865,7 +868,14 @@ class RecordBoothVC: UIViewController {
     
     func playMerge(audio1: URL, audio2:  URL) {
         
-        voiceURL = audio1
+        var recordedURL: URL
+        
+        if voiceURL != nil {
+            recordedURL = voiceURL!
+        } else {
+            recordedURL = audio1
+            voiceURL = audio1
+        }
         
         let composition = AVMutableComposition()
         let compositionAudioTrack1:AVMutableCompositionTrack = composition.addMutableTrack(withMediaType: AVMediaType.audio, preferredTrackID: CMPersistentTrackID())!
@@ -885,7 +895,7 @@ class RecordBoothVC: UIViewController {
             }
         }
         
-        let url1 = audio1
+        let url1 = recordedURL
         let url2 = audio2
         
         let avAsset1 = AVURLAsset(url: url1 as URL, options: nil)
@@ -894,8 +904,8 @@ class RecordBoothVC: UIViewController {
         let tracks1 = avAsset1.tracks(withMediaType: AVMediaType.audio)
         let tracks2 = avAsset2.tracks(withMediaType: AVMediaType.audio)
         
-        let assetTrack1:AVAssetTrack = tracks1[0]
-        let assetTrack2:AVAssetTrack = tracks2[0]
+        let assetTrack1: AVAssetTrack = tracks1[0]
+        let assetTrack2: AVAssetTrack = tracks2[0]
         
         let duration1 = Double(avAsset1.duration.value) / Double(avAsset1.duration.timescale)
         let duration2 = Double(avAsset2.duration.value) / Double(avAsset2.duration.timescale)

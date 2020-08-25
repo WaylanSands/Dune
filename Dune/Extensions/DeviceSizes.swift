@@ -12,7 +12,6 @@ import AVFoundation
 extension UIDevice {
     
     static func vibrate() {
-        print("attempt")
         var audioPlayer: AVAudioPlayer!
         let path = Bundle.main.path(forResource: "end.mp3", ofType: nil)!
         let url = URL(fileURLWithPath: path)

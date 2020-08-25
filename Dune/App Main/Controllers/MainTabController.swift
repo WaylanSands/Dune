@@ -15,20 +15,15 @@ class MainTabController: UITabBarController {
         setupTabBar()
     }
     
-    let thisView: UIView = {
-        let view = UIView()
-        view.backgroundColor = .red
-        return view
-    }()
-    
-    
-    func setupTabBar() {
-
+    private func setupTabBar() {
+        
         var accountController: UINavigationController
         
+        // Set the Account tab-button to correct VC
         if CurrentProgram.isPublisher! {
             accountController = UINavigationController(rootViewController: ProgramAccountVC())
         } else {
+            // User is a listener
             accountController = UINavigationController(rootViewController: ListenerAccountVC())
         }
         

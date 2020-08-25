@@ -705,12 +705,7 @@ class SubProgramAccountVC: UIViewController {
     @objc func continueToView() {
         let tabBar = MainTabController()
         tabBar.selectedIndex = 2
-        if #available(iOS 13.0, *) {
-            let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
-            sceneDelegate.window?.rootViewController = tabBar
-        } else {
-            self.appDelegate.window?.rootViewController = tabBar
-        }
+        DuneDelegate.newRootView(tabBar)
     }
     
     @objc func viewPendingRequests() {
@@ -816,13 +811,7 @@ extension SubProgramAccountVC :EpisodeCellDelegate {
         if CurrentProgram.programsIDs().contains(program.ID) {
             let tabBar = MainTabController()
             tabBar.selectedIndex = 4
-            if #available(iOS 13.0, *) {
-                let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
-                sceneDelegate.window?.rootViewController = tabBar
-            } else {
-                let appDelegate = UIApplication.shared.delegate as! AppDelegate
-                appDelegate.window?.rootViewController = tabBar
-            }
+            DuneDelegate.newRootView(tabBar)
         } else {
             if program.isPrimaryProgram && !program.programIDs!.isEmpty  {
                 let programVC = ProgramProfileVC()
@@ -932,9 +921,19 @@ extension SubProgramAccountVC: DuneAudioPlayerDelegate {
     }
     
     func showCommentsFor(episode: Episode) {
-        dismiss(animated: true) {
-            NotificationCenter.default.post(name: NSNotification.Name(rawValue: "modalCommentPush"), object: nil, userInfo: ["ID": episode.ID])
+//        dismiss(animated: true) {
+//            NotificationCenter.default.post(name: NSNotification.Name(rawValue: "modalCommentPush"), object: nil, userInfo: ["ID": episode.ID])
+//        }
+        pushingContent = true
+        if audioPlayer.audioPlayer != nil {
+            audioPlayer.pauseSession()
+        } else if audioPlayer.currentState == .loading {
+            audioPlayer.cancelCurrentDownload()
+            audioPlayer.finishSession()
         }
+        let commentVC = CommentThreadVC(episode: episode)
+        commentVC.hidesBottomBarWhenPushed = true
+        navigationController?.pushViewController(commentVC, animated: true)
     }
    
     func playedEpisode(episode: Episode) {
@@ -968,8 +967,8 @@ extension SubProgramAccountVC: DuneAudioPlayerDelegate {
         let indexPath = IndexPath(item: atIndex, section: 0)
         if episodeTV.indexPathsForVisibleRows!.contains(indexPath) {
             let cell = episodeTV.cellForRow(at: IndexPath(item: atIndex, section: 0)) as! EpisodeCell
-//            cell.playEpisodeButton.setImage(nil, for: .normal)
             cell.playbackBarView.setupPlaybackBar()
+            cell.removePlayIcon()
             activeCell = cell
         }
     }

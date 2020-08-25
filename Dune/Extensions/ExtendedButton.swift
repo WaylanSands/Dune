@@ -10,8 +10,7 @@ import Foundation
 import UIKit
 
 class ExtendedButton: UIButton {
-    // default value
-    // you can change clickable area dynamically by setting this value.
+   
     var padding = CGFloat(0)
     
     override open func point(inside point: CGPoint, with event: UIEvent?) -> Bool {

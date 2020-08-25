@@ -55,9 +55,15 @@ class EditAccountVC: UIViewController {
         return view
     }()
     
-    let profileImageView: UIImageView = {
+    lazy var profileImageView: UIImageView = {
+        var radius: CGFloat
+        if CurrentProgram.isPublisher! {
+            radius = 7
+        } else {
+            radius = imageSize / 2
+        }
         let imageView = UIImageView()
-        imageView.layer.cornerRadius = 7
+        imageView.layer.cornerRadius = radius
         imageView.clipsToBounds = true
         return imageView
     }()

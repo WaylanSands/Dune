@@ -77,21 +77,33 @@ class SubscribersVC: UIViewController {
        let label = UILabel()
         label.numberOfLines = 0
         label.text = "At this current moment \(programName!) does not have any subscribers"
-        label.font = UIFont.systemFont(ofSize: 14, weight: .regular)
-        label.textColor = CustomStyle.fifthShade
+        label.font = UIFont.systemFont(ofSize: 16, weight: .regular)
+        label.textColor = CustomStyle.subTextColor
         label.lineBreakMode = .byWordWrapping
         label.textAlignment = .center
         return label
     }()
     
+//    lazy var subscribeButton: UIButton = {
+//       let button = UIButton()
+//        button.setTitle("Subscribe to \(programName!)", for: .normal)
+//        button.titleLabel?.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
+//        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 15, bottom: 0, right: 15)
+//        button.addTarget(self, action: #selector(subscribePress), for: .touchUpInside)
+//        button.backgroundColor = CustomStyle.onBoardingBlack
+//        button.layer.cornerRadius = 13
+//        return button
+//    }()
+    
     lazy var subscribeButton: UIButton = {
        let button = UIButton()
         button.setTitle("Subscribe to \(programName!)", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
-        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 15, bottom: 0, right: 15)
+        button.layer.cornerRadius = 17
+        button.backgroundColor = CustomStyle.primaryYellow
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 25, bottom: 1, right: 25)
         button.addTarget(self, action: #selector(subscribePress), for: .touchUpInside)
-        button.backgroundColor = CustomStyle.onBoardingBlack
-        button.layer.cornerRadius = 13
+        button.setTitleColor(.black, for: .normal)
         return button
     }()
  
@@ -212,9 +224,8 @@ class SubscribersVC: UIViewController {
         emptyTableView.addSubview(subscribeButton)
         subscribeButton.translatesAutoresizingMaskIntoConstraints = false
         subscribeButton.topAnchor.constraint(equalTo: noSubscribersSubLabel.bottomAnchor, constant: 20).isActive = true
-        subscribeButton.widthAnchor.constraint(equalToConstant: subscribeButton.intrinsicContentSize.width).isActive = true
         subscribeButton.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
-        subscribeButton.heightAnchor.constraint(equalToConstant: 26).isActive = true
+        subscribeButton.heightAnchor.constraint(equalToConstant: 36).isActive = true
         
         view.addSubview(loadingView)
         loadingView.translatesAutoresizingMaskIntoConstraints = false
@@ -464,13 +475,7 @@ extension SubscribersVC: ProgramCellDelegate {
         if CurrentProgram.programsIDs().contains(program.ID) {
             let tabBar = MainTabController()
             tabBar.selectedIndex = 4
-            if #available(iOS 13.0, *) {
-                let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
-                sceneDelegate.window?.rootViewController = tabBar
-            } else {
-                let appDelegate = UIApplication.shared.delegate as! AppDelegate
-                appDelegate.window?.rootViewController = tabBar
-            }
+            DuneDelegate.newRootView(tabBar)
         } else if program.isPublisher {
             if program.isPrimaryProgram && !program.programIDs!.isEmpty  {
                 let programVC = ProgramProfileVC()

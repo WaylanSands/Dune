@@ -11,6 +11,16 @@ import UIKit
 
 extension FileManager {
     
+    static let fileManager = FileManager.default
+    
+    static func fileExistsWith(path: String) -> Bool {
+        if FileManager.default.fileExists(atPath: path) {
+            return true
+        } else {
+            return false
+        }
+    }
+    
     static func getDocumentsDirectory() -> URL {
          let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
          let documentsDirectory = paths[0]
@@ -27,57 +37,9 @@ extension FileManager {
         return FileManager.default.temporaryDirectory
      }
     
-   static func clearTmpDirectory() {
-        print("Clearing temp directory")
-        do {
-            let tmpDirURL = FileManager.default.temporaryDirectory
-            let tmpDirectory = try FileManager.default.contentsOfDirectory(atPath: tmpDirURL.path)
-            try tmpDirectory.forEach { file in
-                let fileUrl = tmpDirURL.appendingPathComponent(file)
-                try FileManager.default.removeItem(atPath: fileUrl.path)
-            }
-        } catch {
-           //catch the error somehow
-        }
-    }
-    
-   static func clearCacheDirectory() {
-        print("Clearing cache directory")
-        do {
-            let cacheURL = getCacheDirectory()
-            let cacheDirectory = try FileManager.default.contentsOfDirectory(atPath: cacheURL.path)
-            try cacheDirectory.forEach { file in
-                let fileUrl = cacheURL.appendingPathComponent(file)
-                try FileManager.default.removeItem(atPath: fileUrl.path)
-            }
-        } catch {
-           //catch the error somehow
-        }
-    }
-    
-    static func checkCacheFor(imageID: String, completion: @escaping (UIImage?) -> ()) {
-
-        let cacheURL = getCacheDirectory()
-        let possibleURL = cacheURL.appendingPathComponent(imageID)
-        
-        if FileManager.default.fileExists(atPath: possibleURL.path) {
-            let imageData = try! Data(contentsOf: possibleURL)
-            if let image = UIImage(data: imageData) {
-                completion(image)
-            } else {
-                print("Error getting the image from cache")
-            }
-        } else {
-             print("No image exists in cache")
-             completion(nil)
-        }
-    }
-    
     static func clearDocumentsDirectory() {
         print("Clearing documents directory")
-        let fileManager = FileManager.default
-        guard let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
-
+        let documentsDirectory = getDocumentsDirectory()
         let contentURLs = try? fileManager.contentsOfDirectory(at: documentsDirectory, includingPropertiesForKeys: nil)
         
         guard let fileURLs = contentURLs else { return }
@@ -91,25 +53,49 @@ extension FileManager {
         }
     }
     
-    static func getAudioFileFromDocumentsDirectory(fileName: String, fileExtension: String) -> Data? {
-        
-        let documentsDirectory = FileManager.getDocumentsDirectory()
-        
-        var fileURL: URL
-        
-        if fileName.contains(".m4a") {
-             fileURL = documentsDirectory.appendingPathComponent(fileName)
-        } else {
-             fileURL = documentsDirectory.appendingPathComponent(fileName + fileExtension)
+   static func clearTmpDirectory() {
+        print("Clearing temp directory")
+        do {
+            let tmpDirURL = FileManager.default.temporaryDirectory
+            let tmpDirectory = try FileManager.default.contentsOfDirectory(atPath: tmpDirURL.path)
+            try tmpDirectory.forEach { file in
+                let fileUrl = tmpDirURL.appendingPathComponent(file)
+                try FileManager.default.removeItem(atPath: fileUrl.path)
+            }
+        } catch {
+            print("Error clearing temp directory")
         }
-                
-        if FileManager.default.fileExists(atPath: fileURL.path) {
-            let fileManger = FileManager.default
-            let track = fileManger.contents(atPath: fileURL.path)
-            return track
+    }
+    
+   static func clearCacheDirectory() {
+        print("Clearing cache directory")
+        do {
+            let cacheURL = getCacheDirectory()
+            let cacheDirectory = try FileManager.default.contentsOfDirectory(atPath: cacheURL.path)
+            try cacheDirectory.forEach { file in
+                let fileUrl = cacheURL.appendingPathComponent(file)
+                try FileManager.default.removeItem(atPath: fileUrl.path)
+            }
+        } catch {
+            print("Error clearing cache directory")
+        }
+    }
+    
+    static func checkCacheFor(imageID: String, completion: @escaping (UIImage?) -> ()) {
+
+        let cacheURL = getCacheDirectory()
+        let possibleURL = cacheURL.appendingPathComponent(imageID)
+        
+        if fileExistsWith(path: possibleURL.path){
+            let imageData = try! Data(contentsOf: possibleURL)
+            if let image = UIImage(data: imageData) {
+                completion(image)
+            } else {
+                print("Error getting the image from cache")
+            }
         } else {
-            print("There is no data with that fileName")
-            return nil
+             print("No image exists in cache")
+             completion(nil)
         }
     }
     
@@ -126,7 +112,7 @@ extension FileManager {
         
         print("The Filename is \(fileName)")
         
-        if FileManager.default.fileExists(atPath: fileURL.path) {
+        if fileExistsWith(path: fileURL.path) {
             let fileManger = FileManager.default
             let track = fileManger.contents(atPath: fileURL.path)
             return track
@@ -141,7 +127,7 @@ extension FileManager {
         let tempDirectory = FileManager.getTempDirectory()
         let fileURL = tempDirectory.appendingPathComponent(fileName)
         
-        if FileManager.default.fileExists(atPath: fileURL.path) {
+        if fileExistsWith(path: fileURL.path) {
             let fileManger = FileManager.default
             let track = fileManger.contents(atPath: fileURL.path)
             return track
@@ -151,53 +137,19 @@ extension FileManager {
         }
     }
     
-    static func getAudioURLFrom(fileName: String, completion: @escaping (URL?) -> ())  {
-        print("Docs:")
-        printContentsOfDocumentsDirectory()
-        let documentsDirectory = FileManager.getDocumentsDirectory()
-        let fileURL = documentsDirectory.appendingPathComponent(fileName + ".m4a")
-        
-        if FileManager.default.fileExists(atPath: fileURL.path) {
-            completion(fileURL)
-        } else {
-            print("There is no data with that fileName")
-            completion(nil)
-        }
-        
-    }
-    
     static func getAudioURLFromTempDirectory(fileName: String, completion: @escaping (URL) -> ())  {
 
         let documentsDirectory = FileManager.getTempDirectory()
         let fileURL = documentsDirectory.appendingPathComponent(fileName)
         
-        if FileManager.default.fileExists(atPath: fileURL.path) {
+        if fileExistsWith(path: fileURL.path) {
             print("File found in temp directory")
             completion(fileURL)
         } else {
-            print("File not in temp directory, attemptng to fetch from Firebase Storage")
+            print("File not in temp directory, attempting to fetch from Firebase Storage")
             FireStorageManager.downloadDraftEpisodeAudio(audioID: fileName) { url in
                 completion(url)
             }
-        }
-        
-    }
-    
-    static func removeFileFromDocumentsDirectory(fileName: String) {
-        
-        let documentsDirectory = FileManager.getDocumentsDirectory()
-        let fileURL = documentsDirectory.appendingPathComponent(fileName + ".m4a")
-        
-        if FileManager.default.fileExists(atPath: fileURL.path) {
-            do {
-                 try FileManager.default.removeItem(atPath: fileURL.path)
-            }
-            catch {
-                print("Unable to remove file")
-            }
-             print("Successfully removed file")
-        } else {
-            print("File does not exist")
         }
     }
     
@@ -206,7 +158,7 @@ extension FileManager {
         let tempDirectory = FileManager.getTempDirectory()
         let fileURL = tempDirectory.appendingPathComponent(fileName)
         
-        if FileManager.default.fileExists(atPath: fileURL.path) {
+        if fileExistsWith(path: fileURL.path) {
             do {
                  try FileManager.default.removeItem(atPath: fileURL.path)
             }
@@ -219,26 +171,16 @@ extension FileManager {
         }
     }
     
-    static func checkFileExists(filePath: String) -> Bool {
-        
-        if FileManager.default.fileExists(atPath: filePath) {
-            return true
-        } else {
-            print("There is no file at that path")
-            return false
-        }
-    }
     
     static func removeAudioFilesFromDocumentsDirectory(completion: @escaping () -> ()) {
         
         let documentsUrl =  getDocumentsDirectory()
-        let fileManager = FileManager.default
         DispatchQueue.global(qos: .background).async {
             do {
                 let directoryContents = try FileManager.default.contentsOfDirectory(at: documentsUrl, includingPropertiesForKeys: nil)
                 
                 for each in directoryContents {
-                    if each.lastPathComponent != "user" && each.pathExtension != "png" && each.pathExtension != "jpg"  {
+                    if each.pathExtension != "png" && each.pathExtension != "jpg"  {
                         do {
                             try fileManager.removeItem(at: each)
                         } catch {
@@ -256,11 +198,8 @@ extension FileManager {
     }
     
         static func printContentsOfDocumentsDirectory() {
-           
             let documentsURL = getDocumentsDirectory()
-           
             do {
-                // Get the directory contents urls (including subfolders urls)
                 let directoryContents = try FileManager.default.contentsOfDirectory(at: documentsURL, includingPropertiesForKeys: nil)
                 if directoryContents.count == 0 {
                     print("The documents directory is empty")
@@ -278,11 +217,8 @@ extension FileManager {
         }
     
     static func printContentsOfTempDirectory() {
-       
         let tempURL = FileManager.default.temporaryDirectory
-       
         do {
-            // Get the directory contents urls (including subfolders urls)
             let directoryContents = try FileManager.default.contentsOfDirectory(at: tempURL, includingPropertiesForKeys: nil)
            
             for each in directoryContents {
@@ -294,18 +230,6 @@ extension FileManager {
             }
         } catch {
             print(error)
-        }
-    }
-    
-    static func checkTempDirectoryForAudioFileWith(audioID: String, completion: (URL?) -> ()) {
-        let tempDirectory = FileManager.default.temporaryDirectory
-        let fileURL = tempDirectory.appendingPathComponent(audioID)
-        
-        if FileManager.default.fileExists(atPath: fileURL.path) {
-            completion(fileURL)
-        } else {
-            print("There is no data with that fileName")
-            completion(nil)
         }
     }
     
@@ -332,11 +256,8 @@ extension FileManager {
         }
     }
     
-    // Store selected image in cache directory
     static func storeSelectedProgramImage(image: UIImage, imageID: String?, programID: String) {
-        
-        let fileManager = FileManager.default
-        
+                
         let imageID = imageID ?? NSUUID().uuidString + ".jpg"
         
         if CurrentProgram.ID != programID {
@@ -351,7 +272,7 @@ extension FileManager {
             let cacheURL = getCacheDirectory()
             let fileURL = cacheURL.appendingPathComponent(imageID)
             
-            if fileManager.fileExists(atPath: fileURL.path) {
+            if fileExistsWith(path: fileURL.path) {
                 do {
                     try fileManager.removeItem(at: fileURL)
                 } catch {
@@ -374,7 +295,6 @@ extension FileManager {
     
     static func storeInitialProgramImage(image: UIImage, programID: String) {
         
-        let fileManager = FileManager.default
         let imageID = NSUUID().uuidString + ".jpg"
         CurrentProgram.imageID = imageID
         CurrentProgram.image = image
@@ -385,7 +305,7 @@ extension FileManager {
             
             let fileURL = cacheURL.appendingPathComponent(imageID)
             
-            if fileManager.fileExists(atPath: fileURL.path) {
+            if fileExistsWith(path: fileURL.path) {
                 do {
                     try fileManager.removeItem(at: fileURL)
                 } catch {
@@ -408,7 +328,6 @@ extension FileManager {
     
     static func storeTwitterProgramImage(image: UIImage) {
         
-        let fileManager = FileManager.default
         let imageID = NSUUID().uuidString + ".jpg"
         CurrentProgram.imageID = imageID
         CurrentProgram.image = image
@@ -419,7 +338,7 @@ extension FileManager {
                 
                 let fileURL = cacheURL.appendingPathComponent(imageID)
                 
-                if fileManager.fileExists(atPath: fileURL.path) {
+                if fileExistsWith(path: fileURL.path) {
                     do {
                         try fileManager.removeItem(at: fileURL)
                     } catch {
@@ -446,8 +365,8 @@ extension FileManager {
         let cacheURL = FileManager.getCacheDirectory()
         let fileURL = cacheURL.appendingPathComponent(imageID)
         
-        DispatchQueue.global().async {
-            if FileManager.default.fileExists(atPath: fileURL.path) {
+        DispatchQueue.global(qos: .userInitiated).async {
+            if fileExistsWith(path: fileURL.path) {
                 let imageData = try! Data(contentsOf: fileURL)
                 if let image = UIImage(data: imageData) {
                     completion(image)
@@ -468,8 +387,8 @@ extension FileManager {
         let cacheURL = FileManager.getCacheDirectory()
         let fileURL = cacheURL.appendingPathComponent(imageID)
         
-        DispatchQueue.global().async {
-            if FileManager.default.fileExists(atPath: fileURL.path) {
+        DispatchQueue.global(qos: .userInitiated).async {
+            if fileExistsWith(path: fileURL.path) {
                 let imageData = try! Data(contentsOf: fileURL)
                 if let image = UIImage(data: imageData) {
                     completion(image)
@@ -490,9 +409,9 @@ extension FileManager {
         let cacheURL = FileManager.getCacheDirectory()
         let fileURL = cacheURL.appendingPathComponent(audioID)
         
-        DispatchQueue.global().async {
+        DispatchQueue.global(qos: .userInitiated).async {
             
-            if FileManager.default.fileExists(atPath: fileURL.path) {
+            if fileExistsWith(path: fileURL.path) {
                 completion(fileURL)
             } else {
                 print("Fetching music from Firebase Storage")
@@ -510,9 +429,9 @@ extension FileManager {
         let cacheURL = FileManager.getCacheDirectory()
         let fileURL = cacheURL.appendingPathComponent(audioID)
         
-        DispatchQueue.global().async {
+        DispatchQueue.global(qos: .userInitiated).async {
             
-            if !FileManager.default.fileExists(atPath: fileURL.path) {
+            if !fileExistsWith(path: fileURL.path) {
                 print("Downloading low-audio to cache")
                 FireStorageManager.downloadLowAudioToCache(audioID: audioID)
             }
@@ -529,30 +448,6 @@ extension FileManager {
         }
     }
 
-   static func storeImageWith(fileName: String, image: UIImage) {
-        if let data = image.jpegData(compressionQuality: 0.5) {
-            // Using our extension here
-            let documentsURL = FileManager.getDocumentsDirectory()
-            let fileURL = documentsURL.appendingPathComponent(fileName)
 
-             do {
-                try data.write(to: fileURL, options: .atomic)
-                print("Storing image")
-              }
-              catch {
-               print("Unable to Write Data to Disk (\(error.localizedDescription))")
-              }
-          }
-    }
-
-    
 }
 
-enum userFolder {
-    case user
-    case image
-    case program
-    case programImage
-    case programDrafts
-    case programIntro
-}

@@ -10,43 +10,43 @@ import UIKit
 
 class IntroVC: UIViewController {
     
-    var introScreens = [IntroScreenView]()
+    private var introScreens = [IntroScreenView]()
     
-    // For various screens
-    var topHeight: CGFloat = 70
-    var bottomHeight: CGFloat = -50
+    // For various screen sizes
+    private var topHeight: CGFloat = 70
+    private var bottomHeight: CGFloat = -50
     
-    let scrollView: UIScrollView = {
+    private let scrollView: UIScrollView = {
         let view = UIScrollView()
         view.isPagingEnabled = true
         view.showsHorizontalScrollIndicator = false
         return view
     }()
     
-    lazy var pageControl: UIPageControl = {
+    private lazy var pageControl: UIPageControl = {
         let control = UIPageControl()
         control.numberOfPages = introScreens.count
         control.currentPage = 0
         return control
     }()
     
-    let logoImageView: UIImageView = {
+    private let logoImageView: UIImageView = {
         let view = UIImageView()
         view.image = UIImage(named: "introLogo")
         return view
     }()
     
-    let logoLabel: UILabel = {
+    private let logoLabel: UILabel = {
         let label = UILabel()
         label.text = "Dune"
-        label.font = UIFont.systemFont(ofSize: 27, weight: .bold)
+        label.font = UIFont.systemFont(ofSize: 26, weight: .bold)
         label.textColor = .white
         return label
     }()
     
-    let skipButton: UIButton = {
+    private let skipButton: UIButton = {
         let button = UIButton()
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .semibold)
         button.setTitle("Skip", for: .normal)
         button.setTitleColor(.white, for: .normal)
         button.addTarget(self, action: #selector(continueButtonPress), for: .touchUpInside)
@@ -65,7 +65,7 @@ class IntroVC: UIViewController {
         configureViews()
     }
     
-    func styleForScreens() {
+    private func styleForScreens() {
         switch UIDevice.current.deviceType {
         case .iPhone4S, .iPhoneSE:
            bottomHeight = -15
@@ -87,7 +87,7 @@ class IntroVC: UIViewController {
         }
     }
     
-    func configureViews() {
+    private func configureViews() {
         view.backgroundColor = hexStringToUIColor(hex: "A5AECA")
         view.addSubview(scrollView)
         setupSlideScrollView(screens : introScreens)
@@ -101,7 +101,7 @@ class IntroVC: UIViewController {
         
         view.addSubview(logoLabel)
         logoLabel.translatesAutoresizingMaskIntoConstraints = false
-        logoLabel.leadingAnchor.constraint(equalTo: logoImageView.trailingAnchor, constant: 10).isActive = true
+        logoLabel.leadingAnchor.constraint(equalTo: logoImageView.trailingAnchor, constant: 7).isActive = true
         logoLabel.centerYAnchor.constraint(equalTo: logoImageView.centerYAnchor, constant: 0).isActive = true
         
         view.addSubview(pageControl)
@@ -115,7 +115,7 @@ class IntroVC: UIViewController {
         skipButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: bottomHeight - 5).isActive = true
     }
     
-    func setupSlideScrollView(screens : [IntroScreenView]) {
+    private func setupSlideScrollView(screens : [IntroScreenView]) {
         scrollView.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: view.frame.height)
         scrollView.contentSize = CGSize(width: view.frame.width * CGFloat(screens.count), height: view.frame.height)
         
@@ -125,10 +125,10 @@ class IntroVC: UIViewController {
         }
     }
     
-    func screens() -> [IntroScreenView] {
-        let screenOne = IntroScreenView(image: UIImage(named: "introImage-1")!, heading: "Stay in the loop", subHeading: "Subscribe to your interests to listen, learn & stay up to date through a stream of short audio clips")
-        let screenTwo = IntroScreenView(image: UIImage(named: "introImage-2")!, heading: "Connect with others", subHeading: "Connect with like minded people, post comments &  join the discussion.")
-        let screenThree = IntroScreenView(image: UIImage(named: "introImage-3")!, heading: "Have a voice", subHeading: "Create your own channel & grow your following by sharing your ideas and thoughts.")
+    private func screens() -> [IntroScreenView] {
+        let screenOne = IntroScreenView(image: UIImage(named: "introImage-1")!, heading: "Stay in the loop", subHeading: "Subscribe to your interests to listen, learn & stay up-to-date through bite-sized audio clips. ")
+        let screenTwo = IntroScreenView(image: UIImage(named: "introImage-2")!, heading: "Connect with others", subHeading: "Connect with like-minded people, post comments & join in on the discussions.")
+        let screenThree = IntroScreenView(image: UIImage(named: "introImage-3")!, heading: "Have a voice", subHeading: "Create your own channel and share your thoughts, ideas and interests with the world.")
         return [screenOne, screenTwo, screenThree]
     }
     
@@ -175,17 +175,10 @@ extension IntroVC: UIScrollViewDelegate {
     @objc func continueButtonPress() {
         let rootVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "mainNavController") as! UINavigationController
         UserDefaults.standard.set(true, forKey: "completedIntro")
-        if #available(iOS 13.0, *) {
-            let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
-            sceneDelegate.window?.rootViewController = rootVC
-        } else {
-            let appDelegate = UIApplication.shared.delegate as! AppDelegate
-            appDelegate.window?.rootViewController = rootVC
-        }
-        
+        DuneDelegate.newRootView(rootVC)
     }
     
-    func blend(from: UIColor, to: UIColor, percent: Double) -> UIColor {
+    private func blend(from: UIColor, to: UIColor, percent: Double) -> UIColor {
         var fR : CGFloat = 0.0
         var fG : CGFloat = 0.0
         var fB : CGFloat = 0.0
@@ -208,7 +201,7 @@ extension IntroVC: UIScrollViewDelegate {
     }
 
     // Pass in the scroll percentage to get the appropriate color
-    func scrollColor(percent: Double) -> UIColor {
+    private func scrollColor(percent: Double) -> UIColor {
         var start : UIColor
         var end : UIColor
         var perc = percent

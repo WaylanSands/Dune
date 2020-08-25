@@ -29,6 +29,7 @@ class ProfileImageVC: UIViewController {
         let navBar = CustomNavBar()
         navBar.titleLabel.text = ""
         navBar.rightButton.isHidden = true
+        navBar.leftButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: -10, bottom: 0, right: 0)
         navBar.leftButton.addTarget(self, action: #selector(backButtonPress), for: .touchUpInside)
         return navBar
     }()
@@ -54,7 +55,7 @@ class ProfileImageVC: UIViewController {
     
     func addRoundedCorners() {
         for eachImage in profileImages {
-            eachImage.layer.cornerRadius = 7
+            eachImage.layer.cornerRadius = eachImage.frame.width / 2
             eachImage.clipsToBounds = true
         }
     }
@@ -92,9 +93,11 @@ class ProfileImageVC: UIViewController {
     }
     
     func presentNextVC() {
-        if let interestsVC = UIStoryboard(name: "OnboardingPublisher", bundle: nil).instantiateViewController(withIdentifier: "interestsVC") as? InterestsVC {
-            navigationController?.pushViewController(interestsVC, animated: true)
-        }
+        let listenerBioVC = ListenerAddBioVC()
+        navigationController?.pushViewController(listenerBioVC, animated: true)
+//        if let interestsVC = UIStoryboard(name: "OnboardingPublisher", bundle: nil).instantiateViewController(withIdentifier: "interestsVC") as? InterestsVC {
+//            navigationController?.pushViewController(interestsVC, animated: true)
+//        }
     }
 }
 

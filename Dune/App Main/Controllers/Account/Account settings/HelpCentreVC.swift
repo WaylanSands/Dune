@@ -27,7 +27,7 @@ Releasing entertaining, informative content on a regular basis is essential to n
 
 Like to know what they think of your episodes or ideas for future content? Ask them to comment.
 
-Pro tip - Channels with more subscribers and high Cred rank higher than other channels which means they show up more in search results. One of the best ways to grow you subscribers and boost Cred is by sharing your channel through your own network. If people have the app and click the shared link they are taken to your channel and are automatically subscribed. If they don't have the app, they are taken to the Appstore and if they continue to download the app they will be subscribed and you will be rewarded 100 rep.
+Pro tip - Channels with more subscribers and high Cred rank higher than other channels which means they show up more in search results. One of the best ways to grow you subscribers and boost Cred is by sharing your channel through your own network. If people have the app and click the shared link they are taken to your channel and are automatically subscribed. If they don't have the app, they are taken to the Appstore and if they continue to download the app they will be subscribed and you will be rewarded 100 Cred.
 
 """
     

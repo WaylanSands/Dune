@@ -9,8 +9,6 @@
 import UIKit
 import Firebase
 import FirebaseFirestore
-import UserNotifications
-
 
 protocol NextButtonDelegate: class {
     func makeNextButton(active: Bool)
@@ -24,7 +22,9 @@ class CreateUserVC: UIViewController {
     
     var nextButtonYPosition: CGFloat = 14
     var datePickerDistance: CGFloat  = 40.0
+    var nextButtonLowerYPosition: CGFloat = 100
     lazy var screenWidth = view.frame.width
+    var statusStyle: UIStatusBarStyle = .default
     lazy var centerXPosition = self.view.frame.origin.x
     let Under18Years = Calendar.current.date(byAdding: .year, value: -18, to: Date())
     
@@ -58,6 +58,7 @@ class CreateUserVC: UIViewController {
         let navBar = CustomNavBar()
         navBar.leftButton.setImage(#imageLiteral(resourceName: "back-button-blk"), for: .normal)
         navBar.rightButton.isHidden = true
+        navBar.leftButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: -10, bottom: 0, right: 0)
         navBar.leftButton.addTarget(self, action: #selector(backButtonPress), for: .touchUpInside)
         navBar.backgroundColor = .clear
         return navBar
@@ -74,6 +75,10 @@ class CreateUserVC: UIViewController {
     lazy var currentView: UIView = createUsername
     var nextButtonActive = false
     
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        return self.statusStyle
+    }
+    
     // View Did Load
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -88,10 +93,13 @@ class CreateUserVC: UIViewController {
             nextButtonYPosition = 4
             progressBar.isHidden = true
             datePickerDistance = 20.0
+            nextButtonLowerYPosition = 60
         case .iPhone8:
             nextButtonYPosition = 20
+            nextButtonLowerYPosition = 60
             progressBarTopAnchor.constant = 50.0
         case .iPhone8Plus:
+            nextButtonLowerYPosition = 60
              progressBarTopAnchor.constant = 70.0
         case .iPhone11:
             progressBarTopAnchor.constant = 100.0
@@ -105,7 +113,6 @@ class CreateUserVC: UIViewController {
     }
     
     func configureViews() {
-        
         self.view.addSubview(containerView)
         containerView.translatesAutoresizingMaskIntoConstraints = false
         containerView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
@@ -146,18 +153,19 @@ class CreateUserVC: UIViewController {
         addBirthDate.nextButtonDelegate = self
         
         view.addSubview(nextButton)
-        nextButton.translatesAutoresizingMaskIntoConstraints = false
-        nextButton.heightAnchor.constraint(equalToConstant: 40).isActive = true
-        nextButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
-        nextButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
-        nextButton.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: nextButtonYPosition).isActive = true
+        nextButton.frame = CGRect(x: 16, y: view.center.y + nextButtonYPosition - 20, width: view.frame.width - 32, height: 40)
+//        nextButton.translatesAutoresizingMaskIntoConstraints = false
+//        nextButton.heightAnchor.constraint(equalToConstant: 40).isActive = true
+//        nextButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
+//        nextButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
+//        nextButton.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: nextButtonYPosition).isActive = true
         
-        view.addSubview(noThanksButton)
-        noThanksButton.translatesAutoresizingMaskIntoConstraints = false
-        noThanksButton.heightAnchor.constraint(equalToConstant: 40).isActive = true
-        noThanksButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
-        noThanksButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
-        noThanksButton.topAnchor.constraint(equalTo: nextButton.bottomAnchor, constant: 10).isActive = true
+//        view.addSubview(noThanksButton)
+//        noThanksButton.translatesAutoresizingMaskIntoConstraints = false
+//        noThanksButton.heightAnchor.constraint(equalToConstant: 40).isActive = true
+//        noThanksButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
+//        noThanksButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
+//        noThanksButton.topAnchor.constraint(equalTo: nextButton.bottomAnchor, constant: 10).isActive = true
 
         view.bringSubviewToFront(progressBar)
         
@@ -234,17 +242,37 @@ class CreateUserVC: UIViewController {
                 User.password = createPassword.password
                 transitionBackwards(view: createPassword)
                 transitionToCenter(view: addBirthDate)
+                animateNextButtonDown()
                 updateProgressImage(4)
-                nextButtonActive = true
+                nextButtonActive = false
                 createPassword.passwordTextField.resignFirstResponder()
-                addBirthDate.dateTextField.becomeFirstResponder()
-                nextButton.setTitle("Allow alerts", for: .normal)
-                noThanksButton.isHidden = false
             case addBirthDate:
+                User.interests = addBirthDate.selectedCategories
                 print("Selected allow")
-                askToRegisterForNotifications()
+                navigateToAccountType()
+//                askToRegisterForNotifications()
             default: return
             }
+        }
+    }
+    
+    func animateNextButtonDown() {
+        UIView.animate(withDuration: 0.5) {
+            self.nextButton.frame = CGRect(x: 16, y: self.view.frame.height - self.nextButtonLowerYPosition, width: self.view.frame.width - 32, height: 40)
+//            self.view.backgroundColor = CustomStyle.onBoardingBlack
+//            self.statusStyle = .lightContent
+//            self.customNavBar.leftButton.setImage(UIImage(named: "back-button-white"), for: .normal)
+//            self.setNeedsStatusBarAppearanceUpdate()
+        }
+    }
+    
+    func animateNextButtonUp() {
+        UIView.animate(withDuration: 0.5) {
+            self.nextButton.frame = CGRect(x: 16, y: self.view.center.y + self.nextButtonYPosition - 20, width: self.view.frame.width - 32, height: 40)
+//            self.view.backgroundColor = CustomStyle.white
+//            self.statusStyle = .default
+//            self.customNavBar.leftButton.setImage(UIImage(named: "back-button-blk"), for: .normal)
+//            self.setNeedsStatusBarAppearanceUpdate()
         }
     }
     
@@ -252,14 +280,14 @@ class CreateUserVC: UIViewController {
         let appDelegate = UIApplication.shared.delegate as! AppDelegate
         appDelegate.promptForPushNotifications { _ in
             DispatchQueue.main.async {
-                self.navigateToAccountType()
+//                self.navigateToAccountType()
             }
         }
     }
     
     func navigateToAccountType() {
         if let accountTypeController = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "accountTypeController") as? AccountTypeVC {
-            navigationController?.pushViewController(accountTypeController, animated: true)
+            navigationController?.pushViewController(accountTypeController, animated: false)
         }
     }
     
@@ -285,11 +313,11 @@ class CreateUserVC: UIViewController {
             createPassword.passwordTextField.resignFirstResponder()
             addEmail.emailTextField.becomeFirstResponder()
         case addBirthDate:
-            nextButton.setTitle("Next", for: .normal)
             noThanksButton.isHidden = true
             transitionForward(view: addBirthDate)
             transitionToCenter(view: createPassword)
             updateProgressImage(3)
+            animateNextButtonUp()
             currentView = createPassword
         default: return
         }
@@ -314,7 +342,7 @@ class CreateUserVC: UIViewController {
     
     @objc func noToNotifications() {
         print("No")
-         navigateToAccountType()
+//         navigateToAccountType()
     }
     
 }

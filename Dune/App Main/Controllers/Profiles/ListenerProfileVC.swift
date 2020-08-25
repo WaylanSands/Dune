@@ -14,7 +14,7 @@ class ListenerProfileVC: UIViewController {
     let minHeight = UIDevice.current.navBarHeight() + 40
     let navHeight = UIDevice.current.navBarHeight()
     
-    var largeImageSize: CGFloat = 80.0
+    var imageSize: CGFloat = 60.0
     var fontNameSize: CGFloat = 16
     var fontIDSize: CGFloat = 14
     let maxPrograms = 10
@@ -77,9 +77,9 @@ class ListenerProfileVC: UIViewController {
         return view
     }()
     
-    let mainImage: UIImageView = {
+    lazy var mainImage: UIImageView = {
         let imageView = UIImageView()
-        imageView.layer.cornerRadius = 7
+        imageView.layer.cornerRadius = imageSize / 2
         imageView.clipsToBounds = true
         imageView.contentMode = .scaleAspectFill
         return imageView
@@ -105,13 +105,6 @@ class ListenerProfileVC: UIViewController {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 14, weight: .regular)
         label.textColor = CustomStyle.primaryBlue
-        return label
-    }()
-    
-    let categoryLabel: UILabel = {
-        let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 14, weight: .regular)
-        label.textColor = CustomStyle.fourthShade
         return label
     }()
     
@@ -255,9 +248,12 @@ class ListenerProfileVC: UIViewController {
         nameLabel.text = program.name
         summaryTextView.text = program.summary
         usernameLabel.text = "@\(program.username)"
-        categoryLabel.text = program.primaryCategory
         repCountLabel.text = program.rep.roundedWithAbbreviations
         subscriptionCountLabel.text = (program.subscriptionIDs.count - 1).roundedWithAbbreviations
+        
+        if program.summary == "" {
+             summaryTextView.text = "Busy listening to episodes on Dune..."
+        }
 
         setMainImage()
         
@@ -370,7 +366,7 @@ class ListenerProfileVC: UIViewController {
         case .iPhone4S:
             break
         case .iPhoneSE:
-            largeImageSize = 60
+            imageSize = 60
             fontNameSize = 14
             fontIDSize = 12
         case .iPhone8:
@@ -399,14 +395,14 @@ class ListenerProfileVC: UIViewController {
         topDetailsView.topAnchor.constraint(equalTo: headerView.topAnchor, constant: navHeight + 10).isActive = true
         topDetailsView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
         topDetailsView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
-        topDetailsView.heightAnchor.constraint(equalToConstant: 80).isActive = true
+        topDetailsView.heightAnchor.constraint(equalToConstant: imageSize).isActive = true
         
         topDetailsView.addSubview(mainImage)
         mainImage.translatesAutoresizingMaskIntoConstraints = false
         mainImage.topAnchor.constraint(equalTo:topDetailsView.topAnchor, constant: 0).isActive = true
         mainImage.leadingAnchor.constraint(equalTo:topDetailsView.leadingAnchor).isActive = true
-        mainImage.widthAnchor.constraint(equalToConstant: largeImageSize).isActive = true
-        mainImage.heightAnchor.constraint(equalToConstant: largeImageSize).isActive = true
+        mainImage.widthAnchor.constraint(equalToConstant: imageSize).isActive = true
+        mainImage.heightAnchor.constraint(equalToConstant: imageSize).isActive = true
         
         topDetailsView.addSubview(playIntroButton)
         playIntroButton.translatesAutoresizingMaskIntoConstraints = false
@@ -416,12 +412,11 @@ class ListenerProfileVC: UIViewController {
         
         topDetailsView.addSubview(topMiddleStackedView)
         topMiddleStackedView.translatesAutoresizingMaskIntoConstraints = false
-        topMiddleStackedView.topAnchor.constraint(equalTo: topDetailsView.topAnchor).isActive = true
+        topMiddleStackedView.centerYAnchor.constraint(equalTo: mainImage.centerYAnchor).isActive = true
         topMiddleStackedView.leadingAnchor.constraint(equalTo: mainImage.trailingAnchor, constant: 10).isActive = true
-        topMiddleStackedView.trailingAnchor.constraint(lessThanOrEqualTo: playIntroButton.leadingAnchor, constant: -20).isActive = true
+        topMiddleStackedView.trailingAnchor.constraint(lessThanOrEqualTo: topDetailsView.trailingAnchor, constant: -16).isActive = true
         topMiddleStackedView.addArrangedSubview(nameLabel)
         topMiddleStackedView.addArrangedSubview(usernameLabel)
-        topMiddleStackedView.addArrangedSubview(categoryLabel)
         
         headerView.addSubview(summaryTextView)
         summaryTextView.translatesAutoresizingMaskIntoConstraints = false

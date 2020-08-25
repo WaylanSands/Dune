@@ -11,10 +11,9 @@ import FirebaseFirestore
 
 class ListenerAddBioVC: UIViewController {
     
-    let appDelegate = UIApplication.shared.delegate as! AppDelegate
     let maxCaptionCharacters = 240
     
-    let summaryPlaceholder = "Include a short bio, what makes you unique?"
+    let summaryPlaceholder = "Share a little information about yourself."
     
     var scrollContentHeightConstraint: NSLayoutConstraint!
     
@@ -33,7 +32,8 @@ class ListenerAddBioVC: UIViewController {
         
     let customNavBar: CustomNavBar = {
         let navBar = CustomNavBar()
-        navBar.titleLabel.text = "Biography"
+        navBar.titleLabel.text = "About you"
+        navBar.leftButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: -10, bottom: 0, right: 0)
         navBar.leftButton.addTarget(self, action: #selector(backButtonPress), for: .touchUpInside)
         return navBar
     }()
@@ -50,9 +50,9 @@ class ListenerAddBioVC: UIViewController {
         return view
     }()
     
-    let mainImage: UIImageView = {
+    lazy var mainImage: UIImageView = {
         let imageView = UIImageView()
-        imageView.layer.cornerRadius = 7
+        imageView.layer.cornerRadius = imageViewSize / 2
         imageView.clipsToBounds = true
         imageView.contentMode = .scaleAspectFill
         return imageView
@@ -88,7 +88,7 @@ class ListenerAddBioVC: UIViewController {
         label.textContainerInset = .zero
         label.textContainer.lineFragmentPadding = 0
         label.isScrollEnabled = false
-        label.isEditable = false
+        label.isUserInteractionEnabled = false
         return label
     }()
     
@@ -100,7 +100,7 @@ class ListenerAddBioVC: UIViewController {
     
     let summaryBarLabel: UILabel = {
         let label = UILabel()
-        label.text = "Include a bio"
+        label.text = "Include a short bio"
         label.font = UIFont.systemFont(ofSize: 14, weight: .medium)
         label.textColor = CustomStyle.fifthShade
         return label
@@ -119,7 +119,6 @@ class ListenerAddBioVC: UIViewController {
         textView.text = summaryPlaceholder
         textView.font = UIFont.systemFont(ofSize: 15, weight: .regular)
         textView.textContainer.maximumNumberOfLines = 12
-        textView.isUserInteractionEnabled = false
         textView.isScrollEnabled = false
         textView.textColor = CustomStyle.fourthShade
         textView.keyboardType = .twitter
@@ -135,9 +134,9 @@ class ListenerAddBioVC: UIViewController {
         return view
     }()
     
-    let bottomBarImageView: UIImageView = {
+    lazy var bottomBarImageView: UIImageView = {
         let imageView = UIImageView()
-        imageView.layer.cornerRadius = 7
+        imageView.layer.cornerRadius = imageBarViewSize / 2
         imageView.clipsToBounds = true
         return imageView
     }()
@@ -311,7 +310,7 @@ class ListenerAddBioVC: UIViewController {
         
         scrollContentView.addSubview(mainImage)
         mainImage.translatesAutoresizingMaskIntoConstraints = false
-        mainImage.topAnchor.constraint(equalTo: scrollContentView.topAnchor, constant: UIDevice.current.navBarHeight() + 10).isActive = true
+        mainImage.topAnchor.constraint(equalTo: scrollContentView.topAnchor, constant: UIDevice.current.navBarHeight() + 15).isActive = true
         mainImage.leadingAnchor.constraint(equalTo: scrollContentView.leadingAnchor, constant: 16).isActive = true
         mainImage.heightAnchor.constraint(equalToConstant: imageViewSize).isActive = true
         mainImage.widthAnchor.constraint(equalToConstant: imageViewSize).isActive = true
@@ -340,7 +339,7 @@ class ListenerAddBioVC: UIViewController {
         
         scrollContentView.addSubview(summaryBar)
         summaryBar.translatesAutoresizingMaskIntoConstraints = false
-        summaryBar.topAnchor.constraint(equalTo: summaryLabel.bottomAnchor, constant: 40).isActive = true
+        summaryBar.topAnchor.constraint(equalTo: summaryLabel.bottomAnchor, constant: 20).isActive = true
         summaryBar.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         summaryBar.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         summaryBar.heightAnchor.constraint(equalToConstant: 37.0).isActive = true
@@ -462,7 +461,6 @@ class ListenerAddBioVC: UIViewController {
         }
         
         DispatchQueue.global(qos: .userInitiated).async {
-            OneSignal.sendTags([ "onboarded" : true ])
             programRef.updateData([
                 "summary" : CurrentProgram.summary!,
                 "isPublisher" : false,
@@ -483,25 +481,19 @@ class ListenerAddBioVC: UIViewController {
                 }
             }
         }
-        presentSearchView()
+        presentDailyFeed()
     }
 
-    func presentSearchView() {
+    func presentDailyFeed() {
         let tabBar = MainTabController()
-        tabBar.selectedIndex = 3
+        tabBar.selectedIndex = 0
         
         if User.recommendedProgram != nil {
             let searchNav = tabBar.selectedViewController as! UINavigationController
             let searchVC = searchNav.viewControllers[0] as! SearchVC
             searchVC.programToPush = User.recommendedProgram!
         }
-        
-        if #available(iOS 13.0, *) {
-            let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
-             sceneDelegate.window?.rootViewController = tabBar
-        } else {
-             appDelegate.window?.rootViewController = tabBar
-        }
+        DuneDelegate.newRootView(tabBar)
     }
     
     // Determine if ok to confirm

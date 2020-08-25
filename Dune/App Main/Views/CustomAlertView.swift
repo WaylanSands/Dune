@@ -87,7 +87,7 @@ class CustomAlertView: UIView {
     let bodyTextLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 14, weight: .medium)
-        label.textColor = CustomStyle.sixthShade
+        label.textColor = CustomStyle.fifthShade
         label.textAlignment = .center
         label.numberOfLines = 0
         return label

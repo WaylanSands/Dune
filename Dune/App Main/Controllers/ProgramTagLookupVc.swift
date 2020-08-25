@@ -243,15 +243,9 @@ extension ProgramTagLookupVC: ProgramCellDelegate {
     
     func visitProfile(program: Program) {
         if CurrentProgram.programsIDs().contains(program.ID) {
-             let tabBar = MainTabController()
-             tabBar.selectedIndex = 4
-             if #available(iOS 13.0, *) {
-                 let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
-                  sceneDelegate.window?.rootViewController = tabBar
-             } else {
-                let appDelegate = UIApplication.shared.delegate as! AppDelegate
-                  appDelegate.window?.rootViewController = tabBar
-             }
+            let tabBar = MainTabController()
+            tabBar.selectedIndex = 4
+            DuneDelegate.newRootView(tabBar)
          } else {
              if program.isPrimaryProgram && !program.programIDs!.isEmpty  {
                  let programVC = ProgramProfileVC()

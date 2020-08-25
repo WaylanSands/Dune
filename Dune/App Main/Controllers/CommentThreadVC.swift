@@ -15,6 +15,7 @@ class CommentThreadVC: UIViewController {
     var primarySubCount = 0
     var attributedCharCount = 0
     var replyIsAttributed = false
+//    var tableView = UITableView(frame: .zero, style: .grouped)
     var tableView = UITableView()
     var isModallyPresented = false
     var keyboardRectHeight: CGFloat = 0
@@ -35,6 +36,12 @@ class CommentThreadVC: UIViewController {
         nav.titleLabel.text = "Comments"
         nav.titleLabel.textColor = .white
         return nav
+    }()
+    
+    let testView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .blue
+        return view
     }()
 
     required init(episode: Episode) {
@@ -113,6 +120,14 @@ class CommentThreadVC: UIViewController {
     
     func configureViews() {
         view.backgroundColor = CustomStyle.onBoardingBlack
+        
+//        view.addSubview(testView)
+//        testView.translatesAutoresizingMaskIntoConstraints = false
+//        testView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+//        testView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+//        testView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+//        testView.heightAnchor.constraint(equalToConstant: 100).isActive = true
+        
         view.addSubview(tableView)
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
@@ -209,6 +224,21 @@ extension CommentThreadVC: UITableViewDataSource, UITableViewDelegate {
         return commentCell
     }
     
+//    func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+//        let headerView = UIView.init(frame: CGRect.init(x: 0, y: 0, width: tableView.frame.width, height: 50))
+//
+//        let label = UILabel()
+//        label.frame = CGRect.init(x: 5, y: 5, width: headerView.frame.width-10, height: headerView.frame.height-10)
+//        label.text = "Notification Times"
+//        headerView.addSubview(label)
+//
+//        return headerView
+//    }
+//
+//    func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+//        return 50
+//    }
+    
       func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
           
             if editingStyle == .delete {
@@ -280,11 +310,6 @@ extension CommentThreadVC: UITextViewDelegate {
     
     func textViewDidChange(_ textView: UITextView) {
         
-//        if !User.isPublisher! || CurrentProgram.imagePath == nil {
-//            UIApplication.shared.windows.last?.addSubview(nonPublisherAlert)
-//            textView.text = ""
-//        }
-        
         if !User.isSetUp! {
             UIApplication.shared.windows.last?.addSubview(publisherNotSetUpAlert)
             textView.text = ""
@@ -335,13 +360,7 @@ extension CommentThreadVC: CommentCellDelegate {
         if CurrentProgram.programsIDs().contains(program.ID) {
             let tabBar = MainTabController()
             tabBar.selectedIndex = 4
-            if #available(iOS 13.0, *) {
-                let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
-                sceneDelegate.window?.rootViewController = tabBar
-            } else {
-                let appDelegate = UIApplication.shared.delegate as! AppDelegate
-                appDelegate.window?.rootViewController = tabBar
-            }
+            DuneDelegate.newRootView(tabBar)
         } else if program.isPublisher {
             if program.isPrimaryProgram && !program.programIDs!.isEmpty  {
                 let programVC = ProgramProfileVC()

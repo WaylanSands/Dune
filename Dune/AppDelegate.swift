@@ -63,17 +63,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         return true
     }
-    
+        
     func promptForPushNotifications(completion: @escaping (Bool) -> ()) {
         OneSignal.consentGranted(true)
-        OneSignal.sendTags([
-            "onboarded" : false,
-            "username" : User.username!,
-        ])
         OneSignal.promptForPushNotifications(userResponse: { accepted in
+            UserDefaults.standard.set(true, forKey: "askedPermissionForNotifications")
+            UserDefaults.standard.set(accepted, forKey: "allowedNotifications")
             print("User accepted notifications: \(accepted)")
+            if accepted {
+                OneSignal.sendTags([ "username" : User.username! ])
+            }
             completion(accepted)
-            
         })
     }
     
@@ -104,7 +104,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
     
     func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
-          print("5")
         if let dynamicLink = DynamicLinks.dynamicLinks().dynamicLink(fromCustomSchemeURL: url) {
             DynamicLinkHandler.handleIncomingLinkOnOpen(dynamicLink)
             return true

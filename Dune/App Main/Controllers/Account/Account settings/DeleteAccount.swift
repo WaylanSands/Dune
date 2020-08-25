@@ -15,6 +15,8 @@ class DeleteAccount: UIViewController {
     let defaultSubHeadingText = "We hope you'll be back again soon."
     var networkingIndicator = NetworkingProgress()
     
+    var feedbackView = DeleteSettings()
+    
     var headingTopConstant: CGFloat = 220
     
     let db = Firestore.firestore()
@@ -24,6 +26,7 @@ class DeleteAccount: UIViewController {
     
     let customNavBar: CustomNavBar = {
         let nav = CustomNavBar()
+        nav.backgroundColor = CustomStyle.blackNavBar
         nav.leftButton.isHidden = true
         return nav
     }()
@@ -40,19 +43,19 @@ class DeleteAccount: UIViewController {
     let subHeadingLabel: UILabel =  {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 14, weight: .regular)
-        label.textColor = CustomStyle.fourthShade
+        label.textColor = CustomStyle.subTextColor
         label.numberOfLines = 0
         label.textAlignment = .center
         return label
     }()
     
-    let saveButton: UIButton = {
+    let deleteButton: UIButton = {
         let button = UIButton()
         button.backgroundColor = CustomStyle.primaryBlue
         button.layer.cornerRadius = 6
         button.setTitle("Delete", for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
-        button.addTarget(self, action: #selector(selectButtonPress), for: .touchUpInside)
+        button.addTarget(self, action: #selector(deleteButtonPress), for: .touchUpInside)
         button.setTitleColor(UIColor.white, for: .normal)
         return button
     }()
@@ -70,7 +73,8 @@ class DeleteAccount: UIViewController {
     }
     
     override func viewDidAppear(_ animated: Bool) {
-        passwordTextField.becomeFirstResponder()
+        feedbackView.madeSelection = feedbackOptionSelected
+        feedbackView.showFeedbackOptions()
     }
     
     func styleForScreens() {
@@ -118,12 +122,12 @@ class DeleteAccount: UIViewController {
         textFieldToggle.centerYAnchor.constraint(equalTo: passwordTextField.centerYAnchor).isActive = true
         textFieldToggle.trailingAnchor.constraint(equalTo: passwordTextField.trailingAnchor, constant: -20).isActive = true
         
-        view.addSubview(saveButton)
-        saveButton.translatesAutoresizingMaskIntoConstraints = false
-        saveButton.topAnchor.constraint(equalTo: passwordTextField.bottomAnchor, constant: 12).isActive = true
-        saveButton.leadingAnchor.constraint(equalTo: passwordTextField.leadingAnchor).isActive = true
-        saveButton.trailingAnchor.constraint(equalTo: passwordTextField.trailingAnchor).isActive = true
-        saveButton.heightAnchor.constraint(equalToConstant: 40).isActive = true
+        view.addSubview(deleteButton)
+        deleteButton.translatesAutoresizingMaskIntoConstraints = false
+        deleteButton.topAnchor.constraint(equalTo: passwordTextField.bottomAnchor, constant: 12).isActive = true
+        deleteButton.leadingAnchor.constraint(equalTo: passwordTextField.leadingAnchor).isActive = true
+        deleteButton.trailingAnchor.constraint(equalTo: passwordTextField.trailingAnchor).isActive = true
+        deleteButton.heightAnchor.constraint(equalToConstant: 40).isActive = true
         
         passwordTextField.returnKeyType = .next
         passwordTextField.clearButtonMode = .never
@@ -135,9 +139,16 @@ class DeleteAccount: UIViewController {
         customNavBar.pinNavBarTo(view)
     }
     
-    @objc func selectButtonPress() {
+    private func feedbackOptionSelected() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            self.passwordTextField.becomeFirstResponder()
+        }
+    }
+    
+    @objc private func deleteButtonPress() {
         guard let password = passwordTextField.text else { return }
-        saveButton.setTitle("Checking...", for: .normal)
+        passwordTextField.resignFirstResponder()
+        deleteButton.setTitle("Checking...", for: .normal)
         FireAuthManager.reAuthenticate(with: User.email!, using: password) { result in
             
             if result == .success {
@@ -161,7 +172,6 @@ class DeleteAccount: UIViewController {
                     })
                 }
             } else {
-                self.saveButton.setTitle("Save", for: .normal)
                 self.passwordTextField.text = ""
             }
         }

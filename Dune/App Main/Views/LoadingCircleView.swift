@@ -46,7 +46,7 @@ class LoadingCircleView: PassThoughView {
     func animate() {
         self.isHidden = false
         basicAnimation.toValue = 1
-        basicAnimation.duration = 60
+        basicAnimation.duration = 120
         
         basicAnimation.fillMode = .forwards
         basicAnimation.isRemovedOnCompletion = false

@@ -10,28 +10,30 @@ import UIKit
 
 class LaunchVC: UIViewController {
     
-    let loggedIn = UserDefaults.standard.bool(forKey: "loggedIn")
-    let completedIntro = UserDefaults.standard.bool(forKey: "completedIntro")
-    let appDelegate = UIApplication.shared.delegate as! AppDelegate
-    var style:UIStatusBarStyle = .lightContent
-    var rootVC : UIViewController?
+    private let completedIntro = UserDefaults.standard.bool(forKey: "completedIntro")
+    private let loggedIn = UserDefaults.standard.bool(forKey: "loggedIn")
+    private var style: UIStatusBarStyle = .lightContent
+    private var rootVC : UIViewController!
+    private var finishedAnimation = false
+    private var hasUserData = false
+    private var isLoggedIn = false
     
-    let logoStackView: UIStackView = {
-        let view = UIStackView()
-        view.spacing = 10
+    private let labelMask: UIView = {
+        let view = UIView()
+        view.backgroundColor = CustomStyle.onBoardingBlack
         return view
     }()
     
-    let logoImageView: UIImageView = {
+    private let logoImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.image = UIImage(named: "splash-icon")
         return imageView
     }()
     
-    let duneLabel: UILabel = {
+    private let duneLabel: UILabel = {
         let label = UILabel()
         label.text = "Dune"
-        label.font = UIFont.systemFont(ofSize: 29, weight: .bold)
+        label.font = UIFont.systemFont(ofSize: 32, weight: .bold)
         label.textColor = .white
         return label
     }()
@@ -45,86 +47,84 @@ class LaunchVC: UIViewController {
         view.backgroundColor = CustomStyle.onBoardingBlack
         configureView()
     }
-    
     override func viewDidAppear(_ animated: Bool) {
-        if completedIntro {
-            if loggedIn {
-                getUserData()
-            } else {
-                sendToSignUp()
-            }
-        } else {
-            sendToIntro()
-        }
+        checkIfLoggedIn()
+        animateWithLogo()
     }
     
+    func checkIfLoggedIn() {
+        if completedIntro && loggedIn {
+            isLoggedIn = true
+            getUserData()
+        }
+    }
+        
     override func viewWillDisappear(_ animated: Bool) {
         style = .lightContent
         setNeedsStatusBarAppearanceUpdate()
     }
     
-    func configureView() {
-        view.addSubview(logoStackView)
-        logoStackView.translatesAutoresizingMaskIntoConstraints = false
-        logoStackView.centerXAnchor.constraint(equalTo: view.centerXAnchor, constant: -10).isActive = true
-        logoStackView.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -25).isActive = true
+    private func configureView() {
         
-        logoStackView.addArrangedSubview(logoImageView)
-        logoImageView.translatesAutoresizingMaskIntoConstraints = false
-        logoImageView.widthAnchor.constraint(equalToConstant: 32).isActive = true
-        logoImageView.heightAnchor.constraint(equalToConstant: 32).isActive = true
+        view.addSubview(duneLabel)
+        duneLabel.frame = CGRect(x: view.frame.width / 2 - duneLabel.intrinsicContentSize.width, y: view.frame.height / 2 - (20 + 20), width: duneLabel.intrinsicContentSize.width, height: 40)
         
-        logoStackView.addArrangedSubview(duneLabel)
+        view.addSubview(labelMask)
+        labelMask.frame = CGRect(x: view.frame.width / 2 - duneLabel.intrinsicContentSize.width, y: view.frame.height / 2 - (20 + 20), width: duneLabel.intrinsicContentSize.width, height: 40)
+        
+        view.addSubview(logoImageView)
+        logoImageView.frame = CGRect(x: view.frame.width / 2 - 20, y: view.frame.height / 2 - (20 + 20), width: 40, height: 40)
+
     }
     
-    func getUserData() {
-        FireStoreManager.getUserData() {
-            self.determineFirstScreen()
+    func animateWithLogo() {
+        UIView.animate(withDuration: 1, delay: 0, options: .curveEaseInOut, animations: {
+            self.duneLabel.frame.origin.x = self.view.frame.width / 2 - 15
+            self.labelMask.frame.origin.x = self.labelMask.frame.width - 20
+            self.logoImageView.frame.origin.x = self.view.frame.width / 2 - 65
+        }) { _ in
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                self.finishedAnimation = true
+                if self.isLoggedIn && self.hasUserData {
+                    self.grantUserAccess()
+                } else if self.completedIntro && !self.loggedIn {
+                    self.sendToSignUp()
+                } else if !self.completedIntro {
+                    self.sendToIntro()
+                }
+            }
         }
     }
     
-    func determineFirstScreen() {
+    private func getUserData() {
+        FireStoreManager.getUserData() {
+            self.hasUserData = true
+            if self.finishedAnimation {
+                self.grantUserAccess()
+            }
+        }
+    }
+    
+    // Determine if user is returning to complete onboarding or returning as full fledged user.
+    private func grantUserAccess() {
         if User.completedOnBoarding! {
             rootVC = MainTabController()
-            if #available(iOS 13.0, *) {
-                let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
-                 sceneDelegate.window?.rootViewController = rootVC
-            } else {
-                 appDelegate.window?.rootViewController = rootVC
-            }
+            DuneDelegate.newRootView(rootVC)
         } else {
             rootVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "accountTypeController") as! AccountTypeVC
             let navController = UINavigationController()
             navController.viewControllers = [rootVC!]
-            
-            if #available(iOS 13.0, *) {
-                let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
-                 sceneDelegate.window?.rootViewController = navController
-            } else {
-                 appDelegate.window?.rootViewController = navController
-            }
+            DuneDelegate.newRootView(navController)
         }
     }
     
-    func sendToSignUp() {
+    private func sendToSignUp() {
         rootVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "mainNavController") as! UINavigationController
-        
-        if #available(iOS 13.0, *) {
-            let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
-             sceneDelegate.window?.rootViewController = rootVC
-        } else {
-             appDelegate.window?.rootViewController = rootVC
-        }
+        DuneDelegate.newRootView(rootVC)
     }
     
-    func sendToIntro() {
+    private func sendToIntro() {
         rootVC = IntroVC()
-        
-        if #available(iOS 13.0, *) {
-            let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
-             sceneDelegate.window?.rootViewController = rootVC
-        } else {
-             appDelegate.window?.rootViewController = rootVC
-        }
+        DuneDelegate.newRootView(rootVC)
     }
 }

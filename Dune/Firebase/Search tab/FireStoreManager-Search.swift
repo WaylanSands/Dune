@@ -133,7 +133,7 @@ extension FireStoreManager {
                     print("Error subscribing user to program")
                     completion(false)
                 } else {
-                    print("Success subscribing user to program")
+                    print("Success adding user as subscriber")
                     completion(true)
                 }
             }
@@ -141,6 +141,9 @@ extension FireStoreManager {
     }
     
     static func subscribeToProgramWith(programID: String) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 4) {
+            self.askToRegisterForNotifications()
+        }
         DispatchQueue.global(qos: .userInitiated).async {
             let userRef = db.collection("programs").document(CurrentProgram.ID!)
             
@@ -156,11 +159,21 @@ extension FireStoreManager {
         }
     }
     
+    static func askToRegisterForNotifications() {
+        let askedPermission = UserDefaults.standard.bool(forKey: "askedPermissionForNotifications")
+        
+        if !askedPermission {
+            let appDelegate = UIApplication.shared.delegate as! AppDelegate
+            appDelegate.promptForPushNotifications { _ in
+            }
+        }
+    }
+    
     static func addSubscriptionToProgramWith(programID: String) {
         DispatchQueue.global(qos: .userInitiated).async {
-            let userRef = db.collection("programs").document(programID)
+            let programRef = db.collection("programs").document(programID)
             
-            userRef.updateData([
+            programRef.updateData([
                 "subscriberIDs" : FieldValue.arrayUnion([CurrentProgram.ID!]),
                 "subscriberCount" : FieldValue.increment(Double(1)),
             ]) { error in
@@ -210,7 +223,7 @@ extension FireStoreManager {
     static func usedCategories(completion: @escaping ([String]) ->()) {
         
         DispatchQueue.global(qos: .userInitiated).async {
-            var categories = [String]()
+            var snapshots = [(String, Int)]()
             var counter = 0
             for each in Category.allCases {
                 let programRef = db.collection("programs").whereField("primaryCategory", isEqualTo: each.rawValue)
@@ -220,10 +233,12 @@ extension FireStoreManager {
                         print("Error searching for program with category")
                     } else {
                         if snapshot!.documents.count > 0 {
-                            categories.append(each.rawValue)
+                            snapshots.append((each.rawValue, snapshot!.count))
                         }
                     }
                     if counter == Category.allCases.count {
+                        let sortedSnaps = snapshots.sorted(by: { $0.1 > $1.1 })
+                        let categories = sortedSnaps.map({ $0.0 })
                         completion(categories)
                     }
                 }

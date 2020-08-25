@@ -31,6 +31,7 @@ class SearchVC: UIViewController {
     var currentMode: searchMode = .all
     var selectedCategory: String?
     var isGoingForward = false
+    var isFetching = false
     
     var categoryButtons = [UIButton]()
     var categories = [String]()
@@ -46,11 +47,9 @@ class SearchVC: UIViewController {
     var lastProgress: CGFloat = 0
     var selectedCellRow: Int?
     
-//    lazy var tabButtons = [programButton]
     
     // Deep link navigation
     var programToPush: Program?
-    
     
     let searchScrollView: UIScrollView = {
         let view = UIScrollView()
@@ -159,6 +158,7 @@ class SearchVC: UIViewController {
         searchController.obscuresBackgroundDuringPresentation = false
         searchController.searchBar.placeholder = "Search channels by name"
         if #available(iOS 13.0, *) {
+            searchController.searchBar.searchTextField.font = UIFont.systemFont(ofSize: 14, weight: .medium)
             searchController.searchBar.searchTextField.textColor = CustomStyle.primaryBlack
             searchController.searchBar.searchTextField.backgroundColor = .white
         } else {
@@ -232,9 +232,10 @@ class SearchVC: UIViewController {
     }
     
     func fetchTopPrograms() {
+        isFetching = true
         FireStoreManager.fetchProgramsOrderedBySubscriptions(limit: 10) { [weak self] snapshot in
             guard let self = self else { return }
-            
+            self.isFetching = false
             if self.initialSnapshot != snapshot {
                 self.resetTableView()
                 self.initialSnapshot = snapshot
@@ -265,13 +266,13 @@ class SearchVC: UIViewController {
     
     func  fetchAnotherBatch() {
         addBottomLoadingSpinner()
+        isFetching = true
         FireStoreManager.fetchProgramsOrderedBySubscriptionsFrom(lastSnapshot: lastSnapshot!, limit: 10) { snapshots in
-            
+            self.isFetching = false
             if snapshots.count == 0 {
-                 self.tableView.tableFooterView = nil
+                self.tableView.tableFooterView = nil
                 self.moreToLoad = false
             } else {
-                
                 self.lastSnapshot = snapshots.last!
                 var counter = 0
                 
@@ -280,7 +281,6 @@ class SearchVC: UIViewController {
                     
                     let data = eachDocument.data()
                     let imageID = data["imageID"] as? String
-
                     
                     if imageID != nil {
                         let program = Program(data: data)
@@ -303,7 +303,25 @@ class SearchVC: UIViewController {
             self.searchContentStackView.addArrangedSubview(allProgramsButton)
             self.categoryButtons.append(allProgramsButton)
             
+            if let interests = User.interests {
+               for each in interests {
+                if !categories.contains(each) {
+                    continue
+                }
+                   let button = self.categoryPill()
+                   button.setTitle(each, for: .normal)
+                   button.addTarget(self, action: #selector(self.categorySelection), for: .touchUpInside)
+                   self.searchContentStackView.addArrangedSubview(button)
+                   self.categoryButtons.append(button)
+               }
+            }
+            
             for each in categories {
+                if let interests = User.interests {
+                    if interests.contains(each) {
+                        continue
+                    }
+                }
                 let button = self.categoryPill()
                 button.setTitle(each, for: .normal)
                 button.addTarget(self, action: #selector(self.categorySelection), for: .touchUpInside)
@@ -329,7 +347,7 @@ class SearchVC: UIViewController {
         button.backgroundColor = CustomStyle.sixthShade
         button.layer.cornerRadius = 13
         button.titleLabel?.font = UIFont.systemFont(ofSize: 12, weight: .medium)
-        button.setTitleColor(CustomStyle.fifthShade, for: .normal)
+        button.setTitleColor(CustomStyle.fourthShade.withAlphaComponent(0.8), for: .normal)
         button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 15, bottom: 2, right: 15)
         return button
     }
@@ -426,15 +444,16 @@ class SearchVC: UIViewController {
             let pill = categoryButtons.first(where: { $0.titleLabel?.text ==  eachCategory })
             if eachCategory != selectedCategory {
                 pill?.backgroundColor = CustomStyle.sixthShade
-                pill?.setTitleColor(CustomStyle.fifthShade, for: .normal)
+                pill?.setTitleColor(CustomStyle.fourthShade.withAlphaComponent(0.8), for: .normal)
             } else {
                 pill?.backgroundColor = CustomStyle.white
                 pill?.setTitleColor(CustomStyle.primaryBlack, for: .normal)
             }
         }
         
+        isFetching = true
         FireStoreManager.fetchProgramsWithinCategory(limit: 10, category: category) { snapshot in
-            
+            self.isFetching = false
             if self.initialSnapshot != snapshot {
                 
                 self.initialSnapshot = snapshot
@@ -469,8 +488,9 @@ class SearchVC: UIViewController {
     
     func  fetchAnotherBatchOfCategory() {
         addBottomLoadingSpinner()
+        isFetching = true
         FireStoreManager.fetchMoreProgramsWithinCategoryFrom(lastSnapshot: lastSnapshot!, limit: 10, category: selectedCategory!) { snapshot in
-            
+            self.isFetching = false
             if snapshot.count == 0 {
                 self.tableView.tableFooterView = nil
                 self.moreToLoad = false
@@ -567,11 +587,11 @@ extension SearchVC: UITableViewDelegate, UITableViewDataSource {
         if maximumOffset - currentOffset <= 90.0 {
             switch currentMode {
             case .all:
-                if moreToLoad == true {
+                if moreToLoad == true && !isFetching {
                     fetchAnotherBatch()
                 }
             case .category:
-                if moreToLoad == true {
+                if moreToLoad == true && !isFetching {
                     fetchAnotherBatchOfCategory()
                 }
             case .episode:
@@ -598,13 +618,7 @@ extension SearchVC: ProgramCellDelegate {
         if CurrentProgram.programsIDs().contains(program.ID) {
             let tabBar = MainTabController()
             tabBar.selectedIndex = 4
-            if #available(iOS 13.0, *) {
-                let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
-                 sceneDelegate.window?.rootViewController = tabBar
-            } else {
-                let appDelegate = UIApplication.shared.delegate as! AppDelegate
-                appDelegate.window?.rootViewController = tabBar
-            }
+            DuneDelegate.newRootView(tabBar)
         } else {
             isGoingForward = true
             if program.isPrimaryProgram && !program.programIDs!.isEmpty  {
@@ -726,7 +740,7 @@ extension SearchVC: DuneAudioPlayerDelegate {
     func resetCategoryButtons() {
         for each in categoryButtons {
             each.backgroundColor = CustomStyle.sixthShade
-            each.setTitleColor(CustomStyle.fifthShade, for: .normal)
+            each.setTitleColor(CustomStyle.fourthShade.withAlphaComponent(0.8), for: .normal)
         }
     }
     

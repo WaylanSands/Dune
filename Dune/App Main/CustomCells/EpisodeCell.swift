@@ -647,6 +647,11 @@ class EpisodeCell: UITableViewCell {
 //        playEpisodeButton.setImage(nil, for: .normal)
     }
     
+    func removePlayIcon() {
+        playEpisodeImageView.isHidden = true
+        playBarButton.isHidden = true
+    }
+    
     @objc func showSettings() {
         cellDelegate?.showSettings(cell: self )
     }

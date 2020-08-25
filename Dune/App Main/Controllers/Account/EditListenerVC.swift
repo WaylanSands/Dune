@@ -49,10 +49,10 @@ class EditListenerVC: UIViewController {
         return view
     }()
     
-    let profileImageView: UIImageView = {
+    lazy var profileImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.image = CurrentProgram.image!
-        imageView.layer.cornerRadius = 7
+        imageView.layer.cornerRadius = imageSize / 2
         imageView.clipsToBounds = true
         return imageView
     }()

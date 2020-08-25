@@ -395,13 +395,7 @@ extension TrendingVC: EpisodeCellDelegate {
         if CurrentProgram.programsIDs().contains(program.ID) {
              let tabBar = MainTabController()
              tabBar.selectedIndex = 4
-             if #available(iOS 13.0, *) {
-                 let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
-                  sceneDelegate.window?.rootViewController = tabBar
-             } else {
-                let appDelegate = UIApplication.shared.delegate as! AppDelegate
-                  appDelegate.window?.rootViewController = tabBar
-             }
+             DuneDelegate.newRootView(tabBar)
          } else {
              if program.isPrimaryProgram && !program.programIDs!.isEmpty  {
                  let programVC = ProgramProfileVC()
@@ -517,10 +511,11 @@ extension TrendingVC: DuneAudioPlayerDelegate {
     func updateActiveCell(atIndex: Int, forType: PlayBackType) {
         let indexPath = IndexPath(item: atIndex, section: 0)
         if tableView.indexPathsForVisibleRows!.contains(indexPath) {
-            let cell = tableView.cellForRow(at: IndexPath(item: atIndex, section: 0)) as! EpisodeCell
-//            cell.playEpisodeButton.setImage(nil, for: .normal)
-            cell.playbackBarView.setupPlaybackBar()
-            activeCell = cell
+            if let cell = tableView.cellForRow(at: IndexPath(item: atIndex, section: 0)) as? EpisodeCell {
+                cell.playbackBarView.setupPlaybackBar()
+                cell.removePlayIcon()
+                activeCell = cell
+            }
         }
     }
     

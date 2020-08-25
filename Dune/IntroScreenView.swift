@@ -9,25 +9,25 @@
 import UIKit
 
 class IntroScreenView: UIView {
-    var image: UIImage
-    var heading: String
-    var subHeading: String
+    private var image: UIImage
+    private var heading: String
+    private var subHeading: String
     
     // For various device sizes
-    var contentHeight: CGFloat = -170
-    var imageHeight: CGFloat = -50
-    var paddingLeft: CGFloat  = 0
-    var paddingRight: CGFloat  = 0
-    var headingSize: CGFloat = 26
+    private var contentHeight: CGFloat = -170
+    private var imageHeight: CGFloat = -50
+    private var paddingLeft: CGFloat  = 0
+    private var paddingRight: CGFloat  = 0
+    private var headingSize: CGFloat = 26
     
-    lazy var imageView: UIImageView = {
+    private lazy var imageView: UIImageView = {
         let view = UIImageView()
         view.image = image
         view.contentMode = .scaleAspectFit
         return view
     }()
     
-    lazy var headingLabel: UILabel = {
+    private lazy var headingLabel: UILabel = {
       let label = UILabel()
         label.text = heading
         label.font = UIFont.systemFont(ofSize: headingSize, weight: .bold)
@@ -36,11 +36,11 @@ class IntroScreenView: UIView {
         return label
     }()
     
-    lazy var subHeadingLabel: UILabel = {
+    private lazy var subHeadingLabel: UILabel = {
       let label = UILabel()
         label.text = subHeading
         label.numberOfLines = 0
-        label.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        label.font = UIFont.systemFont(ofSize: 15, weight: .medium)
         label.textColor = .white
         return label
     }()
@@ -59,7 +59,7 @@ class IntroScreenView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func styleForScreens() {
+    private func styleForScreens() {
         switch UIDevice.current.deviceType {
         case .iPhone4S, .iPhoneSE:
            contentHeight = -120
@@ -89,7 +89,7 @@ class IntroScreenView: UIView {
         }
     }
     
-    func configureViews() {        
+    private func configureViews() {
         self.addSubview(imageView)
         imageView.translatesAutoresizingMaskIntoConstraints = false
         imageView.centerYAnchor.constraint(equalTo: self.centerYAnchor, constant: imageHeight).isActive = true
@@ -108,7 +108,6 @@ class IntroScreenView: UIView {
         subHeadingLabel.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 16).isActive = true
         subHeadingLabel.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -16).isActive = true
         subHeadingLabel.topAnchor.constraint(equalTo: headingLabel.bottomAnchor, constant: 7).isActive = true
-//      subHeadingLabel.heightAnchor.constraint(equalToConstant: 80).isActive = true
     }
 }
 

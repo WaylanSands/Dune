@@ -25,9 +25,8 @@ class SignUpVC: UIViewController {
     @IBOutlet weak var stackedButtons: UIStackView!
     @IBOutlet weak var stackedButtonsYAnchor: NSLayoutConstraint!
     
-    let appDelegate = UIApplication.shared.delegate as! AppDelegate
     let deviceType = UIDevice.current.deviceType
-    var rootVC : UIViewController?
+    var rootVC : UIViewController!
     
     let provider = OAuthProvider(providerID: "twitter.com")
    
@@ -270,23 +269,12 @@ class SignUpVC: UIViewController {
         rootVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "accountTypeController") as! AccountTypeVC
         let navController = UINavigationController()
         navController.viewControllers = [rootVC!]
-        
-        if #available(iOS 13.0, *) {
-            let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
-            sceneDelegate.window?.rootViewController = navController
-        } else {
-            appDelegate.window?.rootViewController = navController
-        }
+        DuneDelegate.newRootView(navController)
     }
     
     func sendToMainFeed() {
         rootVC = MainTabController()
-        if #available(iOS 13.0, *) {
-            let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
-            sceneDelegate.window?.rootViewController = rootVC
-        } else {
-            appDelegate.window?.rootViewController = rootVC
-        }
+        DuneDelegate.newRootView(rootVC)
     }
     
 }

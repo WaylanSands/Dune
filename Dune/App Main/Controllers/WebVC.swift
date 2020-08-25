@@ -61,12 +61,6 @@ class WebVC: UIViewController {
     func addPlayIcon() {
          playbackButton.setImage(UIImage(named: "pause-music-icon"), for: .normal)
     }
-
-//    lazy var webView: WKWebView = {
-//        let webView = WKWebView()
-//        webView.addObserver(self, forKeyPath: #keyPath(WKWebView.estimatedProgress), options: .new, context: nil)
-//        return webView
-//    }()
     
     let progressView: UIProgressView = {
         let view = UIProgressView()
@@ -89,6 +83,7 @@ class WebVC: UIViewController {
     let customNavBar: CustomNavBar = {
        let navBar = CustomNavBar()
         navBar.leftButton.setImage(#imageLiteral(resourceName: "drop-arrow"), for: .normal)
+        navBar.backgroundColor = CustomStyle.blackNavBar
         navBar.leftButton.addTarget(self, action: #selector(dismissVC), for: .touchUpInside)
         return navBar
     }()

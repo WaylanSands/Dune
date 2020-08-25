@@ -51,10 +51,15 @@ class ListenerCell: ProgramCell {
             self.programImageButton.setImage(#imageLiteral(resourceName: "missing-image-large"), for: .normal)
         }
         
+        programImageButton.layer.cornerRadius = imageSize / 2
         
         programNameLabel.text = program.name
         usernameButton.setTitle("@\(program.username)", for: .normal)
         captionTextView.text = program.summary
+        
+        if program.summary == "" {
+             captionTextView.text = "Still getting setup"
+        }
                 
         DispatchQueue.main.async {
             if self.captionTextView.lineCount() > 3 {

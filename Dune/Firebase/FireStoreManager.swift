@@ -39,6 +39,100 @@ struct FireStoreManager {
         }
     }
     
+    static func topThreeInterests(with IDs: [String]) {
+        DispatchQueue.global(qos: .background).async {
+            
+            var categories = [String]()
+            var counter = 0
+            for each in IDs {
+                let episodeRef = db.collection("episodes").document(each)
+                
+                episodeRef.getDocument { snapshot, error in
+                    counter += 1
+
+                    if error != nil {
+                        print("Error fetching episode for Interest")
+                    }
+                    
+                    guard let category = snapshot!.get("category") as? String else { return }
+                    categories.append(category)
+                    
+                    if counter == IDs.count {
+                        let sorted = categories.sorted(by: { $0 < $1 })
+                        User.interests = Array(sorted.removingDuplicates().prefix(3))
+                        print("RAN")
+                    }
+                }
+            }
+        }
+    }
+    
+    static func autoSubscribeToInterests(completion: @escaping (Bool) ->()) {
+        DispatchQueue.global(qos: .background).async {
+            var counter = 0
+            
+            for each in User.interests! {
+                let channelQuery = db.collection("programs").whereField("primaryCategory", isEqualTo: each).order(by: "subscriberCount", descending: true).limit(to: 2)
+                            
+                channelQuery.getDocuments { (snapshot, error) in
+                    counter += 1
+                    if error != nil {
+                        print("Error")
+                        return
+                    }
+                    
+                    let docs = snapshot!.documents
+                    
+                    for doc in docs {
+                        subscribeToProgramWith(programID: doc.documentID)
+                        addSubscriptionToProgramWith(programID: doc.documentID)
+                        CurrentProgram.subscriptionIDs?.append(doc.documentID)
+                    }
+                    
+                    if counter == User.interests!.count {
+                        if CurrentProgram.subscriptionIDs!.count > 4 {
+                            completion(true)
+                        } else {
+                            completion(false)
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    static func autoSubscribeToTop(completion: @escaping () ->()) {
+        DispatchQueue.global(qos: .background).async {
+    
+                var counter = 0
+                let popularCategories = ["News", "Education", "Business"]
+                for each in popularCategories {
+                    
+                    let programRef = db.collection("programs").whereField("primaryCategory", isEqualTo: each).order(by: "subscriberCount", descending: true).limit(to: 2)
+                    
+                    programRef.getDocuments { snapshot, error in
+                        counter += 1
+                        
+                        if error != nil {
+                            print("Error fetching episode for Interest")
+                        }
+                        
+                        let docs = snapshot!.documents
+                        
+                        for doc in docs {
+                            subscribeToProgramWith(programID: doc.documentID)
+                            addSubscriptionToProgramWith(programID: doc.documentID)
+                            CurrentProgram.subscriptionIDs?.append(doc.documentID)
+                        }
+                        
+                        if counter == popularCategories.count {
+                            completion()
+                        }
+                    }
+                }
+        }
+    }
+    
     static func addImagePathToSubProgram(with programID: String, imageID: String, imagePath: String) {
         DispatchQueue.global(qos: .userInitiated).async {
             
@@ -278,9 +372,7 @@ struct FireStoreManager {
     
     
     static func getProgramData(completion: @escaping (Bool) -> ()) {
-        
         guard let programID = User.programID else { return }
-        
         let programRef = db.collection("programs").document(programID)
         
         DispatchQueue.global(qos: .userInitiated).async {
@@ -290,6 +382,7 @@ struct FireStoreManager {
                     print("There was an error getting the program document")
                     completion(false)
                 } else {
+                    
                     guard let data = snapshot?.data() else { return }
                     CurrentProgram.modelProgram(data: data)
                     completion(true)

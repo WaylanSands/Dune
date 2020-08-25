@@ -30,11 +30,8 @@ extension UIView {
     func navBarHeight(controller: UIViewController) -> CGFloat {
         return controller.navigationController!.navigationBar.frame.height
     }
+   
     // Transition functions
-    
-//    lazy var screenWidth = self.frame.width
-//    lazy var centerXposition = self.frame.origin.x
-    
     func toCenter(view: UIView) {
         view.frame.origin.x = self.self.frame.origin.x
     }
@@ -48,8 +45,8 @@ extension UIView {
     }
     
     func transitionToCenter(view: UIView) {
-        UIView.transition(with: view, duration: 0.5, options: .curveEaseInOut, animations: {self.toCenter(view: view)}, completion: {(value: Bool) in
-//            self.currentView = view
+        UIView.transition(with: view, duration: 0.5, options: .curveEaseInOut, animations: {self.toCenter(view: view)}, completion:
+            {(value: Bool) in
         })
     }
     

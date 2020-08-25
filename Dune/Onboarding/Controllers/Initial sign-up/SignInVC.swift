@@ -23,9 +23,11 @@ class SignInVC: UIViewController, UITextFieldDelegate {
     @IBOutlet weak var emailLabelTopAnchor: NSLayoutConstraint!
     @IBOutlet weak var passwordLabelTopConstraint: NSLayoutConstraint!
     
-    var provider = OAuthProvider(providerID: "twitter.com")
+    let provider = OAuthProvider(providerID: "twitter.com")
     let networkingIndicator = NetworkingProgress()
     var twitterAuthResult: AuthDataResult?
+    
+    var keyboardHeight: CGFloat = 0
     
     var socialSignup: Bool = false {
         didSet {
@@ -50,12 +52,11 @@ class SignInVC: UIViewController, UITextFieldDelegate {
     let socialAccountNotFoundAlert = CustomAlertView(alertType: .socialAccountNotFound)
     let featureUnavailableAlert = CustomAlertView(alertType: .iOS13Needed)
     
-    let appDelegate = UIApplication.shared.delegate as! AppDelegate
-    var rootVC : UIViewController?
+    var rootVC : UIViewController!
     
     var signInButtonPadding: CGFloat = 10.0
     
-    lazy var containerView: PassThoughView = {
+    let containerView: PassThoughView = {
         let view = PassThoughView()
         return view
     }()
@@ -118,23 +119,25 @@ class SignInVC: UIViewController, UITextFieldDelegate {
     
     deinit {
         NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
+        print("Removed")
     }
     
     func addKeyBoardObserver() {
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillChange(notification:)), name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
     }
-    
+        
     @objc func keyboardWillChange(notification : Notification) {
-        guard let keyboardRect = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue else {
-            return
-        }
-        signInButton.frame.origin.y = view.frame.height - keyboardRect.height - 45
+        let userInfo = notification.userInfo!
+        let endFrameValue = (userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)!
+        let endFrame = endFrameValue.cgRectValue
+        
+        signInButton.frame.origin.y = view.frame.height - endFrame.height - 45
     }
     
     func configureDelegates() {
-        emailTextField.delegate = self
-        passwordTextField.delegate = self
         socialAccountNotFoundAlert.alertDelegate = self
+        passwordTextField.delegate = self
+        emailTextField.delegate = self
     }
     
     func styleForScreens() {
@@ -168,17 +171,13 @@ class SignInVC: UIViewController, UITextFieldDelegate {
         customNavBar.leftButton.addTarget(self, action: #selector(backButtonPress), for: .touchUpInside)
         
         view.addSubview(containerView)
-        containerView.translatesAutoresizingMaskIntoConstraints = false
-        containerView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
-        containerView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-        containerView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        containerView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+        containerView.pinEdges(to: view)
         
         containerView.addSubview(signInButton)
         signInButton.translatesAutoresizingMaskIntoConstraints = false
-        signInButton.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
-        signInButton.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-        signInButton.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        signInButton.bottomAnchor.constraint(equalTo: containerView.bottomAnchor).isActive = true
+        signInButton.leadingAnchor.constraint(equalTo: containerView.leadingAnchor).isActive = true
+        signInButton.trailingAnchor.constraint(equalTo: containerView.trailingAnchor).isActive = true
         signInButton.heightAnchor.constraint(equalToConstant: 45.0).isActive = true
         
         view.addSubview(customNavBar)
@@ -225,8 +224,10 @@ class SignInVC: UIViewController, UITextFieldDelegate {
         guard let email =  emailTextField.text else { return }
         guard let password =  passwordTextField.text else { return }
         
+        signInButton.setTitle("Checking...", for: .normal)
+        print(1)
         Auth.auth().signIn(withEmail: email, password: password) { [weak self] authResult, error in
-            
+             print(2)
             guard let vc = self else { return }
             
             if let error = error {
@@ -249,6 +250,7 @@ class SignInVC: UIViewController, UITextFieldDelegate {
                         print("Other error!")
                     }
                 }
+                vc.signInButton.setTitle("Sign in", for: .normal)
             } else {
                 vc.signInUser()
             }
@@ -266,13 +268,10 @@ class SignInVC: UIViewController, UITextFieldDelegate {
             if error != nil {
                 print("There was an error getting users document: \(error!)")
             } else {
-                
                 if snapshot!.exists {
-                    
                     UserDefaults.standard.set(true, forKey: "loggedIn")
                     guard let data = snapshot?.data() else { return }
                     User.modelUser(data: data)
-                    
                     let completedOnBoarding = data["completedOnBoarding"] as! Bool
                     
                     FireStoreManager.getProgramData { success in
@@ -297,23 +296,12 @@ class SignInVC: UIViewController, UITextFieldDelegate {
         rootVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "accountTypeController") as! AccountTypeVC
         let navController = UINavigationController()
         navController.viewControllers = [rootVC!]
-        
-        if #available(iOS 13.0, *) {
-            let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
-             sceneDelegate.window?.rootViewController = navController
-        } else {
-             appDelegate.window?.rootViewController = navController
-        }
+        DuneDelegate.newRootView(navController)
     }
     
     func sendToMainFeed() {
         rootVC = MainTabController()
-        if #available(iOS 13.0, *) {
-            let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
-             sceneDelegate.window?.rootViewController = rootVC
-        } else {
-             appDelegate.window?.rootViewController = rootVC
-        }
+        DuneDelegate.newRootView(rootVC)
     }
     
     func resignTextBoard() {

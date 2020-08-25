@@ -327,12 +327,7 @@ class ListenerProfileBottomVC: UIViewController {
     @objc func continueToView() {
         let tabBar = MainTabController()
         tabBar.selectedIndex = pageIndex
-        if #available(iOS 13.0, *) {
-            let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
-            sceneDelegate.window?.rootViewController = tabBar
-        } else {
-            self.appDelegate.window?.rootViewController = tabBar
-        }
+        DuneDelegate.newRootView(tabBar)
     }
 }
 

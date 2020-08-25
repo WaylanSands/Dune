@@ -16,7 +16,6 @@ extension String {
     }
     
     func isValidPassword() -> Bool {
-//        guard testStr != nil else { return false }
 
         // at least one uppercase,
         // at least one digit

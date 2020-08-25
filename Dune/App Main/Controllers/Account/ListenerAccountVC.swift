@@ -15,8 +15,7 @@ class ListenerAccountVC : UIViewController {
     let minHeight = UIDevice.current.navBarHeight() + 40
     let navHeight = UIDevice.current.navBarHeight()
 
-    var imageSize: CGFloat = 80.0
-    var subProgramSize: CGFloat = 64
+    var imageSize: CGFloat = 60.0
     let maxPrograms = 10
     
     var unwrapped = false
@@ -74,9 +73,9 @@ class ListenerAccountVC : UIViewController {
         return view
     }()
     
-    let mainImageButton: UIButton = {
+    lazy var mainImageButton: UIButton = {
         let button = UIButton()
-        button.layer.cornerRadius = 7
+        button.layer.cornerRadius = imageSize / 2
         button.clipsToBounds = true
         button.contentMode = .scaleAspectFill
         button.addTarget(self, action: #selector(changeImageButtonPress), for: .touchUpInside)
@@ -104,20 +103,6 @@ class ListenerAccountVC : UIViewController {
         label.font = UIFont.systemFont(ofSize: 14, weight: .regular)
         label.textColor = CustomStyle.primaryBlue
         return label
-    }()
-    
-    let categoryLabel: UILabel = {
-        let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 14, weight: .regular)
-        label.textColor = CustomStyle.fourthShade
-        return label
-    }()
-    
-    let playIntroButton: UIButton = {
-        let button = UIButton()
-        button.layer.cornerRadius = 13
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
-        return button
     }()
     
     let summaryTextView: UITextView = {
@@ -275,7 +260,6 @@ class ListenerAccountVC : UIViewController {
         mainImageButton.setBackgroundImage(CurrentProgram.image!, for: .normal)
         usernameLabel.text = "@\(User.username!)"
         repCountLabel.text = String(CurrentProgram.rep!)
-        categoryLabel.text = CurrentProgram.primaryCategory
         subscriptionCountLabel.text = (CurrentProgram.subscriptionIDs!.count - 1).roundedWithAbbreviations
         
         configureSummary()
@@ -291,6 +275,7 @@ class ListenerAccountVC : UIViewController {
         switch CurrentProgram.privacyStatus {
         case .madePrivate:
             navigationItem.leftBarButtonItem = UIBarButtonItem(image: privacyImage(), style: .plain, target: self, action: #selector(viewPendingRequests))
+            navigationItem.leftBarButtonItem?.imageInsets = UIEdgeInsets(top: 0, left: -10, bottom: 0, right: 0)
         case .madePublic:
             navigationItem.leftBarButtonItem = nil
         default:
@@ -359,7 +344,7 @@ class ListenerAccountVC : UIViewController {
         if CurrentProgram.summary != "" {
            summaryTextView.text = CurrentProgram.summary
         } else {
-            summaryTextView.text = "Include a short bio, what makes you unique?"
+            summaryTextView.text = "Share a little information about yourself."
         }
     }
     
@@ -390,7 +375,7 @@ class ListenerAccountVC : UIViewController {
     }
 
     func headerHeightCalculated() -> CGFloat {
-        var height: CGFloat = 83 + navHeight
+        var height: CGFloat = 73 + navHeight
         
         for each in headerView.subviews {
             height += each.frame.height
@@ -410,7 +395,6 @@ class ListenerAccountVC : UIViewController {
             break
         case .iPhoneSE:
             imageSize = 60
-            subProgramSize = 55
             editProgramButton.titleLabel?.font = UIFont.systemFont(ofSize: 12, weight: .medium)
             becomePublisherButton.titleLabel?.font = UIFont.systemFont(ofSize: 12, weight: .medium)
         case .iPhone8:
@@ -436,10 +420,11 @@ class ListenerAccountVC : UIViewController {
         
         headerView.addSubview(topDetailsView)
         topDetailsView.translatesAutoresizingMaskIntoConstraints = false
-        topDetailsView.topAnchor.constraint(equalTo: headerView.topAnchor, constant: navHeight + 10).isActive = true
+        topDetailsView.topAnchor.constraint(equalTo: headerView.topAnchor, constant: navHeight).isActive = true
         topDetailsView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
         topDetailsView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
-        topDetailsView.heightAnchor.constraint(equalToConstant: 80).isActive = true
+        topDetailsView.heightAnchor.constraint(equalToConstant: imageSize).isActive = true
+//        topDetailsView.backgroundColor = .brown
         
         topDetailsView.addSubview(mainImageButton)
         mainImageButton.translatesAutoresizingMaskIntoConstraints = false
@@ -448,20 +433,13 @@ class ListenerAccountVC : UIViewController {
         mainImageButton.widthAnchor.constraint(equalToConstant: imageSize).isActive = true
         mainImageButton.heightAnchor.constraint(equalToConstant: imageSize).isActive = true
         
-        topDetailsView.addSubview(playIntroButton)
-        playIntroButton.translatesAutoresizingMaskIntoConstraints = false
-        playIntroButton.topAnchor.constraint(equalTo: topDetailsView.topAnchor).isActive = true
-        playIntroButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
-        playIntroButton.heightAnchor.constraint(equalToConstant: 26).isActive = true
-        
         topDetailsView.addSubview(topMiddleStackedView)
         topMiddleStackedView.translatesAutoresizingMaskIntoConstraints = false
-        topMiddleStackedView.topAnchor.constraint(equalTo: topDetailsView.topAnchor).isActive = true
+        topMiddleStackedView.centerYAnchor.constraint(equalTo: mainImageButton.centerYAnchor).isActive = true
         topMiddleStackedView.leadingAnchor.constraint(equalTo: mainImageButton.trailingAnchor, constant: 10).isActive = true
-        topMiddleStackedView.trailingAnchor.constraint(lessThanOrEqualTo: playIntroButton.leadingAnchor, constant: -20).isActive = true
+        topMiddleStackedView.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -16).isActive = true
         topMiddleStackedView.addArrangedSubview(nameLabel)
         topMiddleStackedView.addArrangedSubview(usernameLabel)
-        topMiddleStackedView.addArrangedSubview(categoryLabel)
         
         headerView.addSubview(summaryTextView)
         summaryTextView.translatesAutoresizingMaskIntoConstraints = false

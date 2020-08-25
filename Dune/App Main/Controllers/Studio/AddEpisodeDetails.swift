@@ -13,7 +13,6 @@ import SwiftLinkPreview
 
 class AddEpisodeDetails: UIViewController {
     
-    let appDelegate = UIApplication.shared.delegate as! AppDelegate
     let maxCaptionCharacters = 240
     let maxTagCharacters = 45
     
@@ -441,6 +440,7 @@ class AddEpisodeDetails: UIViewController {
         navBar?.tintColor = .white
         
         navigationItem.leftBarButtonItem = UIBarButtonItem(image: #imageLiteral(resourceName: "back-button-white"), style: .plain, target: self, action: #selector(popVC))
+        navigationItem.leftBarButtonItem?.imageInsets = UIEdgeInsets(top: 0, left: -10, bottom: 0, right: 0)
         navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Save", style: .plain, target: self, action: #selector(saveButtonPress))
         navigationItem.rightBarButtonItem!.setTitleTextAttributes(CustomStyle.barButtonAttributes, for: .normal)
     }
@@ -984,13 +984,7 @@ class AddEpisodeDetails: UIViewController {
         networkingIndicator.removeFromSuperview()
         let tabBar = MainTabController()
         tabBar.selectedIndex = 2
-        
-        if #available(iOS 13.0, *) {
-            let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
-            sceneDelegate.window?.rootViewController = tabBar
-        } else {
-            appDelegate.window?.rootViewController = tabBar
-        }
+        DuneDelegate.newRootView(tabBar)
     }
     
     @objc func publishButtonPress() {
@@ -1009,13 +1003,7 @@ class AddEpisodeDetails: UIViewController {
         networkingIndicator.removeFromSuperview()
         let tabBar = MainTabController()
         tabBar.selectedIndex = 0
-        
-        if #available(iOS 13.0, *) {
-            let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
-            sceneDelegate.window?.rootViewController = tabBar
-        } else {
-            appDelegate.window?.rootViewController = tabBar
-        }
+        DuneDelegate.newRootView(tabBar)
     }
     
     func trimThanStoreEpisodeOnFirebase() {
