@@ -339,7 +339,12 @@ struct FireStoreManager {
                     print("Error getting document: \(error!.localizedDescription)")
                 }
                 
-                if snapshot!.isEmpty {
+                guard let snapshot = snapshot else {
+                    completion(true)
+                    return
+                }
+                
+                if snapshot.isEmpty {
                     completion(true)
                 } else {
                     completion(false)
@@ -1237,7 +1242,6 @@ struct FireStoreManager {
                 if error != nil {
                     print("There was an error getting users document: \(error!)")
                 } else {
-                    
                     guard let data = snapshot?.data() else { return }
                     User.modelUser(data: data)
                     

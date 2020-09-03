@@ -844,8 +844,6 @@ class DunePlayBar: UIView {
     }
     
     func setEpisodeDetailsWith(episode: Episode, image: UIImage) {
-//        AudioManager.activeEpisode = episode
-//        AudioManager.activeImage = image
         audioPlayerDelegate.playedEpisode(episode: episode)
         setupLikeButtonAndCounterFor(episode: episode)
         programNameLabel.text = episode.programName
@@ -857,20 +855,17 @@ class DunePlayBar: UIView {
         self.episode = episode
     }
     
-    func continueState() {
-        guard let episode = AudioManager.activeEpisode else { return }
-        guard let image = AudioManager.activeImage else { return }
-        audioPlayerDelegate.playedEpisode(episode: episode)
-        setupLikeButtonAndCounterFor(episode: episode)
-        programNameLabel.text = episode.programName
-        largeNameLabel.text = "@\(episode.username)"
-        captionTextView.text = episode.caption
-        captionLabel.text = episode.caption
-        programImageView.image = image
-        largeImageView.image = image
-        self.episode = episode
-        fastTrackToPosition()
-    }
+//    func continueState() {
+//        audioPlayerDelegate.playedEpisode(episode: episode)
+//        setupLikeButtonAndCounterFor(episode: episode)
+//        programNameLabel.text = episode.programName
+//        largeNameLabel.text = "@\(episode.username)"
+//        captionTextView.text = episode.caption
+//        captionLabel.text = episode.caption
+//        programImageView.image = image
+//        largeImageView.image = image
+//        fastTrackToPosition()
+//    }
     
     func playOrPauseEpisodeWith(audioID: String) {
         
@@ -1215,8 +1210,8 @@ class DunePlayBar: UIView {
         panningAllowed = true
         isClosed = true
         isOpen = false
-        let position = AudioManager.yPosition - 64
-        self.frame = CGRect(x: 0, y: position, width: self.frame.width, height: self.playerHeight)
+//        let position = AudioManager.yPosition - 64
+//        self.frame = CGRect(x: 0, y: position, width: self.frame.width, height: self.playerHeight)
     }
     
     func transitionOutOfView() {

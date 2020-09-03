@@ -54,6 +54,7 @@ class LaunchVC: UIViewController {
     
     func checkIfLoggedIn() {
         if completedIntro && loggedIn {
+            print("logged in")
             isLoggedIn = true
             getUserData()
         }

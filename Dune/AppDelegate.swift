@@ -78,7 +78,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
     
     override init() {
-        FirebaseConfiguration.shared.setLoggerLevel(.min)
+        FirebaseConfiguration.shared.setLoggerLevel(.min)        
         FirebaseApp.configure()
     }
     

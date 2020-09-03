@@ -477,6 +477,9 @@ class MainFeedVC: UIViewController {
     
     func fetchEpisodes() {
         if downloadedEpisodes.count != episodeItems.count {
+            print(downloadedEpisodes.count)
+            print(episodeItems.count)
+
             var endIndex = 10
             if episodeItems.count - downloadedEpisodes.count < endIndex {
                 endIndex = episodeItems.count - downloadedEpisodes.count

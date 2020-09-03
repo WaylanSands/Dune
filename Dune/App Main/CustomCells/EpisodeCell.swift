@@ -29,7 +29,10 @@ class EpisodeCell: UITableViewCell {
     var likedEpisode = false
     var episode: Episode!
     var fetching = false
-        
+    
+    var tagScrollViewTop: NSLayoutConstraint!
+    var tagScrollViewHeight: NSLayoutConstraint!
+    
     // For various screen sizes
     var imageSize: CGFloat = 50
     var playBarWidth: CGFloat = 50
@@ -46,13 +49,6 @@ class EpisodeCell: UITableViewCell {
         button.isOpaque = true
         return button
     }()
-    
-//    lazy var playEpisodeButton: UIButton = {
-//        let button = UIButton()
-//        button.setImage(UIImage(named: "play-episode-btn"), for: .normal)
-//        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: -imageSize + 15, bottom: 0, right: 0)
-//        return button
-//    }()
     
     let playEpisodeImageView: UIImageView = {
         let imageView = UIImageView()
@@ -94,7 +90,7 @@ class EpisodeCell: UITableViewCell {
         button.setTitleColor(CustomStyle.linkBlue, for: .normal)
         return button
     }()
-        
+    
     lazy var captionTextView: ActiveLabel = {
         let label = ActiveLabel()
         label.font = UIFont.systemFont(ofSize: 14, weight: .regular)
@@ -276,11 +272,21 @@ class EpisodeCell: UITableViewCell {
         programNameLabel.text = episode.programName
         usernameButton.setTitle("@\(episode.username)", for: .normal)
         timeSinceReleaseLabel.text = episode.timeSince
-        captionTextView.text = episode.caption
+        captionTextView.text = episode.caption.trimmingTrailingSpaces
         episodeTags = episode.tags!
+                
+        if episodeTags.count == 0 {
+            tagScrollViewTop.constant = 0
+            tagScrollViewHeight.constant = 0
+            gradientOverlayView.isHidden = true
+        } else {
+            tagScrollViewTop.constant = 10
+            tagScrollViewHeight.constant = 22
+            gradientOverlayView.isHidden = false
+        }
         
         commentCountLabel.text = "\(episode.commentCount.roundedWithAbbreviations)"
-
+        
         createTagButtons()
         setupProgressBar()
         
@@ -299,24 +305,24 @@ class EpisodeCell: UITableViewCell {
     }
     
     func styleForScreens() {
-         switch UIDevice.current.deviceType {
-         case .iPhone4S, .iPhoneSE:
-             imageSize = 45.0
-             playBarWidth = 40
-         case .iPhone8:
-             break
-         case .iPhone8Plus:
-             break
-         case .iPhone11:
-             break
-         case .iPhone11Pro:
-             break
-         case .iPhone11ProMax:
-             break
-         case .unknown:
-             break
-         }
-     }
+        switch UIDevice.current.deviceType {
+        case .iPhone4S, .iPhoneSE:
+            imageSize = 45.0
+            playBarWidth = 40
+        case .iPhone8:
+            break
+        case .iPhone8Plus:
+            break
+        case .iPhone11:
+            break
+        case .iPhone11Pro:
+            break
+        case .iPhone11ProMax:
+            break
+        case .unknown:
+            break
+        }
+    }
     
     func setupProgressBar() {
         if episode.hasBeenPlayed {
@@ -343,7 +349,7 @@ class EpisodeCell: UITableViewCell {
         programImageButton.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 16).isActive = true
         programImageButton.heightAnchor.constraint(equalToConstant: imageSize).isActive = true
         programImageButton.widthAnchor.constraint(equalToConstant: imageSize).isActive = true
-
+        
         self.addSubview(playbackBarView)
         playbackBarView.translatesAutoresizingMaskIntoConstraints = false
         playbackBarView.centerXAnchor.constraint(equalTo: programImageButton.centerXAnchor).isActive = true
@@ -364,15 +370,6 @@ class EpisodeCell: UITableViewCell {
         playBarButton.trailingAnchor.constraint(equalTo: programImageButton.trailingAnchor, constant: -1).isActive = true
         playBarButton.centerYAnchor.constraint(equalTo: playbackBarView.centerYAnchor).isActive = true
         playBarButton.heightAnchor.constraint(equalToConstant: 4).isActive = true
-
-        
-//        self.addSubview(playEpisodeButton)
-//        playEpisodeButton.translatesAutoresizingMaskIntoConstraints = false
-//        playEpisodeButton.centerXAnchor.constraint(equalTo: programImageButton.centerXAnchor).isActive = true
-//        playEpisodeButton.topAnchor.constraint(equalTo: programImageButton.bottomAnchor, constant: 3).isActive = true
-//        playEpisodeButton.widthAnchor.constraint(equalTo: programImageButton.widthAnchor).isActive = true
-//        playEpisodeButton.heightAnchor.constraint(equalToConstant: 20).isActive = true
-//        playEpisodeButton.backgroundColor = .blue
         
         self.addSubview(programNameStackedView)
         programNameStackedView.translatesAutoresizingMaskIntoConstraints = false
@@ -407,7 +404,7 @@ class EpisodeCell: UITableViewCell {
         moreGradientView.trailingAnchor.constraint(equalTo: moreButton.leadingAnchor).isActive = true
         moreGradientView.heightAnchor.constraint(equalToConstant: 20).isActive = true
         moreGradientView.widthAnchor.constraint(equalToConstant: 20).isActive = true
-
+        
         moreButtonGradient.frame = CGRect(x: 0, y: 0, width: 18, height: 20)
         let whiteColor = UIColor.white
         moreButtonGradient.colors = [whiteColor.withAlphaComponent(0.0).cgColor, whiteColor.withAlphaComponent(5.0).cgColor, whiteColor.withAlphaComponent(1.0).cgColor]
@@ -418,10 +415,12 @@ class EpisodeCell: UITableViewCell {
         
         self.addSubview(tagScrollView)
         tagScrollView.translatesAutoresizingMaskIntoConstraints = false
-        tagScrollView.topAnchor.constraint(equalTo: captionTextView.bottomAnchor, constant: 10).isActive = true
+        tagScrollViewTop = tagScrollView.topAnchor.constraint(equalTo: captionTextView.bottomAnchor, constant: 10)
+        tagScrollViewTop.isActive = true
         tagScrollView.trailingAnchor.constraint(equalTo: trailingAnchor,constant: -16).isActive = true
         tagScrollView.leadingAnchor.constraint(equalTo: captionTextView.leadingAnchor).isActive = true
-        tagScrollView.heightAnchor.constraint(equalToConstant: 22).isActive = true
+        tagScrollViewHeight = tagScrollView.heightAnchor.constraint(equalToConstant: 22)
+        tagScrollViewHeight.isActive = true
         
         tagScrollView.addSubview(tagContainingStackView)
         tagContainingStackView.translatesAutoresizingMaskIntoConstraints = false
@@ -485,20 +484,20 @@ class EpisodeCell: UITableViewCell {
         shareCountLabel.widthAnchor.constraint(equalToConstant: 35).isActive = true
         
         if UIDevice.current.deviceType != .iPhone4S && UIDevice.current.deviceType != .iPhoneSE {
-        episodeOptions.addSubview(listenIconImage)
-        listenIconImage.translatesAutoresizingMaskIntoConstraints = false
-        listenIconImage.centerYAnchor.constraint(equalTo: episodeOptions.centerYAnchor).isActive = true
-        listenIconImage.leadingAnchor.constraint(equalTo: shareCountLabel.trailingAnchor, constant: 7).isActive = true
-        listenIconImage.widthAnchor.constraint(equalToConstant: 18).isActive = true
-        listenIconImage.heightAnchor.constraint(equalToConstant: 18).isActive = true
-        
-        episodeOptions.addSubview(listenCountLabel)
-        listenCountLabel.translatesAutoresizingMaskIntoConstraints = false
-        listenCountLabel.centerYAnchor.constraint(equalTo: episodeOptions.centerYAnchor).isActive = true
-        listenCountLabel.leadingAnchor.constraint(equalTo: listenIconImage.trailingAnchor, constant: 5).isActive = true
-        listenCountLabel.widthAnchor.constraint(equalToConstant: 35).isActive = true
+            episodeOptions.addSubview(listenIconImage)
+            listenIconImage.translatesAutoresizingMaskIntoConstraints = false
+            listenIconImage.centerYAnchor.constraint(equalTo: episodeOptions.centerYAnchor).isActive = true
+            listenIconImage.leadingAnchor.constraint(equalTo: shareCountLabel.trailingAnchor, constant: 7).isActive = true
+            listenIconImage.widthAnchor.constraint(equalToConstant: 18).isActive = true
+            listenIconImage.heightAnchor.constraint(equalToConstant: 18).isActive = true
+            
+            episodeOptions.addSubview(listenCountLabel)
+            listenCountLabel.translatesAutoresizingMaskIntoConstraints = false
+            listenCountLabel.centerYAnchor.constraint(equalTo: episodeOptions.centerYAnchor).isActive = true
+            listenCountLabel.leadingAnchor.constraint(equalTo: listenIconImage.trailingAnchor, constant: 5).isActive = true
+            listenCountLabel.widthAnchor.constraint(equalToConstant: 35).isActive = true
         }
-
+        
         episodeOptions.addSubview(timeSinceReleaseLabel)
         timeSinceReleaseLabel.translatesAutoresizingMaskIntoConstraints = false
         timeSinceReleaseLabel.centerYAnchor.constraint(equalTo: episodeOptions.centerYAnchor).isActive = true
@@ -538,7 +537,7 @@ class EpisodeCell: UITableViewCell {
     
     @objc func captionPress() {
         if captionTextView.numberOfLines != 0 && captionTextView.lineCount() > 3 {
-           moreUnwrap()
+            moreUnwrap()
         } else {
             self.cellDelegate?.showCommentsFor(episode: episode)
         }
@@ -644,7 +643,7 @@ class EpisodeCell: UITableViewCell {
         cellDelegate?.playEpisode(cell: self )
         playEpisodeImageView.isHidden = true
         playBarButton.isHidden = true
-//        playEpisodeButton.setImage(nil, for: .normal)
+        //        playEpisodeButton.setImage(nil, for: .normal)
     }
     
     func removePlayIcon() {
@@ -665,7 +664,7 @@ class EpisodeCell: UITableViewCell {
             }
         }
     }
-        
+    
     func getIndexPath() -> IndexPath? {
         var indexPath: IndexPath!
         guard let superView = self.superview as? UITableView else {

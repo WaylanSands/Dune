@@ -27,7 +27,7 @@ class AccountTypeVC: UIViewController {
     var fastTrack = false
     
     override var preferredStatusBarStyle: UIStatusBarStyle {
-      return .lightContent
+        return .lightContent
     }
     
     override func viewDidLoad() {
@@ -53,7 +53,7 @@ class AccountTypeVC: UIViewController {
     }
     
     override func viewWillDisappear(_ animated: Bool) {
-       fastTrack = false
+        fastTrack = false
     }
     
     func removeBackButtonIfRootView() {
@@ -98,8 +98,6 @@ class AccountTypeVC: UIViewController {
     }
     
     @IBAction func accountTypeButtonPress(_ sender: UIButton) {
-        print("Tap")
-        
         if sender.titleLabel?.text == "Finish Setup" {
             view.addSubview(completionAlert)
         } else if sender.titleLabel?.text == "Start Listening" {
@@ -115,7 +113,7 @@ class AccountTypeVC: UIViewController {
     
     func updateOrCreateUser() {
         let loggedIn = UserDefaults.standard.bool(forKey: "loggedIn")
-
+        
         if loggedIn {
             updateReturningUser()
         } else if User.socialSignUp == true {
@@ -152,7 +150,7 @@ class AccountTypeVC: UIViewController {
                         if let err = err {
                             print("Error creating new user document: \(err)")
                         } else {
-                            print("Success creating new user document")
+                            print("Success creating new user")
                             if self.fastTrack {
                                 self.fastTrackAccount()
                             }
@@ -164,96 +162,94 @@ class AccountTypeVC: UIViewController {
     }
     
     func fastTrackAccount() {
-            DispatchQueue.global(qos: .userInitiated).async {
-                let programID = NSUUID().uuidString
-                guard let uid = Auth.auth().currentUser?.uid else { return }
-                
-                User.ID = uid
-                CurrentProgram.rep = 0
-                CurrentProgram.image = (CurrentProgram.image ?? #imageLiteral(resourceName: "missing-image-large"))
-                CurrentProgram.summary = ""
-                CurrentProgram.tags = [String]()
-                User.completedOnBoarding = true
-                CurrentProgram.hasIntro = false
-                CurrentProgram.hasMentions = false
-                CurrentProgram.isPublisher = false
-                CurrentProgram.programIDs = [String]()
-                CurrentProgram.name = User.username!
-                CurrentProgram.isPrimaryProgram = true
-                CurrentProgram.subscriberCount = 0
-                CurrentProgram.repMethods = [String]()
-                CurrentProgram.username = User.username
-                CurrentProgram.subPrograms = [Program]()
-                CurrentProgram.subscriberIDs = [String]()
-                CurrentProgram.episodeIDs = [[String:Any]]()
-                User.programID = CurrentProgram.ID ?? programID
-                CurrentProgram.ID = CurrentProgram.ID ?? programID
-                if User.recommendedProgram == nil {
-                   CurrentProgram.subscriptionIDs = [CurrentProgram.ID ?? programID]
+        DispatchQueue.global(qos: .userInitiated).async {
+            let programID = NSUUID().uuidString
+            print("Fast tracking")
+            guard let uid = Auth.auth().currentUser?.uid else { return }
+            
+            User.ID = uid
+            CurrentProgram.rep = 0
+            CurrentProgram.image = (CurrentProgram.image ?? #imageLiteral(resourceName: "missing-image-large"))
+            CurrentProgram.summary = ""
+            CurrentProgram.tags = [String]()
+            User.completedOnBoarding = true
+            CurrentProgram.hasIntro = false
+            CurrentProgram.hasMentions = false
+            CurrentProgram.isPublisher = false
+            CurrentProgram.programIDs = [String]()
+            CurrentProgram.name = User.username!
+            CurrentProgram.isPrimaryProgram = true
+            CurrentProgram.subscriberCount = 0
+            CurrentProgram.repMethods = [String]()
+            CurrentProgram.username = User.username
+            CurrentProgram.subPrograms = [Program]()
+            CurrentProgram.subscriberIDs = [String]()
+            CurrentProgram.episodeIDs = [[String:Any]]()
+            User.programID = CurrentProgram.ID ?? programID
+            CurrentProgram.ID = CurrentProgram.ID ?? programID
+            if User.recommendedProgram == nil {
+                CurrentProgram.subscriptionIDs = [CurrentProgram.ID ?? programID]
+            } else {
+                CurrentProgram.subscriptionIDs?.append(CurrentProgram.ID ?? programID)
+            }
+            
+            // Private channel
+            CurrentProgram.privacyStatus = .madePublic
+            CurrentProgram.pendingChannels = [String]()
+            CurrentProgram.deniedChannels = [String]()
+                        
+            let db = Firestore.firestore()
+            let userRef = db.collection("users").document(User.ID!)
+            let programRef = db.collection("programs").document(User.programID!)
+
+            
+            userRef.updateData([
+                "programID": User.programID!,
+                "completedOnBoarding" : true,
+                ])
+            { (error) in
+                if let error = error {
+                    print("There has been an error adding program ID: \(error.localizedDescription)")
                 } else {
-                    CurrentProgram.subscriptionIDs?.append(CurrentProgram.ID ?? programID)
-                }
-                
-                // Private channel
-                CurrentProgram.privacyStatus = .madePublic
-                CurrentProgram.pendingChannels = [String]()
-                CurrentProgram.deniedChannels = [String]()
-
-                // Ready to move
-                self.presentSearchVC()
-
-                let db = Firestore.firestore()
-                let userRef = db.collection("users").document(User.ID!)
-                let programRef = db.collection("programs").document(User.programID!)
+                    print("Successfully added channel ID")
                     
+                    if CurrentProgram.imageID != nil {
+                        programRef.setData(["imageID" : CurrentProgram.imageID!])
+                    }
                     
-                
-                userRef.updateData([
-                    "programID": User.programID!,
-                    "completedOnBoarding" : true,
-                        ])
-                 { (error) in
-                    if let error = error {
-                        print("There has been an error adding program ID: \(error.localizedDescription)")
-                    } else {
-                        print("Successfully added channel ID")
-                        
-                        if CurrentProgram.imageID != nil {
-                            programRef.setData(["imageID" : CurrentProgram.imageID!])
-                        }
-                        
-                        programRef.setData([
-                            "subscriptionIDs" : CurrentProgram.subscriptionIDs!,
-                            "isPublisher" : CurrentProgram.isPublisher!,
-                            "episodeIDs" : CurrentProgram.episodeIDs!,
-                            "summary": CurrentProgram.summary ?? "",
-                            "privacyStatus" : "madePublic",
-                            "username" : User.username!,
-                            "isPrimaryProgram" : true,
-                            "ID" : CurrentProgram.ID!,
-                            "name" : User.username!,
-                            "pendingChannels": [],
-                            "deniedChannels" : [],
-                            "subscriberCount" : 0,
-                            "hasMentions" : false,
-                            "ownerID" : User.ID!,
-                            "subscriberIDs": [],
-                            "programIDs" : [],
-                            "hasIntro" : false,
-                            "repMethods" : [],
-                            "tags" : [],
-                            "rep" : 0
-                        ]) { (error) in
-                            if let error = error {
-                                print("There has been an error adding the program: \(error.localizedDescription)")
-                            } else {
-                                print("Successfully fast tracked")
-                            }
+                    programRef.setData([
+                        "subscriptionIDs" : CurrentProgram.subscriptionIDs!,
+                        "isPublisher" : CurrentProgram.isPublisher!,
+                        "episodeIDs" : CurrentProgram.episodeIDs!,
+                        "summary": CurrentProgram.summary ?? "",
+                        "privacyStatus" : "madePublic",
+                        "username" : User.username!,
+                        "isPrimaryProgram" : true,
+                        "ID" : CurrentProgram.ID!,
+                        "name" : User.username!,
+                        "pendingChannels": [],
+                        "deniedChannels" : [],
+                        "subscriberCount" : 0,
+                        "hasMentions" : false,
+                        "ownerID" : User.ID!,
+                        "subscriberIDs": [],
+                        "programIDs" : [],
+                        "hasIntro" : false,
+                        "repMethods" : [],
+                        "tags" : [],
+                        "rep" : 0
+                    ]) { (error) in
+                        if let error = error {
+                            print("There has been an error adding the program: \(error.localizedDescription)")
+                        } else {
+                            print("Successfully fast tracked")
+                            self.presentSearchVC()
                         }
                     }
                 }
             }
         }
+    }
     
     func presentProgramNameVC() {
         if let programNameVC = UIStoryboard(name: "OnboardingPublisher", bundle: nil).instantiateViewController(withIdentifier: "programNameVC") as? ProgramNameVC {
@@ -331,7 +327,7 @@ class AccountTypeVC: UIViewController {
     
     func signUpSocialUser() {
         DispatchQueue.global(qos: .userInitiated).sync {
-                        
+            
             let userRef = db.collection("users").document(User.ID!)
             
             userRef.setData([
@@ -339,7 +335,7 @@ class AccountTypeVC: UIViewController {
                 "isSetUp" : User.isSetUp!,
                 "username" : User.username!,
                 "completedOnBoarding" : false,
-                ]) { error in
+            ]) { error in
                 if error != nil {
                     print("Error attempting to signup Twitter user: \(error!.localizedDescription)")
                 } else {
@@ -354,90 +350,87 @@ class AccountTypeVC: UIViewController {
     }
     
     func fastTrackSocialAccount() {
-            DispatchQueue.global(qos: .userInitiated).async {
-                
-                CurrentProgram.rep = 0
-                User.completedOnBoarding = true
-                CurrentProgram.hasIntro = false
-                CurrentProgram.isPublisher = false
-                CurrentProgram.hasMentions = false
-                CurrentProgram.tags = [String]()
-                CurrentProgram.repMethods = [String]()
-                CurrentProgram.programIDs = [String]()
-                CurrentProgram.isPrimaryProgram = true
-                CurrentProgram.subscriberCount = 0
-                CurrentProgram.subPrograms = [Program]()
-                CurrentProgram.subscriberIDs = [String]()
-                CurrentProgram.episodeIDs = [[String:Any]]()
-                User.programID = CurrentProgram.ID
-                CurrentProgram.image = CurrentProgram.image ?? #imageLiteral(resourceName: "missing-image-large")
-                CurrentProgram.summary = (CurrentProgram.summary ?? "")
-               
-                // Private channel
-                CurrentProgram.privacyStatus = .madePublic
-                CurrentProgram.pendingChannels = [String]()
-                CurrentProgram.deniedChannels = [String]()
-                
-                if User.recommendedProgram == nil {
-                   CurrentProgram.subscriptionIDs = [CurrentProgram.ID!]
+        DispatchQueue.global(qos: .userInitiated).async {
+            
+            CurrentProgram.rep = 0
+            User.completedOnBoarding = true
+            CurrentProgram.hasIntro = false
+            CurrentProgram.isPublisher = false
+            CurrentProgram.hasMentions = false
+            CurrentProgram.tags = [String]()
+            CurrentProgram.repMethods = [String]()
+            CurrentProgram.programIDs = [String]()
+            CurrentProgram.isPrimaryProgram = true
+            CurrentProgram.subscriberCount = 0
+            CurrentProgram.subPrograms = [Program]()
+            CurrentProgram.subscriberIDs = [String]()
+            CurrentProgram.episodeIDs = [[String:Any]]()
+            User.programID = CurrentProgram.ID
+            CurrentProgram.image = CurrentProgram.image ?? #imageLiteral(resourceName: "missing-image-large")
+            CurrentProgram.summary = (CurrentProgram.summary ?? "")
+            
+            // Private channel
+            CurrentProgram.privacyStatus = .madePublic
+            CurrentProgram.pendingChannels = [String]()
+            CurrentProgram.deniedChannels = [String]()
+            
+            if User.recommendedProgram == nil {
+                CurrentProgram.subscriptionIDs = [CurrentProgram.ID!]
+            } else {
+                CurrentProgram.subscriptionIDs?.append(CurrentProgram.ID!)
+            }
+                        
+            let db = Firestore.firestore()
+            let userRef = db.collection("users").document(User.ID!)
+            let programRef = db.collection("programs").document(User.programID!)
+            
+            userRef.updateData([
+                "programID": User.programID!,
+                "completedOnBoarding" : true,
+                ])
+            { (error) in
+                if let error = error {
+                    print("There has been an error adding program ID: \(error.localizedDescription)")
                 } else {
-                    CurrentProgram.subscriptionIDs?.append(CurrentProgram.ID!)
-                }
-                                
-                // Ready to move
-                self.presentSearchVC()
-
-                let db = Firestore.firestore()
-                let userRef = db.collection("users").document(User.ID!)
-                let programRef = db.collection("programs").document(User.programID!)
-                
-                userRef.updateData([
-                    "programID": User.programID!,
-                    "completedOnBoarding" : true,
-                        ])
-                 { (error) in
-                    if let error = error {
-                        print("There has been an error adding program ID: \(error.localizedDescription)")
-                    } else {
-                        print("Successfully added channel ID")
-                        
-                        if CurrentProgram.imageID != nil {
-                            programRef.setData(["imageID" : CurrentProgram.imageID!])
-                        }
-                        
-                        programRef.setData([
-                            "subscriptionIDs" :  CurrentProgram.subscriptionIDs!,
-                            "isPublisher" : CurrentProgram.isPublisher!,
-                            "episodeIDs" : CurrentProgram.episodeIDs!,
-                            "summary": CurrentProgram.summary!,
-                            "privacyStatus" : "madePublic",
-                            "name" : CurrentProgram.name!,
-                            "username" : User.username!,
-                            "isPrimaryProgram" : true,
-                            "pendingChannels": [],
-                            "deniedChannels" : [],
-                            "hasMentions" : false,
-                            "subscriberCount" : 0,
-                            "ownerID" : User.ID!,
-                            "subscriberIDs": [],
-                            "programIDs" : [],
-                            "hasIntro" : false,
-                            "repMethods" : [],
-                            "ID" : User.ID!,
-                            "tags": [],
-                            "rep": 0
-                        ]) { (error) in
-                            if let error = error {
-                                print("There has been an error adding the program: \(error.localizedDescription)")
-                            } else {
-                                print("Successfully fast tracked")
-//                                self.attemptToStoreProgramImage()
-                            }
+                    print("Successfully added channel ID")
+                    
+                    if CurrentProgram.imageID != nil {
+                        programRef.setData(["imageID" : CurrentProgram.imageID!])
+                    }
+                    
+                    programRef.setData([
+                        "subscriptionIDs" :  CurrentProgram.subscriptionIDs!,
+                        "isPublisher" : CurrentProgram.isPublisher!,
+                        "episodeIDs" : CurrentProgram.episodeIDs!,
+                        "summary": CurrentProgram.summary!,
+                        "privacyStatus" : "madePublic",
+                        "name" : CurrentProgram.name!,
+                        "username" : User.username!,
+                        "isPrimaryProgram" : true,
+                        "pendingChannels": [],
+                        "deniedChannels" : [],
+                        "hasMentions" : false,
+                        "subscriberCount" : 0,
+                        "ownerID" : User.ID!,
+                        "subscriberIDs": [],
+                        "programIDs" : [],
+                        "hasIntro" : false,
+                        "repMethods" : [],
+                        "ID" : User.ID!,
+                        "tags": [],
+                        "rep": 0
+                    ]) { (error) in
+                        if let error = error {
+                            print("There has been an error adding the program: \(error.localizedDescription)")
+                        } else {
+                            print("Successfully fast tracked")
+                            self.presentSearchVC()
                         }
                     }
                 }
             }
         }
+    }
     
     @objc func backButtonPress() {
         navigationController?.popViewController(animated: true)
