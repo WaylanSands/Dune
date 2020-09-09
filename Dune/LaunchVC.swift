@@ -100,6 +100,7 @@ class LaunchVC: UIViewController {
     private func getUserData() {
         FireStoreManager.getUserData() {
             self.hasUserData = true
+            print("Returned")
             if self.finishedAnimation {
                 self.grantUserAccess()
             }

@@ -9,7 +9,7 @@
 import UIKit
 import WebKit
 
-protocol WebViewDelegate {
+protocol NavPlayerDelegate: class {
     func playOrPauseEpisode()
 }
 
@@ -43,7 +43,7 @@ class WebVC: UIViewController {
     let playbackCircleView = PlaybackCircleView()
     let loadingCircle = LoadingAudioView()
     
-    var delegate: WebViewDelegate!
+    var delegate: NavPlayerDelegate!
     var webView = WKWebView()
     
     let playbackButton: ExtendedButton = {
@@ -235,15 +235,6 @@ extension WebVC: DuneAudioPlayerDelegate {
     func updateActiveCell(atIndex: Int, forType: PlayBackType) {
         //
     }
-    
-    func showCommentsFor(episode: Episode) {
-        //
-    }
-    
-    func playedEpisode(episode: Episode) {
-        //
-    }
-    
     
 }
 

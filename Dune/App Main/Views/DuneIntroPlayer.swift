@@ -23,7 +23,7 @@ class DuneIntroPlayer: UIView {
     var currentAudioID: String?
     
     var isInPosition = false
-    var yPosition: CGFloat!
+    var yPosition = UIScreen.main.bounds.height - duneTabBar.frame.height
     var program: Program?
     
     var playbackCircleLink: CADisplayLink!

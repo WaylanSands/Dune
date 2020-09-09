@@ -26,7 +26,7 @@ class RecordBoothVC: UIViewController {
     }
     
     var selectedProgram: Program?
-    
+        
     var recordingWaveFeedbackLink: CADisplayLink!
     var playbackLink: CADisplayLink!
     
@@ -69,7 +69,7 @@ class RecordBoothVC: UIViewController {
     let boothBackOutAlert = CustomAlertView(alertType: .boothBackOut)
     let nextVersionAlert = CustomAlertView(alertType: .nextVersion)
 
-    lazy var tabBar = navigationController?.tabBarController?.tabBar
+//    lazy var tabBar = navigationController?.tabBarController?.tabBar
     
     let tooShortAlert = CustomAlertView(alertType: .shortAudioLength)
     let introTooShortAlert = CustomAlertView(alertType: .shortIntroLength)
@@ -260,6 +260,7 @@ class RecordBoothVC: UIViewController {
         navigationController?.interactivePopGestureRecognizer?.isEnabled = false
         boothBackOutAlert.alertDelegate = self
         configureAudioSessionCategory()
+        duneTabBar.isHidden = true
         setupNavigationBar()
         resetEditingModes()
         setProgramImage()
@@ -329,6 +330,7 @@ class RecordBoothVC: UIViewController {
             view.addSubview(boothBackOutAlert)
         } else {
             resetViews()
+            duneTabBar.isHidden = false
             navigationController?.popViewController(animated: true)
         }
     }
@@ -370,9 +372,9 @@ class RecordBoothVC: UIViewController {
         navBar?.setBackgroundImage(UIImage(), for: .default)
         navBar?.shadowImage = UIImage()
         navBar?.tintColor = .white
-        tabBar!.barTintColor = .none
-        tabBar?.isTranslucent = true
-        tabBar?.isHidden = true
+//        tabBar!.barTintColor = .none
+//        tabBar?.isTranslucent = true
+//        tabBar?.isHidden = true
     }
     
     func addGradient() {
@@ -627,14 +629,14 @@ class RecordBoothVC: UIViewController {
     }
     
     func resetTabBar() {
-        tabBar?.barStyle = .default
-        tabBar?.isHidden = false
-        tabBar!.backgroundImage = .none
-        tabBar!.items?[0].image = UIImage(named: "feed-icon")
-        tabBar!.items?[1].image =  UIImage(named: "search-icon")
-        tabBar!.items?[2].image =  UIImage(named: "studio-icon")
-        tabBar!.items?[3].image =  UIImage(named: "trending-icon")
-        tabBar!.items?[4].image =  UIImage(named: "account-icon")
+//        tabBar?.barStyle = .default
+//        tabBar?.isHidden = false
+//        tabBar!.backgroundImage = .none
+//        tabBar!.items?[0].image = UIImage(named: "feed-icon")
+//        tabBar!.items?[1].image =  UIImage(named: "search-icon")
+//        tabBar!.items?[2].image =  UIImage(named: "studio-icon")
+//        tabBar!.items?[3].image =  UIImage(named: "trending-icon")
+//        tabBar!.items?[4].image =  UIImage(named: "account-icon")
     }
     
     // MARK: Continue Button Press
@@ -1184,6 +1186,7 @@ extension RecordBoothVC: BackgroundMusicDelegate {
 extension RecordBoothVC: CustomAlertDelegate {
     
     func primaryButtonPress() {
+        duneTabBar.isHidden = false
         navigationController?.popViewController(animated: true)
     }
     

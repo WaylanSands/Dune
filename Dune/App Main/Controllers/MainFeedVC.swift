@@ -20,7 +20,6 @@ class MainFeedVC: UIViewController {
     
     let tableView = UITableView()
     var subscriptionIDs = [String]()
-    var pushingContent = false
     
     // Tracking episode progress
     var listenCountUpdated = false
@@ -53,7 +52,10 @@ class MainFeedVC: UIViewController {
     var autoSubscribeSpinner = UIActivityIndicatorView(style: .gray)
     var loadingView = TVLoadingAnimationView(topHeight: 20)
     var refreshControl: UIRefreshControl!
-    var audioPlayer = DunePlayBar()
+    //    var audioPlayer = DunePlayBar()
+    
+    var commentVC: CommentThreadVC!
+    
     
     let subscriptionSettings = SettingsLauncher(options: SettingOptions.subscriptionEpisode, type: .subscriptionEpisode)
     let ownEpisodeSettings = SettingsLauncher(options: SettingOptions.ownEpisode, type: .ownEpisode)
@@ -213,19 +215,17 @@ class MainFeedVC: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         subscriptionIDs = CurrentProgram.subscriptionIDs!
         setNeedsStatusBarAppearanceUpdate()
-        setupModalCommentObserver()
-        pushingContent = false
         selectedCellRow = nil
         configureNavigation()
         fetchEpisodeItems()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
-        searchScrollView.setScrollBarToTopLeft()
-        removeModalCommentObserver()
-        if !pushingContent {
-            audioPlayer.finishSession()
-        }
+//        searchScrollView.setScrollBarToTopLeft()
+        //        removeModalCommentObserver()
+        //        if !pushingContent {
+        //            dunePlayer.finishSession()
+        //        }
         
         FileManager.removeAudioFilesFromDocumentsDirectory() {
             print("Audio removed")
@@ -244,7 +244,6 @@ class MainFeedVC: UIViewController {
         subscriptionSettings.settingsDelegate = self
         ownEpisodeSettings.settingsDelegate = self
         reportEpisodeAlert.alertDelegate = self
-        audioPlayer.audioPlayerDelegate = self
     }
     
     func configureTableView() {
@@ -256,16 +255,16 @@ class MainFeedVC: UIViewController {
         tableView.delegate = self
     }
     
-    func setupModalCommentObserver() {
-        NotificationCenter.default.addObserver(self, selector: #selector(self.showCommentFromModal), name: NSNotification.Name(rawValue: "modalCommentPush"), object: nil)
-    }
-    
-    func removeModalCommentObserver() {
-        NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: "modalCommentPush"), object: nil)
-    }
+//    func setupModalCommentObserver() {
+//        NotificationCenter.default.addObserver(self, selector: #selector(self.showCommentFromModal), name: NSNotification.Name(rawValue: "modalCommentPush"), object: nil)
+//    }
+//
+//    func removeModalCommentObserver() {
+//        NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: "modalCommentPush"), object: nil)
+//    }
     
     func resetTableView() {
-        audioPlayer.downloadedEpisodes = [Episode]()
+        //        audioPlayer.downloadedEpisodes = [Episode]()
         noEpisodesMainLabel.isHidden = true
         downloadedEpisodes = [Episode]()
         noEpisodesLabel.isHidden = true
@@ -283,8 +282,8 @@ class MainFeedVC: UIViewController {
         navigationController?.navigationBar.barStyle = .black
         navigationController?.navigationBar.isHidden = true
         
-        tabBarController?.tabBar.backgroundColor = hexStringToUIColor(hex: "F4F7FB")
-        tabBarController?.tabBar.backgroundImage = UIImage()
+//        tabBarController?.tabBar.backgroundColor = hexStringToUIColor(hex: "F4F7FB")
+//        tabBarController?.tabBar.backgroundImage = UIImage()
     }
     
     func styleForScreens() {
@@ -359,7 +358,7 @@ class MainFeedVC: UIViewController {
         view.sendSubviewToBack(tableView)
         tableView.pinEdges(to: view)
         tableView.backgroundColor = .white
-        tableView.contentInset = UIEdgeInsets(top: 45, left: 0, bottom: 64, right: 0)
+        tableView.contentInset = UIEdgeInsets(top: 45, left: 0, bottom: tableView.safeDunePlayBarHeight, right: 0)
         tableView.addTopBounceAreaView(color: hexStringToUIColor(hex: "191919"))
         tableView.backgroundColor = CustomStyle.secondShade
         tableView.bringSubviewToFront(refreshControl)
@@ -388,8 +387,8 @@ class MainFeedVC: UIViewController {
         loadingView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         loadingView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
         
-        view.addSubview(audioPlayer)
-        audioPlayer.frame = CGRect(x: 0, y: view.frame.height, width: view.frame.width, height: 600)
+        //        view.addSubview(audioPlayer)
+        //        audioPlayer.frame = CGRect(x: 0, y: view.frame.height, width: view.frame.width, height: 600)
         
         view.bringSubviewToFront(navBarView)
         
@@ -433,7 +432,7 @@ class MainFeedVC: UIViewController {
                     self.setupEmptyTableView()
                 } else {
                     if items != self.episodeItems {
-                        self.audioPlayer.itemCount = items.count
+                        //                        self.audioPlayer.itemCount = items.count
                         self.fakeNavBarView.isHidden = true
                         self.autoSubscribeSpinner.isHidden = true
                         self.autoSubscribeButton.setTitleColor(CustomStyle.primaryBlack, for: .normal)
@@ -464,7 +463,7 @@ class MainFeedVC: UIViewController {
         navBarView.isHidden = true
         tableView.isHidden = true
     }
-        
+    
     func recreateCategoryPills() {
         for each in searchContentStackView.arrangedSubviews {
             let button = each as! UIButton
@@ -479,7 +478,7 @@ class MainFeedVC: UIViewController {
         if downloadedEpisodes.count != episodeItems.count {
             print(downloadedEpisodes.count)
             print(episodeItems.count)
-
+            
             var endIndex = 10
             if episodeItems.count - downloadedEpisodes.count < endIndex {
                 endIndex = episodeItems.count - downloadedEpisodes.count
@@ -504,16 +503,29 @@ class MainFeedVC: UIViewController {
                 guard let self = self else { return }
                 DispatchQueue.main.async {
                     if !episodes.isEmpty {
-                        self.audioPlayer.downloadedEpisodes += episodes
+            //                        self.audioPlayer.downloadedEpisodes += episodes
                         self.tableView.tableFooterView = nil
                         self.downloadedEpisodes += episodes
                         self.episodes += episodes
                         self.episodes = self.episodes.sorted(by: >)
+                        self.checkPlayBarActiveController()
                         self.isFetchingEpisodes = false
                         self.tableView.reloadData()
                         self.loadingView.isHidden = true
+                        
                     }
                 }
+            }
+        }
+    }
+    
+    func checkPlayBarActiveController() {
+        if dunePlayBar.activeController == .dailyFeed {
+            dunePlayBar.downloadedEpisodes = episodes
+            if selectedCategory != nil {
+                dunePlayBar.itemCount = filteredEpisodeItems.count
+            } else {
+                dunePlayBar.itemCount = episodeItems.count
             }
         }
     }
@@ -556,11 +568,11 @@ class MainFeedVC: UIViewController {
         FireStoreManager.fetchEpisodesWith(episodeItems: items) { episodes in
             DispatchQueue.main.async {
                 if !episodes.isEmpty {
-                    self.audioPlayer.downloadedEpisodes = episodes
                     self.tableView.tableFooterView = nil
                     self.downloadedEpisodes += episodes
                     self.episodes += episodes
                     self.episodes = self.episodes.sorted(by: >)
+                    self.checkPlayBarActiveController()
                     self.tableView.reloadData()
                     self.loadingView.isHidden = true
                     self.isFetchingEpisodes = false
@@ -635,10 +647,10 @@ class MainFeedVC: UIViewController {
         } else {
             if filterMode == .all {
                 filteredEpisodeItems = episodeItems.filter({$0.category == category.titleLabel?.text})
-                self.audioPlayer.itemCount = filteredEpisodeItems.count
+                //                self.audioPlayer.itemCount = filteredEpisodeItems.count
             } else if filterMode == .today {
                 filteredEpisodeItems = episodeItems.filter({$0.category == category.titleLabel?.text && Calendar.current.isDateInToday($0.postedDate)})
-                self.audioPlayer.itemCount = filteredEpisodeItems.count
+                //                self.audioPlayer.itemCount = filteredEpisodeItems.count
             }
             highLightButtonWith(title: category.titleLabel!.text!)
             loadingView.isHidden = false
@@ -652,7 +664,7 @@ class MainFeedVC: UIViewController {
         if filterMode == .all {
             filteredEpisodeItems = []
             episodes = downloadedEpisodes
-            self.audioPlayer.itemCount = episodeItems.count
+            //            self.audioPlayer.itemCount = episodeItems.count
             tableView.reloadData()
         } else if filterMode == .today {
             getTodaysEpisodes()
@@ -710,7 +722,7 @@ class MainFeedVC: UIViewController {
     
     func getTodaysEpisodes() {
         let items = episodeItems.filter({Calendar.current.isDateInToday($0.postedDate)})
-        self.audioPlayer.itemCount = items.count
+        //        self.audioPlayer.itemCount = items.count
         
         var itemsNeeded = [EpisodeItem]()
         episodes = []
@@ -738,7 +750,7 @@ class MainFeedVC: UIViewController {
         FireStoreManager.fetchAllEpisodesWith(episodeItems: items) { episodes in
             DispatchQueue.main.async {
                 if !episodes.isEmpty {
-                    self.audioPlayer.downloadedEpisodes = episodes
+                    //                    self.audioPlayer.downloadedEpisodes = episodes
                     self.downloadedEpisodes += episodes
                     self.episodes += episodes
                     self.episodes = self.episodes.sorted(by: >)
@@ -760,11 +772,11 @@ class MainFeedVC: UIViewController {
         tableView.reloadRows(at: [IndexPath(item: index, section: 0)], with: .fade)
     }
     
-    @objc func showCommentFromModal(_ notification: Notification) {
-        let episodeID = notification.userInfo?["ID"] as! String
-        guard let episode = downloadedEpisodes.first(where: {$0.ID == episodeID}) else { return }
-        showCommentsFor(episode: episode)
-    }
+//    @objc func showCommentFromModal(_ notification: Notification) {
+//        let episodeID = notification.userInfo?["ID"] as! String
+//        guard let episode = downloadedEpisodes.first(where: {$0.ID == episodeID}) else { return }
+//        showCommentsFor(episode: episode)
+//    }
     
     // May be used later
     func setCurrentDate() {
@@ -790,9 +802,6 @@ class MainFeedVC: UIViewController {
     }
     
     @objc func autoSubscribePress() {
-//        DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
-//            self.askToRegisterForNotifications()
-//        }
         autoSubscribeSpinner.isHidden = false
         autoSubscribeButton.setTitleColor(CustomStyle.primaryYellow, for: .normal)
         if let interests = User.interests {
@@ -819,9 +828,11 @@ class MainFeedVC: UIViewController {
     }
     
     @objc func visitSearchPress() {
-        let tabBar = MainTabController()
-        tabBar.selectedIndex = 3
-        DuneDelegate.newRootView(tabBar)
+         duneTabBar.visit(screen: .search)
+//        duneTabBar.tabButtonSelection(3)
+//        let tabBar = MainTabController()
+//        tabBar.selectedIndex = 3
+//        DuneDelegate.newRootView(tabBar)
     }
     
 }
@@ -868,7 +879,7 @@ extension MainFeedVC: UITableViewDataSource, UITableViewDelegate {
             }
         }
         
-        if let playerEpisode = audioPlayer.episode  {
+        if let playerEpisode = dunePlayBar.episode  {
             if episode.ID == playerEpisode.ID {
                 activeCell = episodeCell
             }
@@ -930,11 +941,10 @@ extension MainFeedVC: UITableViewDataSource, UITableViewDelegate {
 extension MainFeedVC: EpisodeCellDelegate {
     
     func visitLinkWith(url: URL) {
-        pushingContent = true
         let webView = WebVC(url: url)
         webView.delegate = self
         
-        switch audioPlayer.currentState {
+        switch dunePlayBar.currentState {
         case .loading:
             webView.currentStatus = .ready
         case .ready:
@@ -947,7 +957,7 @@ extension MainFeedVC: EpisodeCellDelegate {
             webView.currentStatus = .ready
         }
         
-        audioPlayer.audioPlayerDelegate = webView
+        dunePlayBar.audioPlayerDelegate = webView
         navigationController?.present(webView, animated: true, completion: nil)
     }
     
@@ -958,10 +968,8 @@ extension MainFeedVC: EpisodeCellDelegate {
     
     func visitProfile(program: Program) {
         if CurrentProgram.programsIDs().contains(program.ID) {
-            let tabBar = MainTabController()
-            tabBar.selectedIndex = 4
-            DuneDelegate.newRootView(tabBar)
-        } else {
+             duneTabBar.visit(screen: .account)
+        } else if program.isPublisher {
             if program.isPrimaryProgram && !program.programIDs!.isEmpty  {
                 let programVC = ProgramProfileVC()
                 programVC.program = program
@@ -970,6 +978,9 @@ extension MainFeedVC: EpisodeCellDelegate {
                 let programVC = SingleProgramProfileVC(program: program)
                 navigationController?.pushViewController(programVC, animated: true)
             }
+        } else {
+            let programVC = ListenerProfileVC(program: program)
+            navigationController?.pushViewController(programVC, animated: true)
         }
     }
     
@@ -986,14 +997,24 @@ extension MainFeedVC: EpisodeCellDelegate {
             cell.playbackBarView.setupPlaybackBar()
         }
         
-        audioPlayer.yPosition = view.frame.height - self.tabBarController!.tabBar.frame.height
         
         let image = cell.programImageButton.imageView?.image
         let audioID = cell.episode.audioID
         
-        self.audioPlayer.setEpisodeDetailsWith(episode: cell.episode, image: image!)
-        self.audioPlayer.animateToPositionIfNeeded()
-        self.audioPlayer.playOrPauseEpisodeWith(audioID: audioID)
+        dunePlayBar.audioPlayerDelegate = self
+        dunePlayBar.activeController = .dailyFeed
+        dunePlayBar.setEpisodeDetailsWith(episode: cell.episode, image: image!)
+        dunePlayBar.animateToPositionIfNeeded()
+        dunePlayBar.playOrPauseEpisodeWith(audioID: audioID)
+      
+        // Update play bar with active episode list
+        dunePlayBar.downloadedEpisodes = episodes
+        
+        if selectedCategory != nil {
+            dunePlayBar.itemCount = filteredEpisodeItems.count
+        } else {
+            dunePlayBar.itemCount = episodeItems.count
+        }
     }
     
     func updateLikeCountFor(episode: Episode, at indexPath: IndexPath) {
@@ -1035,9 +1056,9 @@ extension MainFeedVC: EpisodeCellDelegate {
         episodes.removeAll(where: { $0.ID == episode.ID })
         episodeItems.removeAll(where: { $0.id == episode.ID })
         downloadedEpisodes.removeAll(where: { $0.ID == episode.ID })
-        audioPlayer.downloadedEpisodes.removeAll(where: { $0.ID == episode.ID })
+        dunePlayBar.downloadedEpisodes.removeAll(where: { $0.ID == episode.ID })
         tableView.deleteRows(at: [index], with: .fade)
-        audioPlayer.transitionOutOfView()
+//        audioPlayer.transitionOutOfView()
         recreateCategoryPills()
         startingIndex -= 1
         
@@ -1081,7 +1102,7 @@ extension MainFeedVC: SettingsLauncherDelegate {
         case "Edit":
             let editEpisodeVC = EditPublishedEpisode(episode: episode)
             editEpisodeVC.delegate = self
-            editEpisodeVC.hidesBottomBarWhenPushed = true
+//            editEpisodeVC.hidesBottomBarWhenPushed = true
             navigationController?.pushViewController(editEpisodeVC, animated: true)
         case "Report":
             episodeReported = true
@@ -1137,19 +1158,15 @@ extension MainFeedVC: DuneAudioPlayerDelegate {
     }
     
     func showCommentsFor(episode: Episode) {
-        pushingContent = true
-        if audioPlayer.audioPlayer != nil {
-            audioPlayer.pauseSession()
-        } else if audioPlayer.currentState == .loading {
-            audioPlayer.cancelCurrentDownload()
-            audioPlayer.finishSession()
-        }
-        let commentVC = CommentThreadVC(episode: episode)
-        commentVC.hidesBottomBarWhenPushed = true
+        dunePlayBar.isHidden = true
+        commentVC = CommentThreadVC(episode: episode)
+        commentVC.currentState = dunePlayBar.currentState
+        dunePlayBar.audioPlayerDelegate = commentVC
+        commentVC.delegate = self
         navigationController?.pushViewController(commentVC, animated: true)
     }
     
-    func playedEpisode(episode: Episode) {
+    func makeActive(episode: Episode) {
         episode.hasBeenPlayed = true
         guard let index = downloadedEpisodes.firstIndex(where: { $0.ID == episode.ID }) else { return }
         downloadedEpisodes[index] = episode
@@ -1213,11 +1230,23 @@ extension MainFeedVC: CustomAlertDelegate {
     
 }
 
-extension MainFeedVC: WebViewDelegate {
+extension MainFeedVC: NavPlayerDelegate {
     
     func playOrPauseEpisode() {
+        if dunePlayBar.isOutOfPosition {
+            activeCell = nil
+        }
+        
         if let cell = activeCell {
-            audioPlayer.playOrPauseEpisodeWith(audioID: cell.episode.audioID)
+            dunePlayBar.playOrPauseEpisodeWith(audioID: cell.episode.audioID)
+        } else {
+            if let cellIndex = episodes.firstIndex(of: commentVC.episode) {
+                let indexPath = IndexPath(item: cellIndex, section: 0)
+                guard let episodeCell = tableView.cellForRow(at: indexPath) as? EpisodeCell else { return }
+                playEpisode(cell: episodeCell)
+                episodeCell.removePlayIcon()
+                dunePlayBar.audioPlayerDelegate = commentVC
+            }
         }
     }
     

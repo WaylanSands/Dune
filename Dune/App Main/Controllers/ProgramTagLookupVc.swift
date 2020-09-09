@@ -23,6 +23,7 @@ class ProgramTagLookupVC: UIViewController {
     var audioIDs = [String]()
     var downloadedPrograms = [Program]()
 
+    var commentVC: CommentThreadVC!
     var activeCell: ProgramCell?
     var activeProgram: Program?
     var selectedCellRow: Int?
@@ -32,7 +33,7 @@ class ProgramTagLookupVC: UIViewController {
     let loadingView = TVLoadingAnimationView(topHeight: 20)
     
     var selectedProgramCellRow: Int?
-
+    
     let subscriptionSettings = SettingsLauncher(options: SettingOptions.subscriptionEpisode, type: .subscriptionEpisode)
     let programSettings = SettingsLauncher(options: SettingOptions.programSettings, type: .program)
     let noIntroRecordedAlert = CustomAlertView(alertType: .noIntroRecorded)
@@ -192,9 +193,9 @@ extension ProgramTagLookupVC: UITableViewDataSource, UITableViewDelegate {
        
         programCell.program = program
         programCell.subscribeButton.addTarget(programCell, action: #selector(ProgramCell.subscribeButtonPress), for: .touchUpInside)
-        programCell.programImageButton.addTarget(programCell, action: #selector(ProgramCell.playProgramIntro), for: .touchUpInside)
-//        programCell.playProgramButton.addTarget(programCell, action: #selector(ProgramCell.playProgramIntro), for: .touchUpInside)
-        programCell.programSettingsButton.addTarget(programCell, action: #selector(ProgramCell.showSettings), for: .touchUpInside)
+        programCell.programImageButton.addTarget(programCell, action: #selector(ProgramCell.visitProfile), for: .touchUpInside)
+        programCell.programNameButton.addTarget(programCell, action: #selector(ProgramCell.visitProfile), for: .touchUpInside)
+//        programCell.programSettingsButton.addTarget(programCell, action: #selector(ProgramCell.showSettings), for: .touchUpInside)
         programCell.usernameButton.addTarget(programCell, action: #selector(ProgramCell.visitProfile), for: .touchUpInside)
         programCell.moreButton.addTarget(programCell, action: #selector(ProgramCell.moreUnwrap), for: .touchUpInside)
         programCell.normalSetUp(program: program)
@@ -243,19 +244,20 @@ extension ProgramTagLookupVC: ProgramCellDelegate {
     
     func visitProfile(program: Program) {
         if CurrentProgram.programsIDs().contains(program.ID) {
-            let tabBar = MainTabController()
-            tabBar.selectedIndex = 4
-            DuneDelegate.newRootView(tabBar)
-         } else {
-             if program.isPrimaryProgram && !program.programIDs!.isEmpty  {
-                 let programVC = ProgramProfileVC()
-                 programVC.program = program
-                 navigationController?.pushViewController(programVC, animated: true)
-             } else {
-                 let programVC = SingleProgramProfileVC(program: program)
-                 navigationController?.pushViewController(programVC, animated: true)
-             }
-         }
+             duneTabBar.visit(screen: .account)
+        } else if program.isPublisher {
+            if program.isPrimaryProgram && !program.programIDs!.isEmpty  {
+                let programVC = ProgramProfileVC()
+                programVC.program = program
+                navigationController?.pushViewController(programVC, animated: true)
+            } else {
+                let programVC = SingleProgramProfileVC(program: program)
+                navigationController?.pushViewController(programVC, animated: true)
+            }
+        } else {
+            let programVC = ListenerProfileVC(program: program)
+            navigationController?.pushViewController(programVC, animated: true)
+        }
     }
     
     func playProgramIntro(cell: ProgramCell) {
@@ -272,9 +274,7 @@ extension ProgramTagLookupVC: ProgramCellDelegate {
               if !cell.playbackBarView.playbackBarIsSetup {
                   cell.playbackBarView.setupPlaybackBar()
               }
-              
-              introPlayer.yPosition = view.frame.height - tabBarController!.tabBar.frame.height - introPlayer.frame.height
-            
+                          
               let image = cell.programImageButton.imageView!.image!
               let audioID = cell.program.introID
         
@@ -311,17 +311,6 @@ extension ProgramTagLookupVC: DuneAudioPlayerDelegate {
     func fetchMoreEpisodes() {
         print("Should fetch more episodes: Needs implementation")
     }
-    
-    func showCommentsFor(episode: Episode) {
-        let commentVC = CommentThreadVC(episode: episode)
-        commentVC.hidesBottomBarWhenPushed = true
-        navigationController?.pushViewController(commentVC, animated: true)
-    }
-    
-    func playedEpisode(episode: Episode) {
-        //
-    }
-    
    
     func updateProgressBarWith(percentage: CGFloat, forType: PlayBackType, episodeID: String) {
         if lastPlayedID != episodeID {

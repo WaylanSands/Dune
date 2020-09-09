@@ -300,6 +300,7 @@ class SignInVC: UIViewController, UITextFieldDelegate {
     }
     
     func sendToMainFeed() {
+//        duneTabBar.tabButtonSelection(0)
         rootVC = MainTabController()
         DuneDelegate.newRootView(rootVC)
     }

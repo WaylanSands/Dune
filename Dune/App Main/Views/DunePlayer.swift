@@ -1,8 +1,8 @@
 //
-//  DuneAudioPlayer.swift
+//  DunePlayer.swift
 //  Dune
 //
-//  Created by Waylan Sands on 18/4/20.
+//  Created by Waylan Sands on 6/9/20.
 //  Copyright © 2020 Waylan Sands. All rights reserved.
 //
 
@@ -11,33 +11,32 @@ import MediaPlayer
 import AVFoundation
 import FirebaseStorage
 
-enum playerStatus {
-    case loading
-    case fetching
-    case playing
-    case paused
-    case ready
-}
+//
+//enum sliderStatus {
+//    case unchanged
+//    case moved
+//    case ended
+//    case began
+//}
+//
+//protocol DuneAudioPlayerDelegate {
+//    func updateProgressBarWith(percentage: CGFloat, forType: PlayBackType,  episodeID: String)
+//    func updateActiveCell(atIndex: Int, forType: PlayBackType)
+//    func showCommentsFor(episode: Episode)
+//    func playedEpisode(episode: Episode)
+//    func fetchMoreEpisodes()
+//}
 
-enum sliderStatus {
-    case unchanged
-    case moved
-    case ended
-    case began
-}
-
-protocol DuneAudioPlayerDelegate {
-    func updateProgressBarWith(percentage: CGFloat, forType: PlayBackType,  episodeID: String)
-    func updateActiveCell(atIndex: Int, forType: PlayBackType)
-    func fetchMoreEpisodes()
-}
-
-extension DuneAudioPlayerDelegate {
-    func showCommentsFor(episode: Episode) {}
-    func makeActive(episode: Episode) {}
-}
-
-class DunePlayBar: UIView {
+class DunePlayer: UIView {
+    
+    enum ActiveController {
+        case none
+        case dailyFeed
+        case trending
+        case account
+        case profile
+        case tagLookup
+    }
     
     var audioPlayerDelegate: DuneAudioPlayerDelegate!
     var audioSession = AVAudioSession.sharedInstance()
@@ -51,6 +50,9 @@ class DunePlayBar: UIView {
     
     var screenHeight = UIScreen.main.bounds.height
     var playerHeight: CGFloat = 600
+    
+    var activeProfile = ""
+    var activeController: ActiveController  = .none
     
     var downloadedEpisodes: [Episode] = [] {
         willSet {
@@ -858,18 +860,6 @@ class DunePlayBar: UIView {
         self.episode = episode
     }
     
-//    func continueState() {
-//        audioPlayerDelegate.playedEpisode(episode: episode)
-//        setupLikeButtonAndCounterFor(episode: episode)
-//        programNameLabel.text = episode.programName
-//        largeNameLabel.text = "@\(episode.username)"
-//        captionTextView.text = episode.caption
-//        captionLabel.text = episode.caption
-//        programImageView.image = image
-//        largeImageView.image = image
-//        fastTrackToPosition()
-//    }
-    
     func playOrPauseEpisodeWith(audioID: String) {
         
         switch currentState {
@@ -1229,6 +1219,7 @@ class DunePlayBar: UIView {
         resetPlayBarAlphas()
         transitionOutOfView()
         currentState = .ready
+        activeController = .none
         isOutOfPosition = true
         cancelCurrentDownload()
         if audioPlayer != nil {
@@ -1338,7 +1329,7 @@ class DunePlayBar: UIView {
     
 }
 
-extension DunePlayBar: AVAudioPlayerDelegate {
+extension DunePlayer: AVAudioPlayerDelegate {
     
     func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
         currentState = .ready
@@ -1361,7 +1352,7 @@ extension DunePlayBar: AVAudioPlayerDelegate {
     
 }
 
-extension DunePlayBar: UIGestureRecognizerDelegate {
+extension DunePlayer: UIGestureRecognizerDelegate {
     
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
         true
@@ -1376,5 +1367,4 @@ extension DunePlayBar: UIGestureRecognizerDelegate {
     }
     
 }
-
 

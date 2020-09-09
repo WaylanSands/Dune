@@ -243,7 +243,6 @@ class ListenerAccountVC : UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.hidesBottomBarWhenPushed = false
         nonPublisherAlert.alertDelegate = self
         switchToPublisherAlert.alertDelegate = self
         styleForScreens()
@@ -313,8 +312,8 @@ class ListenerAccountVC : UIViewController {
     }
     
     func setupNavigationBar() {
-        tabBarController?.tabBar.backgroundImage = UIImage()
-        tabBarController?.tabBar.backgroundColor = hexStringToUIColor(hex: "F4F7FB")
+//        tabBarController?.tabBar.backgroundImage = UIImage()
+//        tabBarController?.tabBar.backgroundColor = hexStringToUIColor(hex: "F4F7FB")
         navigationController?.navigationBar.titleTextAttributes = [.foregroundColor: CustomStyle.primaryBlack]
         navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
         navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
@@ -612,7 +611,7 @@ class ListenerAccountVC : UIViewController {
  
     @objc func settingsButtonPress() {
         let settingsVC = AccountSettingsVC()
-        settingsVC.hidesBottomBarWhenPushed = true
+//        settingsVC.hidesBottomBarWhenPushed = true
         navigationController?.pushViewController(settingsVC, animated: true)
     }
     
@@ -643,7 +642,7 @@ class ListenerAccountVC : UIViewController {
     
     @objc func editProgramButtonPress() {
         let editListenerVC = EditListenerVC()
-        editListenerVC.hidesBottomBarWhenPushed = true
+//        editListenerVC.hidesBottomBarWhenPushed = true
         navigationController?.pushViewController(editListenerVC, animated: true)
     }
     
@@ -653,7 +652,7 @@ class ListenerAccountVC : UIViewController {
     
     @objc func pushSubscribersVC() {
         let subscribersVC = SubscribersVC(programName: CurrentProgram.name!, programID: CurrentProgram.ID!, programIDs: CurrentProgram.programsIDs(), subscriberIDs: CurrentProgram.subscriberIDs!)
-        subscribersVC.hidesBottomBarWhenPushed = true
+//        subscribersVC.hidesBottomBarWhenPushed = true
         subscribersVC.isPublic = CurrentProgram.isPrivate!
         navigationController?.pushViewController(subscribersVC, animated: true)
     }
@@ -745,7 +744,7 @@ extension ListenerAccountVC: CustomAlertDelegate {
         editProgramVC.switchedAccount = true
         FireStoreManager.updateProgramToPublisher()
         FireStoreManager.updateUserSetUpTo(false)
-        editProgramVC.hidesBottomBarWhenPushed = true
+//        editProgramVC.hidesBottomBarWhenPushed = true
         navigationController?.pushViewController(editProgramVC, animated: true)
     }
     

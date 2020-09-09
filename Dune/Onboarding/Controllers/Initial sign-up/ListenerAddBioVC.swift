@@ -487,12 +487,6 @@ class ListenerAddBioVC: UIViewController {
     func presentDailyFeed() {
         let tabBar = MainTabController()
         tabBar.selectedIndex = 0
-        
-        if User.recommendedProgram != nil {
-            let searchNav = tabBar.selectedViewController as! UINavigationController
-            let searchVC = searchNav.viewControllers[0] as! SearchVC
-            searchVC.programToPush = User.recommendedProgram!
-        }
         DuneDelegate.newRootView(tabBar)
     }
     

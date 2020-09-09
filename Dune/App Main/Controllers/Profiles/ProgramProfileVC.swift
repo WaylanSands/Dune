@@ -315,7 +315,6 @@ class ProgramProfileVC: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.hidesBottomBarWhenPushed = false
         configureDelegates()
         styleForScreens()
         configureViews()
@@ -756,6 +755,7 @@ class ProgramProfileVC: UIViewController {
     
     // MARK: Play Intro
     @objc func playIntro() {
+        dunePlayBar.finishSession()
         accountBottomVC.playIntro()
     }
     
@@ -942,7 +942,7 @@ class ProgramProfileVC: UIViewController {
     
     @objc func pushSubscribersVC() {
         let subscribersVC = SubscribersVC(programName: program.name, programID: program.ID, programIDs: program.programsIDs(), subscriberIDs: program.subscriberIDs)
-        subscribersVC.hidesBottomBarWhenPushed = true
+//        subscribersVC.hidesBottomBarWhenPushed = true
         subscribersVC.isPublic = program.isPrivate
         subscribersVC.program = program
         navigationController?.pushViewController(subscribersVC, animated: true)

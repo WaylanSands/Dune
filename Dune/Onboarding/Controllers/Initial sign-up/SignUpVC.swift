@@ -70,7 +70,6 @@ class SignUpVC: UIViewController {
     func configureNavigation() {
         navigationController?.isNavigationBarHidden = true
         networkingIndicator.removeFromSuperview()
-        tabBarController?.tabBar.isHidden = true
     }
     
     func styleButtons() {

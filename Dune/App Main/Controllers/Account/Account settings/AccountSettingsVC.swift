@@ -20,7 +20,7 @@ class AccountSettingsVC: UIViewController {
         case email
     }
     
-    lazy var contentViewSize = CGSize(width: view.frame.width, height: 980.0)
+    lazy var contentViewSize = CGSize(width: view.frame.width, height: 1030.0)
     lazy var versionNumber = VersionControl.lastetVersion
     
     let logOutAlert = CustomAlertView(alertType: .loggingOut)
@@ -499,6 +499,7 @@ class AccountSettingsVC: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         feedbackView.madeSelection = addedDeletionFeedback
+        duneTabBar.isHidden = false
         configurePrivacyState()
     }
     
@@ -808,12 +809,14 @@ class AccountSettingsVC: UIViewController {
     // MARK: Logging out
     @objc func logoutButtonPress() {
         logoutPress = true
-        view.addSubview(logOutAlert)
+        UIApplication.shared.keyWindow!.addSubview(logOutAlert)
+//        view.addSubview(logOutAlert)
     }
     
     @objc func deleteProgram() {
         deleteAccountPress = true
-        view.addSubview(deleteAccountAlert)
+        UIApplication.shared.keyWindow!.addSubview(deleteAccountAlert)
+//        view.addSubview(deleteAccountAlert)
     }
 }
 
@@ -828,6 +831,7 @@ extension AccountSettingsVC: MFMailComposeViewControllerDelegate {
 extension AccountSettingsVC: CustomAlertDelegate {
     
     func primaryButtonPress() {
+        dunePlayBar.finishSession()
         
         if logoutPress {
             logoutPress = false
@@ -837,6 +841,7 @@ extension AccountSettingsVC: CustomAlertDelegate {
                 UserDefaults.standard.set(false, forKey: "loggedIn")
                 if let signupScreen = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "signUpVC") as? SignUpVC {
                     User.signOutUser()
+                    duneTabBar.isHidden = true
                     CurrentProgram.signOutProgram()
                     navigationController?.pushViewController(signupScreen, animated: false)
                 }
@@ -857,6 +862,7 @@ extension AccountSettingsVC: CustomAlertDelegate {
                         signUpMethod = .apple
                         feedbackView.showFeedbackOptions()
                     case "password":
+                        duneTabBar.isHidden = true
                         let deleteAccountVC = DeleteAccount()
                         navigationController?.pushViewController(deleteAccountVC, animated: true)
                     default:
@@ -912,7 +918,8 @@ extension AccountSettingsVC: CustomAlertDelegate {
     
     func deleteSocialSignUp() {
         networkingIndicator.taskLabel.text = "Deleting account data"
-        view.addSubview(networkingIndicator)
+        UIApplication.shared.keyWindow!.addSubview(networkingIndicator)
+//        view.addSubview(networkingIndicator)
         FireStoreManager.deleteProgram(with:  CurrentProgram.ID!, introID: CurrentProgram.introID, imageID:  CurrentProgram.imageID, isSubProgram: false) {
             
             Auth.auth().currentUser?.delete(completion: { (error) in
@@ -925,6 +932,7 @@ extension AccountSettingsVC: CustomAlertDelegate {
                         User.signOutUser()
                         CurrentProgram.signOutProgram()
                         UserDefaults.standard.set(false, forKey: "loggedIn")
+                        self.tabBarController?.tabBar.isUserInteractionEnabled = false
                         self.navigationController?.pushViewController(signupScreen, animated: false)
                     }
                 }

@@ -194,7 +194,7 @@ class EditListenerVC: UIViewController {
     }
     
     override func viewWillAppear(_ animated: Bool) {
-        self.hidesBottomBarWhenPushed = true
+//        self.hidesBottomBarWhenPushed = true
         scrollView.setScrollBarToTopLeft()
         summaryTextLabel.text = CurrentProgram.summary
        

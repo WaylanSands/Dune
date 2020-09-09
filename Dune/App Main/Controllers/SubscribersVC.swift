@@ -197,6 +197,10 @@ class SubscribersVC: UIViewController {
         view.backgroundColor = CustomStyle.secondShade
         view.addSubview(tableView)
         tableView.pinEdges(to: view)
+        tableView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: tableView.safeDunePlayBarHeight, right: 0)
+        tableView.backgroundColor = CustomStyle.secondShade
+        tableView.tableFooterView = UIView()
+        tableView.addTopBounceAreaView()
         
         view.addSubview(emptyTableView)
         emptyTableView.translatesAutoresizingMaskIntoConstraints = false
@@ -204,9 +208,6 @@ class SubscribersVC: UIViewController {
         emptyTableView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20).isActive = true
         emptyTableView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20).isActive = true
         emptyTableView.heightAnchor.constraint(equalToConstant: 150).isActive = true
-        tableView.backgroundColor = CustomStyle.secondShade
-        tableView.tableFooterView = UIView()
-        tableView.addTopBounceAreaView()
         
         emptyTableView.addSubview(noSubscribersLabel)
         noSubscribersLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -313,8 +314,9 @@ extension SubscribersVC: UITableViewDataSource, UITableViewDelegate {
             let programCell = tableView.dequeueReusableCell(withIdentifier: "programCell") as! ProgramCell
             programCell.program = program
             programCell.moreButton.addTarget(programCell, action: #selector(ProgramCell.moreUnwrap), for: .touchUpInside)
-            programCell.programImageButton.addTarget(programCell, action: #selector(ProgramCell.playProgramIntro), for: .touchUpInside)
-            programCell.programSettingsButton.addTarget(programCell, action: #selector(ProgramCell.showSettings), for: .touchUpInside)
+            programCell.programImageButton.addTarget(programCell, action: #selector(ProgramCell.visitProfile), for: .touchUpInside)
+            programCell.programNameButton.addTarget(programCell, action: #selector(ProgramCell.visitProfile), for: .touchUpInside)
+//            programCell.programSettingsButton.addTarget(programCell, action: #selector(ProgramCell.showSettings), for: .touchUpInside)
             programCell.subscribeButton.addTarget(programCell, action: #selector(ProgramCell.subscribeButtonPress), for: .touchUpInside)
             programCell.usernameButton.addTarget(programCell, action: #selector(ProgramCell.visitProfile), for: .touchUpInside)
             programCell.normalSetUp(program: program)
@@ -332,6 +334,7 @@ extension SubscribersVC: UITableViewDataSource, UITableViewDelegate {
         } else {
             let listenerCell = tableView.dequeueReusableCell(withIdentifier: "listenerCell") as! ListenerCell
             listenerCell.moreButton.addTarget(listenerCell, action: #selector(ListenerCell.moreUnwrap), for: .touchUpInside)
+            listenerCell.programImageButton.addTarget(listenerCell, action: #selector(listenerCell.visitProfile), for: .touchUpInside)
             listenerCell.settingsButton.addTarget(listenerCell, action: #selector(ListenerCell.showSettings), for: .touchUpInside)
             listenerCell.usernameButton.addTarget(listenerCell, action: #selector(ListenerCell.visitProfile), for: .touchUpInside)
             listenerCell.normalSetUp(program: program)
@@ -381,11 +384,6 @@ extension SubscribersVC: DuneAudioPlayerDelegate {
         //
     }
     
-    func playedEpisode(episode: Episode) {
-        //
-    }
-    
-    
 }
 
 extension SubscribersVC: ProgramCellDelegate {
@@ -415,9 +413,7 @@ extension SubscribersVC: ProgramCellDelegate {
         if !cell.playbackBarView.playbackBarIsSetup {
             cell.playbackBarView.setupPlaybackBar()
         }
-        
-        introPlayer.yPosition = view.frame.height - introPlayer.frame.height - introYConstant
-     
+             
         let image = cell.programImageButton.imageView!.image!
         let audioID = cell.program.introID
         
@@ -473,9 +469,7 @@ extension SubscribersVC: ProgramCellDelegate {
     
     func visitProfile(program: Program) {
         if CurrentProgram.programsIDs().contains(program.ID) {
-            let tabBar = MainTabController()
-            tabBar.selectedIndex = 4
-            DuneDelegate.newRootView(tabBar)
+             duneTabBar.visit(screen: .account)
         } else if program.isPublisher {
             if program.isPrimaryProgram && !program.programIDs!.isEmpty  {
                 let programVC = ProgramProfileVC()

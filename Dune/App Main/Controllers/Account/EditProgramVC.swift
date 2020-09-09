@@ -316,7 +316,7 @@ class EditProgramVC: UIViewController {
     }
     
     override func viewWillAppear(_ animated: Bool) {
-        self.hidesBottomBarWhenPushed = true
+//        self.hidesBottomBarWhenPushed = true
         scrollView.setScrollBarToTopLeft()
         tagScrollView.setScrollBarToTopLeft()
         summaryTextLabel.text = CurrentProgram.summary
@@ -382,16 +382,20 @@ class EditProgramVC: UIViewController {
     }
     
     @objc func popToCorrectVC() {
-        let tabBar = MainTabController()
+        print("POPPED")
+//        let tabBar = MainTabController()
         
         if switchedAccount {
-            tabBar.selectedIndex = 4
+            duneTabBar.visit(screen: .account)
             switchedAccount = false
-            DuneDelegate.newRootView(tabBar)
+//            DuneDelegate.newRootView(tabBar)
         } else if switchedFromStudio {
-            tabBar.selectedIndex = 2
+            duneTabBar.visit(screen: .studio)
+//            duneTabBar.tabButtonSelection(2)
+//
+//            duneTabBar.selectedIndex = 2
             switchedFromStudio = false
-            DuneDelegate.newRootView(tabBar)
+//            DuneDelegate.newRootView(tabBar)
         } else {
             navigationController?.popViewController(animated: true)
         }
@@ -663,6 +667,8 @@ class EditProgramVC: UIViewController {
     @objc func recordIntroButtonPress() {
         let recordBoothVC = RecordBoothVC()
         recordBoothVC.currentScope = .intro
+        duneTabBar.isHidden = true
+        dunePlayBar.finishSession()
         navigationController?.pushViewController(recordBoothVC, animated: true)
     }
     

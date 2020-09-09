@@ -348,7 +348,7 @@ class EditSubProgramVC: UIViewController {
     }
     
     override func viewWillAppear(_ animated: Bool) {
-        self.hidesBottomBarWhenPushed = true
+//        self.hidesBottomBarWhenPushed = true
         tagScrollView.setScrollBarToTopLeft()
         scrollView.setScrollBarToTopLeft()
         configureSegmentControl()

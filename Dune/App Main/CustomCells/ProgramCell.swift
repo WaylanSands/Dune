@@ -26,10 +26,10 @@ class ProgramCell: UITableViewCell {
     var unwrapped = false
     let scrollPadding: CGFloat = 40.0
     var programTags: [String]!
-    var cellHeight: NSLayoutConstraint!
-    var subscribeButtonConstraint: NSLayoutConstraint!
-    var tagScrollViewHeightConstraint: NSLayoutConstraint!
-    var tagContentWidthConstraint: NSLayoutConstraint!
+   
+    var subscribeButtonWidth: NSLayoutConstraint!
+    var tagScrollViewHeight: NSLayoutConstraint!
+    var tagScrollViewTop: NSLayoutConstraint!
         
     // Used for modifying space when adding/removing options
     var summaryViewHeight: NSLayoutConstraint!
@@ -63,19 +63,19 @@ class ProgramCell: UITableViewCell {
 //        return button
 //    }()
     
-    let playEpisodeImageView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.image = UIImage(named: "play-episode-btn")
-        return imageView
-    }()
-    
-    let playBarButton: UIButton = {
-        let button = UIButton()
-        button.backgroundColor = CustomStyle.thirdShade
-        button.isUserInteractionEnabled = false
-        button.layer.cornerRadius = 2
-        return button
-    }()
+//    let playEpisodeImageView: UIImageView = {
+//        let imageView = UIImageView()
+//        imageView.image = UIImage(named: "play-episode-btn")
+//        return imageView
+//    }()
+//
+//    let playBarButton: UIButton = {
+//        let button = UIButton()
+//        button.backgroundColor = CustomStyle.thirdShade
+//        button.isUserInteractionEnabled = false
+//        button.layer.cornerRadius = 2
+//        return button
+//    }()
     
     let programNameStackedView: UIStackView = {
         let view = UIStackView()
@@ -83,20 +83,21 @@ class ProgramCell: UITableViewCell {
         return view
     }()
     
-    let programSettingsButton: ExtendedButton = {
-        let button = ExtendedButton()
-        button.setImage(#imageLiteral(resourceName: "episode-settings") , for: .normal)
-        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: -5)
-        button.padding = 10
-        return button
-    }()
+//    let programSettingsButton: ExtendedButton = {
+//        let button = ExtendedButton()
+//        button.setImage(#imageLiteral(resourceName: "episode-settings") , for: .normal)
+//        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: -5)
+//        button.padding = 10
+//        return button
+//    }()
     
-    lazy var programNameLabel: UILabel = {
-        let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: nameSize, weight: .bold)
-        label.allowsDefaultTighteningForTruncation = true
-        label.lineBreakMode = .byTruncatingTail
-        return label
+    lazy var programNameButton: UIButton = {
+        let button = UIButton()
+        button.titleLabel?.font = UIFont.systemFont(ofSize: nameSize, weight: .bold)
+        button.setTitleColor(CustomStyle.primaryBlack, for: .normal)
+        button.titleLabel?.allowsDefaultTighteningForTruncation = true
+        button.titleLabel?.lineBreakMode = .byTruncatingTail
+        return button
     }()
     
     let usernameButton: UIButton = {
@@ -116,6 +117,7 @@ class ProgramCell: UITableViewCell {
         view.textContainerInset = .zero
         view.textContainer.lineFragmentPadding = 0
         view.textColor = CustomStyle.sixthShade
+        view.backgroundColor = .clear
         return view
     }()
     
@@ -167,7 +169,7 @@ class ProgramCell: UITableViewCell {
     let moreButton: ExtendedButton = {
         let button = ExtendedButton()
         button.setTitle("more", for: .normal)
-        button.titleLabel!.font = UIFont.systemFont(ofSize: 13, weight: .regular)
+        button.titleLabel!.font = UIFont.systemFont(ofSize: 14, weight: .regular)
         button.setTitleColor(CustomStyle.linkBlue, for: .normal)
         button.addTarget(self, action: #selector(moreUnwrap), for: .touchUpInside)
         button.backgroundColor = .white
@@ -190,7 +192,7 @@ class ProgramCell: UITableViewCell {
         button.backgroundColor = CustomStyle.primaryYellow
         button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 18, bottom: 1, right: 13)
         button.imageEdgeInsets = UIEdgeInsets(top: 1, left: -10, bottom: 0, right: 0)
-        button.layer.cornerRadius = 12
+        button.layer.cornerRadius = 11
         return button
     }()
     
@@ -208,7 +210,7 @@ class ProgramCell: UITableViewCell {
     let programStatsLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 12, weight: .medium)
-        label.textColor = CustomStyle.primaryBlack
+        label.textColor = CustomStyle.fifthShade
         return label
     }()
 
@@ -255,13 +257,28 @@ class ProgramCell: UITableViewCell {
             subscribeButton.isHidden = false
         }
     
-        programNameLabel.text = program.name
+        programNameButton.setTitle(program.name, for: .normal)
         usernameButton.setTitle("@\(program.username)", for: .normal)
         captionTextView.text = program.summary
+        
+        if captionTextView.text == "" {
+            captionTextView.text = "Still getting set up"
+        }
+        
         programTags = program.tags
         
+        if programTags.count == 0 {
+            tagScrollViewTop.constant = 0
+            tagScrollViewHeight.constant = 0
+            gradientOverlayView.isHidden = true
+        } else {
+            tagScrollViewTop.constant = 10
+            tagScrollViewHeight.constant = 22
+            gradientOverlayView.isHidden = false
+        }
+        
         configureStats()
-        setupProgressBar()
+//        setupProgressBar()
         createTagButtons()
         
         DispatchQueue.main.async {
@@ -278,23 +295,23 @@ class ProgramCell: UITableViewCell {
         }
     }
     
-    func setupProgressBar() {
-        if program.hasIntro {
-            playBarButton.isHidden = false
-            playEpisodeImageView.isHidden = false
-            if program.hasBeenPlayed {
-                playBarButton.isHidden = true
-                playbackBarView.isHidden = false
-                playEpisodeImageView.isHidden = true
-                playbackBarView.setupPlaybackBar()
-                playbackBarView.setProgressWith(percentage: program.playBackProgress)
-            }
-         } else {
-            playBarButton.isHidden = true
-            playbackBarView.isHidden = true
-            playEpisodeImageView.isHidden = true
-         }
-    }
+//    func setupProgressBar() {
+//        if program.hasIntro {
+//            playBarButton.isHidden = false
+//            playEpisodeImageView.isHidden = false
+//            if program.hasBeenPlayed {
+//                playBarButton.isHidden = true
+//                playbackBarView.isHidden = false
+//                playEpisodeImageView.isHidden = true
+//                playbackBarView.setupPlaybackBar()
+//                playbackBarView.setProgressWith(percentage: program.playBackProgress)
+//            }
+//         } else {
+//            playBarButton.isHidden = true
+//            playbackBarView.isHidden = true
+//            playEpisodeImageView.isHidden = true
+//         }
+//    }
     
     func configureStats() {
         let episodes = program.episodeIDs
@@ -362,7 +379,7 @@ class ProgramCell: UITableViewCell {
                 subscribeButton.setTitleColor(CustomStyle.primaryBlack, for: .normal)
             }
         }
-        subscribeButtonConstraint.constant = subscribeButton.intrinsicContentSize.width
+        subscribeButtonWidth.constant = subscribeButton.intrinsicContentSize.width
     }
     
 //    func setupSubscribeButton() {
@@ -417,19 +434,19 @@ class ProgramCell: UITableViewCell {
         playbackBarView.heightAnchor.constraint(equalToConstant: 5).isActive = true
         playbackBarView.widthAnchor.constraint(equalToConstant: playBarWidth).isActive = true
         
-        self.addSubview(playEpisodeImageView)
-        playEpisodeImageView.translatesAutoresizingMaskIntoConstraints = false
-        playEpisodeImageView.leadingAnchor.constraint(equalTo: programImageButton.leadingAnchor, constant: 0).isActive = true
-        playEpisodeImageView.centerYAnchor.constraint(equalTo: playbackBarView.centerYAnchor).isActive = true
-        playEpisodeImageView.widthAnchor.constraint(equalToConstant: 7).isActive = true
-        playEpisodeImageView.heightAnchor.constraint(equalToConstant: 7).isActive = true
-        
-        self.addSubview(playBarButton)
-        playBarButton.translatesAutoresizingMaskIntoConstraints = false
-        playBarButton.leadingAnchor.constraint(equalTo: playEpisodeImageView.trailingAnchor, constant: 4).isActive = true
-        playBarButton.trailingAnchor.constraint(equalTo: programImageButton.trailingAnchor, constant: -1).isActive = true
-        playBarButton.centerYAnchor.constraint(equalTo: playbackBarView.centerYAnchor).isActive = true
-        playBarButton.heightAnchor.constraint(equalToConstant: 4).isActive = true
+//        self.addSubview(playEpisodeImageView)
+//        playEpisodeImageView.translatesAutoresizingMaskIntoConstraints = false
+//        playEpisodeImageView.leadingAnchor.constraint(equalTo: programImageButton.leadingAnchor, constant: 0).isActive = true
+//        playEpisodeImageView.centerYAnchor.constraint(equalTo: playbackBarView.centerYAnchor).isActive = true
+//        playEpisodeImageView.widthAnchor.constraint(equalToConstant: 7).isActive = true
+//        playEpisodeImageView.heightAnchor.constraint(equalToConstant: 7).isActive = true
+//
+//        self.addSubview(playBarButton)
+//        playBarButton.translatesAutoresizingMaskIntoConstraints = false
+//        playBarButton.leadingAnchor.constraint(equalTo: playEpisodeImageView.trailingAnchor, constant: 4).isActive = true
+//        playBarButton.trailingAnchor.constraint(equalTo: programImageButton.trailingAnchor, constant: -1).isActive = true
+//        playBarButton.centerYAnchor.constraint(equalTo: playbackBarView.centerYAnchor).isActive = true
+//        playBarButton.heightAnchor.constraint(equalToConstant: 4).isActive = true
         
 //        self.addSubview(playProgramButton)
 //        playProgramButton.translatesAutoresizingMaskIntoConstraints = false
@@ -438,45 +455,57 @@ class ProgramCell: UITableViewCell {
 //        playProgramButton.widthAnchor.constraint(equalTo: programImageButton.widthAnchor).isActive = true
 //        playProgramButton.heightAnchor.constraint(equalToConstant: 20).isActive = true
         
-        self.addSubview(programSettingsButton)
-        programSettingsButton.translatesAutoresizingMaskIntoConstraints = false
-        programSettingsButton.topAnchor.constraint(equalTo: programImageButton.topAnchor, constant: 0).isActive = true
-        programSettingsButton.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -16).isActive = true
+//        self.addSubview(programSettingsButton)
+//        programSettingsButton.translatesAutoresizingMaskIntoConstraints = false
+//        programSettingsButton.topAnchor.constraint(equalTo: programImageButton.topAnchor, constant: 0).isActive = true
+//        programSettingsButton.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -16).isActive = true
         
         self.addSubview(subscribeButton)
         subscribeButton.translatesAutoresizingMaskIntoConstraints = false
-        subscribeButton.topAnchor.constraint(equalTo: programImageButton.topAnchor).isActive = true
-        subscribeButton.trailingAnchor.constraint(equalTo: programSettingsButton.trailingAnchor, constant: -15).isActive = true
-        subscribeButton.heightAnchor.constraint(equalToConstant: 24).isActive = true
-        subscribeButtonConstraint = subscribeButton.widthAnchor.constraint(equalToConstant: subscribeButton.intrinsicContentSize.width)
-        subscribeButtonConstraint.isActive = true
-
-        self.addSubview(programNameLabel)
-        programNameLabel.translatesAutoresizingMaskIntoConstraints = false
-        programNameLabel.topAnchor.constraint(equalTo: programImageButton.topAnchor).isActive = true
-        programNameLabel.leadingAnchor.constraint(equalTo: programImageButton.trailingAnchor, constant: 12).isActive = true
-        programNameLabel.trailingAnchor.constraint(lessThanOrEqualTo: subscribeButton.leadingAnchor, constant: -10).isActive = true
+        subscribeButton.topAnchor.constraint(equalTo: programImageButton.topAnchor, constant: -4).isActive = true
+        subscribeButton.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -16).isActive = true
+        subscribeButton.heightAnchor.constraint(equalToConstant: 22).isActive = true
+        subscribeButtonWidth = subscribeButton.widthAnchor.constraint(equalToConstant: subscribeButton.intrinsicContentSize.width)
+        subscribeButtonWidth.isActive = true
         
-        self.addSubview(usernameButton)
-        usernameButton.translatesAutoresizingMaskIntoConstraints = false
-        usernameButton.topAnchor.constraint(equalTo: programNameLabel.bottomAnchor, constant: 3).isActive = true
-        usernameButton.heightAnchor.constraint(equalToConstant: 20).isActive = true
-        usernameButton.leadingAnchor.constraint(equalTo: programNameLabel.leadingAnchor, constant: -2).isActive = true
-        usernameButton.trailingAnchor.constraint(lessThanOrEqualTo: subscribeButton.leadingAnchor, constant: -20).isActive = true
+        self.addSubview(programNameStackedView)
+        programNameStackedView.translatesAutoresizingMaskIntoConstraints = false
+        programNameStackedView.topAnchor.constraint(equalTo: programImageButton.topAnchor, constant: -5).isActive = true
+        programNameStackedView.leadingAnchor.constraint(equalTo: programImageButton.trailingAnchor, constant: 10).isActive = true
+        programNameStackedView.trailingAnchor.constraint(lessThanOrEqualTo: subscribeButton.leadingAnchor, constant: -10).isActive = true
+        programNameStackedView.heightAnchor.constraint(equalToConstant: 25).isActive = true
+        
+        
+        programNameStackedView.addArrangedSubview(programNameButton)
+//        programNameStackedView.addArrangedSubview(usernameButton)
+
+//        self.addSubview(programNameLabel)
+//        programNameLabel.translatesAutoresizingMaskIntoConstraints = false
+//        programNameLabel.topAnchor.constraint(equalTo: programImageButton.topAnchor).isActive = true
+//        programNameLabel.leadingAnchor.constraint(equalTo: programImageButton.trailingAnchor, constant: 12).isActive = true
+//        programNameLabel.trailingAnchor.constraint(lessThanOrEqualTo: subscribeButton.leadingAnchor, constant: -10).isActive = true
+//
+//        self.addSubview(usernameButton)
+//        usernameButton.translatesAutoresizingMaskIntoConstraints = false
+//        usernameButton.topAnchor.constraint(equalTo: programNameLabel.bottomAnchor, constant: 3).isActive = true
+//        usernameButton.heightAnchor.constraint(equalToConstant: 20).isActive = true
+//        usernameButton.leadingAnchor.constraint(equalTo: programNameLabel.leadingAnchor, constant: -2).isActive = true
+//        usernameButton.trailingAnchor.constraint(lessThanOrEqualTo: subscribeButton.leadingAnchor, constant: -20).isActive = true
         
         self.addSubview(captionTextView)
         captionTextView.translatesAutoresizingMaskIntoConstraints = false
-        captionTextView.topAnchor.constraint(equalTo: usernameButton.bottomAnchor, constant: 2).isActive = true
-        captionTextView.leadingAnchor.constraint(equalTo: usernameButton.leadingAnchor).isActive = true
+        captionTextView.topAnchor.constraint(equalTo: programNameStackedView.bottomAnchor, constant: 2).isActive = true
+        captionTextView.leadingAnchor.constraint(equalTo: programNameStackedView.leadingAnchor).isActive = true
         captionTextView.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -16.0).isActive = true
         
         self.addSubview(tagScrollView)
         tagScrollView.translatesAutoresizingMaskIntoConstraints = false
-        tagScrollView.topAnchor.constraint(equalTo: captionTextView.bottomAnchor, constant: 10).isActive = true
+        tagScrollViewTop = tagScrollView.topAnchor.constraint(equalTo: captionTextView.bottomAnchor, constant: 10)
+        tagScrollViewTop.isActive = true
         tagScrollView.leadingAnchor.constraint(equalTo: captionTextView.leadingAnchor).isActive = true
         tagScrollView.trailingAnchor.constraint(equalTo: self.trailingAnchor,constant: -16).isActive = true
-        tagScrollViewHeightConstraint = tagScrollView.heightAnchor.constraint(equalToConstant: 22)
-        tagScrollViewHeightConstraint.isActive = true
+        tagScrollViewHeight = tagScrollView.heightAnchor.constraint(equalToConstant: 22)
+        tagScrollViewHeight.isActive = true
         
         tagScrollView.addSubview(tagContainingStackView)
         tagContainingStackView.translatesAutoresizingMaskIntoConstraints = false
@@ -599,14 +628,14 @@ class ProgramCell: UITableViewCell {
     
     
     @objc func playProgramIntro(cell: ProgramCell) {
-        if program.hasIntro {
-            playbackBarView.isHidden = false
-            cellDelegate?.playProgramIntro(cell: self)
-            playEpisodeImageView.isHidden = true
-            playBarButton.isHidden = true
-        } else {
-            cellDelegate.noIntroAlert()
-        }
+//        if program.hasIntro {
+//            playbackBarView.isHidden = false
+//            cellDelegate?.playProgramIntro(cell: self)
+//            playEpisodeImageView.isHidden = true
+//            playBarButton.isHidden = true
+//        } else {
+//            cellDelegate.noIntroAlert()
+//        }
     }
     
     @objc func showSettings() {
@@ -654,7 +683,7 @@ class ProgramCell: UITableViewCell {
             subscribeButton.setTitleColor(CustomStyle.white, for: .normal)
             subscribeButton.backgroundColor = CustomStyle.primaryBlack
         }
-        subscribeButtonConstraint.constant = subscribeButton.intrinsicContentSize.width
+        subscribeButtonWidth.constant = subscribeButton.intrinsicContentSize.width
     }
     
     @objc func requestInvite() {
@@ -674,7 +703,7 @@ class ProgramCell: UITableViewCell {
             subscribeButton.backgroundColor = CustomStyle.primaryYellow
             subscribeButton.setTitleColor(CustomStyle.primaryBlack, for: .normal)
         }
-        subscribeButtonConstraint.constant = subscribeButton.intrinsicContentSize.width
+        subscribeButtonWidth.constant = subscribeButton.intrinsicContentSize.width
     }
     
     // Helper functions

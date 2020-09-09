@@ -311,9 +311,18 @@ class ListenerAccountBottomVC: UIViewController {
     }
     
     @objc func continueToView() {
-        let tabBar = MainTabController()
-        tabBar.selectedIndex = pageIndex
-        DuneDelegate.newRootView(tabBar)
+        switch pageIndex {
+        case 2:
+            duneTabBar.visit(screen: .studio)
+        case 3:
+            duneTabBar.visit(screen: .search)
+        default:
+            break
+        }
+//        duneTabBar.tabButtonSelection(pageIndex)
+//        let tabBar = MainTabController()
+//        tabBar.selectedIndex = pageIndex
+//        DuneDelegate.newRootView(tabBar)
     }
 }
 
@@ -336,8 +345,9 @@ extension ListenerAccountBottomVC: UITableViewDelegate, UITableViewDataSource {
         case subscriptionTV:
             let programCell = tableView.dequeueReusableCell(withIdentifier: "programCell") as! ProgramCell
             programCell.subscribeButton.addTarget(programCell, action: #selector(ProgramCell.subscribeButtonPress), for: .touchUpInside)
-            programCell.programImageButton.addTarget(programCell, action: #selector(ProgramCell.playProgramIntro), for: .touchUpInside)
-            programCell.programSettingsButton.addTarget(programCell, action: #selector(ProgramCell.showSettings), for: .touchUpInside)
+            programCell.programImageButton.addTarget(programCell, action: #selector(ProgramCell.visitProfile), for: .touchUpInside)
+            programCell.programNameButton.addTarget(programCell, action: #selector(ProgramCell.visitProfile), for: .touchUpInside)
+//            programCell.programSettingsButton.addTarget(programCell, action: #selector(ProgramCell.showSettings), for: .touchUpInside)
             programCell.usernameButton.addTarget(programCell, action: #selector(ProgramCell.visitProfile), for: .touchUpInside)
             programCell.moreButton.addTarget(programCell, action: #selector(ProgramCell.moreUnwrap), for: .touchUpInside)
             
@@ -362,13 +372,13 @@ extension ListenerAccountBottomVC: UITableViewDelegate, UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
-       return 116
+        return duneTabBar.frame.height + 64
     }
 
     func tableView(_ tableView: UITableView, viewForFooterInSection section: Int) -> UIView? {
         let view = UIView()
         view.backgroundColor = .clear
-        view.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: 116)
+        view.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: duneTabBar.frame.height + 64)
         return view
     }
     
@@ -421,12 +431,18 @@ extension ListenerAccountBottomVC: ProgramCellDelegate, MentionCellDelegate {
         if program.ID == CurrentProgram.ID {
             return
         }
-        if program.isPrimaryProgram && !program.programIDs!.isEmpty  {
-            let programVC = ProgramProfileVC()
-            programVC.program = program
-            navigationController?.pushViewController(programVC, animated: true)
+        
+        if program.isPublisher {
+            if program.isPrimaryProgram && !program.programIDs!.isEmpty  {
+                let programVC = ProgramProfileVC()
+                programVC.program = program
+                navigationController?.pushViewController(programVC, animated: true)
+            } else {
+                let programVC = SingleProgramProfileVC(program: program)
+                navigationController?.pushViewController(programVC, animated: true)
+            }
         } else {
-            let programVC = SingleProgramProfileVC(program: program)
+            let programVC = ListenerProfileVC(program: program)
             navigationController?.pushViewController(programVC, animated: true)
         }
     }
@@ -439,9 +455,7 @@ extension ListenerAccountBottomVC: ProgramCellDelegate, MentionCellDelegate {
         if !cell.playbackBarView.playbackBarIsSetup {
             cell.playbackBarView.setupPlaybackBar()
         }
-        
-        introPlayer.yPosition = UIScreen.main.bounds.height - self.tabBarController!.tabBar.frame.height
-        
+            
         let image = cell.programImageButton.imageView!.image!
         let audioID = cell.program.introID
         
@@ -467,10 +481,6 @@ extension ListenerAccountBottomVC: DuneAudioPlayerDelegate {
     
     func fetchMoreEpisodes() {
         print("Should fetch more episodes: Needs implementation")
-    }
-
-    func playedEpisode(episode: Episode) {
-        //
     }
     
     func updateProgressBarWith(percentage: CGFloat, forType: PlayBackType, episodeID: String) {

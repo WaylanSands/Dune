@@ -265,15 +265,18 @@ class AccountTypeVC: UIViewController {
     
     func presentSearchVC() {
         DispatchQueue.main.async {
+//            duneTabBar.tabButtonSelection(0)
             self.networkingIndicator.removeFromSuperview()
             let tabBar = MainTabController()
             tabBar.selectedIndex = 0
+//            DuneDelegate.newRootView(tabBar)
+
             
-            if User.recommendedProgram != nil {
-                let searchNav = tabBar.selectedViewController as! UINavigationController
-                let searchVC = searchNav.viewControllers[0] as! SearchVC
-                searchVC.programToPush = User.recommendedProgram!
-            }
+//            if User.recommendedProgram != nil {
+//                let searchNav = tabBar.selectedViewController as! UINavigationController
+//                let searchVC = searchNav.viewControllers[0] as! SearchVC
+//                searchVC.programToPush = User.recommendedProgram!
+//            }
             
             DuneDelegate.newRootView(tabBar)
         }

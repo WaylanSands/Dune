@@ -35,17 +35,16 @@ class SubProgramAccountVC: UIViewController {
     var isFetchingEpisodes = false
     var epsStartingIndex: Int = 0
 
-    lazy var tabBar = navigationController?.tabBarController?.tabBar
+//    lazy var tabBar = navigationController?.tabBarController?.tabBar
     let loadingView = TVLoadingAnimationView(topHeight: 15)
     let appDelegate = UIApplication.shared.delegate as! AppDelegate
     let settingsLauncher = SettingsLauncher(options: SettingOptions.sharing, type: .sharing)
     let ownEpisodeSettings = SettingsLauncher(options: SettingOptions.ownEpisode, type: .ownEpisode)
     
     let introPlayer = DuneIntroPlayer()
-    let audioPlayer = DunePlayBar()
     
-    var pushingContent = false
-            
+    var commentVC: CommentThreadVC!
+                
     let programView: UIView = {
         let view = UIView()
         return view
@@ -277,7 +276,7 @@ class SubProgramAccountVC: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.hidesBottomBarWhenPushed = false
+//        self.hidesBottomBarWhenPushed = false
         configureDelegates()
         styleForScreens()
         configureViews()
@@ -286,7 +285,6 @@ class SubProgramAccountVC: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         episodeTV.setScrollBarToTopLeft()
         configureIntroButton()
-        pushingContent = false
         setupTopBar()
         addWebLink()
         
@@ -330,9 +328,6 @@ class SubProgramAccountVC: UIViewController {
     override func viewWillDisappear(_ animated: Bool) {
         websiteLinkButton.removeConstraints(websiteLinkButton.constraints)
         websiteLinkButton.removeFromSuperview()
-        if !pushingContent {
-            audioPlayer.finishSession()
-        }
         introPlayer.finishSession()
     }
     
@@ -342,7 +337,6 @@ class SubProgramAccountVC: UIViewController {
         episodeTV.register(EpisodeCellSmlLink.self, forCellReuseIdentifier: "EpisodeCellSmlLink")
         ownEpisodeSettings.settingsDelegate = self
         settingsLauncher.settingsDelegate = self
-        audioPlayer.audioPlayerDelegate = self
         episodeTV.dataSource = self
         episodeTV.delegate = self
     }
@@ -416,7 +410,6 @@ class SubProgramAccountVC: UIViewController {
             FireStoreManager.fetchEpisodesWith(episodeItems: items) { episodes in
                 DispatchQueue.main.async {
                     if !episodes.isEmpty {
-                        self.audioPlayer.downloadedEpisodes += episodes
                         self.downloadedEpisodes += episodes
                         self.episodeTV.reloadData()
                         self.loadingView.isHidden = true
@@ -617,9 +610,7 @@ class SubProgramAccountVC: UIViewController {
         
         view.addSubview(introPlayer)
         introPlayer.frame = CGRect(x: 0, y: view.frame.height, width: view.frame.width, height: 64)
-        
-        view.addSubview(audioPlayer)
-        audioPlayer.frame = CGRect(x: 0, y: view.frame.height, width: view.frame.width, height: 600)
+        introPlayer.offset = 64
     }
     
     func addWebLink() {
@@ -632,13 +623,7 @@ class SubProgramAccountVC: UIViewController {
     }
     
     @objc func playIntro() {
-        
-        if !audioPlayer.isOutOfPosition {
-            audioPlayer.finishSession()
-        }
-        
-        introPlayer.yPosition = view.frame.height - tabBarController!.tabBar.frame.height - introPlayer.frame.height
-
+        dunePlayBar.finishSession()
         introPlayer.setProgramDetailsWith(name: program.name, username: program.username, image: program.image!)
         introPlayer.playOrPauseIntroWith(audioID: program.introID!)
     }
@@ -666,7 +651,7 @@ class SubProgramAccountVC: UIViewController {
     
     @objc func settingsButtonPress() {
         let settingsVC = AccountSettingsVC()
-        settingsVC.hidesBottomBarWhenPushed = true
+//        settingsVC.hidesBottomBarWhenPushed = true
         navigationController?.pushViewController(settingsVC, animated: true)
     }
     
@@ -685,7 +670,7 @@ class SubProgramAccountVC: UIViewController {
     
     @objc func editProgramButtonPress() {
         let editSubProgramVC = EditSubProgramVC(program: program)
-        editSubProgramVC.hidesBottomBarWhenPushed = true
+//        editSubProgramVC.hidesBottomBarWhenPushed = true
         navigationController?.pushViewController(editSubProgramVC, animated: true)
     }
     
@@ -695,7 +680,7 @@ class SubProgramAccountVC: UIViewController {
     
     @objc func pushSubscribersVC() {
         let subscribersVC = SubscribersVC(programName: program.name, programID: program.ID, programIDs: program.programsIDs(), subscriberIDs: program.subscriberIDs)
-        subscribersVC.hidesBottomBarWhenPushed = true
+//        subscribersVC.hidesBottomBarWhenPushed = true
         subscribersVC.isPublic = program.isPrivate
         subscribersVC.requestDelegate = self
         subscribersVC.program = program
@@ -703,9 +688,11 @@ class SubProgramAccountVC: UIViewController {
     }
     
     @objc func continueToView() {
-        let tabBar = MainTabController()
-        tabBar.selectedIndex = 2
-        DuneDelegate.newRootView(tabBar)
+        duneTabBar.visit(screen: .studio)
+//        duneTabBar.tabButtonSelection(2)
+//        let tabBar = MainTabController()
+//        tabBar.selectedIndex = 2
+//        DuneDelegate.newRootView(tabBar)
     }
     
     @objc func viewPendingRequests() {
@@ -769,7 +756,7 @@ extension SubProgramAccountVC: UITableViewDataSource, UITableViewDelegate {
 //            episodeCell.optionsConfigured = false
 //        }
         
-        if let playerEpisode = audioPlayer.episode  {
+        if let playerEpisode = dunePlayBar.episode  {
             if episode.ID == playerEpisode.ID {
                 activeCell = episodeCell
             }
@@ -781,11 +768,10 @@ extension SubProgramAccountVC: UITableViewDataSource, UITableViewDelegate {
 extension SubProgramAccountVC :EpisodeCellDelegate {
     
     func visitLinkWith(url: URL) {
-        pushingContent = true
         let webView = WebVC(url: url)
         webView.delegate = self
         
-        switch audioPlayer.currentState {
+        switch dunePlayBar.currentState {
         case .loading:
              webView.currentStatus = .ready
         case .ready:
@@ -798,7 +784,7 @@ extension SubProgramAccountVC :EpisodeCellDelegate {
             webView.currentStatus = .ready
         }
         
-        audioPlayer.audioPlayerDelegate = webView
+        dunePlayBar.audioPlayerDelegate = webView
         navigationController?.present(webView, animated: true, completion: nil)
     }
     
@@ -808,11 +794,13 @@ extension SubProgramAccountVC :EpisodeCellDelegate {
     }
     
     func visitProfile(program: Program) {
+        if program.ID == self.program.ID {
+            return
+        }
+        
         if CurrentProgram.programsIDs().contains(program.ID) {
-            let tabBar = MainTabController()
-            tabBar.selectedIndex = 4
-            DuneDelegate.newRootView(tabBar)
-        } else {
+             duneTabBar.visit(screen: .account)
+        } else if program.isPublisher {
             if program.isPrimaryProgram && !program.programIDs!.isEmpty  {
                 let programVC = ProgramProfileVC()
                 programVC.program = program
@@ -821,6 +809,9 @@ extension SubProgramAccountVC :EpisodeCellDelegate {
                 let programVC = SingleProgramProfileVC(program: program)
                 navigationController?.pushViewController(programVC, animated: true)
             }
+        } else {
+            let programVC = ListenerProfileVC(program: program)
+            navigationController?.pushViewController(programVC, animated: true)
         }
     }
     
@@ -844,15 +835,19 @@ extension SubProgramAccountVC :EpisodeCellDelegate {
         if !cell.playbackBarView.playbackBarIsSetup {
             cell.playbackBarView.setupPlaybackBar()
         }
-        
-        audioPlayer.yPosition = view.frame.height - self.tabBarController!.tabBar.frame.height
-        
+                
         let image = cell.programImageButton.imageView?.image
         let audioID = cell.episode.audioID
         
-        self.audioPlayer.setEpisodeDetailsWith(episode: cell.episode, image: image!)
-        self.audioPlayer.animateToPositionIfNeeded()
-        self.audioPlayer.playOrPauseEpisodeWith(audioID: audioID)
+        dunePlayBar.audioPlayerDelegate = self
+        dunePlayBar.setEpisodeDetailsWith(episode: cell.episode, image: image!)
+        dunePlayBar.animateToPositionIfNeeded()
+        dunePlayBar.playOrPauseEpisodeWith(audioID: audioID)
+        
+        // Update play bar with active episode list
+        dunePlayBar.activeController = .account
+        dunePlayBar.downloadedEpisodes = downloadedEpisodes
+        dunePlayBar.itemCount = episodeItems.count
     }
     
     func showSettings(cell: EpisodeCell) {
@@ -910,7 +905,6 @@ extension SubProgramAccountVC: SettingsLauncherDelegate {
         if downloadedEpisodes.count == 0 {
             emptyTableView.isHidden = false
         }
-        audioPlayer.transitionOutOfView()
     }
 }
 
@@ -921,27 +915,22 @@ extension SubProgramAccountVC: DuneAudioPlayerDelegate {
     }
     
     func showCommentsFor(episode: Episode) {
-//        dismiss(animated: true) {
-//            NotificationCenter.default.post(name: NSNotification.Name(rawValue: "modalCommentPush"), object: nil, userInfo: ["ID": episode.ID])
-//        }
-        pushingContent = true
-        if audioPlayer.audioPlayer != nil {
-            audioPlayer.pauseSession()
-        } else if audioPlayer.currentState == .loading {
-            audioPlayer.cancelCurrentDownload()
-            audioPlayer.finishSession()
-        }
-        let commentVC = CommentThreadVC(episode: episode)
-        commentVC.hidesBottomBarWhenPushed = true
+        dunePlayBar.isHidden = true
+        commentVC = CommentThreadVC(episode: episode)
+        commentVC.currentState = dunePlayBar.currentState
+        dunePlayBar.audioPlayerDelegate = commentVC
+        commentVC.delegate = self
         navigationController?.pushViewController(commentVC, animated: true)
     }
    
-    func playedEpisode(episode: Episode) {
-        //
+    func makeActive(episode: Episode) {
+        episode.hasBeenPlayed = true
+        guard let index = downloadedEpisodes.firstIndex(where: { $0.ID == episode.ID }) else { return }
+        downloadedEpisodes[index] = episode
     }
     
     func updateProgressBarWith(percentage: CGFloat, forType: PlayBackType, episodeID: String) {
-        
+
         if lastPlayedID != episodeID {
             updatePastEpisodeProgress()
             listenCountUpdated = false
@@ -982,11 +971,24 @@ extension SubProgramAccountVC: DuneAudioPlayerDelegate {
     
 }
 
-extension SubProgramAccountVC: WebViewDelegate {
+extension SubProgramAccountVC: NavPlayerDelegate {
     
     func playOrPauseEpisode() {
+        if dunePlayBar.isOutOfPosition {
+            activeCell = nil
+        }
+        
         if let cell = activeCell {
-            audioPlayer.playOrPauseEpisodeWith(audioID: cell.episode.audioID)
+            print("NOPE")
+            dunePlayBar.playOrPauseEpisodeWith(audioID: cell.episode.audioID)
+        } else {
+            if let cellIndex = downloadedEpisodes.firstIndex(of: commentVC.episode) {
+                let indexPath = IndexPath(item: cellIndex, section: 0)
+                guard let episodeCell = episodeTV.cellForRow(at: indexPath) as? EpisodeCell else { return }
+                playEpisode(cell: episodeCell)
+                episodeCell.removePlayIcon()
+                dunePlayBar.audioPlayerDelegate = commentVC
+            }
         }
     }
     

@@ -108,7 +108,6 @@ class SearchVC: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         searchScrollView.setScrollBarToTopLeft()
-        setupModalCommentObserver()
         setupSearchController()
         isGoingForward = false
         fetchTopPrograms()
@@ -119,7 +118,6 @@ class SearchVC: UIViewController {
     }
     
     override func viewWillDisappear(_ animated: Bool) {
-        removeModalCommentObserver()
         introPlayer.finishSession()
         if isGoingForward {
             pillsHeightConstraint.constant = 15
@@ -136,21 +134,6 @@ class SearchVC: UIViewController {
             visitProfile(program: programToPush!)
             programToPush = nil
         }
-    }
-    
-    func setupModalCommentObserver() {
-        NotificationCenter.default.addObserver(self, selector: #selector(self.showCommentFromModal), name: NSNotification.Name(rawValue: "modalCommentPush"), object: nil)
-    }
-    
-    @objc func showCommentFromModal(_ notification: Notification) {
-        let episodeID = notification.userInfo?["ID"] as! String
-        FireStoreManager.getEpisodeWith(episodeID: episodeID) { episode in
-            self.showCommentsFor(episode: episode)
-        }
-    }
-    
-    func removeModalCommentObserver() {
-        NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: "modalCommentPush"), object: nil)
     }
     
     func setupSearchController() {
@@ -175,8 +158,8 @@ class SearchVC: UIViewController {
         navigationController?.navigationBar.barStyle = .black
         navigationController?.navigationBar.shadowImage = UIImage()
         
-        tabBarController?.tabBar.backgroundImage = UIImage()
-        tabBarController?.tabBar.backgroundColor = hexStringToUIColor(hex: "F4F7FB")
+//        tabBarController?.tabBar.backgroundImage = UIImage()
+//        tabBarController?.tabBar.backgroundColor = hexStringToUIColor(hex: "F4F7FB")
         
         let searchBarTextField = searchController.searchBar.value(forKey: "searchField") as? UITextField
         searchBarTextField?.textColor = CustomStyle.sixthShade
@@ -406,7 +389,7 @@ class SearchVC: UIViewController {
         tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
         tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        tableView.contentInset = UIEdgeInsets(top: 0.0, left: 0.0, bottom: 67.0, right: 0.0)
+        tableView.contentInset = UIEdgeInsets(top: 0.0, left: 0.0, bottom: tableView.safeDunePlayBarHeight, right: 0.0)
         tableView.backgroundColor = CustomStyle.secondShade
         tableView.addTopBounceAreaView()
         
@@ -550,9 +533,9 @@ extension SearchVC: UITableViewDelegate, UITableViewDataSource {
         
         programCell.program = program
         programCell.moreButton.addTarget(programCell, action: #selector(ProgramCell.moreUnwrap), for: .touchUpInside)
-        programCell.programImageButton.addTarget(programCell, action: #selector(ProgramCell.playProgramIntro), for: .touchUpInside)
-//        programCell.playProgramButton.addTarget(programCell, action: #selector(ProgramCell.playProgramIntro), for: .touchUpInside)
-        programCell.programSettingsButton.addTarget(programCell, action: #selector(ProgramCell.showSettings), for: .touchUpInside)
+        programCell.programImageButton.addTarget(programCell, action: #selector(ProgramCell.visitProfile), for: .touchUpInside)
+        programCell.programNameButton.addTarget(programCell, action: #selector(ProgramCell.visitProfile), for: .touchUpInside)
+//        programCell.programSettingsButton.addTarget(programCell, action: #selector(ProgramCell.showSettings), for: .touchUpInside)
         programCell.subscribeButton.addTarget(programCell, action: #selector(ProgramCell.subscribeButtonPress), for: .touchUpInside)
         programCell.usernameButton.addTarget(programCell, action: #selector(ProgramCell.visitProfile), for: .touchUpInside)
         programCell.normalSetUp(program: program)
@@ -616,11 +599,8 @@ extension SearchVC: ProgramCellDelegate {
     
     func visitProfile(program: Program) {
         if CurrentProgram.programsIDs().contains(program.ID) {
-            let tabBar = MainTabController()
-            tabBar.selectedIndex = 4
-            DuneDelegate.newRootView(tabBar)
-        } else {
-            isGoingForward = true
+             duneTabBar.visit(screen: .account)
+        } else if program.isPublisher {
             if program.isPrimaryProgram && !program.programIDs!.isEmpty  {
                 let programVC = ProgramProfileVC()
                 programVC.program = program
@@ -629,6 +609,9 @@ extension SearchVC: ProgramCellDelegate {
                 let programVC = SingleProgramProfileVC(program: program)
                 navigationController?.pushViewController(programVC, animated: true)
             }
+        } else {
+            let programVC = ListenerProfileVC(program: program)
+            navigationController?.pushViewController(programVC, animated: true)
         }
     }
     
@@ -646,9 +629,7 @@ extension SearchVC: ProgramCellDelegate {
         if !cell.playbackBarView.playbackBarIsSetup {
             cell.playbackBarView.setupPlaybackBar()
         }
-        
-        introPlayer.yPosition = view.frame.height - tabBarController!.tabBar.frame.height - introPlayer.frame.height
-      
+              
         let image = cell.programImageButton.imageView!.image!
         let audioID = cell.program.introID
   
@@ -678,16 +659,6 @@ extension SearchVC: DuneAudioPlayerDelegate {
     
     func fetchMoreEpisodes() {
         print("Should fetch more episodes: Needs implementation")
-    }
-    
-    func showCommentsFor(episode: Episode) {
-        let commentVC = CommentThreadVC(episode: episode)
-        commentVC.hidesBottomBarWhenPushed = true
-        navigationController?.pushViewController(commentVC, animated: true)
-    }
-    
-    func playedEpisode(episode: Episode) {
-        //
     }
     
     func updateProgressBarWith(percentage: CGFloat, forType: PlayBackType, episodeID: String) {

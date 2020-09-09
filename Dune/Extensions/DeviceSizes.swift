@@ -11,6 +11,8 @@ import AVFoundation
 
 extension UIDevice {
     
+    static let safeBottomHeight = UIApplication.shared.keyWindow!.safeAreaInsets.bottom
+    
     static func vibrate() {
         var audioPlayer: AVAudioPlayer!
         let path = Bundle.main.path(forResource: "end.mp3", ofType: nil)!

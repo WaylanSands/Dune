@@ -20,7 +20,7 @@ protocol BackgroundMusicDelegate {
 
 class AddBGMusicVC: UIViewController {
     
-    lazy var tabBar = navigationController?.tabBarController?.tabBar
+//    lazy var tabBar = navigationController?.tabBarController?.tabBar
     let tableView = UITableView()
     let backgroundMusic = BackgroundMusic.options
     var cells = [BackgroundMusicCell]()

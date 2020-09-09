@@ -982,9 +982,12 @@ class AddEpisodeDetails: UIViewController {
     
     func presentStudioVC() {
         networkingIndicator.removeFromSuperview()
-        let tabBar = MainTabController()
-        tabBar.selectedIndex = 2
-        DuneDelegate.newRootView(tabBar)
+//        duneTabBar.tabButtonSelection(2)
+        duneTabBar.visit(screen: .studio)
+
+//        let tabBar = MainTabController()
+//        tabBar.selectedIndex = 2
+//        DuneDelegate.newRootView(tabBar)
     }
     
     @objc func publishButtonPress() {
@@ -1001,9 +1004,10 @@ class AddEpisodeDetails: UIViewController {
     
     func presentDailyFeedVC() {
         networkingIndicator.removeFromSuperview()
-        let tabBar = MainTabController()
-        tabBar.selectedIndex = 0
-        DuneDelegate.newRootView(tabBar)
+//        let tabBar = MainTabController()
+        duneTabBar.isHidden = false
+        duneTabBar.visit(screen: .dailyFeed)
+//        duneTabBar.tabButtonSelection(0)
     }
     
     func trimThanStoreEpisodeOnFirebase() {

@@ -10,18 +10,53 @@ import UIKit
 
 class CommentThreadVC: UIViewController {
     
+    
+    var currentState: playerStatus? {
+        didSet {
+            switch currentState {
+            case .paused:
+                addPlayIcon()
+            case .playing:
+                addPauseIcon()
+                spinner.isHidden = true
+                loadingCircle.isHidden = false
+                playbackButton.isHidden = false
+                playbackCircleView.isHidden = false
+            case .ready:
+                 addPlayIcon()
+            case .fetching:
+                spinner.isHidden = false
+                loadingCircle.isHidden = true
+                playbackButton.isHidden = true
+                playbackCircleView.isHidden = true
+            case .loading:
+                spinner.isHidden = false
+                loadingCircle.isHidden = true
+                playbackButton.isHidden = true
+                playbackCircleView.isHidden = true
+            case .none:
+                print("not yet set")
+            }
+        }
+    }
+    
+    var spinner = UIActivityIndicatorView(style: .white)
+    
+    let playbackCircleView = PlaybackCircleView()
+    let loadingCircle = LoadingAudioView()
+    
+    weak var delegate: NavPlayerDelegate?
+    
     var episode: Episode
     var keyboardUp = false
     var primarySubCount = 0
     var attributedCharCount = 0
     var replyIsAttributed = false
-//    var tableView = UITableView(frame: .zero, style: .grouped)
     var tableView = UITableView()
     var isModallyPresented = false
     var keyboardRectHeight: CGFloat = 0
     var downloadedComments = [Comment]()
-    var homeIndicatorHeight:CGFloat = 34.0
-    var tableViewBottomConstraint: NSLayoutConstraint!    
+    var tableViewBottomConstraint: NSLayoutConstraint!
     
     lazy var passThoughView = PassThoughView(frame: CGRect(x: 0, y: 0, width: view.frame.width, height: view.frame.height))
     var commentTextView = CommentTextView()
@@ -31,7 +66,8 @@ class CommentThreadVC: UIViewController {
 
     let customNavBar: CustomNavBar = {
         let nav = CustomNavBar()
-        nav.leftButton.isHidden = true
+        nav.leftButton.addTarget(self, action: #selector(popVC), for: .touchUpInside)
+        nav.leftButton.contentEdgeInsets = UIEdgeInsets(top: 0, left: -20.0, bottom: 0, right: 0)
         nav.backgroundColor = CustomStyle.blackNavBar
         nav.titleLabel.text = "Comments"
         nav.titleLabel.textColor = .white
@@ -42,6 +78,14 @@ class CommentThreadVC: UIViewController {
         let view = UIView()
         view.backgroundColor = .blue
         return view
+    }()
+    
+    let playbackButton: ExtendedButton = {
+        let button = ExtendedButton()
+        button.setImage(UIImage(named: "play-music-icon"), for: .normal)
+        button.addTarget(self, action: #selector(playbackButtonPress), for: .touchUpInside)
+        button.padding = 20
+        return button
     }()
 
     required init(episode: Episode) {
@@ -59,20 +103,26 @@ class CommentThreadVC: UIViewController {
     }
     
     override func viewWillAppear(_ animated: Bool) {
+        dunePlayBar.isHidden = true
         configureNavigation()
-        checkIfModallyPresented()
     }
     
     func styleForScreens() {
         switch UIDevice.current.deviceType {
         case .iPhoneSE, .iPhone8Plus, .iPhone8, .iPhone4S:
-            homeIndicatorHeight = 0
+//            homeIndicatorHeight = 0
+            break
         default:
             break
         }
     }
     
+    @objc func popVC() {
+        navigationController?.popViewController(animated: true)
+    }
+    
     override func viewWillDisappear(_ animated: Bool) {
+        dunePlayBar.isHidden = false
         isModallyPresented = false
     }
     
@@ -82,13 +132,6 @@ class CommentThreadVC: UIViewController {
     
     deinit {
         NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
-    }
-    
-    func checkIfModallyPresented() {
-        if isModallyPresented {
-            customNavBar.isHidden = true
-            tableView.contentInset = UIEdgeInsets(top: 40, left: 0, bottom: 0, right: 0)
-        }
     }
     
     func configureDelegates() {
@@ -103,37 +146,23 @@ class CommentThreadVC: UIViewController {
         tableView.delegate = self
     }
     
-   func configureNavigation() {
-    navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
-    navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
-    navigationController?.navigationBar.backIndicatorTransitionMaskImage = #imageLiteral(resourceName: "back-button-white")
-    navigationController?.navigationBar.prefersLargeTitles = false
-    navigationController?.navigationBar.backIndicatorImage = #imageLiteral(resourceName: "back-button-white")
-    navigationController?.navigationBar.isTranslucent = true
-    navigationController?.navigationBar.shadowImage = nil
-    navigationController?.navigationBar.barStyle = .black
-    navigationController?.navigationBar.shadowImage = UIImage()
-    navigationController?.navigationBar.tintColor = .white
-    navigationController?.navigationBar.isHidden = false
-    navigationItem.largeTitleDisplayMode = .never
+    func configureNavigation() {
+        navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
+        navigationController?.navigationBar.backIndicatorImage = #imageLiteral(resourceName: "back-button-white")
+        navigationController?.navigationBar.barStyle = .black
+        navigationController?.navigationBar.isHidden = true
     }
     
     func configureViews() {
         view.backgroundColor = CustomStyle.onBoardingBlack
         
-//        view.addSubview(testView)
-//        testView.translatesAutoresizingMaskIntoConstraints = false
-//        testView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
-//        testView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-//        testView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-//        testView.heightAnchor.constraint(equalToConstant: 100).isActive = true
-        
         view.addSubview(tableView)
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+        tableView.contentInset = UIEdgeInsets(top: 45, left: 0, bottom: 0, right: 0)
         tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        tableViewBottomConstraint = tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -homeIndicatorHeight)
+        tableViewBottomConstraint = tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -duneTabBar.frame.height)
         tableViewBottomConstraint.isActive = true
         tableView.separatorStyle = .none
         
@@ -142,12 +171,70 @@ class CommentThreadVC: UIViewController {
         commentTextView.translatesAutoresizingMaskIntoConstraints = false
         commentTextView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         commentTextView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        commentTextView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -homeIndicatorHeight).isActive = true
+        commentTextView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -duneTabBar.frame.height).isActive = true
         commentTextView.heightAnchor.constraint(greaterThanOrEqualToConstant: 48).isActive = true
         commentTextView.episodeID = episode.ID
         
         view.addSubview(customNavBar)
         customNavBar.pinNavBarTo(view)
+        
+        customNavBar.addSubview(playbackButton)
+        playbackButton.translatesAutoresizingMaskIntoConstraints = false
+        playbackButton.centerYAnchor.constraint(equalTo: customNavBar.leftButton.centerYAnchor).isActive = true
+        playbackButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
+        playbackButton.heightAnchor.constraint(equalToConstant: 40).isActive = true
+        playbackButton.widthAnchor.constraint(equalToConstant: 40).isActive = true
+        
+        customNavBar.addSubview(playbackCircleView)
+        playbackCircleView.translatesAutoresizingMaskIntoConstraints = false
+        playbackCircleView.centerYAnchor.constraint(equalTo: playbackButton.centerYAnchor, constant: 0).isActive = true
+        playbackCircleView.centerXAnchor.constraint(equalTo: playbackButton.centerXAnchor, constant: 0).isActive = true
+        playbackCircleView.setupNavBarCircle()
+        
+        customNavBar.addSubview(loadingCircle)
+        loadingCircle.translatesAutoresizingMaskIntoConstraints = false
+        loadingCircle.centerYAnchor.constraint(equalTo: playbackButton.centerYAnchor, constant: 0).isActive = true
+        loadingCircle.centerXAnchor.constraint(equalTo: playbackButton.centerXAnchor, constant: 0).isActive = true
+        loadingCircle.setupLoadingAnimation()
+        
+        customNavBar.addSubview(spinner)
+        spinner.translatesAutoresizingMaskIntoConstraints = false
+        spinner.centerYAnchor.constraint(equalTo: playbackButton.centerYAnchor).isActive = true
+        spinner.centerXAnchor.constraint(equalTo: playbackButton.centerXAnchor).isActive = true
+        spinner.heightAnchor.constraint(equalToConstant: 20).isActive = true
+        spinner.widthAnchor.constraint(equalToConstant: 20).isActive = true
+        spinner.isUserInteractionEnabled = false
+        spinner.startAnimating()
+        
+        if dunePlayBar.currentState == .fetching || dunePlayBar.currentState == .loading {
+            spinner.isHidden = false
+        } else {
+            spinner.isHidden = true
+        }
+    }
+    
+    func addPauseIcon() {
+        playbackButton.setImage(UIImage(named: "pause-music-icon"), for: .normal)
+    }
+    
+    func addPlayIcon() {
+         playbackButton.setImage(UIImage(named: "play-music-icon"), for: .normal)
+    }
+    
+    func toggleStatus() {
+        switch currentState {
+        case .ready:
+            spinner.isHidden = false
+            loadingCircle.isHidden = true
+            playbackButton.isHidden = true
+            playbackCircleView.isHidden = true
+        case .playing:
+            currentState =  .paused
+        case .paused:
+            currentState = .playing
+        default:
+            break
+        }
     }
     
     func configureKeyboardTracking() {
@@ -169,8 +256,13 @@ class CommentThreadVC: UIViewController {
                 self.downloadedComments += comments!
                 self.tableView.reloadData()
             } else if comments?.count == 0 {
-             print("No comments")
             }
+        }
+    }
+    
+    func animateTableView() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            self.tableViewBottomConstraint.constant = -(self.keyboardRectHeight + self.commentTextView.commentView.frame.height - 30)
         }
     }
     
@@ -185,11 +277,11 @@ class CommentThreadVC: UIViewController {
         }
     }
     
-    func animateTableView() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            self.tableViewBottomConstraint.constant = -(self.keyboardRectHeight + self.commentTextView.commentView.frame.height - 30)
-        }
+    @objc func playbackButtonPress() {
+        delegate!.playOrPauseEpisode()
+        toggleStatus()
     }
+    
 }
 
 extension CommentThreadVC: UITableViewDataSource, UITableViewDelegate {
@@ -267,7 +359,6 @@ extension CommentThreadVC: UITableViewDataSource, UITableViewDelegate {
             }
             
             if self.downloadedComments.count == 0 {
-                print("No comments to display")
             }
             
             self.downloadedComments.remove(at: indexPath.row)
@@ -289,13 +380,13 @@ extension CommentThreadVC: UITableViewDataSource, UITableViewDelegate {
     }
     
     func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
-       return commentTextView.commentView.frame.height + homeIndicatorHeight
+       return commentTextView.commentView.frame.height + duneTabBar.frame.height
     }
 
     func tableView(_ tableView: UITableView, viewForFooterInSection section: Int) -> UIView? {
         let view = UIView()
         view.backgroundColor = .clear
-        view.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: (commentTextView.commentView.frame.height + homeIndicatorHeight))
+        view.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: (commentTextView.commentView.frame.height + duneTabBar.frame.height))
         return view
     }
     
@@ -358,9 +449,7 @@ extension CommentThreadVC: CommentCellDelegate {
   
     func visitProfile(program: Program) {
         if CurrentProgram.programsIDs().contains(program.ID) {
-            let tabBar = MainTabController()
-            tabBar.selectedIndex = 4
-            DuneDelegate.newRootView(tabBar)
+             duneTabBar.visit(screen: .account)
         } else if program.isPublisher {
             if program.isPrimaryProgram && !program.programIDs!.isEmpty  {
                 let programVC = ProgramProfileVC()
@@ -440,8 +529,8 @@ extension CommentThreadVC: commentTextViewDelegate {
         DispatchQueue.main.async {
             self.commentTextView.commentView.resignFirstResponder()
             self.commentTextView.frame.size = CGSize(width: self.commentTextView.backgroundView.frame.width , height: 48)
-            self.commentTextView.frame.origin.y = self.view.frame.height - (self.commentTextView.frame.height + self.homeIndicatorHeight)
-            self.tableViewBottomConstraint.constant = -self.homeIndicatorHeight
+            self.commentTextView.frame.origin.y = self.view.frame.height - (self.commentTextView.frame.height + duneTabBar.frame.height)
+            self.tableViewBottomConstraint.constant = -duneTabBar.frame.height
             self.keyboardUp = false
         }
         
@@ -477,8 +566,8 @@ extension CommentThreadVC: commentTextViewDelegate {
             print("dismissKeyBoard")
             self.keyboardUp = false
             self.commentTextView.frame.size = CGSize(width: self.commentTextView.backgroundView.frame.width , height: self.commentTextView.backgroundView.frame.height)
-            self.commentTextView.frame.origin.y = self.view.frame.height - (self.commentTextView.frame.height + self.homeIndicatorHeight)
-            self.tableViewBottomConstraint.constant =  -self.homeIndicatorHeight
+            self.commentTextView.frame.origin.y = self.view.frame.height - (self.commentTextView.frame.height + duneTabBar.frame.height)
+            self.tableViewBottomConstraint.constant =  -duneTabBar.frame.height
         }
         if commentTextView.commentView.text.isEmpty {
             commentTextView.placeholderLabel.isHidden = false
@@ -496,11 +585,11 @@ extension CommentThreadVC: CustomAlertDelegate {
     func primaryButtonPress() {
         if CurrentProgram.isPublisher! {
             let editProgramVC = EditProgramVC()
-            editProgramVC.hidesBottomBarWhenPushed = true
+//            editProgramVC.hidesBottomBarWhenPushed = true
             navigationController?.pushViewController(editProgramVC, animated: true)
         } else {
             let editListenerVC = EditListenerVC()
-            editListenerVC.hidesBottomBarWhenPushed = true
+//            editListenerVC.hidesBottomBarWhenPushed = true
             navigationController?.pushViewController(editListenerVC, animated: true)
         }
     }
@@ -509,6 +598,24 @@ extension CommentThreadVC: CustomAlertDelegate {
         //
     }
     
+    
+}
+
+extension CommentThreadVC: DuneAudioPlayerDelegate {
+  
+    func fetchMoreEpisodes() {
+        print("Should fetch more episodes: Needs implementation")
+    }
+    
+    func updateProgressBarWith(percentage: CGFloat, forType: PlayBackType, episodeID: String) {
+        playbackCircleView.shapeLayer.strokeEnd = percentage
+        playbackButton.isUserInteractionEnabled = true
+        currentState = .playing
+    }
+    
+    func updateActiveCell(atIndex: Int, forType: PlayBackType) {
+        //
+    }
     
 }
 

@@ -52,22 +52,22 @@ public extension UIViewController {
         }
     }
     
-    func presentProgram(program: Program, isGoingForward: inout Bool?) {
-        if CurrentProgram.programsIDs().contains(program.ID) {
-            let tabBar = MainTabController()
-            tabBar.selectedIndex = 4
-            DuneDelegate.newRootView(tabBar)
-        } else {
-            isGoingForward = true
-            if program.isPrimaryProgram && !program.programIDs!.isEmpty  {
-                let programVC = ProgramProfileVC()
-                programVC.program = program
-                navigationController?.pushViewController(programVC, animated: true)
-            } else {
-                let programVC = SingleProgramProfileVC(program: program)
-                navigationController?.pushViewController(programVC, animated: true)
-            }
-        }
-    }
+//    func presentProgram(program: Program, isGoingForward: inout Bool?) {
+//        if CurrentProgram.programsIDs().contains(program.ID) {
+//            let tabBar = MainTabController()
+//            tabBar.selectedIndex = 4
+//            DuneDelegate.newRootView(tabBar)
+//        } else {
+//            isGoingForward = true
+//            if program.isPrimaryProgram && !program.programIDs!.isEmpty  {
+//                let programVC = ProgramProfileVC()
+//                programVC.program = program
+//                navigationController?.pushViewController(programVC, animated: true)
+//            } else {
+//                let programVC = SingleProgramProfileVC(program: program)
+//                navigationController?.pushViewController(programVC, animated: true)
+//            }
+//        }
+//    }
     
 }

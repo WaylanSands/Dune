@@ -1230,21 +1230,25 @@ struct FireStoreManager {
     }
     
     static func getUserData(completion: @escaping () -> ()) {
-        
+        print("0")
+
         guard let uid = Auth.auth().currentUser?.uid else { return }
-        
+         print("1")
         let userRef = db.collection("users").document(uid)
         
         DispatchQueue.global(qos: .userInitiated).async {
             
             userRef.getDocument { (snapshot, error) in
-                
+                print("2")
+
                 if error != nil {
                     print("There was an error getting users document: \(error!)")
                 } else {
+
                     guard let data = snapshot?.data() else { return }
                     User.modelUser(data: data)
-                    
+                    print("3")
+
                     let onBoarded = data["completedOnBoarding"] as! Bool
                     
                     if onBoarded {

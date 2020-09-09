@@ -20,4 +20,8 @@ extension UITableView {
 
         self.addSubview(view)
     }
+    
+    var safeDunePlayBarHeight: CGFloat {
+        return 64 + duneTabBar.frame.height - UIDevice.safeBottomHeight
+    }
 }

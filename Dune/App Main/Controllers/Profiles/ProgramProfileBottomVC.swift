@@ -20,7 +20,7 @@ class ProgramProfileBottomVC: UIViewController {
     var programsOwnIDs = [String]()
 
     var listenCountUpdated = false
-    var pushingContent = false
+//    var pushingContent = false
     var lastProgress: CGFloat = 0
     var lastPlayedID: String?
         
@@ -61,8 +61,10 @@ class ProgramProfileBottomVC: UIViewController {
     let introPlayer = DuneIntroPlayer()
     var activeProgramCell: ProgramCell?
 
-    let audioPlayer = DunePlayBar()
+//    let audioPlayer = DunePlayBar()
     var activeEpisodeCell: EpisodeCell?
+    
+    var commentVC: CommentThreadVC!
     
     required init(program: Program) {
         self.program = program
@@ -108,8 +110,6 @@ class ProgramProfileBottomVC: UIViewController {
         programsOwnIDs = program.programsIDs()
         episodeTV.setScrollBarToTopLeft()
         mentionTV.setScrollBarToTopLeft()
-        setupModalCommentObserver()
-        pushingContent = false
         configureForPrivacy()
         hideTableViews()
     }
@@ -136,10 +136,10 @@ class ProgramProfileBottomVC: UIViewController {
     }
     
     override func viewWillDisappear(_ animated: Bool) {
-         removeModalCommentObserver()
-        if !pushingContent {
-           audioPlayer.finishSession()
-        }
+//         removeModalCommentObserver()
+//        if !pushingContent {
+//           audioPlayer.finishSession()
+//        }
         introPlayer.finishSession()
     }
     
@@ -162,7 +162,6 @@ class ProgramProfileBottomVC: UIViewController {
         mentionTV.dataSource = self
         mentionTV.delegate = self
         episodeTV.delegate = self
-        audioPlayer.audioPlayerDelegate = self
         introPlayer.playbackDelegate = self
     }
     
@@ -177,25 +176,25 @@ class ProgramProfileBottomVC: UIViewController {
         subsStartingIndex = 0
     }
     
-    func setupModalCommentObserver() {
-        NotificationCenter.default.addObserver(self, selector: #selector(self.showCommentFromModal), name: NSNotification.Name(rawValue: "modalCommentPush"), object: nil)
-    }
+//    func setupModalCommentObserver() {
+//        NotificationCenter.default.addObserver(self, selector: #selector(self.showCommentFromModal), name: NSNotification.Name(rawValue: "modalCommentPush"), object: nil)
+//    }
+//
+//    @objc func showCommentFromModal(_ notification: Notification) {
+//        let episodeID = notification.userInfo?["ID"] as! String
+//        let episode = downloadedEpisodes.first(where: {$0.ID == episodeID})
+//        if episode != nil {
+//             showCommentsFor(episode: episode!)
+//        } else {
+//            FireStoreManager.getEpisodeWith(episodeID: episodeID) { episode in
+//                self.showCommentsFor(episode: episode)
+//            }
+//        }
+//    }
     
-    @objc func showCommentFromModal(_ notification: Notification) {
-        let episodeID = notification.userInfo?["ID"] as! String
-        let episode = downloadedEpisodes.first(where: {$0.ID == episodeID})
-        if episode != nil {
-             showCommentsFor(episode: episode!)
-        } else {
-            FireStoreManager.getEpisodeWith(episodeID: episodeID) { episode in
-                self.showCommentsFor(episode: episode)
-            }
-        }
-    }
-    
-    func removeModalCommentObserver() {
-        NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: "modalCommentPush"), object: nil)
-    }
+//    func removeModalCommentObserver() {
+//        NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: "modalCommentPush"), object: nil)
+//    }
     
     func configureViews() {
         self.view.backgroundColor = CustomStyle.secondShade
@@ -240,8 +239,8 @@ class ProgramProfileBottomVC: UIViewController {
         introPlayer.frame = CGRect(x: 0, y: vFrame.height, width: vFrame.width, height: 64)
         introPlayer.offset = 64
         
-        navigationController?.visibleViewController?.view.addSubview(audioPlayer)
-        audioPlayer.frame = CGRect(x: 0, y: vFrame.height, width: vFrame.width, height: 600)
+//        navigationController?.visibleViewController?.view.addSubview(audioPlayer)
+//        audioPlayer.frame = CGRect(x: 0, y: vFrame.height, width: vFrame.width, height: 600)
     }
     
     func configureEmptyTableViewFor(tableView: UITableView) {
@@ -294,8 +293,8 @@ class ProgramProfileBottomVC: UIViewController {
             FireStoreManager.fetchEpisodesWith(episodeItems: items) { episodes in
                 DispatchQueue.main.async {
                     if !episodes.isEmpty {
-                        self.audioPlayer.downloadedEpisodes += episodes
                         self.downloadedEpisodes += episodes
+                        self.checkPlayBarActiveController()
                         self.episodeTV.reloadData()
                         self.loadingView.isHidden = true
                         self.isFetchingEpisodes = false
@@ -305,6 +304,13 @@ class ProgramProfileBottomVC: UIViewController {
                     }
                 }
             }
+        }
+    }
+    
+    func checkPlayBarActiveController() {
+        if dunePlayBar.activeController == .profile && dunePlayBar.activeProfile == program.username {
+            dunePlayBar.downloadedEpisodes = downloadedEpisodes
+            dunePlayBar.itemCount = episodeItems.count
         }
     }
     
@@ -358,12 +364,7 @@ class ProgramProfileBottomVC: UIViewController {
     }
     
     @objc func playIntro() {
-        if !audioPlayer.isOutOfPosition {
-            audioPlayer.finishSession()
-        }
-        
-        introPlayer.yPosition = UIScreen.main.bounds.height - self.tabBarController!.tabBar.frame.height
-    
+        dunePlayBar.finishSession()
         introPlayer.setProgramDetailsWith(name: program.name, username: program.username, image: program.image!)
         introPlayer.playOrPauseIntroWith(audioID: program.introID!)
     }
@@ -473,7 +474,7 @@ extension ProgramProfileBottomVC: UITableViewDelegate, UITableViewDataSource {
                 }
             }
 
-            if let playerEpisode = audioPlayer.episode  {
+            if let playerEpisode = dunePlayBar.episode  {
                 if episode.ID == playerEpisode.ID {
                     activeEpisodeCell = episodeCell
                 }
@@ -482,9 +483,10 @@ extension ProgramProfileBottomVC: UITableViewDelegate, UITableViewDataSource {
         case subscriptionTV:
             let programCell = tableView.dequeueReusableCell(withIdentifier: "programCell") as! ProgramCell
             programCell.subscribeButton.addTarget(programCell, action: #selector(ProgramCell.subscribeButtonPress), for: .touchUpInside)
-            programCell.programImageButton.addTarget(programCell, action: #selector(ProgramCell.playProgramIntro), for: .touchUpInside)
+            programCell.programImageButton.addTarget(programCell, action: #selector(ProgramCell.visitProfile), for: .touchUpInside)
+            programCell.programNameButton.addTarget(programCell, action: #selector(ProgramCell.visitProfile), for: .touchUpInside)
 //            programCell.playProgramButton.addTarget(programCell, action: #selector(ProgramCell.playProgramIntro), for: .touchUpInside)
-            programCell.programSettingsButton.addTarget(programCell, action: #selector(ProgramCell.showSettings), for: .touchUpInside)
+//            programCell.programSettingsButton.addTarget(programCell, action: #selector(ProgramCell.showSettings), for: .touchUpInside)
             programCell.usernameButton.addTarget(programCell, action: #selector(ProgramCell.visitProfile), for: .touchUpInside)
             programCell.moreButton.addTarget(programCell, action: #selector(ProgramCell.moreUnwrap), for: .touchUpInside)
             
@@ -509,13 +511,13 @@ extension ProgramProfileBottomVC: UITableViewDelegate, UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
-       return 116
+       return duneTabBar.frame.height + 64
     }
 
     func tableView(_ tableView: UITableView, viewForFooterInSection section: Int) -> UIView? {
         let view = UIView()
         view.backgroundColor = .clear
-        view.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: 116)
+        view.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: duneTabBar.frame.height + 64)
         return view
     }
 }
@@ -557,16 +559,15 @@ extension ProgramProfileBottomVC: DuneAudioPlayerDelegate {
     }
     
     func showCommentsFor(episode: Episode) {
-        pushingContent = true
-        if audioPlayer.audioPlayer != nil {
-            audioPlayer.pauseSession()
-        }
-        let commentVC = CommentThreadVC(episode: episode)
-        commentVC.hidesBottomBarWhenPushed = true
+        dunePlayBar.isHidden = true
+        commentVC = CommentThreadVC(episode: episode)
+        commentVC.currentState = dunePlayBar.currentState
+        dunePlayBar.audioPlayerDelegate = commentVC
+        commentVC.delegate = self
         navigationController?.pushViewController(commentVC, animated: true)
     }
  
-    func playedEpisode(episode: Episode) {
+    func makeActive(episode: Episode) {
         episode.hasBeenPlayed = true
         guard let index = downloadedEpisodes.firstIndex(where: { $0.ID == episode.ID }) else { return }
         downloadedEpisodes[index] = episode
@@ -636,11 +637,10 @@ extension ProgramProfileBottomVC: DuneAudioPlayerDelegate {
 extension ProgramProfileBottomVC :EpisodeCellDelegate {
     
     func visitLinkWith(url: URL) {
-        pushingContent = true
         let webView = WebVC(url: url)
         webView.delegate = self
         
-        switch audioPlayer.currentState {
+        switch dunePlayBar.currentState {
         case .loading:
              webView.currentStatus = .ready
         case .ready:
@@ -653,7 +653,7 @@ extension ProgramProfileBottomVC :EpisodeCellDelegate {
             webView.currentStatus = .ready
         }
         
-        audioPlayer.audioPlayerDelegate = webView
+        dunePlayBar.audioPlayerDelegate = webView
         navigationController?.present(webView, animated: true, completion: nil)
     }
     
@@ -685,20 +685,20 @@ extension ProgramProfileBottomVC :EpisodeCellDelegate {
         if !cell.playbackBarView.playbackBarIsSetup {
             cell.playbackBarView.setupPlaybackBar()
         }
-        
-//        let difference = UIScreen.main.bounds.height - headerHeight! + unwrapDifference
-//        let position = difference - tabBarController!.tabBar.frame.height
-//        let offset = position + (yOffset ?? 0)
-//        audioPlayer.yPosition = offset
-        
-        audioPlayer.yPosition = UIScreen.main.bounds.height - self.tabBarController!.tabBar.frame.height
 
         let image = cell.programImageButton.imageView?.image
         let audioID = cell.episode.audioID
         
-        self.audioPlayer.setEpisodeDetailsWith(episode: cell.episode, image: image!)
-        self.audioPlayer.animateToPositionIfNeeded()
-        self.audioPlayer.playOrPauseEpisodeWith(audioID: audioID)
+        dunePlayBar.audioPlayerDelegate = self
+        dunePlayBar.activeController = .profile
+        dunePlayBar.activeProfile = program.username
+        dunePlayBar.setEpisodeDetailsWith(episode: cell.episode, image: image!)
+        dunePlayBar.animateToPositionIfNeeded()
+        dunePlayBar.playOrPauseEpisodeWith(audioID: audioID)
+        
+        // Update play bar with active episode list
+        dunePlayBar.downloadedEpisodes = downloadedEpisodes
+        dunePlayBar.itemCount = episodeItems.count
     }
     
     func showSettings(cell: EpisodeCell) {
@@ -734,10 +734,8 @@ extension ProgramProfileBottomVC: ProgramCellDelegate, MentionCellDelegate {
         }
         
         if CurrentProgram.programsIDs().contains(program.ID) {
-            let tabBar = MainTabController()
-            tabBar.selectedIndex = 4
-            DuneDelegate.newRootView(tabBar)
-        } else {
+             duneTabBar.visit(screen: .account)
+        } else if program.isPublisher {
             if program.isPrimaryProgram && !program.programIDs!.isEmpty  {
                 let programVC = ProgramProfileVC()
                 programVC.program = program
@@ -746,6 +744,9 @@ extension ProgramProfileBottomVC: ProgramCellDelegate, MentionCellDelegate {
                 let programVC = SingleProgramProfileVC(program: program)
                 navigationController?.pushViewController(programVC, animated: true)
             }
+        } else {
+            let programVC = ListenerProfileVC(program: program)
+            navigationController?.pushViewController(programVC, animated: true)
         }
     }
     
@@ -758,9 +759,9 @@ extension ProgramProfileBottomVC: ProgramCellDelegate, MentionCellDelegate {
     func playProgramIntro(cell: ProgramCell) {
         activeProgramCell = cell
         
-        if !audioPlayer.isOutOfPosition {
-            audioPlayer.finishSession()
-        }
+//        if !audioPlayer.isOutOfPosition {
+//            audioPlayer.finishSession()
+//        }
         
         if !cell.playbackBarView.playbackBarIsSetup {
             cell.playbackBarView.setupPlaybackBar()
@@ -769,9 +770,7 @@ extension ProgramProfileBottomVC: ProgramCellDelegate, MentionCellDelegate {
 //        let difference = UIScreen.main.bounds.height - headerHeight! + unwrapDifference
 //        let position = difference - tabBarController!.tabBar.frame.height - 70
 //        let offset = position + (yOffset ?? 0)
-        
-        introPlayer.yPosition = UIScreen.main.bounds.height - self.tabBarController!.tabBar.frame.height
-        
+                
         let image = cell.programImageButton.imageView!.image!
         let audioID = cell.program.introID
         
@@ -801,11 +800,24 @@ extension ProgramProfileBottomVC: CustomAlertDelegate {
     
 }
 
-extension ProgramProfileBottomVC: WebViewDelegate {
+extension ProgramProfileBottomVC: NavPlayerDelegate {
     
     func playOrPauseEpisode() {
+        if dunePlayBar.isOutOfPosition {
+            activeEpisodeCell = nil
+        }
+        
         if let cell = activeEpisodeCell {
-            audioPlayer.playOrPauseEpisodeWith(audioID: cell.episode.audioID)
+            print("NOPE")
+            dunePlayBar.playOrPauseEpisodeWith(audioID: cell.episode.audioID)
+        } else {
+            if let cellIndex = downloadedEpisodes.firstIndex(of: commentVC.episode) {
+                let indexPath = IndexPath(item: cellIndex, section: 0)
+                guard let episodeCell = episodeTV.cellForRow(at: indexPath) as? EpisodeCell else { return }
+                playEpisode(cell: episodeCell)
+                episodeCell.removePlayIcon()
+                dunePlayBar.audioPlayerDelegate = commentVC
+            }
         }
     }
     

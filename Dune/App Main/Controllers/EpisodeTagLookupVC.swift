@@ -12,15 +12,12 @@ import AVFoundation
 
 class EpisodeTagLookupVC: UIViewController {
     
-    var pushingContent = false
-
     let tableView = UITableView()
-    var audioPlayer = DunePlayBar()
-   
-    var pushingComment = false
     var audioIDs = [String]()
     var downloadedEpisodes = [Episode]()
     var episodeItems = [EpisodeItem]()
+    
+    var commentVC: CommentThreadVC!
 
     var activeCell: EpisodeCell?
     var selectedCellRow: Int?
@@ -61,7 +58,10 @@ class EpisodeTagLookupVC: UIViewController {
     }
     
     func addEpisodesToAudioPlayer() {
-        audioPlayer.downloadedEpisodes = downloadedEpisodes
+        if dunePlayBar.activeController == .tagLookup && dunePlayBar.activeProfile == tag {
+            dunePlayBar.downloadedEpisodes = downloadedEpisodes
+            dunePlayBar.itemCount = downloadedEpisodes.count
+        }
     }
     
     func configureEpisodeLabelWith(count: Int) {
@@ -86,14 +86,9 @@ class EpisodeTagLookupVC: UIViewController {
 
     override func viewWillAppear(_ animated: Bool) {
         selectedCellRow = nil
-        pushingComment = false
     }
 
     override func viewWillDisappear(_ animated: Bool) {
-        if !pushingComment {
-            audioPlayer.finishSession()
-        }
-
         FileManager.removeAudioFilesFromDocumentsDirectory() {
             print("Audio removed")
         }
@@ -104,7 +99,7 @@ class EpisodeTagLookupVC: UIViewController {
         ownEpisodeSettings.settingsDelegate = self
         tableView.register(EpisodeCell.self, forCellReuseIdentifier: "episodeCell")
         reportEpisodeAlert.alertDelegate = self
-        audioPlayer.audioPlayerDelegate = self
+//        audioPlayer.audioPlayerDelegate = self
         tableView.dataSource = self
         tableView.delegate = self
     }
@@ -149,7 +144,7 @@ class EpisodeTagLookupVC: UIViewController {
 
         view.addSubview(tableView)
         view.sendSubviewToBack(tableView)
-        tableView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 64, right: 0)
+        tableView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: tableView.safeDunePlayBarHeight, right: 0)
         tableView.pinEdges(to: view)
         tableView.backgroundColor = .white
 
@@ -157,9 +152,6 @@ class EpisodeTagLookupVC: UIViewController {
         episodeNumberLabel.translatesAutoresizingMaskIntoConstraints = false
         episodeNumberLabel.bottomAnchor.constraint(equalTo: tableView.topAnchor, constant: -10).isActive = true
         episodeNumberLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
-
-        view.addSubview(audioPlayer)
-        audioPlayer.frame = CGRect(x: 0, y: view.frame.height, width: view.frame.width, height: 70)
         
         view.addSubview(customNavBar)
         customNavBar.pinNavBarTo(view)
@@ -223,11 +215,10 @@ extension EpisodeTagLookupVC: UITableViewDataSource, UITableViewDelegate {
 extension EpisodeTagLookupVC: EpisodeCellDelegate {
     
     func visitLinkWith(url: URL) {
-        pushingContent = true
         let webView = WebVC(url: url)
         webView.delegate = self
         
-        switch audioPlayer.currentState {
+        switch dunePlayBar.currentState {
         case .loading:
              webView.currentStatus = .ready
         case .ready:
@@ -240,24 +231,30 @@ extension EpisodeTagLookupVC: EpisodeCellDelegate {
             webView.currentStatus = .ready
         }
         
-        audioPlayer.audioPlayerDelegate = webView
+        dunePlayBar.audioPlayerDelegate = webView
         navigationController?.present(webView, animated: true, completion: nil)
     }
     
     func episodeTagSelected(tag: String) {
         let tagSelectedVC = EpisodeTagLookupVC(tag: tag)
-        pushingContent = true
         navigationController?.pushViewController(tagSelectedVC, animated: true)
     }
 
 
     func visitProfile(program: Program) {
-            if program.isPrimaryProgram && !program.programIDs!.isEmpty  {
-                let programVC = ProgramProfileVC()
-                programVC.program = program
-                navigationController?.pushViewController(programVC, animated: true)
+            if CurrentProgram.programsIDs().contains(program.ID) {
+                 duneTabBar.visit(screen: .account)
+            } else if program.isPublisher {
+                if program.isPrimaryProgram && !program.programIDs!.isEmpty  {
+                    let programVC = ProgramProfileVC()
+                    programVC.program = program
+                    navigationController?.pushViewController(programVC, animated: true)
+                } else {
+                    let programVC = SingleProgramProfileVC(program: program)
+                    navigationController?.pushViewController(programVC, animated: true)
+                }
             } else {
-                let programVC = SingleProgramProfileVC(program: program)
+                let programVC = ListenerProfileVC(program: program)
                 navigationController?.pushViewController(programVC, animated: true)
             }
     }
@@ -275,15 +272,22 @@ extension EpisodeTagLookupVC: EpisodeCellDelegate {
         if !cell.playbackBarView.playbackBarIsSetup {
             cell.playbackBarView.setupPlaybackBar()
         }
-        
-        audioPlayer.yPosition = view.frame.height - self.tabBarController!.tabBar.frame.height
-        
+                
         let image = cell.programImageButton.imageView?.image
         let audioID = cell.episode.audioID
         
-        self.audioPlayer.setEpisodeDetailsWith(episode: cell.episode, image: image!)
-        self.audioPlayer.animateToPositionIfNeeded()
-        self.audioPlayer.playOrPauseEpisodeWith(audioID: audioID)
+        dunePlayBar.activeProfile = tag
+        dunePlayBar.audioPlayerDelegate = self
+        dunePlayBar.activeController = .tagLookup
+        
+        dunePlayBar.downloadedEpisodes = downloadedEpisodes
+        dunePlayBar.itemCount = downloadedEpisodes.count
+
+
+        dunePlayBar.setEpisodeDetailsWith(episode: cell.episode, image: image!)
+        dunePlayBar.animateToPositionIfNeeded()
+        dunePlayBar.playOrPauseEpisodeWith(audioID: audioID)
+        
     }
 
     func updateLikeCountFor(episode: Episode, at indexPath: IndexPath) {
@@ -316,14 +320,14 @@ extension EpisodeTagLookupVC: EpisodeCellDelegate {
 
         let index = IndexPath(item: row, section: 0)
         downloadedEpisodes.removeAll(where: { $0.ID == episode.ID })
-        audioPlayer.downloadedEpisodes.removeAll(where: { $0.ID == episode.ID })
+        dunePlayBar.downloadedEpisodes.removeAll(where: { $0.ID == episode.ID })
         tableView.deleteRows(at: [index], with: .fade)
 
         if downloadedEpisodes.count == 0 {
              resetTableView()
         }
 
-        audioPlayer.transitionOutOfView()
+//        audioPlayer.transitionOutOfView()
 
     }
 
@@ -349,7 +353,7 @@ extension EpisodeTagLookupVC: SettingsLauncherDelegate {
             let episode = downloadedEpisodes[selectedCellRow!]
             let editEpisodeVC = EditPublishedEpisode(episode: episode)
             editEpisodeVC.delegate = self
-            editEpisodeVC.hidesBottomBarWhenPushed = true
+//            editEpisodeVC.hidesBottomBarWhenPushed = true
             navigationController?.pushViewController(editEpisodeVC, animated: true)
         case "Report":
             UIApplication.shared.windows.last?.addSubview(reportEpisodeAlert)
@@ -377,17 +381,18 @@ extension EpisodeTagLookupVC: DuneAudioPlayerDelegate {
     }
     
     func showCommentsFor(episode: Episode) {
-        pushingComment = true
-        if audioPlayer.audioPlayer != nil {
-            audioPlayer.pauseSession()
-        }
-        let commentVC = CommentThreadVC(episode: episode)
-        commentVC.hidesBottomBarWhenPushed = true
+        dunePlayBar.isHidden = true
+        commentVC = CommentThreadVC(episode: episode)
+        commentVC.currentState = dunePlayBar.currentState
+        dunePlayBar.audioPlayerDelegate = commentVC
+        commentVC.delegate = self
         navigationController?.pushViewController(commentVC, animated: true)
     }
    
-    func playedEpisode(episode: Episode) {
-        //
+    func makeActive(episode: Episode) {
+        episode.hasBeenPlayed = true
+        guard let index = downloadedEpisodes.firstIndex(where: { $0.ID == episode.ID }) else { return }
+        downloadedEpisodes[index] = episode
     }
 
     func updateProgressBarWith(percentage: CGFloat, forType: PlayBackType, episodeID: String) {
@@ -423,11 +428,24 @@ extension EpisodeTagLookupVC: CustomAlertDelegate {
 
 }
 
-extension EpisodeTagLookupVC: WebViewDelegate {
+extension EpisodeTagLookupVC: NavPlayerDelegate {
     
     func playOrPauseEpisode() {
+        if dunePlayBar.isOutOfPosition {
+            activeCell = nil
+        }
+        
         if let cell = activeCell {
-            audioPlayer.playOrPauseEpisodeWith(audioID: cell.episode.audioID)
+            print("NOPE")
+            dunePlayBar.playOrPauseEpisodeWith(audioID: cell.episode.audioID)
+        } else {
+            if let cellIndex = downloadedEpisodes.firstIndex(of: commentVC.episode) {
+                let indexPath = IndexPath(item: cellIndex, section: 0)
+                guard let episodeCell = tableView.cellForRow(at: indexPath) as? EpisodeCell else { return }
+                playEpisode(cell: episodeCell)
+                episodeCell.removePlayIcon()
+                dunePlayBar.audioPlayerDelegate = commentVC
+            }
         }
     }
     

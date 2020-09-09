@@ -53,7 +53,7 @@ class ListenerCell: ProgramCell {
         
         programImageButton.layer.cornerRadius = imageSize / 2
         
-        programNameLabel.text = program.name
+        programNameButton.setTitle(program.name, for: .normal)
         usernameButton.setTitle("@\(program.username)", for: .normal)
         captionTextView.text = program.summary
         
@@ -88,7 +88,7 @@ class ListenerCell: ProgramCell {
         programNameStackedView.leadingAnchor.constraint(equalTo: programImageButton.trailingAnchor, constant: 10).isActive = true
         programNameStackedView.trailingAnchor.constraint(lessThanOrEqualTo: self.trailingAnchor, constant: -35).isActive = true
         
-        programNameStackedView.addArrangedSubview(programNameLabel)
+        programNameStackedView.addArrangedSubview(programNameButton)
         programNameStackedView.addArrangedSubview(usernameButton)
         
         self.addSubview(settingsButton)

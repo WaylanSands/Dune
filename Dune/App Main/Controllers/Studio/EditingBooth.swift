@@ -70,7 +70,7 @@ class EditingBoothVC: UIViewController {
     
     var networkingIndicator = NetworkingProgress()
 
-    lazy var tabBar = navigationController?.tabBarController?.tabBar
+//    lazy var tabBar = navigationController?.tabBarController?.tabBar
    
     let boothBackOutAlert = CustomAlertView(alertType: .boothBackOut)
     let tooShortAlert = CustomAlertView(alertType: .shortAudioLength)
@@ -394,9 +394,9 @@ class EditingBoothVC: UIViewController {
         navBar?.setBackgroundImage(UIImage(), for: .default)
         navBar?.shadowImage = UIImage()
         navBar?.tintColor = .white
-        tabBar?.isHidden = true
-        tabBar!.barTintColor = .none
-        tabBar?.isTranslucent = true
+//        tabBar?.isHidden = true
+//        tabBar!.barTintColor = .none
+//        tabBar?.isTranslucent = true
     }
     
     func addGradient() {
@@ -649,14 +649,14 @@ class EditingBoothVC: UIViewController {
     }
     
     func resetTabBar() {
-        tabBar?.barStyle = .default
-        tabBar?.isHidden = false
-        tabBar!.backgroundImage = .none
-        tabBar!.items?[0].image = UIImage(named: "feed-icon")
-        tabBar!.items?[1].image =  UIImage(named: "search-icon")
-        tabBar!.items?[2].image =  UIImage(named: "studio-icon")
-        tabBar!.items?[3].image =  UIImage(named: "trending-icon")
-        tabBar!.items?[4].image =  UIImage(named: "account-icon")
+//        tabBar?.barStyle = .default
+//        tabBar?.isHidden = false
+//        tabBar!.backgroundImage = .none
+//        tabBar!.items?[0].image = UIImage(named: "feed-icon")
+//        tabBar!.items?[1].image =  UIImage(named: "search-icon")
+//        tabBar!.items?[2].image =  UIImage(named: "studio-icon")
+//        tabBar!.items?[3].image =  UIImage(named: "trending-icon")
+//        tabBar!.items?[4].image =  UIImage(named: "account-icon")
     }
     
     // MARK: Continue Button Press

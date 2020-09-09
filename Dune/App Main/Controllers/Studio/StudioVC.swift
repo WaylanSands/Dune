@@ -16,7 +16,7 @@ class StudioVC: UIViewController {
    
     var programSelectionView: SettingsLauncher!
     var recordingSession: AVAudioSession!
-    lazy var tabBar = navigationController?.tabBarController?.tabBar
+//    lazy var tabBar = navigationController?.tabBarController?.tabBar
     
     let tableView = UITableView()
     var firstBatchAmount = 10
@@ -76,12 +76,6 @@ class StudioVC: UIViewController {
         return label
     }()
     
-    let tabView: UIView = {
-       let view = UIView()
-        view.backgroundColor = CustomStyle.onBoardingBlack.withAlphaComponent(0.8)
-        return view
-    }()
-    
     override var preferredStatusBarStyle: UIStatusBarStyle {
       return .lightContent
     } 
@@ -107,15 +101,13 @@ class StudioVC: UIViewController {
         programNameButton.setTitle(CurrentProgram.name, for: .normal)
 
         navigationController?.isNavigationBarHidden = true
-        tabBar?.isHidden = false
-        tabBar?.isTranslucent = true
-        tabBar!.backgroundImage =  UIImage()
-        tabBar!.backgroundColor = .clear
-
-        tabBar!.items?[0].image = UIImage(named: "feed-icon-selected")
-        tabBar!.items?[1].image =  UIImage(named: "trending-icon-selected")
-        tabBar!.items?[3].image =  UIImage(named: "search-icon-selected")
-        tabBar!.items?[4].image =  UIImage(named: "account-icon-selected")
+//        tabBar?.isHidden = false
+        duneTabBar.isHidden = false
+//
+//        tabBar!.items?[0].image = UIImage(named: "feed-icon-selected")
+//        tabBar!.items?[1].image =  UIImage(named: "trending-icon-selected")
+//        tabBar!.items?[3].image =  UIImage(named: "search-icon-selected")
+//        tabBar!.items?[4].image =  UIImage(named: "account-icon-selected")
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -123,14 +115,15 @@ class StudioVC: UIViewController {
     }
     
     override func viewWillDisappear(_ animated: Bool) {
-        tabBar?.barStyle = .default
-        tabBar!.backgroundImage = .none
-        tabBar!.backgroundColor = hexStringToUIColor(hex: "F4F7FB")
-        tabBar!.items?[0].image = UIImage(named: "feed-icon")
-        tabBar!.items?[1].image =  UIImage(named: "trending-icon")
-        tabBar!.items?[2].image =  UIImage(named: "studio-icon")
-        tabBar!.items?[3].image =  UIImage(named: "search-icon")
-        tabBar!.items?[4].image =  UIImage(named: "account-icon")
+//        tabBarController?.tabBar.isHidden = false
+//        tabBar?.barStyle = .default
+//        tabBar!.backgroundImage = .none
+//        tabBar!.backgroundColor = hexStringToUIColor(hex: "F4F7FB")
+//        tabBar!.items?[0].image = UIImage(named: "feed-icon")
+//        tabBar!.items?[1].image =  UIImage(named: "trending-icon")
+//        tabBar!.items?[2].image =  UIImage(named: "studio-icon")
+//        tabBar!.items?[3].image =  UIImage(named: "search-icon")
+//        tabBar!.items?[4].image =  UIImage(named: "account-icon")
     }
 
     func setupNavigationBar() {
@@ -149,15 +142,6 @@ class StudioVC: UIViewController {
     }
     
     func configureViews() {
-        let tabBaHeight = self.tabBar!.frame.size.height
-        
-        view.addSubview(tabView)
-        tabView.translatesAutoresizingMaskIntoConstraints = false
-        tabView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
-        tabView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-        tabView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        tabView.heightAnchor.constraint(equalToConstant: tabBaHeight).isActive = true
-        
         view.addSubview(tableView)
         view.sendSubviewToBack(tableView)
         tableView.pinEdges(to: view)
@@ -305,6 +289,7 @@ class StudioVC: UIViewController {
                 recordingSession.requestRecordPermission() { [unowned self] allowed in
                     DispatchQueue.main.async {
                         if allowed {
+                            dunePlayBar.finishSession()
                             self.moveToRecordBooth()
                         } else {
                             // Test this here
@@ -316,9 +301,11 @@ class StudioVC: UIViewController {
                 print("Unable to start recording \(error)")
             }
         } else  if CurrentProgram.isPublisher! && !User.isSetUp! {
-            view.addSubview(publisherNotSetUpAlert)
+            UIApplication.shared.keyWindow!.addSubview(publisherNotSetUpAlert)
+//            view.addSubview(publisherNotSetUpAlert)
         } else if !CurrentProgram.isPublisher! {
-            view.addSubview(notAPublisherAlert)
+            UIApplication.shared.keyWindow!.addSubview(notAPublisherAlert)
+//            view.addSubview(notAPublisherAlert)
         }
     }
     
@@ -517,9 +504,11 @@ extension StudioVC: UIDocumentPickerDelegate, UINavigationControllerDelegate {
             
             present(importMenu, animated: true)
         } else if CurrentProgram.isPublisher! && !User.isSetUp! {
-            view.addSubview(publisherNotSetUpAlert)
+//            view.addSubview(publisherNotSetUpAlert)
+            UIApplication.shared.keyWindow!.addSubview(publisherNotSetUpAlert)
         } else if !CurrentProgram.isPublisher! {
-            view.addSubview(notAPublisherAlert)
+//            view.addSubview(notAPublisherAlert)
+            UIApplication.shared.keyWindow!.addSubview(notAPublisherAlert)
         }
     }
 }
@@ -536,6 +525,8 @@ extension StudioVC: SettingsLauncherDelegate {
 extension StudioVC: CustomAlertDelegate {
    
     func primaryButtonPress() {
+        dunePlayBar.finishSession()
+        duneTabBar.isHidden = true
         let editProgramVC = EditProgramVC()
         
         if !CurrentProgram.isPublisher! {
@@ -546,7 +537,7 @@ extension StudioVC: CustomAlertDelegate {
         }
         
         editProgramVC.switchedFromStudio = true
-        editProgramVC.hidesBottomBarWhenPushed = true
+//        editProgramVC.hidesBottomBarWhenPushed = true
         navigationController?.pushViewController(editProgramVC, animated: true)
     }
     

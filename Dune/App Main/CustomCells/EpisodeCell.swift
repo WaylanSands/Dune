@@ -152,7 +152,7 @@ class EpisodeCell: UITableViewCell {
     let moreButton: ExtendedButton = {
         let button = ExtendedButton()
         button.setTitle("more", for: .normal)
-        button.titleLabel!.font = UIFont.systemFont(ofSize: 13, weight: .regular)
+        button.titleLabel!.font = UIFont.systemFont(ofSize: 14, weight: .regular)
         button.setTitleColor(CustomStyle.linkBlue, for: .normal)
         button.backgroundColor = .white
         button.addTarget(self, action: #selector(moreUnwrap), for: .touchUpInside)
@@ -643,7 +643,6 @@ class EpisodeCell: UITableViewCell {
         cellDelegate?.playEpisode(cell: self )
         playEpisodeImageView.isHidden = true
         playBarButton.isHidden = true
-        //        playEpisodeButton.setImage(nil, for: .normal)
     }
     
     func removePlayIcon() {

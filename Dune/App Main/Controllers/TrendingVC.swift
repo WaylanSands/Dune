@@ -15,10 +15,9 @@ class TrendingVC: UIViewController {
     var initialSnapshot = [QueryDocumentSnapshot]()
     var downloadedEpisodes = [Episode]()
     var lastSnapshot: DocumentSnapshot?
-    var pushingContent = false
     var moreToLoad = true
     
-    var audioPlayer = DunePlayBar()
+    var commentVC: CommentThreadVC!
     
     var activeCell: EpisodeCell?
     var selectedCellRow: Int?
@@ -48,23 +47,15 @@ class TrendingVC: UIViewController {
     }
     
     override func viewWillAppear(_ animated: Bool) {
-//        fetchTrendingEpisodes()
-//        audioPlayer.continueState()
         fetchEpisodes() 
-        pushingContent = false
         configureNavigation()
     }
     
     override func viewDidAppear(_ animated: Bool) {
-        setNeedsStatusBarAppearanceUpdate()
+//        setNeedsStatusBarAppearanceUpdate()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
-        tableView.setScrollBarToTopLeft()
-        if !pushingContent {
-            audioPlayer.finishSession()
-        }
-        
         FileManager.removeAudioFilesFromDocumentsDirectory() {
             print("Audio removed")
         }
@@ -80,20 +71,22 @@ class TrendingVC: UIViewController {
         navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
         navigationController?.navigationBar.titleTextAttributes = [.foregroundColor: UIColor.white]
 
-        tabBarController?.tabBar.backgroundImage = UIImage()
-        tabBarController?.tabBar.backgroundColor = hexStringToUIColor(hex: "F4F7FB")
+//        tabBarController?.tabBar.backgroundImage = UIImage()
+//        tabBarController?.tabBar.backgroundColor = hexStringToUIColor(hex: "F4F7FB")
         
         let imgBackArrow = #imageLiteral(resourceName: "back-button-white")
         navigationController?.navigationBar.backIndicatorImage = imgBackArrow
         navigationController?.navigationBar.backIndicatorTransitionMaskImage = imgBackArrow
         navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
+        DispatchQueue.main.async {
+            self.setNeedsStatusBarAppearanceUpdate()
+        }
     }
     
     func configureDelegates() {
         subscriptionSettings.settingsDelegate = self
         ownEpisodeSettings.settingsDelegate = self
         reportProgramAlert.alertDelegate = self
-        audioPlayer.audioPlayerDelegate = self
         tableView.delegate = self
         tableView.dataSource = self
         tableView.register(EpisodeCell.self, forCellReuseIdentifier: "episodeCell")
@@ -109,13 +102,14 @@ class TrendingVC: UIViewController {
         tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+        tableView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: tableView.safeDunePlayBarHeight, right: 0)
         tableView.backgroundColor = CustomStyle.secondShade
         tableView.tableFooterView = UIView()
         tableView.addTopBounceAreaView()
 
         
-        view.addSubview(audioPlayer)
-        audioPlayer.frame = CGRect(x: 0, y: view.frame.height, width: view.frame.width, height: 600)
+//        view.addSubview(audioPlayer)
+//        audioPlayer.frame = CGRect(x: 0, y: view.frame.height, width: view.frame.width, height: 600)
         
         view.addSubview(navBarView)
         navBarView.translatesAutoresizingMaskIntoConstraints = false
@@ -134,7 +128,7 @@ class TrendingVC: UIViewController {
         loadingView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
         
         view.bringSubviewToFront(navBarView)
-        view.bringSubviewToFront(audioPlayer)
+//        view.bringSubviewToFront(audioPlayer)
     }
     
     func resetTableView() {
@@ -147,11 +141,11 @@ class TrendingVC: UIViewController {
     
     func fetchEpisodes() {
         FireStoreManager.fetchTrendingEpisodes() { episodes in
-            self.downloadedEpisodes = episodes.sortedByLikes()
-            self.audioPlayer.downloadedEpisodes = episodes.sortedByLikes()
-            self.audioPlayer.itemCount = episodes.count
-            self.tableView.reloadData()
-            self.loadingView.removeFromSuperview()
+            if self.downloadedEpisodes != episodes.sortedByLikes() {
+                self.downloadedEpisodes = episodes.sortedByLikes()
+                self.tableView.reloadData()
+                self.loadingView.removeFromSuperview()
+            }
         }
     }
     
@@ -175,7 +169,7 @@ class TrendingVC: UIViewController {
                     let episode = Episode(data: data)
 
                     self.downloadedEpisodes.append(episode)
-                    self.audioPlayer.downloadedEpisodes.append(episode)
+//                    self.audioPlayer.downloadedEpisodes.append(episode)
 
                     if counter == snapshot.count {
                         self.tableView.reloadData()
@@ -203,13 +197,20 @@ class TrendingVC: UIViewController {
                     let episode = Episode(data: data)
 
                     self.downloadedEpisodes.append(episode)
-                    self.audioPlayer.downloadedEpisodes.append(episode)
+                    self.checkPlayBarActiveController()
 
                     if counter == snapshots.count {
                         self.tableView.reloadData()
                     }
                 }
             }
+        }
+    }
+    
+    func checkPlayBarActiveController() {
+        if dunePlayBar.activeController == .trending {
+            dunePlayBar.downloadedEpisodes = downloadedEpisodes
+            dunePlayBar.itemCount = episodeItems.count
         }
     }
     
@@ -270,7 +271,7 @@ extension TrendingVC: UITableViewDelegate, UITableViewDataSource {
             }
         }
         
-        if let playerEpisode = audioPlayer.episode  {
+        if let playerEpisode = dunePlayBar.episode  {
             if episode.ID == playerEpisode.ID {
                 activeCell = episodeCell
             }
@@ -312,7 +313,7 @@ extension TrendingVC: SettingsLauncherDelegate {
             let episode = downloadedEpisodes[selectedCellRow!]
             let editEpisodeVC = EditPublishedEpisode(episode: episode)
             editEpisodeVC.delegate = self
-            editEpisodeVC.hidesBottomBarWhenPushed = true
+//            editEpisodeVC.hidesBottomBarWhenPushed = true
             navigationController?.pushViewController(editEpisodeVC, animated: true)
         case "Report":
             UIApplication.shared.windows.last?.addSubview(reportProgramAlert)
@@ -351,11 +352,10 @@ extension TrendingVC: EpisodeEditorDelegate {
 extension TrendingVC: EpisodeCellDelegate {
     
     func visitLinkWith(url: URL) {
-        pushingContent = true
         let webView = WebVC(url: url)
         webView.delegate = self
         
-        switch audioPlayer.currentState {
+        switch dunePlayBar.currentState {
         case .loading:
              webView.currentStatus = .ready
         case .ready:
@@ -368,21 +368,16 @@ extension TrendingVC: EpisodeCellDelegate {
             webView.currentStatus = .ready
         }
         
-        audioPlayer.audioPlayerDelegate = webView
+        dunePlayBar.audioPlayerDelegate = webView
         navigationController?.present(webView, animated: true, completion: nil)
     }
     
     func showCommentsFor(episode: Episode) {
-        pushingContent = true
-        if audioPlayer.audioPlayer != nil {
-            audioPlayer.pauseSession()
-        } else if audioPlayer.currentState == .loading {
-            audioPlayer.cancelCurrentDownload()
-            audioPlayer.finishSession()
-        }
-        
-        let commentVC = CommentThreadVC(episode: episode)
-        commentVC.hidesBottomBarWhenPushed = true
+        dunePlayBar.isHidden = true
+        commentVC = CommentThreadVC(episode: episode)
+        commentVC.currentState = dunePlayBar.currentState
+        dunePlayBar.audioPlayerDelegate = commentVC
+        commentVC.delegate = self
         navigationController?.pushViewController(commentVC, animated: true)
     }
     
@@ -393,24 +388,27 @@ extension TrendingVC: EpisodeCellDelegate {
     
     func visitProfile(program: Program) {
         if CurrentProgram.programsIDs().contains(program.ID) {
-             let tabBar = MainTabController()
-             tabBar.selectedIndex = 4
-             DuneDelegate.newRootView(tabBar)
-         } else {
-             if program.isPrimaryProgram && !program.programIDs!.isEmpty  {
-                 let programVC = ProgramProfileVC()
-                 programVC.program = program
-                 navigationController?.pushViewController(programVC, animated: true)
-             } else {
-                 let programVC = SingleProgramProfileVC(program: program)
-                 navigationController?.pushViewController(programVC, animated: true)
-             }
-         }
+             duneTabBar.visit(screen: .account)
+        } else if program.isPublisher {
+            if program.isPrimaryProgram && !program.programIDs!.isEmpty  {
+                let programVC = ProgramProfileVC()
+                programVC.program = program
+                navigationController?.pushViewController(programVC, animated: true)
+            } else {
+                let programVC = SingleProgramProfileVC(program: program)
+                navigationController?.pushViewController(programVC, animated: true)
+            }
+        } else {
+            let programVC = ListenerProfileVC(program: program)
+            navigationController?.pushViewController(programVC, animated: true)
+        }
     }
     
     func updateLikeCountFor(episode: Episode, at indexPath: IndexPath) {
         //
     }
+    
+    // MARK: Play Episode
     
     func playEpisode(cell: EpisodeCell) {
          activeCell = cell
@@ -419,14 +417,20 @@ extension TrendingVC: EpisodeCellDelegate {
              cell.playbackBarView.setupPlaybackBar()
          }
          
-         audioPlayer.yPosition = view.frame.height - self.tabBarController!.tabBar.frame.height
+//       audioPlayer.yPosition = view.frame.height - self.tabBarController!.tabBar.frame.height
          
          let image = cell.programImageButton.imageView?.image
          let audioID = cell.episode.audioID
          
-         self.audioPlayer.setEpisodeDetailsWith(episode: cell.episode, image: image!)
-         self.audioPlayer.animateToPositionIfNeeded()
-         self.audioPlayer.playOrPauseEpisodeWith(audioID: audioID)
+        dunePlayBar.audioPlayerDelegate = self
+         dunePlayBar.setEpisodeDetailsWith(episode: cell.episode, image: image!)
+         dunePlayBar.animateToPositionIfNeeded()
+         dunePlayBar.playOrPauseEpisodeWith(audioID: audioID)
+        
+        // Update play bar with active episode list
+        dunePlayBar.activeController = .trending
+        dunePlayBar.downloadedEpisodes = downloadedEpisodes
+        dunePlayBar.itemCount = episodeItems.count
     }
     
     func deleteOwnEpisode() {
@@ -443,13 +447,13 @@ extension TrendingVC: EpisodeCellDelegate {
 
         let index = IndexPath(item: row, section: 0)
         downloadedEpisodes.removeAll(where: { $0.ID == episode.ID })
-        audioPlayer.downloadedEpisodes.removeAll(where: { $0.ID == episode.ID })
+        dunePlayBar.downloadedEpisodes.removeAll(where: { $0.ID == episode.ID })
         tableView.deleteRows(at: [index], with: .fade)
 
         if downloadedEpisodes.count == 0 {
              resetTableView()
         }
-        audioPlayer.transitionOutOfView()
+//        dunePlayBar.transitionOutOfView()
     }
     
     func showSettings(cell: EpisodeCell) {
@@ -478,9 +482,16 @@ extension TrendingVC: DuneAudioPlayerDelegate {
     
     func fetchMoreEpisodes() {
         print("Should fetch more episodes: Needs implementation")
+//        if isFetchingEpisodes == false {
+//            if filterMode == .all && selectedCategory == nil {
+//                fetchEpisodes()
+//            } else if filterMode == .all && selectedCategory != nil {
+//                fetchFilteredEpisodes()
+//            }
+//        }
     }
    
-    func playedEpisode(episode: Episode) {
+    func makeActive(episode: Episode) {
         episode.hasBeenPlayed = true
         guard let index = downloadedEpisodes.firstIndex(where: { $0.ID == episode.ID }) else { return }
         downloadedEpisodes[index] = episode
@@ -529,11 +540,24 @@ extension TrendingVC: DuneAudioPlayerDelegate {
 }
 
 
-extension TrendingVC: WebViewDelegate {
+extension TrendingVC: NavPlayerDelegate {
     
     func playOrPauseEpisode() {
+        if dunePlayBar.isOutOfPosition {
+            activeCell = nil
+        }
+        
         if let cell = activeCell {
-            audioPlayer.playOrPauseEpisodeWith(audioID: cell.episode.audioID)
+            print("NOPE")
+            dunePlayBar.playOrPauseEpisodeWith(audioID: cell.episode.audioID)
+        } else {
+            if let cellIndex = downloadedEpisodes.firstIndex(of: commentVC.episode) {
+                let indexPath = IndexPath(item: cellIndex, section: 0)
+                guard let episodeCell = tableView.cellForRow(at: indexPath) as? EpisodeCell else { return }
+                playEpisode(cell: episodeCell)
+                episodeCell.removePlayIcon()
+                dunePlayBar.audioPlayerDelegate = commentVC
+            }
         }
     }
     

@@ -339,7 +339,6 @@ class ProgramAccountVC : UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.hidesBottomBarWhenPushed = false
         configureDelegates()
         styleForScreens()
         configureViews()
@@ -348,6 +347,7 @@ class ProgramAccountVC : UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         programsScrollView.setScrollBarToTopLeft()
         overlayScrollView.setScrollBarToTopLeft()
+        duneTabBar.isHidden = false
         configurePrivacyState()
         configureSubAccounts()
         configureIntroButton()
@@ -431,8 +431,8 @@ class ProgramAccountVC : UIViewController {
     }
     
     func setupNavigationBar() {
-        tabBarController?.tabBar.backgroundImage = UIImage()
-        tabBarController?.tabBar.backgroundColor = hexStringToUIColor(hex: "F4F7FB")
+//        tabBarController?.tabBar.backgroundImage = UIImage()
+//        tabBarController?.tabBar.backgroundColor = hexStringToUIColor(hex: "F4F7FB")
         navigationController?.navigationBar.titleTextAttributes = [.foregroundColor: CustomStyle.primaryBlack]
         navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
         navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
@@ -857,7 +857,7 @@ class ProgramAccountVC : UIViewController {
             UIApplication.shared.keyWindow!.addSubview(nonPublisherAlert)
         } else {
             let createProgramVC = CreateProgramVC()
-            createProgramVC.hidesBottomBarWhenPushed = true
+//            createProgramVC.hidesBottomBarWhenPushed = true
             navigationController?.pushViewController(createProgramVC, animated: true)
         }
     }
@@ -880,6 +880,7 @@ class ProgramAccountVC : UIViewController {
     
     // MARK: Play Intro
     @objc func playIntro() {
+        dunePlayBar.finishSession()
         accountBottomVC.playIntro()
     }
     
@@ -963,7 +964,7 @@ class ProgramAccountVC : UIViewController {
     
     @objc func settingsButtonPress() {
         let settingsVC = AccountSettingsVC()
-        settingsVC.hidesBottomBarWhenPushed = true
+//        settingsVC.hidesBottomBarWhenPushed = true
         navigationController?.pushViewController(settingsVC, animated: true)
     }
     
@@ -994,7 +995,7 @@ class ProgramAccountVC : UIViewController {
     
     @objc func editProgramButtonPress() {
         let editProgramVC = EditProgramVC()
-        editProgramVC.hidesBottomBarWhenPushed = true
+//        editProgramVC.hidesBottomBarWhenPushed = true
         navigationController?.pushViewController(editProgramVC, animated: true)
     }
     
@@ -1004,7 +1005,7 @@ class ProgramAccountVC : UIViewController {
     
     @objc func pushSubscribersVC() {
         let subscribersVC = SubscribersVC(programName: CurrentProgram.name!, programID: CurrentProgram.ID!, programIDs: CurrentProgram.programsIDs(), subscriberIDs: CurrentProgram.subscriberIDs!)
-        subscribersVC.hidesBottomBarWhenPushed = true
+//        subscribersVC.hidesBottomBarWhenPushed = true
         subscribersVC.isPublic = CurrentProgram.isPrivate!
         navigationController?.pushViewController(subscribersVC, animated: true)
     }
@@ -1123,6 +1124,8 @@ extension ProgramAccountVC: CustomAlertDelegate {
         if createProgramPress {
             createProgramPress = false
         } else {
+            duneTabBar.isHidden = true
+            dunePlayBar.finishSession()
             let recordBoothVC = RecordBoothVC()
             recordBoothVC.currentScope = .intro
             navigationController?.pushViewController(recordBoothVC, animated: true)
@@ -1211,6 +1214,8 @@ extension ProgramAccountVC: UIDocumentPickerDelegate {
         editingVC.isDraft = false
         
         editingVC.currentScope = .intro
+        duneTabBar.isHidden = true
+        dunePlayBar.finishSession()
         navigationController?.pushViewController(editingVC, animated: true)
     }
     

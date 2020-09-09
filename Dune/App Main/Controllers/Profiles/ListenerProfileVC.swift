@@ -233,7 +233,7 @@ class ListenerProfileVC: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.hidesBottomBarWhenPushed = false
+//        self.hidesBottomBarWhenPushed = false
         configureDelegates()
         styleForScreens()
         configureViews()
@@ -603,7 +603,7 @@ class ListenerProfileVC: UIViewController {
     
     @objc func pushSubscribersVC() {
         let subscribersVC = SubscribersVC(programName: program.name, programID: program.ID, programIDs: program.programsIDs(), subscriberIDs: program.subscriberIDs)
-        subscribersVC.hidesBottomBarWhenPushed = true
+//        subscribersVC.hidesBottomBarWhenPushed = true
         subscribersVC.isPublic = program.isPrivate
         navigationController?.pushViewController(subscribersVC, animated: true)
     }
