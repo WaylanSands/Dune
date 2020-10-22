@@ -33,6 +33,19 @@ class DuneTabBar: UIView {
     }
     
     var tabButtonSelection: ((Int) -> Void)!
+    var visitEpisode: ((Episode) -> Void)!
+    var visitChannel: ((Program) -> Void)!
+    
+//    var episodeToVisit: String?
+//    var channelToVisit: String?
+    
+    func visitEpisodeWith(episode: Episode) {
+        visitEpisode(episode)
+    }
+    
+    func visitChannelWith(program: Program) {
+        visitChannel(program)
+    }
     
     private let stackedView: UIStackView = {
         let view = UIStackView()
@@ -51,7 +64,7 @@ class DuneTabBar: UIView {
         button.setImage(UIImage(named: "feed-icon-selected"), for: .normal)
         button.addTarget(self, action: #selector(buttonPress), for: .touchDown)
         button.adjustsImageWhenHighlighted = false
-        button.padding = 10
+        button.padding = 15
         return button
     }()
     
@@ -60,7 +73,7 @@ class DuneTabBar: UIView {
         button.setImage(UIImage(named: "search-icon"), for: .normal)
         button.addTarget(self, action: #selector(buttonPress), for: .touchDown)
         button.adjustsImageWhenHighlighted = false
-        button.padding = 10
+        button.padding = 15
         return button
     }()
     
@@ -69,7 +82,7 @@ class DuneTabBar: UIView {
         button.setBackgroundImage(UIImage(named: "studio-icon"), for: .normal)
         button.addTarget(self, action: #selector(buttonPress), for: .touchDown)
         button.adjustsImageWhenHighlighted = false
-        button.padding = 10
+        button.padding = 15
         return button
     }()
     
@@ -78,7 +91,7 @@ class DuneTabBar: UIView {
         button.setBackgroundImage(UIImage(named: "trending-icon"), for: .normal)
         button.addTarget(self, action: #selector(buttonPress), for: .touchDown)
         button.adjustsImageWhenHighlighted = false
-        button.padding = 10
+        button.padding = 15
         return button
     }()
     
@@ -87,7 +100,7 @@ class DuneTabBar: UIView {
         button.setBackgroundImage(UIImage(named: "account-icon"), for: .normal)
         button.addTarget(self, action: #selector(buttonPress), for: .touchDown)
         button.adjustsImageWhenHighlighted = false
-        button.padding = 10
+        button.padding = 15
         return button
     }()
     
@@ -115,6 +128,11 @@ class DuneTabBar: UIView {
         stackedView.addArrangedSubview(searchButton)
         stackedView.addArrangedSubview(accountButton)
         
+    }
+    
+    func resetTabHighlight() {
+        dailyFeedButton.setImage(UIImage(named: "feed-icon-selected"), for: .normal)
+        accountButton.setImage(UIImage(named: "account-icon"), for: .normal)
     }
     
     required init?(coder aDecoder: NSCoder) {

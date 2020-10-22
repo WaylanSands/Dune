@@ -33,7 +33,7 @@ class LaunchVC: UIViewController {
     private let duneLabel: UILabel = {
         let label = UILabel()
         label.text = "Dune"
-        label.font = UIFont.systemFont(ofSize: 32, weight: .bold)
+        label.font = UIFont.systemFont(ofSize: 34, weight: .bold)
         label.textColor = .white
         return label
     }()
@@ -100,7 +100,6 @@ class LaunchVC: UIViewController {
     private func getUserData() {
         FireStoreManager.getUserData() {
             self.hasUserData = true
-            print("Returned")
             if self.finishedAnimation {
                 self.grantUserAccess()
             }

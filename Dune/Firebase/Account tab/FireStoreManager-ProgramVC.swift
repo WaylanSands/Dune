@@ -63,6 +63,7 @@ extension FireStoreManager {
         }
     }
     
+    
     static func changeSubChannelWith(channelID: String, to state: PrivacyStatus) {
         DispatchQueue.global(qos: .userInitiated).async {
             let programRef = db.collection("programs").document(channelID)
@@ -543,6 +544,8 @@ extension FireStoreManager {
                 "name" : programName,
                 "ownerID" : User.ID!,
                 "summary": summary,
+                "locationType": "Global",
+                "addedByDune": false,
                 "tags": tags,
                 "programIDs" : [],
                 "privacyStatus": "madePublic",

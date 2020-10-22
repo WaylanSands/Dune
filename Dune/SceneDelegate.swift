@@ -64,42 +64,46 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             print("Incoming URL (Scene): \(incomingURL.absoluteString)")
             print("Incoming URL (Scene): \(incomingURL.lastPathComponent)")
             
-            if incomingURL.absoluteString != "https://dailyune.page.link/app" {
-                
-            let networkingIndicator = NetworkingProgress()
-            networkingIndicator.taskLabel.text = "Fetching"
-            UIApplication.shared.windows.last?.addSubview(networkingIndicator)
-            
-            DynamicLinks.dynamicLinks().handleUniversalLink(incomingURL) { (dynamicLink, error) in
-                if error != nil {
-                    print("Error with incoming link: \(error!.localizedDescription) ")
-                    return
-                }
-                if let dynamicLink = dynamicLink {
-                    print("DynamicLink: \(dynamicLink)")
-                    DynamicLinkHandler.handleIncomingLink(dynamicLink) { program in
-                        networkingIndicator.removeFromSuperview()
-                        if program != nil {
-                            self.visitProfile(program: program!, scene: scene)
-                        } else {
-                            return
-                        }
-                    }
-                }
-                }
-            }
+//            if incomingURL.absoluteString != "https://dailyune.page.link/app" {
+//                
+//                let networkingIndicator = NetworkingProgress()
+//                networkingIndicator.taskLabel.text = "Fetching"
+//                UIApplication.shared.windows.last?.addSubview(networkingIndicator)
+//                
+//                DynamicLinks.dynamicLinks().handleUniversalLink(incomingURL) { (dynamicLink, error) in
+//                    if error != nil {
+//                        print("Error with incoming link: \(error!.localizedDescription) ")
+//                        return
+//                    }
+//                    if let dynamicLink = dynamicLink {
+//                        print("DynamicLink: \(dynamicLink)")
+//                        DynamicLinkHandler.handleIncomingLink(dynamicLink) { program in
+//                            networkingIndicator.removeFromSuperview()
+//                            if program != nil {
+//                                self.visitProfile(program: program!, scene: scene)
+//                            } else {
+//                                return
+//                            }
+//                        }
+//                    }
+//                }
+//            }
         }
     }
     
     
     func visitProfile(program: Program, scene: UIScene) {
         if CurrentProgram.programsIDs().contains(program.ID) {
-            let tabBar = MainTabController()
-            tabBar.selectedIndex = 4
-            let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
-            sceneDelegate.window?.rootViewController = tabBar
+            duneTabBar.visit(screen: .account)
+//            let tabBar = MainTabController()
+//            tabBar.selectedIndex = 4
+//            let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
+//            sceneDelegate.window?.rootViewController = tabBar
         } else {
-            navigateTo(program: program)
+            duneTabBar.visit(screen: .search)
+            duneTabBar.visitChannel(program)
+            
+//            navigateTo(program: program)
         }
     }
     

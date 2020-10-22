@@ -54,7 +54,6 @@ class SettingsLauncher: NSObject {
         collectionView.setContentOffset(.zero, animated: false)
         if let window =  UIApplication.shared.keyWindow {
             blackView.backgroundColor = UIColor.black.withAlphaComponent(0.5)
-            print(window.frame.size)
             blackView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleDismiss)))
             
             window.addSubview(blackView)
@@ -140,7 +139,7 @@ extension SettingsLauncher: UICollectionViewDelegateFlowLayout, UICollectionView
             case .countries:
                 break
             case .sharing:
-                break
+                self.settingsDelegate!.selectionOf(setting: setting.name)
             case .subscriptionEpisode:
                 self.settingsDelegate!.selectionOf(setting: setting.name)
             case .ownEpisode:

@@ -186,7 +186,6 @@ class DisplayNameVC: UIViewController {
                 if let error = error {
                     print("Error adding program ID to user: \(error.localizedDescription)")
                 } else {
-                    print("Successfully added channel ID")
                     
                     programRef.setData([
                         "subscriptionIDs" :  CurrentProgram.subscriptionIDs!,

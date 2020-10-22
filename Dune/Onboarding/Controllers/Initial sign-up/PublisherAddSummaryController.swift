@@ -6,7 +6,7 @@
 //  Copyright © 2020 Waylan Sands. All rights reserved.
 //
 import UIKit
-import OneSignal
+import FirebaseAnalytics
 import FirebaseFirestore
 
 class PublisherAddSummaryVC: UIViewController {
@@ -163,7 +163,6 @@ class PublisherAddSummaryVC: UIViewController {
         textView.text = summaryPlaceholder
         textView.font = UIFont.systemFont(ofSize: 15, weight: .regular)
         textView.textContainer.maximumNumberOfLines = 12
-//        textView.isUserInteractionEnabled = false
         textView.isScrollEnabled = false
         textView.textColor = CustomStyle.fourthShade
         textView.keyboardType = .twitter
@@ -402,7 +401,7 @@ class PublisherAddSummaryVC: UIViewController {
         programNameStackedView.translatesAutoresizingMaskIntoConstraints = false
         programNameStackedView.topAnchor.constraint(equalTo: mainImage.topAnchor).isActive = true
         programNameStackedView.leadingAnchor.constraint(equalTo: mainImage.trailingAnchor, constant: 10).isActive = true
-        programNameStackedView.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: 20).isActive = true
+        programNameStackedView.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -16).isActive = true
         
         programNameStackedView.addArrangedSubview(programNameLabel)
         programNameLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -528,10 +527,18 @@ class PublisherAddSummaryVC: UIViewController {
         bottomBarImageView.heightAnchor.constraint(equalToConstant: imageBarViewSize).isActive = true
         bottomBarImageView.widthAnchor.constraint(equalToConstant: imageBarViewSize).isActive = true
         
+        floatingDetailsView.addSubview(confirmButton)
+        confirmButton.translatesAutoresizingMaskIntoConstraints = false
+        confirmButton.centerYAnchor.constraint(equalTo: floatingDetailsView.centerYAnchor).isActive = true
+        confirmButton.trailingAnchor.constraint(equalTo: floatingDetailsView.trailingAnchor, constant: -16.0).isActive = true
+        confirmButton.widthAnchor.constraint(equalToConstant: confirmButton.intrinsicContentSize.width).isActive = true
+        confirmButton.heightAnchor.constraint(equalToConstant: 32.0).isActive = true
+        
         floatingDetailsView.addSubview(bottomBarNameLabel)
         bottomBarNameLabel.translatesAutoresizingMaskIntoConstraints = false
         bottomBarNameLabel.topAnchor.constraint(equalTo: bottomBarImageView.topAnchor, constant: 1).isActive = true
         bottomBarNameLabel.leadingAnchor.constraint(equalTo: bottomBarImageView.trailingAnchor, constant: 10.0).isActive = true
+        bottomBarNameLabel.trailingAnchor.constraint(equalTo: confirmButton.leadingAnchor, constant: -10).isActive = true
 //        bottomBarNameLabel.heightAnchor.constraint(equalToConstant: 20.0).isActive = true
         
         floatingDetailsView.addSubview(bottomBarUsernameLabel)
@@ -540,11 +547,6 @@ class PublisherAddSummaryVC: UIViewController {
         bottomBarUsernameLabel.leadingAnchor.constraint(equalTo: bottomBarNameLabel.leadingAnchor).isActive = true
 //        bottomBarUsernameLabel.heightAnchor.constraint(equalToConstant: 20.0).isActive = true
         
-        floatingDetailsView.addSubview(confirmButton)
-        confirmButton.translatesAutoresizingMaskIntoConstraints = false
-        confirmButton.centerYAnchor.constraint(equalTo: floatingDetailsView.centerYAnchor).isActive = true
-        confirmButton.trailingAnchor.constraint(equalTo: floatingDetailsView.trailingAnchor, constant: -16.0).isActive = true
-        confirmButton.heightAnchor.constraint(equalToConstant: 32.0).isActive = true
     }
     
     func addGradient() {
@@ -658,6 +660,11 @@ class PublisherAddSummaryVC: UIViewController {
         CurrentProgram.tags = tagsUsed
         CurrentProgram.summary = summaryLabel.text?.trimmingTrailingSpaces
         
+        if CurrentProgram.imageID != nil {
+            Analytics.logEvent("user_set_up_account", parameters: nil)
+            User.isSetUp = true
+        }
+        
         let programRef = db.collection("programs").document(CurrentProgram.ID!)
         let userRef = db.collection("users").document(User.ID!)
         FireStoreManager.updateProgramRep(programID: CurrentProgram.ID!, repMethod: "signup", rep: 25)
@@ -683,6 +690,7 @@ class PublisherAddSummaryVC: UIViewController {
     }
 
     func presentDailyFeed() {
+        Analytics.setUserProperty("publisher", forName: "publisher_or_listener")
         let tabBar = MainTabController()
         tabBar.selectedIndex = 0
         DuneDelegate.newRootView(tabBar)

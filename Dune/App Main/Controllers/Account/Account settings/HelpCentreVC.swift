@@ -27,7 +27,7 @@ Releasing entertaining, informative content on a regular basis is essential to n
 
 Like to know what they think of your episodes or ideas for future content? Ask them to comment.
 
-Pro tip - Channels with more subscribers and high Cred rank higher than other channels which means they show up more in search results. One of the best ways to grow you subscribers and boost Cred is by sharing your channel through your own network. If people have the app and click the shared link they are taken to your channel and are automatically subscribed. If they don't have the app, they are taken to the Appstore and if they continue to download the app they will be subscribed and you will be rewarded 100 Cred.
+Pro tip - Channels with more subscribers and high Cred rank higher than other channels which means they show up more in search results. One of the best ways to grow you subscribers is by sharing your channel through your own network.
 
 """
     
@@ -40,13 +40,15 @@ After recording an episode select the "Next" button. If you would like to save t
 If you would like to save any published episode to your account please mention within the feedback section and we will make this a priority going forward.
 """#
     
-    var questionFour = "What is Dune Cred"
+    var questionFour = "What is Cred"
     var answerFour = """
-Dune Cred is a rating system to help potential subscribers understand the popularity of a channel. Channels with higher Cred are more visible than other channels - they appear more often in searches.
+Currently Cred is a rating system to help potential subscribers understand the popularity of a channel. Channels with higher Cred are more visible than other channels - they appear more often in searches.
 
 A channel with a lot of subscribers isn’t necessarily a great channel. A channel with high Cred is active, posting regularly and with content that has a high engagement.
 
-You may build Cred in a few ways: Completing tasks within the app such as adding an intro, posting your first episode, receiving likes on your episodes, people upvoting your comments. The best way to boost Cred and your subscribers is by sharing your channel within your own network such as through Facebook, sms or email.
+You may build Cred in a few ways: Completing tasks within the app such as adding an intro, posting your first episode, receiving likes on your episodes, people upvoting your comments.
+
+Cred may take on more roles in the future such as doubling as an in-app currency.
 """
     
     var questionFive = "How to publish an episode"
@@ -60,11 +62,13 @@ After you have made your recording a "Next" button will appear in the top-right 
     var answerSix = """
 Rich links are hyperlinks that are displayed with an image and title.
 
-To include a rich link with an episode, add a link within the episode caption section before adding your caption itself. If you're having issues press back, and return to the screen to try again.
+To include a rich link with an episode, add a link within the link option field when publishing your episode.
+
+After you have added the link turn on the toggle. If you publish your episode with the toggle off the link will not be displayed.
 """
     
     var questionSeven = "How to edit an episode"
-    var answerSeven = "You may edit your own episodes by selecting the settings-icon on the top right of each episode. At this time  you are only able to edit the caption and tags."
+    var answerSeven = "You may edit your own episodes by selecting the settings-icon on the top right of each episode. At this time  you are only able to edit the caption, tags and optional link."
     
     var questionEight = "How to report an episode"
     var answerEight = """
@@ -112,11 +116,21 @@ If you believe a program has violated Dune's policies, you may find the report b
         FAQsView = FAQView(frame: view.frame, items: items)
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        dunePlayBar.isHidden = true
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+         dunePlayBar.isHidden = false
+    }
+    
     func configureView() {
         view.addSubview(FAQsView)
         FAQsView.translatesAutoresizingMaskIntoConstraints = false
-        FAQsView.pinEdges(to: view)
-        
+        FAQsView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+        FAQsView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        FAQsView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        FAQsView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -duneTabBar.frame.height).isActive = true
         view.addSubview(customNavBar)
         customNavBar.pinNavBarTo(view)
     }

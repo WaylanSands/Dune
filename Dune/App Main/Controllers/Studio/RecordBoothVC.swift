@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import Lottie
 import AVFoundation
 import MultiSlider
 
@@ -25,10 +26,20 @@ class RecordBoothVC: UIViewController {
         case episode
     }
     
+    var lottieWave: AnimationView = {
+        var animation = AnimationView(name: "lottieWave")
+        animation.contentMode = .scaleAspectFill
+        animation.loopMode = .loop
+        animation.isHidden = true
+        animation.alpha = 0.9
+        animation.play()
+        return animation
+    }()
+    
     var selectedProgram: Program?
         
-    var recordingWaveFeedbackLink: CADisplayLink!
-    var playbackLink: CADisplayLink!
+    var recordingDisplayLink: CADisplayLink!
+    var playbackDisplayLink: CADisplayLink!
     
     var audioSession = AVAudioSession.sharedInstance()
     var audioRecorder: AVAudioRecorder!
@@ -42,7 +53,7 @@ class RecordBoothVC: UIViewController {
     var voiceURL: URL?
     
     var currentState = recordState.ready
-    var maxRecordingTime: Double = 120
+    var maxRecordingTime: Double = 300
     var minRecordingTime: Double = 10
     var recordingSnapshot: Double = 0
     var normalizedTime: CGFloat?
@@ -64,23 +75,15 @@ class RecordBoothVC: UIViewController {
 
     var maxValue: Float = Float(UIScreen.main.bounds.width) - Float(60)
     
-    var networkingIndicator = NetworkingProgress()
     
-    let boothBackOutAlert = CustomAlertView(alertType: .boothBackOut)
-    let nextVersionAlert = CustomAlertView(alertType: .nextVersion)
-
-//    lazy var tabBar = navigationController?.tabBarController?.tabBar
-    
-    let tooShortAlert = CustomAlertView(alertType: .shortAudioLength)
     let introTooShortAlert = CustomAlertView(alertType: .shortIntroLength)
+    let boothBackOutAlert = CustomAlertView(alertType: .boothBackOut)
+    let tooShortAlert = CustomAlertView(alertType: .shortAudioLength)
+    let nextVersionAlert = CustomAlertView(alertType: .nextVersion)
     
-    let responsiveSoundWave: ResponsiveWaveformView = {
-        let view = ResponsiveWaveformView()
-        view.waveColor = CustomStyle.white
-        view.backgroundColor = .clear
-        view.isHidden = true
-        return view
-    }()
+    
+    // When uploading an intro
+    var networkingIndicator = NetworkingProgress()
     
     let playBackBars: StaticWaveCreator = {
         let view = StaticWaveCreator()
@@ -117,8 +120,8 @@ class RecordBoothVC: UIViewController {
         return view
     }()
     
-    let circleTimerView: LoadingCircleView = {
-        let view = LoadingCircleView()
+    let circleTimerView: CircleTimerView = {
+        let view = CircleTimerView()
         return view
     }()
     
@@ -487,12 +490,13 @@ class RecordBoothVC: UIViewController {
         timerLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
         timerLabel.topAnchor.constraint(equalTo: programImageView.bottomAnchor, constant: 30).isActive = true
         
-        view.addSubview(responsiveSoundWave)
-        responsiveSoundWave.translatesAutoresizingMaskIntoConstraints = false
-        responsiveSoundWave.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: soundWaveCenterConstant).isActive = true
-        responsiveSoundWave.heightAnchor.constraint(equalToConstant: 1200).isActive = true
-        responsiveSoundWave.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-        responsiveSoundWave.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        
+        view.addSubview(lottieWave)
+        lottieWave.translatesAutoresizingMaskIntoConstraints = false
+        lottieWave.topAnchor.constraint(equalTo: timerLabel.bottomAnchor, constant: 40).isActive = true
+        lottieWave.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 70).isActive = true
+        lottieWave.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -70).isActive = true
+        lottieWave.heightAnchor.constraint(equalToConstant: 80).isActive = true
         
         view.addSubview(playBackBars)
         playBackBars.translatesAutoresizingMaskIntoConstraints = false
@@ -683,7 +687,6 @@ class RecordBoothVC: UIViewController {
     
     // MARK: Record button press
    @objc func recordButtonPress() {
-    print("Current state is \(currentState)")
         switch currentState {
         case .ready:
             circleTimerView.animate()
@@ -698,8 +701,8 @@ class RecordBoothVC: UIViewController {
             timerLabel.text = "0:00"
             circleTimerView.terminate()
             finishRecording(success: true)
-            responsiveSoundWave.isHidden = true
-            recordingWaveFeedbackLink.isPaused = true
+            lottieWave.isHidden = true
+            recordingDisplayLink.isPaused = true
             recordButton.setImage(UIImage(named: "play-audio-icon"), for: .normal)
             recordButton.backgroundColor = CustomStyle.white
             playBackSlider.isHidden = false
@@ -725,7 +728,6 @@ class RecordBoothVC: UIViewController {
                 trackAudio()
                 playDefaultRecording()
             } else if !hasMergedTracks {
-                print("This path")
                 FileManager.getMusicURLWith(audioID: currentOption!.lowAudioID) { url in
                     self.playMerge(audio1: self.recordingURL, audio2: url)
                     self.hasMergedTracks = true
@@ -787,14 +789,14 @@ class RecordBoothVC: UIViewController {
     }
     
     func trackAudio() {
-        playbackLink = CADisplayLink(target: self, selector: #selector(trackRegularPlayback))
-        playbackLink.add(to: RunLoop.current, forMode: RunLoop.Mode.common)
+        playbackDisplayLink = CADisplayLink(target: self, selector: #selector(trackRegularPlayback))
+        playbackDisplayLink.add(to: RunLoop.current, forMode: RunLoop.Mode.common)
     }
     
     @objc func trackRegularPlayback() {
         
         if audioPlayer.currentTime >= (recordingSnapshot - endTime) {
-            playbackLink.isPaused = true
+            playbackDisplayLink.isPaused = true
         }
         
         if audioPlayer.currentTime >= (recordingSnapshot - endTime) - 1.5 {
@@ -943,7 +945,6 @@ class RecordBoothVC: UIViewController {
             case AVAssetExportSessionStatus.exporting:
                 print("exporting\(assetExport!.error!)")
             default:
-                print("complete")
                 DispatchQueue.main.async {
                     self.recordingURL = destinationUrl
                     self.playDefaultRecording()
@@ -982,28 +983,18 @@ extension RecordBoothVC: AVAudioRecorderDelegate, AVAudioPlayerDelegate {
             audioRecorder = try AVAudioRecorder(url: recordingURL, settings: settings)
             audioRecorder.delegate = self
             audioRecorder.record()
-            responsiveSoundWave.isHidden = false
-            fadeInWave()
+            lottieWave.isHidden = false
             audioRecorder.isMeteringEnabled = true
-            recordingWaveFeedbackLink = CADisplayLink(target: self, selector: #selector(updateMeters))
-            recordingWaveFeedbackLink.add(to: RunLoop.current, forMode: RunLoop.Mode.common)
-            recordingWaveFeedbackLink.isPaused = false
+            recordingDisplayLink = CADisplayLink(target: self, selector: #selector(updateMeters))
+            recordingDisplayLink.add(to: RunLoop.current, forMode: RunLoop.Mode.common)
+            recordingDisplayLink.isPaused = false
         } catch {
             finishRecording(success: false)
         }
     }
     
-    func fadeInWave() {
-        responsiveSoundWave.alpha = 0
-        UIView.animate(withDuration: 1) {
-            self.responsiveSoundWave.alpha = 1
-        }
-    }
-    
     @objc func updateMeters() {
         audioRecorder.updateMeters()
-        let normalizedValue = pow(10, audioRecorder.averagePower(forChannel: 0) / 20)
-        responsiveSoundWave.updateWithLevel(CGFloat(normalizedValue))
         timerLabel.text = timeString(time: audioRecorder.currentTime)
         if audioRecorder.currentTime >= maxRecordingTime {
             recordButtonPress()
@@ -1114,13 +1105,13 @@ extension RecordBoothVC: AVAudioRecorderDelegate, AVAudioPlayerDelegate {
     }
     
     func pauseSafeRegularPlaybackLink() {
-        if let link = playbackLink {
+        if let link = playbackDisplayLink {
             link.isPaused = true
         }
     }
     
     func playSafeRegularPlaybackLink() {
-        if let link = playbackLink {
+        if let link = playbackDisplayLink {
             link.isPaused = false
         } else {
             trackAudio()

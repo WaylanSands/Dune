@@ -134,18 +134,18 @@ class MentionCell: UITableViewCell {
     }
     
     func configureViews() {
-        self.addSubview(profileImageButton)
+        contentView.addSubview(profileImageButton)
         profileImageButton.translatesAutoresizingMaskIntoConstraints = false
-        profileImageButton.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 14).isActive = true
-        profileImageButton.topAnchor.constraint(equalTo: self.topAnchor, constant: 15).isActive = true
+        profileImageButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 14).isActive = true
+        profileImageButton.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 15).isActive = true
         profileImageButton.heightAnchor.constraint(equalToConstant: 40).isActive = true
         profileImageButton.widthAnchor.constraint(equalToConstant: 40).isActive = true
         
-        self.addSubview(nameStackView)
+        contentView.addSubview(nameStackView)
         nameStackView.translatesAutoresizingMaskIntoConstraints = false
         nameStackView.topAnchor.constraint(equalTo: profileImageButton.topAnchor, constant: -2).isActive = true
         nameStackView.leadingAnchor.constraint(equalTo: profileImageButton.trailingAnchor, constant: 7).isActive = true
-        nameStackView.trailingAnchor.constraint(lessThanOrEqualTo: self.trailingAnchor).isActive = true
+        nameStackView.trailingAnchor.constraint(lessThanOrEqualTo: contentView.trailingAnchor).isActive = true
         
         nameStackView.addArrangedSubview(usernameButton)
         usernameButton.translatesAutoresizingMaskIntoConstraints = false
@@ -155,19 +155,19 @@ class MentionCell: UITableViewCell {
 //        typeLabel.translatesAutoresizingMaskIntoConstraints = false
 //        typeLabel.topAnchor.constraint(equalTo: nameStackView.topAnchor).isActive = true
         
-        self.addSubview(captionLabel)
+        contentView.addSubview(captionLabel)
         captionLabel.translatesAutoresizingMaskIntoConstraints = false
         captionLabel.topAnchor.constraint(equalTo: usernameButton.bottomAnchor).isActive = true
         captionLabel.leadingAnchor.constraint(equalTo: usernameButton.leadingAnchor).isActive = true
-        captionLabel.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -16).isActive = true
+        captionLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16).isActive = true
         
-        self.addSubview(dateLabel)
+        contentView.addSubview(dateLabel)
         dateLabel.translatesAutoresizingMaskIntoConstraints = false
         dateLabel.topAnchor.constraint(equalTo: captionLabel.bottomAnchor, constant: 7).isActive = true
         dateLabel.leadingAnchor.constraint(equalTo: captionLabel.leadingAnchor, constant: 5).isActive = true
-        dateLabel.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: -15).isActive = true
+        dateLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -15).isActive = true
         
-        self.addSubview(actionButton)
+        contentView.addSubview(actionButton)
         actionButton.translatesAutoresizingMaskIntoConstraints = false
         actionButton.leadingAnchor.constraint(equalTo: dateLabel.trailingAnchor, constant: 20).isActive = true
         actionButton.centerYAnchor.constraint(equalTo: dateLabel.centerYAnchor).isActive = true

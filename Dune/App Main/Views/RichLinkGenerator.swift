@@ -118,13 +118,11 @@ class RichLinkGenerator {
     
     func addRichLinkTo(stackedView: UIStackView) {
         isImageLarge { (result) in
-            if result == true {
-                DispatchQueue.main.async {
+            DispatchQueue.main.async {
+                if result == true {
                     let button = self.configureRegularImageView()
                     self.addRegularButtonTo(stackedView: stackedView, button: button)
-                }
-            } else {
-                DispatchQueue.main.async {
+                } else {
                     let button = self.configureSquareImageView()
                     self.addSquareButtonTo(stackedView: stackedView, button: button)
                 }

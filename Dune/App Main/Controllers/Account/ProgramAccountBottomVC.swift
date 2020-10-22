@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import MessageUI
 
 class ProgramAccountBottomVC: UIViewController {
     
@@ -227,7 +228,7 @@ class ProgramAccountBottomVC: UIViewController {
         
         navigationController?.visibleViewController?.view.addSubview(introPlayer)
         introPlayer.frame = CGRect(x: 0, y: vFrame.height, width: vFrame.width, height: 64)
-        introPlayer.offset = episodeTV.safeDunePlayBarHeight + (64 / 2)
+        introPlayer.offset = 64 + duneTabBar.frame.height
                 
 //        navigationController?.visibleViewController?.view.addSubview(audioPlayer)
 //        audioPlayer.frame = CGRect(x: 0, y: vFrame.height, width: vFrame.width, height: 600)
@@ -264,6 +265,7 @@ class ProgramAccountBottomVC: UIViewController {
     func resetTableView() {
         downloadedEpisodes = [Episode]()
         episodeTV.isHidden = false
+        epsStartingIndex = 0
         episodeItems = []
         episodeTV.reloadData()
     }
@@ -332,30 +334,29 @@ class ProgramAccountBottomVC: UIViewController {
             resetSubscriptionTV()
         }
         
-        currentSubscriptions = subscriptionIDs
+        //        currentSubscriptions = subscriptionIDs
+        //
+        //        if downloadedPrograms.count != subscriptionIDs.count {
+        //            var subsEndIndex = 20
+        //
+        //            if subscriptionIDs.count - fetchedProgramsIDs.count < subsEndIndex {
+        //                subsEndIndex = subscriptionIDs.count - fetchedProgramsIDs.count
+        //            }
+        //
+        //            subsEndIndex += subsStartingIndex
+        //
+        //            let programIDs = Array(subscriptionIDs[subsStartingIndex..<subsEndIndex])
+        //            fetchedProgramsIDs += programIDs
+        //            subsStartingIndex = fetchedProgramsIDs.count
         
-        if downloadedPrograms.count != subscriptionIDs.count {
-            var subsEndIndex = 20
-            
-            if subscriptionIDs.count - fetchedProgramsIDs.count < subsEndIndex {
-                subsEndIndex = subscriptionIDs.count - fetchedProgramsIDs.count
-            }
-            
-            subsEndIndex += subsStartingIndex
-            
-            let programIDs = Array(subscriptionIDs[subsStartingIndex..<subsEndIndex])
-            fetchedProgramsIDs += programIDs
-            subsStartingIndex = fetchedProgramsIDs.count
-            
-            self.isFetchingPrograms = true
-            FireStoreManager.fetchProgramsWith(IDs: programIDs) { programs in
-                if programs != nil {
-                    DispatchQueue.main.async {
-                        self.downloadedPrograms = programs!
-                        self.subscriptionTV.reloadData()
-                        self.loadingView.isHidden = true
-                        self.isFetchingPrograms = false
-                    }
+        self.isFetchingPrograms = true
+        FireStoreManager.fetchProgramsWith(IDs: subscriptionIDs) { programs in
+            if programs != nil {
+                DispatchQueue.main.async {
+                    self.downloadedPrograms += programs!
+                    self.subscriptionTV.reloadData()
+                    self.loadingView.isHidden = true
+                    self.isFetchingPrograms = false
                 }
             }
         }
@@ -477,10 +478,10 @@ extension ProgramAccountBottomVC: UITableViewDelegate, UITableViewDataSource {
             episodeCell.episode = episode
             episodeCell.episodeSettingsButton.addTarget(episodeCell, action: #selector(EpisodeCell.showSettings), for: .touchUpInside)
             episodeCell.programImageButton.addTarget(episodeCell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
-//            episodeCell.playEpisodeButton.addTarget(episodeCell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
             episodeCell.usernameButton.addTarget(episodeCell, action: #selector(EpisodeCell.visitProfile), for: .touchUpInside)
             episodeCell.commentButton.addTarget(episodeCell, action: #selector(EpisodeCell.showComments), for: .touchUpInside)
             episodeCell.likeButton.addTarget(episodeCell, action: #selector(EpisodeCell.likeButtonPress), for: .touchUpInside)
+            episodeCell.shareButton.addTarget(episodeCell, action: #selector(EpisodeCell.showSettings), for: .touchUpInside)
             episodeCell.moreButton.addTarget(episodeCell, action: #selector(EpisodeCell.moreUnwrap), for: .touchUpInside)
             episodeCell.normalSetUp(episode: episode)
             episodeCell.cellDelegate = self
@@ -500,6 +501,9 @@ extension ProgramAccountBottomVC: UITableViewDelegate, UITableViewDataSource {
             
             if let playerEpisode = dunePlayBar.episode  {
                 if episode.ID == playerEpisode.ID {
+                    episodeCell.episode.hasBeenPlayed = true
+                    episodeCell.episode.playBackProgress = dunePlayBar.currentProgress
+                    episodeCell.setupProgressBar()
                     activeEpisodeCell = episodeCell
                 }
             }
@@ -551,6 +555,8 @@ extension ProgramAccountBottomVC: UITableViewDelegate, UITableViewDataSource {
 extension ProgramAccountBottomVC: SettingsLauncherDelegate {
     
     func selectionOf(setting: String) {
+        let episode = downloadedEpisodes[selectedEpisodeCellRow!]
+
         switch setting {
         case "Delete":
             deleteOwnEpisode()
@@ -558,10 +564,37 @@ extension ProgramAccountBottomVC: SettingsLauncherDelegate {
             let episode = downloadedEpisodes[selectedEpisodeCellRow!]
             let editEpisodeVC = EditPublishedEpisode(episode: episode)
             editEpisodeVC.delegate = self
-//            editEpisodeVC.hidesBottomBarWhenPushed = true
+            //            editEpisodeVC.hidesBottomBarWhenPushed = true
             navigationController?.pushViewController(editEpisodeVC, animated: true)
         case "Report":
             UIApplication.shared.windows.last?.addSubview(reportProgramAlert)
+        case "Share via...":
+            if episode.username != User.username {
+                DynamicLinkHandler.createLinkFor(episode: episode) { [weak self] url in
+                    let promoText = "Check out this episode published by \(episode.programName) on Dune."
+                    let items: [Any] = [promoText, url]
+                    let ac = UIActivityViewController(activityItems: items, applicationActivities: nil)
+                    DispatchQueue.main.async {
+                        self!.present(ac, animated: true)
+                    }
+                }
+            } else {
+                DynamicLinkHandler.createLinkFor(episode: episode) { [weak self] url in
+                    let promoText = "Have a listen to my recent episode published on Dune."
+                    let items: [Any] = [promoText, url]
+                    let ac = UIActivityViewController(activityItems: items, applicationActivities: nil)
+                    DispatchQueue.main.async {
+                        self!.present(ac, animated: true)
+                    }
+                }
+            }
+        case "Share via SMS":
+            DynamicLinkHandler.createLinkFor(episode: episode) { [weak self] url in
+                let promoText = "Check out my latest episode on Dune. \(url)"
+                DispatchQueue.main.async {
+                    self?.shareViaSMSWith(messageBody: promoText)
+                }
+            }
         default:
             break
         }
@@ -680,6 +713,7 @@ extension ProgramAccountBottomVC: DuneAudioPlayerDelegate {
         let episode = downloadedEpisodes[index]
         episode.playBackProgress = lastProgress
         downloadedEpisodes[index] = episode
+        User.appendPlayedEpisode(ID: episode.ID, progress: lastProgress)
     }
     
 }
@@ -819,27 +853,20 @@ extension ProgramAccountBottomVC :EpisodeCellDelegate {
         if !cell.playbackBarView.playbackBarIsSetup {
             cell.playbackBarView.setupPlaybackBar()
         }
-        
-//        let difference = UIScreen.main.bounds.height - headerHeight! + unwrapDifference
-//        let position = difference - tabBarController!.tabBar.frame.height
-//        let offset = position + (yOffset ?? 0)
-//
-//        audioPlayer.yPosition = offset
-        
-//        audioPlayer.yPosition = UIScreen.main.bounds.height - self.tabBarController!.tabBar.frame.height
-        
+
         let image = cell.programImageButton.imageView?.image
         let audioID = cell.episode.audioID
-        
-        dunePlayBar.audioPlayerDelegate = self
-        dunePlayBar.setEpisodeDetailsWith(episode: cell.episode, image: image!)
-        dunePlayBar.animateToPositionIfNeeded()
-        dunePlayBar.playOrPauseEpisodeWith(audioID: audioID)
         
         // Update play bar with active episode list
         dunePlayBar.activeController = .account
         dunePlayBar.downloadedEpisodes = downloadedEpisodes
         dunePlayBar.itemCount = episodeItems.count
+        
+        dunePlayBar.audioPlayerDelegate = self
+        dunePlayBar.setEpisodeDetailsWith(episode: cell.episode, image: image)
+        dunePlayBar.animateToPositionIfNeeded()
+        dunePlayBar.playOrPauseEpisodeWith(audioID: audioID)
+    
     }
     
     func showSettings(cell: EpisodeCell) {
@@ -893,6 +920,24 @@ extension ProgramAccountBottomVC: NavPlayerDelegate {
         }
     }
     
+}
+
+extension ProgramAccountBottomVC: MFMessageComposeViewControllerDelegate {
+    
+    func shareViaSMSWith(messageBody: String) {
+        if (MFMessageComposeViewController.canSendText()) {
+            let controller = MFMessageComposeViewController()
+            controller.body = messageBody
+            controller.messageComposeDelegate = self
+            present(controller, animated: true, completion: nil)
+        }
+    }
+
+    func messageComposeViewController(_ controller: MFMessageComposeViewController, didFinishWith result: MessageComposeResult) {
+        //... handle sms screen actions
+        dismiss(animated: true, completion: nil)
+    }
+
 }
 
 

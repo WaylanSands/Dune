@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import FirebaseAnalytics
 
 class EditListenerVC: UIViewController {
         
@@ -95,6 +96,10 @@ class EditListenerVC: UIViewController {
         return label
     }()
     
+    var namePlaceholder: NSAttributedString {
+        NSAttributedString(string: CurrentProgram.name!, attributes: [NSAttributedString.Key.foregroundColor : CustomStyle.fourthShade])
+    }
+    
     let programNameTextView: UITextField = {
         let textField = UITextField()
         let placeholder = NSAttributedString(string: "", attributes: [NSAttributedString.Key.foregroundColor : CustomStyle.fourthShade])
@@ -103,6 +108,7 @@ class EditListenerVC: UIViewController {
         textField.font = UIFont.systemFont(ofSize: 15, weight: .regular)
         textField.addTarget(self, action: #selector(nameFieldChanged), for: UIControl.Event.editingChanged)
         textField.autocorrectionType = .no
+        textField.returnKeyType = .done
         return textField
     }()
     
@@ -155,6 +161,7 @@ class EditListenerVC: UIViewController {
         textField.addTarget(self, action: #selector(linkFieldChanged), for: UIControl.Event.editingChanged)
         textField.autocapitalizationType = .none
         textField.autocorrectionType = .no
+        textField.returnKeyType = .done
         return textField
     }()
     
@@ -194,12 +201,10 @@ class EditListenerVC: UIViewController {
     }
     
     override func viewWillAppear(_ animated: Bool) {
-//        self.hidesBottomBarWhenPushed = true
+        programNameTextView.attributedPlaceholder = namePlaceholder
         scrollView.setScrollBarToTopLeft()
+        configureDelegates()
         summaryTextLabel.text = CurrentProgram.summary
-       
-        let namePlaceholder = NSAttributedString(string: CurrentProgram.name!, attributes: [NSAttributedString.Key.foregroundColor : CustomStyle.fourthShade])
-        programNameTextView.attributedPlaceholder = namePlaceholder;
         
         var weblink: String
         
@@ -213,10 +218,16 @@ class EditListenerVC: UIViewController {
         websiteTextView.textColor = CustomStyle.fourthShade
     }
     
+    func configureDelegates() {
+        programNameTextView.delegate = self
+        websiteTextView.delegate = self
+    }
+    
     override func viewWillDisappear(_ animated: Bool) {
         if !User.isSetUp! && CurrentProgram.summary != "" && CurrentProgram.name != "" && CurrentProgram.image != #imageLiteral(resourceName: "missing-image-large") {
             User.isSetUp = true
             FireStoreManager.updateUserSetUpTo(true)
+            Analytics.logEvent("user_set_up_account", parameters: nil)
             FireStoreManager.updateProgramRep(programID: CurrentProgram.ID!, repMethod: "accountSetup", rep: 15)
             CurrentProgram.rep! += 15
         }
@@ -440,6 +451,7 @@ class EditListenerVC: UIViewController {
             websiteTextView.text = "www.example.com"
             CurrentProgram.webLink = nil
         }
+        programNameTextView.attributedPlaceholder = namePlaceholder
         programNameTextView.resignFirstResponder()
         websiteTextView.resignFirstResponder()
         navigationItem.rightBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: nil, action: nil)
@@ -467,4 +479,14 @@ extension EditListenerVC: UIImagePickerControllerDelegate, UINavigationControlle
             dismiss(animated: true, completion: nil)
         }
     }
+}
+
+extension EditListenerVC : UITextFieldDelegate {
+    
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        saveChanges()
+        print("Touch")
+        return true
+    }
+    
 }

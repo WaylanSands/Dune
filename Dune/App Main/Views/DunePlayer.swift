@@ -7,25 +7,36 @@
 //
 
 import UIKit
+import Cache
 import MediaPlayer
 import AVFoundation
 import FirebaseStorage
 
-//
-//enum sliderStatus {
-//    case unchanged
-//    case moved
-//    case ended
-//    case began
-//}
-//
-//protocol DuneAudioPlayerDelegate {
-//    func updateProgressBarWith(percentage: CGFloat, forType: PlayBackType,  episodeID: String)
-//    func updateActiveCell(atIndex: Int, forType: PlayBackType)
-//    func showCommentsFor(episode: Episode)
-//    func playedEpisode(episode: Episode)
-//    func fetchMoreEpisodes()
-//}
+enum playerStatus {
+    case loading
+    case fetching
+    case playing
+    case paused
+    case ready
+}
+
+enum sliderStatus {
+    case unchanged
+    case moved
+    case ended
+    case began
+}
+
+protocol DuneAudioPlayerDelegate {
+    func updateProgressBarWith(percentage: CGFloat, forType: PlayBackType,  episodeID: String)
+    func updateActiveCell(atIndex: Int, forType: PlayBackType)
+    func fetchMoreEpisodes()
+}
+
+extension DuneAudioPlayerDelegate {
+    func showCommentsFor(episode: Episode) {}
+    func makeActive(episode: Episode) {}
+}
 
 class DunePlayer: UIView {
     
@@ -41,7 +52,7 @@ class DunePlayer: UIView {
     var audioPlayerDelegate: DuneAudioPlayerDelegate!
     var audioSession = AVAudioSession.sharedInstance()
     var currentState: playerStatus = .ready
-    var audioPlayer: AVAudioPlayer!
+    var audioPlayer: AVPlayer!
     var currentAudioID: String?
     var loadingAudioID: String?
     var episode: Episode!
@@ -54,6 +65,8 @@ class DunePlayer: UIView {
     var activeProfile = ""
     var activeController: ActiveController  = .none
     
+    var currentProgress: CGFloat = 0.0
+        
     var downloadedEpisodes: [Episode] = [] {
         willSet {
             index = downloadedEpisodes.count
@@ -71,7 +84,6 @@ class DunePlayer: UIView {
     var commandCenter = MPRemoteCommandCenter.shared()
     
     // Loading progress
-    
     let playbackCircleView = PlaybackCircleView()
     let loadingCircleLarge = LoadingAudioView()
     let loadingCircle = LoadingAudioView()
@@ -81,7 +93,6 @@ class DunePlayer: UIView {
     var yPosition: CGFloat!
     
     var likedEpisode = false
-    //    var episodeIndex: Int!
     var episodeID: String!
     var image: UIImage!
     var likeCount = 0
@@ -102,6 +113,27 @@ class DunePlayer: UIView {
     lazy var maxValue = Float(UIScreen.main.bounds.width) - Float(40)
     var scrubbedTime: Double = 0
     var sliderStatus: sliderStatus = .unchanged
+    
+    
+    // RSS Feed Caching
+    let diskConfig = DiskConfig(name: "DiskCache")
+    let memoryConfig = MemoryConfig(expiry: .never, countLimit: 10, totalCostLimit: 10)
+    
+    // RSS loading spinner
+    
+    var smallSpinner: UIActivityIndicatorView = {
+        let spinner = UIActivityIndicatorView()
+        let transform = CGAffineTransform(scaleX: 1.35, y: 1.35)
+        spinner.transform = transform
+        spinner.style = .white
+        return spinner
+    }()
+    
+    var largeSpinner = UIActivityIndicatorView(style: .whiteLarge)
+    
+    lazy var storage: Cache.Storage? = {
+        return try! Storage(diskConfig: diskConfig, memoryConfig: memoryConfig, transformer: TransformerFactory.forData())
+    }()
     
     let playbackView: UIView = {
         let view = UIView()
@@ -295,7 +327,8 @@ class DunePlayer: UIView {
                 if currentState == .playing {
                     updatePlayerWithScrubbedTime()
                 } else {
-                    audioPlayer.currentTime = scrubbedTime
+                    let time = CMTime(seconds: scrubbedTime, preferredTimescale: 1000)
+                    audioPlayer.seek(to: time)
                     sliderStatus = .unchanged
                 }
             default:
@@ -367,20 +400,12 @@ class DunePlayer: UIView {
         }
     }
     
+    deinit {
+        removePlayerFinishObserver()
+    }
+    
     required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
-    }
-    
-    func setupProgressTracking() {
-        NotificationCenter.default.addObserver(self, selector: #selector(self.progressTracking), name: NSNotification.Name(rawValue: "progressTracking"), object: nil)
-    }
-    
-    func removeProgressTracking() {
-        NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: "progressTracking"), object: nil)
-    }
-    
-    @objc func progressTracking() {
-        print("wammy")
     }
     
     //MARK: Panning
@@ -472,6 +497,7 @@ class DunePlayer: UIView {
     }
     
     func animateLastEpisodeIn() {
+        print("animateLastEpisodeIn")
         animatingEpisode = true
         UIView.animate(withDuration: 0.2, animations: {
             self.programImageView.frame.origin.x = self.programImageView.frame.origin.x + 50
@@ -492,7 +518,6 @@ class DunePlayer: UIView {
     }
     
     @objc func checkAndFetchNextEpisode() {
-        print("Current state: \(currentState)")
         if currentState == .loading {
             cancelCurrentDownload()
         } else if currentState == .fetching {
@@ -521,7 +546,6 @@ class DunePlayer: UIView {
         if index + 1 != downloadedEpisodes.count {
             playNextEpisodeWith(nextIndex: index + 1)
             audioPlayerDelegate.updateActiveCell(atIndex: index + 1, forType: .episode)
-            print("Inside")
             if isClosed {
                 animateNextEpisodeIn()
             }
@@ -532,35 +556,41 @@ class DunePlayer: UIView {
             print("last episode")
             let path = Bundle.main.path(forResource: "end.mp3", ofType: nil)!
             let url = URL(fileURLWithPath: path)
-            do {
-                audioPlayer = try AVAudioPlayer(contentsOf: url)
-                audioPlayer.play()
-                endSession()
-            } catch {
-                print(error)
-            }
+            let playerItem = AVPlayerItem(url: url)
+            audioPlayer = AVPlayer(playerItem: playerItem)
+            audioPlayer.automaticallyWaitsToMinimizeStalling = false
+            audioPlayer.play()
+            endSession()
         }
     }
+    
+    // MARK: - Prefetch
     
     func prefetchNextEpisode() {
         guard let index = downloadedEpisodes.firstIndex(where: { $0.ID == episode!.ID }) else { return }
         if (downloadedEpisodes.count - 1) > index {
             let documentsURL = FileManager.getDocumentsDirectory()
             let episode = downloadedEpisodes[index + 1]
+            if episode.audioID.prefix(3) == "RSS" {
+                // Returning from prefetch
+                return
+            }
             let fileURL = documentsURL.appendingPathComponent(episode.audioID)
             if FileManager.default.fileExists(atPath: fileURL.path) {
             } else {
-                preDownloadEpisodeAudio(audioID: episode.audioID)
+                preDownloadEpisodeAudio(episode: episode)
             }
         }
     }
     
-    func preDownloadEpisodeAudio(audioID: String) {
-        DispatchQueue.global(qos: .background).async {
-            let storageRef = Storage.storage().reference().child("audio/\(audioID)")
-            let documentsURL = FileManager.getDocumentsDirectory()
-            let audioURL = documentsURL.appendingPathComponent(audioID)
-            storageRef.write(toFile: audioURL)
+    func preDownloadEpisodeAudio(episode: Episode) {
+        if episode.audioID.prefix(3) != "RSS" {
+            DispatchQueue.global(qos: .background).async {
+                let storageRef = Storage.storage().reference().child("audio/\(episode.audioID)")
+                let documentsURL = FileManager.getDocumentsDirectory()
+                let audioURL = documentsURL.appendingPathComponent(episode.audioID)
+                storageRef.write(toFile: audioURL)
+            }
         }
     }
     
@@ -590,7 +620,6 @@ class DunePlayer: UIView {
             playbackCircleView.setupPlaybackCircle()
             
             playNextEpisodeWith(nextIndex: index - 1)
-            print("updateActiveCell 1")
             audioPlayerDelegate.updateActiveCell(atIndex: index - 1, forType: .episode)
             if isClosed {
                 animateLastEpisodeIn()
@@ -614,6 +643,7 @@ class DunePlayer: UIView {
             self.playbackButton.alpha = 0
             self.loadingCircle.alpha = 0
             self.captionLabel.alpha = 0
+            self.smallSpinner.alpha = 0
             self.dropButton.alpha = 1
         }) { _ in
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -641,6 +671,7 @@ class DunePlayer: UIView {
             self.largeNameLabel.alpha = 0
             self.loadingCircle.alpha = 1
             self.captionLabel.alpha = 1
+            self.smallSpinner.alpha = 1
             self.dropButton.alpha = 0
             self.isTransitioning = false
             self.panningAllowed = true
@@ -751,6 +782,15 @@ class DunePlayer: UIView {
         loadingCircle.centerXAnchor.constraint(equalTo: playbackButton.centerXAnchor, constant: 0).isActive = true
         loadingCircle.setupLoadingAnimation()
         
+        playbackView.addSubview(smallSpinner)
+        smallSpinner.translatesAutoresizingMaskIntoConstraints = false
+        smallSpinner.centerYAnchor.constraint(equalTo: playbackButton.centerYAnchor).isActive = true
+        smallSpinner.centerXAnchor.constraint(equalTo: playbackButton.centerXAnchor).isActive = true
+        smallSpinner.heightAnchor.constraint(equalToConstant: 40).isActive = true
+        smallSpinner.widthAnchor.constraint(equalToConstant: 40).isActive = true
+        smallSpinner.isUserInteractionEnabled = false
+        smallSpinner.isHidden = true
+        
         playbackView.addSubview(captionLabel)
         captionLabel.translatesAutoresizingMaskIntoConstraints = false
         captionLabel.topAnchor.constraint(equalTo: programNameLabel.bottomAnchor, constant: 2).isActive = true
@@ -832,6 +872,15 @@ class DunePlayer: UIView {
         nextEpisodeButton.centerYAnchor.constraint(equalTo: playPauseButton.centerYAnchor).isActive = true
         nextEpisodeButton.centerXAnchor.constraint(equalTo: playPauseButton.centerXAnchor, constant: 90).isActive = true
         
+        playbackView.addSubview(largeSpinner)
+        largeSpinner.translatesAutoresizingMaskIntoConstraints = false
+        largeSpinner.centerYAnchor.constraint(equalTo: playPauseButton.centerYAnchor).isActive = true
+        largeSpinner.centerXAnchor.constraint(equalTo: playPauseButton.centerXAnchor).isActive = true
+        largeSpinner.heightAnchor.constraint(equalToConstant: 60).isActive = true
+        largeSpinner.widthAnchor.constraint(equalToConstant: 60).isActive = true
+        largeSpinner.isUserInteractionEnabled = false
+        largeSpinner.isHidden = true
+        
         playbackView.addSubview(dropButton)
         dropButton.translatesAutoresizingMaskIntoConstraints = false
         dropButton.topAnchor.constraint(equalTo: playbackView.topAnchor, constant: 15).isActive = true
@@ -848,20 +897,34 @@ class DunePlayer: UIView {
         playbackBottomView.heightAnchor.constraint(equalToConstant: 70).isActive = true
     }
     
-    func setEpisodeDetailsWith(episode: Episode, image: UIImage) {
+    func setEpisodeDetailsWith(episode: Episode, image: UIImage?) {
         audioPlayerDelegate.makeActive(episode: episode)
         setupLikeButtonAndCounterFor(episode: episode)
         programNameLabel.text = episode.programName
         largeNameLabel.text = "@\(episode.username)"
         captionTextView.text = episode.caption
         captionLabel.text = episode.caption
-        programImageView.image = image
-        largeImageView.image = image
+        
+        if image == nil {
+            fetchImageFor(episode: episode)
+        } else {
+            programImageView.image = image
+            largeImageView.image = image
+        }
+        
         self.episode = episode
     }
     
+    func fetchImageFor(episode: Episode) {
+        FileManager.getImageWith(imageID: episode.imageID) { image in
+            DispatchQueue.main.async {
+                self.programImageView.image = image
+                self.largeImageView.image = image
+            }
+        }
+    }
+    
     func playOrPauseEpisodeWith(audioID: String) {
-        
         switch currentState {
         case .ready:
             getAudioWith(audioID: audioID) { url in
@@ -914,13 +977,24 @@ class DunePlayer: UIView {
     }
     
     func getAudioWith(audioID: String, completion: @escaping (URL) -> ()) {
-        let documentsURL = FileManager.getDocumentsDirectory()
-        let fileURL = documentsURL.appendingPathComponent(audioID)
         FireStoreManager.updateListenCountFor(episode: episode.ID)
         currentAudioID = audioID
+        if audioID.prefix(3) == "RSS" {
+            if let url = URL(string: episode.audioPath) {
+                completion(url)
+                return
+            } else {
+                print("FAILED RSS URL")
+            }
+        }
+        
+        let documentsURL = FileManager.getDocumentsDirectory()
+        let fileURL = documentsURL.appendingPathComponent(audioID)
+        
         if FileManager.fileExistsWith(path: fileURL.path) {
             completion(fileURL)
         } else {
+            print("Will download")
             downloadEpisodeAudio(audioID: audioID) { url in
                 self.playPauseButton.backgroundColor = .white
                 completion(url)
@@ -1042,43 +1116,49 @@ class DunePlayer: UIView {
     }
     
     @objc func updatePlaybackPosition() {
-        let duration = audioPlayer.duration
-        let currentTime = audioPlayer.currentTime
-        let percentagePlayed = CGFloat(currentTime / duration)
-        let normalizedTime = CGFloat((currentTime * Double(maxValue)) / duration)
+        guard let duration = audioPlayer.currentItem?.duration.seconds else { return }
         
-        if sliderStatus != .moved && sliderStatus != .ended {
-            playBackSlider.setValue(Float(normalizedTime), animated: false)
+        if !duration.isNaN {
+            hidePlayButtons(false)
+            let currentTime = audioPlayer.currentTime().seconds
+            let percentagePlayed = CGFloat(currentTime / duration)
+            let normalizedTime = CGFloat((currentTime * Double(maxValue)) / duration)
+            
+            if sliderStatus != .moved && sliderStatus != .ended {
+                playBackSlider.setValue(Float(normalizedTime), animated: false)
+            }
+            
+            let leftTime = timeIn()
+            let rightTime = timeToGo()
+            
+            leftHandLabel.text = timeString(time: leftTime)
+            rightHandLabel.text = timeString(time: rightTime)
+            
+            playbackCircleView.shapeLayer.strokeEnd = percentagePlayed
+            audioPlayerDelegate.updateProgressBarWith(percentage: percentagePlayed, forType: .episode, episodeID: episode.ID)
+            currentProgress = percentagePlayed
         }
-        
-        let leftTime = timeIn()
-        let rightTime = timeToGo()
-        
-        leftHandLabel.text = timeString(time: leftTime)
-        rightHandLabel.text = timeString(time: rightTime)
-        
-        playbackCircleView.shapeLayer.strokeEnd = percentagePlayed
-        audioPlayerDelegate.updateProgressBarWith(percentage: percentagePlayed, forType: .episode, episodeID: episode.ID)
     }
     
     func updatePlayerWithScrubbedTime() {
-        audioPlayer.currentTime = scrubbedTime
+        let time = CMTime(seconds: scrubbedTime, preferredTimescale: 1000)
+        audioPlayer.seek(to: time)
         sliderStatus = .unchanged
         audioPlayer.play()
     }
     
     func timeIn() -> Double {
         let percent = CGFloat(playBackSlider.value / maxValue) * 100
-        let timePercent = CGFloat(audioPlayer.duration / 100) * percent
+        let timePercent = CGFloat(audioPlayer.currentItem!.duration.seconds / 100) * percent
         scrubbedTime = Double(timePercent)
         return scrubbedTime
     }
     
     func timeToGo() -> Double {
         let percent = CGFloat(playBackSlider.value / maxValue) * 100
-        let timePercent = CGFloat(audioPlayer.duration / 100) * percent
+        let timePercent = CGFloat(audioPlayer.currentItem!.duration.seconds / 100) * percent
         scrubbedTime = Double(timePercent)
-        return audioPlayer.duration - scrubbedTime
+        return audioPlayer.currentItem!.duration.seconds - scrubbedTime
     }
     
     func timeString(time:TimeInterval) -> String {
@@ -1092,15 +1172,78 @@ class DunePlayer: UIView {
         playbackButton.setImage(UIImage(named: "pause-episode-icon"), for: .normal)
         playPauseButton.setImage(UIImage(named: "pause-audio-icon"), for: .normal)
         playbackButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
-        audioPlayer = try! AVAudioPlayer(contentsOf: url)
         playPauseButton.backgroundColor = .white
-        audioPlayer.delegate = self
-        audioPlayer.volume = 1.0
-        currentState = .playing
-        trackEpisodePlayback()
-        prefetchNextEpisode()
-        audioPlayer.play()
-        setupNowPlaying()
+        if currentAudioID?.prefix(3) == "RSS" {
+            play(with: url)
+        } else {
+            let playerItem = AVPlayerItem(url: url)
+            audioPlayer = AVPlayer(playerItem: playerItem)
+            audioPlayer.automaticallyWaitsToMinimizeStalling = false
+            addPlayerFinishObserver()
+            audioPlayer.volume = 1.0
+            currentState = .playing
+            trackEpisodePlayback()
+            prefetchNextEpisode()
+            audioPlayer.play()
+            setupNowPlaying()
+        }
+    }
+    
+    func addPlayerFinishObserver() {
+        NotificationCenter.default.addObserver(self, selector: #selector(self.playerDidFinishPlaying), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: nil)
+    }
+    
+    func removePlayerFinishObserver() {
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: nil)
+    }
+    
+    func hidePlayButtons(_ value: Bool) {
+        playbackButton.isHidden = value
+        loadingCircle.isHidden = value
+        playbackCircleView.isHidden = value
+        playPauseButton.isHidden = value
+        loadingCircleLarge.isHidden = value
+        
+        if value == true {
+            smallSpinner.isHidden = false
+            largeSpinner.isHidden = false
+            smallSpinner.startAnimating()
+            largeSpinner.startAnimating()
+
+        } else {
+            smallSpinner.isHidden = true
+            largeSpinner.isHidden = true
+            smallSpinner.stopAnimating()
+            largeSpinner.stopAnimating()
+        }
+    }
+    
+    func play(with url: URL) {
+        // Trying to retrieve a track from cache asynchronously.
+        hidePlayButtons(true)
+        storage?.async.entry(forKey: currentAudioID!, completion: { result in
+            let playerItem: CachingPlayerItem
+            switch result {
+            case .error:
+                // The track is not cached.
+                playerItem = CachingPlayerItem(url: url)
+            case .value(let entry):
+                // The track is cached.
+                playerItem = CachingPlayerItem(data: entry.object, mimeType: "audio/mpeg", fileExtension: "mp3")
+            }
+            playerItem.delegate = self
+            DispatchQueue.main.async {
+                self.audioPlayer = AVPlayer(playerItem: playerItem)
+                self.audioPlayer.automaticallyWaitsToMinimizeStalling = false
+                self.audioPlayer.volume = 1.0
+                self.addPlayerFinishObserver()
+                self.audioPlayer.play()
+                self.setupNowPlaying()
+                self.currentState = .playing
+                self.trackEpisodePlayback()
+                self.prefetchNextEpisode()
+            }
+        })
     }
     
     func animateToPositionIfNeeded() {
@@ -1126,7 +1269,8 @@ class DunePlayer: UIView {
             playbackButton.setImage(UIImage(named: "pause-episode-icon"), for: .normal)
             playPauseButton.setImage(UIImage(named: "pause-audio-icon"), for: .normal)
             playbackButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
-            audioPlayer.currentTime = timeIn()
+            let time = CMTime(seconds: timeIn(), preferredTimescale: 1000)
+            audioPlayer.seek(to: time)
             currentState = .playing
             trackEpisodePlayback()
             audioPlayer.play()
@@ -1203,8 +1347,8 @@ class DunePlayer: UIView {
         panningAllowed = true
         isClosed = true
         isOpen = false
-//        let position = AudioManager.yPosition - 64
-//        self.frame = CGRect(x: 0, y: position, width: self.frame.width, height: self.playerHeight)
+        //        let position = AudioManager.yPosition - 64
+        //        self.frame = CGRect(x: 0, y: position, width: self.frame.width, height: self.playerHeight)
     }
     
     func transitionOutOfView() {
@@ -1219,17 +1363,17 @@ class DunePlayer: UIView {
         resetPlayBarAlphas()
         transitionOutOfView()
         currentState = .ready
-        activeController = .none
         isOutOfPosition = true
         cancelCurrentDownload()
+        removePlayerFinishObserver()
         if audioPlayer != nil {
             playbackCircleLink.invalidate()
-            audioPlayer.setVolume(0, fadeDuration: 1)
+            audioPlayer.volume = 0
             DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                 [unowned self] in
                 if self.isOutOfPosition {
                     self.audioPlayer.volume = 1
-                    self.audioPlayer.stop()
+                    self.audioPlayer.pause()
                 }
             }
         }
@@ -1241,14 +1385,16 @@ class DunePlayer: UIView {
         currentState = .ready
         isOutOfPosition = true
         cancelCurrentDownload()
+        removePlayerFinishObserver()
         if audioPlayer != nil {
             playbackCircleLink.invalidate()
-            audioPlayer.setVolume(0, fadeDuration: 3)
+            audioPlayer.volume = 0
+            //            audioPlayer.setVolume(0, fadeDuration: 3)
             DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
                 [unowned self] in
                 if self.isOutOfPosition {
                     self.audioPlayer.volume = 1
-                    self.audioPlayer.stop()
+                    self.audioPlayer.pause()
                 }
             }
         }
@@ -1257,7 +1403,8 @@ class DunePlayer: UIView {
     func pauseSession() {
         currentState = .paused
         if audioPlayer != nil {
-            audioPlayer.setVolume(0, fadeDuration: 1)
+            audioPlayer.volume = 0
+            //            audioPlayer.setVolume(0, fadeDuration: 1)
             DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                 self.playbackButton.setImage(UIImage(named: "play-episode-icon"), for: .normal)
                 self.playPauseButton.setImage(UIImage(named: "play-audio-icon"), for: .normal)
@@ -1320,8 +1467,8 @@ class DunePlayer: UIView {
             }
         }
         
-        nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = audioPlayer.currentTime
-        nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = audioPlayer.duration
+        nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = CMTimeGetSeconds(audioPlayer.currentItem!.currentTime())
+        nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = audioPlayer.currentItem!.duration.seconds
         nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = audioPlayer.rate
         
         MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
@@ -1331,7 +1478,7 @@ class DunePlayer: UIView {
 
 extension DunePlayer: AVAudioPlayerDelegate {
     
-    func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+    @objc func playerDidFinishPlaying() {
         currentState = .ready
         playbackCircleLink.isPaused = true
         playbackButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: 3, bottom: 0, right: 0)
@@ -1343,7 +1490,7 @@ extension DunePlayer: AVAudioPlayerDelegate {
         
         if (downloadedEpisodes.count - 1) > index {
             playNextEpisodeWith(nextIndex: index + 1)
-            print("updateActiveCell 2")
+            print("Yep fin")
             audioPlayerDelegate.updateActiveCell(atIndex: index + 1, forType: .episode)
         } else {
             finishSession()
@@ -1368,3 +1515,12 @@ extension DunePlayer: UIGestureRecognizerDelegate {
     
 }
 
+
+extension DunePlayer: CachingPlayerItemDelegate {
+    func playerItem(_ playerItem: CachingPlayerItem, didFinishDownloadingData data: Data) {
+        // A track is downloaded. Saving it to the cache asynchronously.
+        storage?.async.setObject(data, forKey: currentAudioID!, completion: { _ in
+            // Saved to cache
+        })
+    }
+}

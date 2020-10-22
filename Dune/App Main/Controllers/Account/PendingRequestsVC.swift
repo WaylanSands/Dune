@@ -155,7 +155,6 @@ class PendingRequestsVC: UIViewController {
     
     func fetchPendingPrograms() {
         FireStoreManager.fetchPendingInvitesWith(pendingChannelIDs: pendingIDs) { [unowned self] channels in
-            print("Returned with pending:\(channels)")
             if !channels.isEmpty {
                 self.downloadedChannels = channels
                 self.tableView.reloadData()

@@ -20,7 +20,7 @@ extension UILabel {
         return Int(ceil(CGFloat(labelSize.height) / self.font!.lineHeight))
     }
     
-    func addLineSpacing(spacingValue: CGFloat = 2) {
+    func addLineSpacingCentered(spacingValue: CGFloat = 2) {
 
         guard let textString = text else { return }
        
@@ -29,6 +29,46 @@ extension UILabel {
 
         paragraphStyle.lineSpacing = spacingValue
         paragraphStyle.alignment = .center
+
+        attributedString.addAttribute(
+            .paragraphStyle,
+            value: paragraphStyle,
+            range: NSRange(location: 0, length: attributedString.length
+        ))
+
+        attributedText = attributedString
+    }
+    
+    func addLineSpacingIndented(spacingValue: CGFloat = 2) {
+
+        guard let textString = text else { return }
+
+        let attributedString = NSMutableAttributedString(string: textString)
+        let paragraphStyle = NSMutableParagraphStyle()
+
+        paragraphStyle.lineSpacing = spacingValue
+        paragraphStyle.alignment = .left
+        paragraphStyle.tabStops = [NSTextTab(textAlignment: NSTextAlignment.left, location: 10, options: [:])]
+        paragraphStyle.headIndent = 15
+
+        attributedString.addAttribute(
+            .paragraphStyle,
+            value: paragraphStyle,
+            range: NSRange(location: 0, length: attributedString.length
+        ))
+
+        attributedText = attributedString
+    }
+    
+    func addLineSpacing(spacingValue: CGFloat = 2) {
+
+        guard let textString = text else { return }
+
+        let attributedString = NSMutableAttributedString(string: textString)
+        let paragraphStyle = NSMutableParagraphStyle()
+
+        paragraphStyle.lineSpacing = spacingValue
+        paragraphStyle.alignment = .left
 
         attributedString.addAttribute(
             .paragraphStyle,

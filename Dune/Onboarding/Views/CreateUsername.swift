@@ -170,6 +170,7 @@ extension CreateUsername: UITextFieldDelegate {
     }
     
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        print("Touch")
         nextButtonDelegate.keyboardNextButtonPress()
         return true
     }

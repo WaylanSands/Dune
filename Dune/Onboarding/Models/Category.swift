@@ -9,23 +9,22 @@
 import Foundation
 
 enum Category: String, CaseIterable {
-    case news = "News"
-    case sports = "Sports"
     case comedy = "Comedy"
-    case trueCrime = "True Crime"
-    case history = "History"
+    case globalNews = "Global News"
+    case localNews = "Local News"
     case business = "Business"
-    case entertainment = "Entertainment"
-    case motivation = "Motivation"
-    case music = "Music"
-    case science = "Science"
-    case gamesAndHobbies = "Games & Hobbies"
-    case tech = "Tech"
     case education = "Education"
-    case arts = "Arts"
-    case religionAndSpirituality = "Spirituality"
-    case mindfulness = "Mindfulness"
+    case entertainment = "Entertainment"
+    case finance = "Finance"
+    case politics = "Politics"
+    case kidsAndFamily = "Kids & Family"
     case healthAndFitness = "Health & Fitness"
+    case gaming = "Gaming"
+    case history = "History"
+    case music = "Music"
+    case religionAndSpirituality = "Religion & Spirituality"
+    case tech = "Tech"
+    case sports = "Sports"
+    case science = "Science"
+    case mindfulness = "Mindfulness"
 }
-
-

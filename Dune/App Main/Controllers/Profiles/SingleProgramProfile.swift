@@ -8,6 +8,7 @@
 
 import UIKit
 import Firebase
+import MessageUI
 
 class SingleProgramProfileVC: UIViewController {
     
@@ -34,7 +35,7 @@ class SingleProgramProfileVC: UIViewController {
     
     lazy var accountBottomVC = ProgramProfileBottomVC(program: program)
     
-    let settingsLauncher = SettingsLauncher(options: SettingOptions.sharing, type: .sharing)
+    let sharingSettings = SettingsLauncher(options: SettingOptions.sharing, type: .sharing)
     let programSettings = SettingsLauncher(options: SettingOptions.programSettings, type: .program)
     
     let reportProgramAlert = CustomAlertView(alertType: .reportProgram)
@@ -342,6 +343,7 @@ class SingleProgramProfileVC: UIViewController {
     }
     
     func  configureDelegates() {
+        sharingSettings.settingsDelegate = self
         programSettings.settingsDelegate = self
         reportProgramAlert.alertDelegate = self
     }
@@ -709,10 +711,12 @@ class SingleProgramProfileVC: UIViewController {
     }
     
     @objc func shareButtonPress() {
-        settingsLauncher.showSettings()
+        print("shareButtonPress")
+        sharingSettings.showSettings()
     }
     
     @objc func settingsButtonPress() {
+        print("settingsButtonPress")
         programSettings.showSettings()
     }
     
@@ -882,9 +886,29 @@ extension SingleProgramProfileVC: UIScrollViewDelegate {
 extension SingleProgramProfileVC: SettingsLauncherDelegate {
     
     func selectionOf(setting: String) {
+        print("LANDED")
+
         switch setting {
         case "Report":
             UIApplication.shared.windows.last?.addSubview(reportProgramAlert)
+        case "Share via...":
+            DynamicLinkHandler.createLinkFor(program: program) { [weak self] url in
+                guard let self = self else { return }
+                let promoText = "Check out \(self.program.name) on Dune."
+                let items: [Any] = [promoText, url]
+                let ac = UIActivityViewController(activityItems: items, applicationActivities: nil)
+                DispatchQueue.main.async {
+                    self.present(ac, animated: true)
+                }
+            }
+        case "Share via SMS":
+            DynamicLinkHandler.createLinkFor(program: program) { [weak self] url in
+                guard let self = self else { return }
+                let promoText = "Check out \(self.program.name) on Dune. \(url)"
+                DispatchQueue.main.async {
+                    self.shareViaSMSWith(messageBody: promoText)
+                }
+            }
         default:
             break
         }
@@ -901,6 +925,24 @@ extension SingleProgramProfileVC: CustomAlertDelegate {
         //
     }
     
+}
+
+extension SingleProgramProfileVC: MFMessageComposeViewControllerDelegate {
+    
+    func shareViaSMSWith(messageBody: String) {
+        if (MFMessageComposeViewController.canSendText()) {
+            let controller = MFMessageComposeViewController()
+            controller.body = messageBody
+            controller.messageComposeDelegate = self
+            present(controller, animated: true, completion: nil)
+        }
+    }
+
+    func messageComposeViewController(_ controller: MFMessageComposeViewController, didFinishWith result: MessageComposeResult) {
+        //... handle sms screen actions
+        dismiss(animated: true, completion: nil)
+    }
+
 }
 
 

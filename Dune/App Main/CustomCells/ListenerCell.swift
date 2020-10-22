@@ -75,34 +75,34 @@ class ListenerCell: ProgramCell {
     }
     
     override func configureViews() {
-        self.addSubview(programImageButton)
+        contentView.addSubview(programImageButton)
         programImageButton.translatesAutoresizingMaskIntoConstraints = false
-        programImageButton.topAnchor.constraint(equalTo: self.topAnchor, constant: 15).isActive = true
-        programImageButton.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 16).isActive = true
+        programImageButton.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 15).isActive = true
+        programImageButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16).isActive = true
         programImageButton.heightAnchor.constraint(equalToConstant: imageSize).isActive = true
         programImageButton.widthAnchor.constraint(equalToConstant: imageSize).isActive = true
         
-        self.addSubview(programNameStackedView)
+        contentView.addSubview(programNameStackedView)
         programNameStackedView.translatesAutoresizingMaskIntoConstraints = false
         programNameStackedView.topAnchor.constraint(equalTo: programImageButton.topAnchor, constant: -5).isActive = true
         programNameStackedView.leadingAnchor.constraint(equalTo: programImageButton.trailingAnchor, constant: 10).isActive = true
-        programNameStackedView.trailingAnchor.constraint(lessThanOrEqualTo: self.trailingAnchor, constant: -35).isActive = true
+        programNameStackedView.trailingAnchor.constraint(lessThanOrEqualTo: contentView.trailingAnchor, constant: -35).isActive = true
         
         programNameStackedView.addArrangedSubview(programNameButton)
         programNameStackedView.addArrangedSubview(usernameButton)
         
-        self.addSubview(settingsButton)
+        contentView.addSubview(settingsButton)
         settingsButton.translatesAutoresizingMaskIntoConstraints = false
         settingsButton.centerYAnchor.constraint(equalTo: usernameButton.centerYAnchor, constant: 0).isActive = true
-        settingsButton.trailingAnchor.constraint(lessThanOrEqualTo: self.trailingAnchor, constant: -16).isActive = true
+        settingsButton.trailingAnchor.constraint(lessThanOrEqualTo: contentView.trailingAnchor, constant: -16).isActive = true
         
-        self.addSubview(captionTextView)
+        contentView.addSubview(captionTextView)
         captionTextView.translatesAutoresizingMaskIntoConstraints = false
         captionTextView.topAnchor.constraint(equalTo: programNameStackedView.bottomAnchor, constant: -5).isActive = true
         captionTextView.leadingAnchor.constraint(equalTo: programNameStackedView.leadingAnchor).isActive = true
-        captionTextView.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -16.0).isActive = true
+        captionTextView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16.0).isActive = true
         captionTextView.heightAnchor.constraint(greaterThanOrEqualToConstant: 30).isActive = true
-        captionTextView.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: -15.0).isActive = true
+        captionTextView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -15.0).isActive = true
         
         addSubview(moreButton)
         moreButton.translatesAutoresizingMaskIntoConstraints = false

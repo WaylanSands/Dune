@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import MessageUI
 
 class ProgramProfileBottomVC: UIViewController {
     
@@ -169,32 +170,18 @@ class ProgramProfileBottomVC: UIViewController {
         return activeTV
     }
     
+//    func resetEpisodesTV() {
+//        downloadedEpisodes = [Episode]()
+//        isFetchingEpisodes = false
+//        subsStartingIndex = 0
+//    }
+    
     func resetSubscriptionTV() {
         downloadedPrograms = [Program]()
         fetchedProgramsIDs = [String]()
         isFetchingPrograms = false
         subsStartingIndex = 0
     }
-    
-//    func setupModalCommentObserver() {
-//        NotificationCenter.default.addObserver(self, selector: #selector(self.showCommentFromModal), name: NSNotification.Name(rawValue: "modalCommentPush"), object: nil)
-//    }
-//
-//    @objc func showCommentFromModal(_ notification: Notification) {
-//        let episodeID = notification.userInfo?["ID"] as! String
-//        let episode = downloadedEpisodes.first(where: {$0.ID == episodeID})
-//        if episode != nil {
-//             showCommentsFor(episode: episode!)
-//        } else {
-//            FireStoreManager.getEpisodeWith(episodeID: episodeID) { episode in
-//                self.showCommentsFor(episode: episode)
-//            }
-//        }
-//    }
-    
-//    func removeModalCommentObserver() {
-//        NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: "modalCommentPush"), object: nil)
-//    }
     
     func configureViews() {
         self.view.backgroundColor = CustomStyle.secondShade
@@ -453,10 +440,10 @@ extension ProgramProfileBottomVC: UITableViewDelegate, UITableViewDataSource {
             episodeCell.episode = episode
             episodeCell.episodeSettingsButton.addTarget(episodeCell, action: #selector(EpisodeCell.showSettings), for: .touchUpInside)
             episodeCell.programImageButton.addTarget(episodeCell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
-//            episodeCell.playEpisodeButton.addTarget(episodeCell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
             episodeCell.usernameButton.addTarget(episodeCell, action: #selector(EpisodeCell.visitProfile), for: .touchUpInside)
             episodeCell.commentButton.addTarget(episodeCell, action: #selector(EpisodeCell.showComments), for: .touchUpInside)
             episodeCell.likeButton.addTarget(episodeCell, action: #selector(EpisodeCell.likeButtonPress), for: .touchUpInside)
+            episodeCell.shareButton.addTarget(episodeCell, action: #selector(EpisodeCell.showSettings), for: .touchUpInside)
             episodeCell.moreButton.addTarget(episodeCell, action: #selector(EpisodeCell.moreUnwrap), for: .touchUpInside)
             episodeCell.normalSetUp(episode: episode)
             episodeCell.cellDelegate = self
@@ -476,6 +463,9 @@ extension ProgramProfileBottomVC: UITableViewDelegate, UITableViewDataSource {
 
             if let playerEpisode = dunePlayBar.episode  {
                 if episode.ID == playerEpisode.ID {
+                    episodeCell.episode.hasBeenPlayed = true
+                    episodeCell.episode.playBackProgress = dunePlayBar.currentProgress
+                    episodeCell.setupProgressBar()
                     activeEpisodeCell = episodeCell
                 }
             }
@@ -526,12 +516,41 @@ extension ProgramProfileBottomVC: UITableViewDelegate, UITableViewDataSource {
 extension ProgramProfileBottomVC: SettingsLauncherDelegate {
    
     func selectionOf(setting: String) {
+        let episode = downloadedEpisodes[selectedEpisodeCellRow!]
+
         switch setting {
         case "Report":
             if selectedEpisodeSettings {
                  UIApplication.shared.windows.last?.addSubview(reportEpisodeAlert)
             } else if selectedProgramSettings {
                  UIApplication.shared.windows.last?.addSubview(reportProgramAlert)
+            }
+        case "Share via...":
+            if episode.username != User.username {
+                DynamicLinkHandler.createLinkFor(episode: episode) { [weak self] url in
+                    let promoText = "Check out this episode published by \(episode.programName) on Dune."
+                    let items: [Any] = [promoText, url]
+                    let ac = UIActivityViewController(activityItems: items, applicationActivities: nil)
+                    DispatchQueue.main.async {
+                        self!.present(ac, animated: true)
+                    }
+                }
+            } else {
+                DynamicLinkHandler.createLinkFor(episode: episode) { [weak self] url in
+                    let promoText = "Have a listen to my recent episode published on Dune."
+                    let items: [Any] = [promoText, url]
+                    let ac = UIActivityViewController(activityItems: items, applicationActivities: nil)
+                    DispatchQueue.main.async {
+                        self!.present(ac, animated: true)
+                    }
+                }
+            }
+        case "Share via SMS":
+            DynamicLinkHandler.createLinkFor(episode: episode) { [weak self] url in
+                let promoText = "Check out this episode published by \(episode.programName) on Dune. \(url)"
+                DispatchQueue.main.async {
+                    self?.shareViaSMSWith(messageBody: promoText)
+                }
             }
         default:
             break
@@ -630,6 +649,7 @@ extension ProgramProfileBottomVC: DuneAudioPlayerDelegate {
         let episode = downloadedEpisodes[index]
         episode.playBackProgress = lastProgress
         downloadedEpisodes[index] = episode
+        User.appendPlayedEpisode(ID: episode.ID, progress: lastProgress)
     }
 }
 
@@ -689,16 +709,17 @@ extension ProgramProfileBottomVC :EpisodeCellDelegate {
         let image = cell.programImageButton.imageView?.image
         let audioID = cell.episode.audioID
         
-        dunePlayBar.audioPlayerDelegate = self
-        dunePlayBar.activeController = .profile
-        dunePlayBar.activeProfile = program.username
-        dunePlayBar.setEpisodeDetailsWith(episode: cell.episode, image: image!)
-        dunePlayBar.animateToPositionIfNeeded()
-        dunePlayBar.playOrPauseEpisodeWith(audioID: audioID)
-        
         // Update play bar with active episode list
         dunePlayBar.downloadedEpisodes = downloadedEpisodes
         dunePlayBar.itemCount = episodeItems.count
+        
+        dunePlayBar.audioPlayerDelegate = self
+        dunePlayBar.activeController = .profile
+        dunePlayBar.activeProfile = program.username
+        dunePlayBar.setEpisodeDetailsWith(episode: cell.episode, image: image)
+        dunePlayBar.animateToPositionIfNeeded()
+        dunePlayBar.playOrPauseEpisodeWith(audioID: audioID)
+        
     }
     
     func showSettings(cell: EpisodeCell) {
@@ -821,6 +842,24 @@ extension ProgramProfileBottomVC: NavPlayerDelegate {
         }
     }
     
+}
+
+extension ProgramProfileBottomVC: MFMessageComposeViewControllerDelegate {
+    
+    func shareViaSMSWith(messageBody: String) {
+        if (MFMessageComposeViewController.canSendText()) {
+            let controller = MFMessageComposeViewController()
+            controller.body = messageBody
+            controller.messageComposeDelegate = self
+            present(controller, animated: true, completion: nil)
+        }
+    }
+
+    func messageComposeViewController(_ controller: MFMessageComposeViewController, didFinishWith result: MessageComposeResult) {
+        //... handle sms screen actions
+        dismiss(animated: true, completion: nil)
+    }
+
 }
 
 

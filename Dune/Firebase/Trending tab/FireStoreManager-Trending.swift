@@ -45,11 +45,32 @@ extension FireStoreManager {
         }
     }
     
+    static func testTrendingEpisodes(completion: @escaping ([Episode]) -> ()) {
+
+        var episodes = [Episode]()
+        
+        let episodesRef = db.collection("lastSevenDays").order(by: "likeCount", descending: true).limit(to: 100)
+
+        episodesRef.getDocuments { snapshot, error in
+            if error != nil {
+                print("Error: \(error!.localizedDescription)")
+            } else {
+                let documents = snapshot!.documents
+                
+                for eachDoc in documents {
+                    let data = eachDoc.data()
+                    episodes.append(Episode(data: data))
+                }
+                completion(episodes)
+            }
+        }
+    }
+    
     static func fetchTrendingEpisodes(completion: @escaping ([Episode]) -> ()) {
         
         let components = Calendar.current.dateComponents([.year, .month, .day], from: Date())
         let start = Calendar.current.date(from: components)
-        let end = Calendar.current.date(byAdding: .day, value: -30, to: start!)
+        let end = Calendar.current.date(byAdding: .day, value: -7, to: start!)
         
         var episodes = [Episode]()
         

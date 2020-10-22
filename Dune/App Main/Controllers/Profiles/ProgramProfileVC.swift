@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import MessageUI
 import Firebase
 
 class ProgramProfileVC: UIViewController {
@@ -345,6 +346,7 @@ class ProgramProfileVC: UIViewController {
     }
     
     func configureDelegates() {
+        sharingSettings.settingsDelegate = self
         programSettings.settingsDelegate = self
         reportProgramAlert.alertDelegate = self
     }
@@ -858,10 +860,12 @@ class ProgramProfileVC: UIViewController {
 
     @objc func shareButtonPress() {
         sharingSettings.showSettings()
+        print("Sharing")
     }
     
     @objc func settingsButtonPress() {
          programSettings.showSettings()
+        print("settingsButtonPress")
     }
     
     @objc func moreUnwrap() {
@@ -1037,6 +1041,24 @@ extension ProgramProfileVC: SettingsLauncherDelegate {
         switch setting {
         case "Report":
             UIApplication.shared.keyWindow?.addSubview(reportProgramAlert)
+        case "Share via...":
+            DynamicLinkHandler.createLinkFor(program: program) { [weak self] url in
+                guard let self = self else { return }
+                let promoText = "Check out \(self.program.name) on Dune."
+                let items: [Any] = [promoText, url]
+                let ac = UIActivityViewController(activityItems: items, applicationActivities: nil)
+                DispatchQueue.main.async {
+                    self.present(ac, animated: true)
+                }
+            }
+        case "Share via SMS":
+            DynamicLinkHandler.createLinkFor(program: program) { [weak self] url in
+                guard let self = self else { return }
+                let promoText = "Check out \(self.program.name) on Dune. \(url)"
+                DispatchQueue.main.async {
+                    self.shareViaSMSWith(messageBody: promoText)
+                }
+            }
         default:
             break
         }
@@ -1054,6 +1076,24 @@ extension ProgramProfileVC: CustomAlertDelegate {
     }
     
     
+}
+
+extension ProgramProfileVC: MFMessageComposeViewControllerDelegate {
+    
+    func shareViaSMSWith(messageBody: String) {
+        if (MFMessageComposeViewController.canSendText()) {
+            let controller = MFMessageComposeViewController()
+            controller.body = messageBody
+            controller.messageComposeDelegate = self
+            present(controller, animated: true, completion: nil)
+        }
+    }
+
+    func messageComposeViewController(_ controller: MFMessageComposeViewController, didFinishWith result: MessageComposeResult) {
+        //... handle sms screen actions
+        dismiss(animated: true, completion: nil)
+    }
+
 }
 
 

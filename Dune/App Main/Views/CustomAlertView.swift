@@ -41,6 +41,8 @@ enum alertType {
     case loggingOut
     case emailInUse
     case nextVersion
+    case oldVersion
+    case onTheAppStore
     case hashTagUsed
     case linkNotSecure
     case imageNotSupported
@@ -51,6 +53,9 @@ enum alertType {
     case finishSetup
     case boothBackOut
     case uploadIntroOption
+    case didNotAllowPushes
+    case resetPasswordEmptyField
+    case resetPasswordEmailSent
 }
 
 // For implementation
@@ -314,8 +319,8 @@ class CustomAlertView: UIView {
             primaryButton.setTitle("Dismiss", for: .normal)
             primaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
         case .linkNotSecure:
-            headingLabel.text = "Unsecured Link"
-            bodyTextLabel.text = "The link you have supplied seems to be unsecure. We recommend using a link which starts in https"
+            headingLabel.text = "Invalid Link"
+            bodyTextLabel.text = "The link you have supplied seems to be unsecure or is invalid. Try using a link which starts in https"
             primaryButton.setTitle("Dismiss", for: .normal)
             primaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
         case .imageNotSupported:
@@ -407,8 +412,45 @@ class CustomAlertView: UIView {
             secondaryButton.setTitle("Record", for: .normal)
             secondaryButton.addTarget(self, action: #selector(cancelPress), for: .touchUpInside)
             configureSecondaryButtonForPrimaryOption()
+        case .oldVersion:
+            headingLabel.text = "New Version Available"
+            bodyTextLabel.text = """
+            We have a new and improved version available on TestFlight!
+            
+            Open the app and install build \(VersionControl.currentBuild) apologies for any inconvenience.
+            """
+            primaryButton.setTitle("Open TestFlight", for: .normal)
+            primaryButton.addTarget(self, action: #selector(getTheLatest), for: .touchUpInside)
+        case .onTheAppStore:
+            headingLabel.text = "It's Has Arrived!"
+            bodyTextLabel.text = """
+We are now officially on the AppStore, download now.
+
+Don't forget to share with your friends what you have helped to create!
+"""
+            primaryButton.setTitle("Install Dune", for: .normal)
+            primaryButton.addTarget(self, action: #selector(installDune), for: .touchUpInside)
+        case .didNotAllowPushes:
+            headingLabel.text = "Allow Notifications"
+            bodyTextLabel.text = "Currently notifications for Dune are off. Select allow to be notified."
+            primaryButton.setTitle("Allow", for: .normal)
+            primaryButton.addTarget(self, action: #selector(primaryButtonPress), for: .touchUpInside)
+            secondaryButton.setTitle("Dismiss", for: .normal)
+            secondaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
+        case .resetPasswordEmailSent:
+            headingLabel.text = "Email Sent"
+            bodyTextLabel.text = "The reset password email should land in you inbox any moment. "
+            primaryButton.setTitle("Dismiss", for: .normal)
+            primaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
+        case .resetPasswordEmptyField:
+            headingLabel.text = "Reset Password"
+            bodyTextLabel.text = """
+                Add your email address to the field and then select "Click here" again.
+                """
+            primaryButton.setTitle("Ok got it", for: .normal)
+            primaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
         }
-        bodyTextLabel.addLineSpacing(spacingValue: 3)
+        bodyTextLabel.addLineSpacingCentered(spacingValue: 3)
     }
     
     func configureSecondaryButtonForPrimaryOption() {
@@ -479,6 +521,19 @@ class CustomAlertView: UIView {
     @objc func primaryButtonPress() {
         alertDelegate?.primaryButtonPress()
         self.removeFromSuperview()
+    }
+    
+    @objc func getTheLatest() {
+        if let url = URL(string: "https://apps.apple.com/au/app/testflight/id899247664") {
+            UIApplication.shared.open(url, options: [:], completionHandler: nil)
+        }
+    }
+    
+    @objc func installDune() {
+        if let url = URL(string: VersionControl.appStoreLink) {
+            UIApplication.shared.open(url, options: [:], completionHandler: nil)
+        }
+        print("Visit the AppStore")
     }
     
     @objc func dismiss() {

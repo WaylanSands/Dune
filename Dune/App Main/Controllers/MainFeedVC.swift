@@ -8,7 +8,9 @@
 
 import UIKit
 import Firebase
+import MessageUI
 import AVFoundation
+import CoreLocation
 import UserNotifications
 
 class MainFeedVC: UIViewController {
@@ -60,6 +62,7 @@ class MainFeedVC: UIViewController {
     let subscriptionSettings = SettingsLauncher(options: SettingOptions.subscriptionEpisode, type: .subscriptionEpisode)
     let ownEpisodeSettings = SettingsLauncher(options: SettingOptions.ownEpisode, type: .ownEpisode)
     let reportEpisodeAlert = CustomAlertView(alertType: .reportEpisode)
+    let notificationCenter = NotificationCenter.default
     
     let navBarView: UIView = {
         let view = UIView()
@@ -134,7 +137,7 @@ class MainFeedVC: UIViewController {
     let todayButton: UIButton = {
         let button = UIButton()
         button.layer.cornerRadius = 13
-        button.setTitle("Daily", for: .normal)
+        button.setTitle("Today", for: .normal)
         button.backgroundColor = CustomStyle.sixthShade
         button.titleLabel?.font = UIFont.systemFont(ofSize: 12, weight: .medium)
         button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 15, bottom: 2, right: 15)
@@ -207,12 +210,11 @@ class MainFeedVC: UIViewController {
         configureTableView()
         styleForScreens()
         configureViews()
-        
-        let notificationCenter = NotificationCenter.default
-        notificationCenter.addObserver(self, selector: #selector(appMovedToBackground), name: UIApplication.willResignActiveNotification, object: nil)
     }
-    
+        
     override func viewWillAppear(_ animated: Bool) {
+        notificationCenter.addObserver(self, selector: #selector(appMovedToBackground), name: UIApplication.willResignActiveNotification, object: nil)
+        notificationCenter.addObserver(self, selector: #selector(appMovedToForeground), name: UIApplication.willEnterForegroundNotification, object: nil)
         subscriptionIDs = CurrentProgram.subscriptionIDs!
         setNeedsStatusBarAppearanceUpdate()
         selectedCellRow = nil
@@ -221,15 +223,17 @@ class MainFeedVC: UIViewController {
     }
     
     override func viewWillDisappear(_ animated: Bool) {
-//        searchScrollView.setScrollBarToTopLeft()
-        //        removeModalCommentObserver()
-        //        if !pushingContent {
-        //            dunePlayer.finishSession()
-        //        }
-        
+        searchScrollView.setScrollBarToTopLeft()
+        removeObservers()
+
         FileManager.removeAudioFilesFromDocumentsDirectory() {
             print("Audio removed")
         }
+    }
+    
+    func removeObservers() {
+        notificationCenter.removeObserver(self, name: UIApplication.willResignActiveNotification, object: nil)
+        notificationCenter.removeObserver(self, name: UIApplication.willEnterForegroundNotification, object: nil)
     }
     
     deinit {
@@ -238,6 +242,11 @@ class MainFeedVC: UIViewController {
     
     @objc func appMovedToBackground() {
         print("App moved to background!")
+    }
+    
+    @objc func appMovedToForeground() {
+        print("App moved to foreground!")
+        fetchEpisodeItems()
     }
     
     func configureDelegates() {
@@ -254,14 +263,6 @@ class MainFeedVC: UIViewController {
         tableView.dataSource = self
         tableView.delegate = self
     }
-    
-//    func setupModalCommentObserver() {
-//        NotificationCenter.default.addObserver(self, selector: #selector(self.showCommentFromModal), name: NSNotification.Name(rawValue: "modalCommentPush"), object: nil)
-//    }
-//
-//    func removeModalCommentObserver() {
-//        NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: "modalCommentPush"), object: nil)
-//    }
     
     func resetTableView() {
         //        audioPlayer.downloadedEpisodes = [Episode]()
@@ -467,7 +468,7 @@ class MainFeedVC: UIViewController {
     func recreateCategoryPills() {
         for each in searchContentStackView.arrangedSubviews {
             let button = each as! UIButton
-            if button.titleLabel?.text != "All" && button.titleLabel?.text != "Daily" {
+            if button.titleLabel?.text != "All" && button.titleLabel?.text != "Today" {
                 button.removeFromSuperview()
             }
         }
@@ -626,13 +627,13 @@ class MainFeedVC: UIViewController {
         if !episodeItems.contains(where: { Calendar.current.isDateInToday($0.postedDate)}) {
             for each in searchContentStackView.arrangedSubviews {
                 let button = each as! UIButton
-                if button.titleLabel?.text == "Daily" {
+                if button.titleLabel?.text == "Today" {
                     button.removeFromSuperview()
                 }
             }
         } else {
             let buttons = searchContentStackView.arrangedSubviews as! [UIButton]
-            if !buttons.contains(where: {$0.titleLabel?.text == "Daily" }) {
+            if !buttons.contains(where: {$0.titleLabel?.text == "Today" }) {
                 searchContentStackView.insertArrangedSubview(todayButton, at: 1)
             }
         }
@@ -705,7 +706,7 @@ class MainFeedVC: UIViewController {
             recreateCategoryPills()
             episodes = downloadedEpisodes.sorted(by: >)
             tableView.reloadData()
-        } else if sender.titleLabel?.text == "Daily" {
+        } else if sender.titleLabel?.text == "Today" {
             filterMode = .today
             getTodaysEpisodes()
             allButton.setTitleColor(CustomStyle.fourthShade.withAlphaComponent(0.8), for: .normal)
@@ -803,6 +804,8 @@ class MainFeedVC: UIViewController {
     
     @objc func autoSubscribePress() {
         autoSubscribeSpinner.isHidden = false
+        Analytics.logEvent("auto_subscribe", parameters: nil)
+        Analytics.setUserProperty("true", forName: "is_auto_subscriber")
         autoSubscribeButton.setTitleColor(CustomStyle.primaryYellow, for: .normal)
         if let interests = User.interests {
             if interests.count >= 2 {
@@ -863,6 +866,7 @@ extension MainFeedVC: UITableViewDataSource, UITableViewDelegate {
         episodeCell.likeButton.addTarget(episodeCell, action: #selector(EpisodeCell.likeButtonPress), for: .touchUpInside)
         episodeCell.usernameButton.addTarget(episodeCell, action: #selector(EpisodeCell.visitProfile), for: .touchUpInside)
         episodeCell.commentButton.addTarget(episodeCell, action: #selector(EpisodeCell.showComments), for: .touchUpInside)
+        episodeCell.shareButton.addTarget(episodeCell, action: #selector(EpisodeCell.showSettings), for: .touchUpInside)
         episodeCell.normalSetUp(episode: episode)
         episodeCell.cellDelegate = self
         
@@ -881,10 +885,13 @@ extension MainFeedVC: UITableViewDataSource, UITableViewDelegate {
         
         if let playerEpisode = dunePlayBar.episode  {
             if episode.ID == playerEpisode.ID {
+                episodeCell.episode.hasBeenPlayed = true
+                episodeCell.episode.playBackProgress = dunePlayBar.currentProgress
+                episodeCell.setupProgressBar()
                 activeCell = episodeCell
             }
         }
-        
+                
         return episodeCell
     }
     
@@ -997,24 +1004,23 @@ extension MainFeedVC: EpisodeCellDelegate {
             cell.playbackBarView.setupPlaybackBar()
         }
         
-        
         let image = cell.programImageButton.imageView?.image
         let audioID = cell.episode.audioID
         
-        dunePlayBar.audioPlayerDelegate = self
-        dunePlayBar.activeController = .dailyFeed
-        dunePlayBar.setEpisodeDetailsWith(episode: cell.episode, image: image!)
-        dunePlayBar.animateToPositionIfNeeded()
-        dunePlayBar.playOrPauseEpisodeWith(audioID: audioID)
-      
         // Update play bar with active episode list
         dunePlayBar.downloadedEpisodes = episodes
-        
         if selectedCategory != nil {
             dunePlayBar.itemCount = filteredEpisodeItems.count
         } else {
             dunePlayBar.itemCount = episodeItems.count
         }
+        
+        dunePlayBar.audioPlayerDelegate = self
+        dunePlayBar.activeController = .dailyFeed
+        dunePlayBar.setEpisodeDetailsWith(episode: cell.episode, image: image)
+        dunePlayBar.animateToPositionIfNeeded()
+        dunePlayBar.playOrPauseEpisodeWith(audioID: audioID)
+            
     }
     
     func updateLikeCountFor(episode: Episode, at indexPath: IndexPath) {
@@ -1024,7 +1030,7 @@ extension MainFeedVC: EpisodeCellDelegate {
     func showSettings(cell: EpisodeCell) {
         selectedCellRow =  downloadedEpisodes.firstIndex(where: { $0.ID == cell.episode.ID })
         
-        if cell.episode.username == User.username! {
+        if cell.episode.username == User.username! || User.username == "Master"  {
             ownEpisodeSettings.showSettings()
         } else {
             subscriptionSettings.showSettings()
@@ -1127,6 +1133,13 @@ extension MainFeedVC: SettingsLauncherDelegate {
                     }
                 }
             }
+        case "Share via SMS":
+            DynamicLinkHandler.createLinkFor(episode: episode) { [weak self] url in
+                let promoText = "Check out this episode published by \(episode.programName) on Dune. \(url)"
+                DispatchQueue.main.async {
+                    self?.shareViaSMSWith(messageBody: promoText)
+                }
+            }
         default:
             break
         }
@@ -1169,6 +1182,7 @@ extension MainFeedVC: DuneAudioPlayerDelegate {
     func makeActive(episode: Episode) {
         episode.hasBeenPlayed = true
         guard let index = downloadedEpisodes.firstIndex(where: { $0.ID == episode.ID }) else { return }
+        User.appendPlayedEpisode(ID: episode.ID, progress: 0.0)
         downloadedEpisodes[index] = episode
     }
     
@@ -1210,6 +1224,7 @@ extension MainFeedVC: DuneAudioPlayerDelegate {
         let episode = downloadedEpisodes[index]
         episode.playBackProgress = lastProgress
         downloadedEpisodes[index] = episode
+        User.appendPlayedEpisode(ID: episode.ID, progress: lastProgress)
     }
     
 }
@@ -1250,4 +1265,23 @@ extension MainFeedVC: NavPlayerDelegate {
         }
     }
     
+}
+
+
+extension MainFeedVC: MFMessageComposeViewControllerDelegate {
+    
+    func shareViaSMSWith(messageBody: String) {
+        if (MFMessageComposeViewController.canSendText()) {
+            let controller = MFMessageComposeViewController()
+            controller.body = messageBody
+            controller.messageComposeDelegate = self
+            present(controller, animated: true, completion: nil)
+        }
+    }
+
+    func messageComposeViewController(_ controller: MFMessageComposeViewController, didFinishWith result: MessageComposeResult) {
+        //... handle sms screen actions
+        dismiss(animated: true, completion: nil)
+    }
+
 }

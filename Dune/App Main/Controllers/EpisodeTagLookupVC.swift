@@ -8,6 +8,7 @@
 
 import UIKit
 import Firebase
+import MessageUI
 import AVFoundation
 
 class EpisodeTagLookupVC: UIViewController {
@@ -170,10 +171,10 @@ extension EpisodeTagLookupVC: UITableViewDataSource, UITableViewDelegate {
         
         episodeCell.episodeSettingsButton.addTarget(episodeCell, action: #selector(EpisodeCell.showSettings), for: .touchUpInside)
         episodeCell.programImageButton.addTarget(episodeCell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
-//        episodeCell.playEpisodeButton.addTarget(episodeCell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
         episodeCell.usernameButton.addTarget(episodeCell, action: #selector(EpisodeCell.visitProfile), for: .touchUpInside)
         episodeCell.likeButton.addTarget(episodeCell, action: #selector(EpisodeCell.likeButtonPress), for: .touchUpInside)
         episodeCell.commentButton.addTarget(episodeCell, action: #selector(EpisodeCell.showComments), for: .touchUpInside)
+        episodeCell.shareButton.addTarget(episodeCell, action: #selector(EpisodeCell.showSettings), for: .touchUpInside)
         episodeCell.moreButton.addTarget(episodeCell, action: #selector(EpisodeCell.moreUnwrap), for: .touchUpInside)
 
         let episode = downloadedEpisodes[indexPath.row]
@@ -284,7 +285,7 @@ extension EpisodeTagLookupVC: EpisodeCellDelegate {
         dunePlayBar.itemCount = downloadedEpisodes.count
 
 
-        dunePlayBar.setEpisodeDetailsWith(episode: cell.episode, image: image!)
+        dunePlayBar.setEpisodeDetailsWith(episode: cell.episode, image: image)
         dunePlayBar.animateToPositionIfNeeded()
         dunePlayBar.playOrPauseEpisodeWith(audioID: audioID)
         
@@ -346,6 +347,8 @@ extension EpisodeTagLookupVC: EpisodeCellDelegate {
 extension EpisodeTagLookupVC: SettingsLauncherDelegate {
 
     func selectionOf(setting: String) {
+        let episode = downloadedEpisodes[selectedCellRow!]
+
         switch setting {
         case "Delete":
             deleteOwnEpisode()
@@ -353,10 +356,37 @@ extension EpisodeTagLookupVC: SettingsLauncherDelegate {
             let episode = downloadedEpisodes[selectedCellRow!]
             let editEpisodeVC = EditPublishedEpisode(episode: episode)
             editEpisodeVC.delegate = self
-//            editEpisodeVC.hidesBottomBarWhenPushed = true
+            //            editEpisodeVC.hidesBottomBarWhenPushed = true
             navigationController?.pushViewController(editEpisodeVC, animated: true)
         case "Report":
             UIApplication.shared.windows.last?.addSubview(reportEpisodeAlert)
+        case "Share via...":
+            if episode.username != User.username {
+                DynamicLinkHandler.createLinkFor(episode: episode) { [weak self] url in
+                    let promoText = "Check out this episode published by \(episode.programName) on Dune."
+                    let items: [Any] = [promoText, url]
+                    let ac = UIActivityViewController(activityItems: items, applicationActivities: nil)
+                    DispatchQueue.main.async {
+                        self!.present(ac, animated: true)
+                    }
+                }
+            } else {
+                DynamicLinkHandler.createLinkFor(episode: episode) { [weak self] url in
+                    let promoText = "Have a listen to my recent episode published on Dune."
+                    let items: [Any] = [promoText, url]
+                    let ac = UIActivityViewController(activityItems: items, applicationActivities: nil)
+                    DispatchQueue.main.async {
+                        self!.present(ac, animated: true)
+                    }
+                }
+            }
+        case "Share via SMS":
+            DynamicLinkHandler.createLinkFor(episode: episode) { [weak self] url in
+                let promoText = "Check out this episode published by \(episode.programName) on Dune. \(url)"
+                DispatchQueue.main.async {
+                    self?.shareViaSMSWith(messageBody: promoText)
+                }
+            }
         default:
             break
         }
@@ -451,4 +481,21 @@ extension EpisodeTagLookupVC: NavPlayerDelegate {
     
 }
 
+extension EpisodeTagLookupVC: MFMessageComposeViewControllerDelegate {
+    
+    func shareViaSMSWith(messageBody: String) {
+        if (MFMessageComposeViewController.canSendText()) {
+            let controller = MFMessageComposeViewController()
+            controller.body = messageBody
+            controller.messageComposeDelegate = self
+            present(controller, animated: true, completion: nil)
+        }
+    }
+
+    func messageComposeViewController(_ controller: MFMessageComposeViewController, didFinishWith result: MessageComposeResult) {
+        //... handle sms screen actions
+        dismiss(animated: true, completion: nil)
+    }
+
+}
 

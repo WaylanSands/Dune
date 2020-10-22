@@ -8,6 +8,7 @@
 
 
 import UIKit
+import FirebaseAnalytics
 import Firebase
 
 class ListenerAccountVC : UIViewController {
@@ -744,7 +745,7 @@ extension ListenerAccountVC: CustomAlertDelegate {
         editProgramVC.switchedAccount = true
         FireStoreManager.updateProgramToPublisher()
         FireStoreManager.updateUserSetUpTo(false)
-//        editProgramVC.hidesBottomBarWhenPushed = true
+        Analytics.setUserProperty("publisher", forName: "publisher_or_listener")
         navigationController?.pushViewController(editProgramVC, animated: true)
     }
     

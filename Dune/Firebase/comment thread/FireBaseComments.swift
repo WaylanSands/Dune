@@ -133,6 +133,7 @@ struct FireBaseComments {
 
         let commentsRef = db.collection("episodes").document(ID).collection("comments").document()
         db.collection("episodes").document(ID).updateData(["commentCount" : FieldValue.increment(Double(1))])
+        db.collection("lastSevenDays").document(ID).updateData(["commentCount" : FieldValue.increment(Double(1))])
         let commentID = commentsRef.documentID
         FireStoreManager.updateProgramMethodsUsed(programID: CurrentProgram.ID!, repMethod: commentID)
         CurrentProgram.repMethods?.append(commentID)
@@ -240,6 +241,7 @@ struct FireBaseComments {
     static func deleteCommentForEpisode(ID: String, commentID: String) {
         let commentRef = db.collection("episodes").document(ID).collection("comments").document(commentID)
         db.collection("episodes").document(ID).updateData(["commentCount" : FieldValue.increment(Double(-1))])
+        db.collection("lastSevenDays").document(ID).updateData(["commentCount" : FieldValue.increment(Double(-1))])
         
         commentRef.delete { error in
             if error != nil {
@@ -253,6 +255,7 @@ struct FireBaseComments {
     static func deleteSubCommentForEpisode(ID: String, primaryID: String, commentID: String) {
         let commentRef = db.collection("episodes").document(ID).collection("comments").document(primaryID).collection("subComments").document(commentID)
             db.collection("episodes").document(ID).updateData(["commentCount" : FieldValue.increment(Double(-1))])
+            db.collection("lastSevenDays").document(ID).updateData(["commentCount" : FieldValue.increment(Double(-1))])
             db.collection("episodes").document(ID).collection("comments").document(primaryID).updateData(["subCommentCount" : FieldValue.increment(Double(-1))])
         
         commentRef.delete { error in
@@ -268,6 +271,7 @@ struct FireBaseComments {
         
         let subCommentsRef = db.collection("episodes").document(ID).collection("comments").document(commentID).collection("subComments")
         db.collection("episodes").document(ID).updateData(["commentCount" : FieldValue.increment(Double(-1))])
+        db.collection("lastSevenDays").document(ID).updateData(["commentCount" : FieldValue.increment(Double(-1))])
         
         subCommentsRef.getDocuments { snapshot, error in
             if error != nil {

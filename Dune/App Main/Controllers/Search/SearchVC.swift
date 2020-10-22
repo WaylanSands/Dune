@@ -32,7 +32,7 @@ class SearchVC: UIViewController {
     var selectedCategory: String?
     var isGoingForward = false
     var isFetching = false
-    
+        
     var categoryButtons = [UIButton]()
     var categories = [String]()
     
@@ -47,13 +47,25 @@ class SearchVC: UIViewController {
     var lastProgress: CGFloat = 0
     var selectedCellRow: Int?
     
+    // For various screens
+    var searchBarPadding = 10
     
     // Deep link navigation
     var programToPush: Program?
     
+    var  adjustmentHeight: CGFloat = 15.0
+    
+    let customNavBar: CustomNavBar = {
+        let view = CustomNavBar()
+        view.backgroundColor = CustomStyle.blackNavBar
+        view.leftButton.isHidden = true
+        return view
+    }()
+    
     let searchScrollView: UIScrollView = {
         let view = UIScrollView()
         view.isScrollEnabled = true
+        view.backgroundColor = CustomStyle.blackNavBar
         view.showsHorizontalScrollIndicator = false
         view.contentInsetAdjustmentBehavior = .never
         return view
@@ -96,12 +108,29 @@ class SearchVC: UIViewController {
         return button
     }()
     
+    lazy var emptyTableViewLabel: UILabel = {
+        let label = UILabel()
+        label.textAlignment = .center
+        label.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
+        label.textColor = CustomStyle.fourthShade
+        label.numberOfLines = 0
+        return label
+    }()
+    
+    func emptyLabelText(searchText: String) -> String {
+     return """
+     Sorry but "\(searchText)" is
+     coming up empty.
+     """
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         self.definesPresentationContext = true
         view.backgroundColor = CustomStyle.darkestBlack
         createCategoryPills()
         configureDelegates()
+        styleForScreens()
         configureViews()
         addLoadingView()
     }
@@ -109,8 +138,12 @@ class SearchVC: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         searchScrollView.setScrollBarToTopLeft()
         setupSearchController()
-        isGoingForward = false
-        fetchTopPrograms()
+        isGoingForwardHeight()
+        if isGoingForward {
+            isGoingForward = false
+        } else {
+            fetchTopPrograms()
+        }
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -120,12 +153,13 @@ class SearchVC: UIViewController {
     override func viewWillDisappear(_ animated: Bool) {
         introPlayer.finishSession()
         if isGoingForward {
-            pillsHeightConstraint.constant = 15
+//            pillsHeightConstraint.constant = adjustmentHeight
         } else {
-            pillsHeightConstraint.constant = 0
+//            pillsHeightConstraint.constant = 0
+            resetAllSelection()
+            resetTableView()
         }
         searchController.isActive = false
-        resetAllSelection()
     }
     
     func checkToPushLinkedProgram() {
@@ -136,6 +170,15 @@ class SearchVC: UIViewController {
         }
     }
     
+    func isGoingForwardHeight() {
+        if #available(iOS 13.0, *) {
+            adjustmentHeight = 0
+        } else {
+            adjustmentHeight = 15
+        }
+    }
+    
+
     func setupSearchController() {
         searchController.hidesNavigationBarDuringPresentation = false
         searchController.obscuresBackgroundDuringPresentation = false
@@ -146,20 +189,24 @@ class SearchVC: UIViewController {
             searchController.searchBar.searchTextField.backgroundColor = .white
         } else {
             // Fallback on earlier versions
+            let searchTextField : UITextField?
+            searchTextField = searchController.searchBar.value(forKey: "_searchField") as? UITextField
+            searchTextField?.backgroundColor = .white
         }
-        searchController.searchBar.barStyle = .black
-        navigationItem.titleView = searchController.searchBar
-        navigationController?.isNavigationBarHidden = false
-        navigationController?.navigationBar.isHidden = false
-        navigationController?.navigationBar.isTranslucent = false
-        navigationController?.navigationBar.prefersLargeTitles = false
-        navigationController?.navigationBar.barTintColor = CustomStyle.darkestBlack
-        navigationController?.navigationBar.tintColor = CustomStyle.primaryBlue
-        navigationController?.navigationBar.barStyle = .black
-        navigationController?.navigationBar.shadowImage = UIImage()
         
-//        tabBarController?.tabBar.backgroundImage = UIImage()
-//        tabBarController?.tabBar.backgroundColor = hexStringToUIColor(hex: "F4F7FB")
+        searchController.searchBar.barStyle = .black
+        searchController.searchBar.keyboardAppearance = .light
+
+        navigationItem.titleView = searchController.searchBar
+//        navigationItem.searchController = searchController
+    
+        navigationController?.navigationBar.isHidden = false
+        navigationController?.navigationBar.isTranslucent = true
+        navigationController?.navigationBar.prefersLargeTitles = false
+//        navigationController?.navigationBar.barTintColor = CustomStyle.darkestBlack
+        navigationController?.navigationBar.barStyle = .black
+        navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
+        navigationController?.navigationBar.shadowImage = UIImage()
         
         let searchBarTextField = searchController.searchBar.value(forKey: "searchField") as? UITextField
         searchBarTextField?.textColor = CustomStyle.sixthShade
@@ -265,6 +312,11 @@ class SearchVC: UIViewController {
                     let data = eachDocument.data()
                     let imageID = data["imageID"] as? String
                     
+                                        
+                    if data["isGlobal"] != nil {
+                        FireStoreManager.change(ID: data["ID"] as! String)
+                    }
+                    
                     if imageID != nil {
                         let program = Program(data: data)
                         self.downloadedPrograms.append(program)
@@ -344,11 +396,44 @@ class SearchVC: UIViewController {
         loadingView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
     }
     
+    func styleForScreens() {
+//        switch UIDevice.current.deviceType {
+//        case .iPhone4S, .iPhoneSE:
+//            searchBarPadding = 7
+//        case .iPhone8:
+//            searchBarPadding = 7
+//        case .iPhone8Plus:
+//            searchBarPadding = 7
+//        case .iPhone11:
+//            searchBarPadding = 10
+//        case .iPhone11Pro:
+//            break
+//        case .iPhone11ProMax:
+//            break
+//        case .unknown:
+//            break
+//        }
+    }
+    
     func configureViews() {
+        view.addSubview(customNavBar)
+        customNavBar.translatesAutoresizingMaskIntoConstraints = false
+        customNavBar.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+        customNavBar.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        customNavBar.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+
+        if #available(iOS 14.0, *) {
+            searchController.searchBar.setSearchTextField(height: 32)
+            customNavBar.heightAnchor.constraint(equalToConstant: UIDevice.current.navBarHeight() + 20).isActive = true
+        } else {
+            searchController.searchBar.setSearchTextField(height: 38)
+            customNavBar.heightAnchor.constraint(equalToConstant: UIDevice.current.navBarHeight() + 15).isActive = true
+        }
+        
+        view.backgroundColor = CustomStyle.secondShade
         view.addSubview(searchScrollView)
         searchScrollView.translatesAutoresizingMaskIntoConstraints = false
-        pillsHeightConstraint = searchScrollView.topAnchor.constraint(equalTo: view.topAnchor)
-        pillsHeightConstraint.isActive = true
+        searchScrollView.topAnchor.constraint(equalTo: customNavBar.bottomAnchor).isActive = true
         searchScrollView.heightAnchor.constraint(equalToConstant: 36.0).isActive = true
         searchScrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         searchScrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
@@ -383,6 +468,12 @@ class SearchVC: UIViewController {
         searchContentStackView.heightAnchor.constraint(equalToConstant: 26.0).isActive = true
         searchContentStackView.trailingAnchor.constraint(equalTo: searchScrollView.trailingAnchor, constant: -16).isActive = true
         
+        view.addSubview(emptyTableViewLabel)
+        emptyTableViewLabel.translatesAutoresizingMaskIntoConstraints = false
+        emptyTableViewLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -90).isActive = true
+        emptyTableViewLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 30).isActive = true
+        emptyTableViewLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -30).isActive = true
+        
         view.addSubview(tableView)
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.topAnchor.constraint(equalTo: searchScrollView.bottomAnchor).isActive = true
@@ -392,7 +483,7 @@ class SearchVC: UIViewController {
         tableView.contentInset = UIEdgeInsets(top: 0.0, left: 0.0, bottom: tableView.safeDunePlayBarHeight, right: 0.0)
         tableView.backgroundColor = CustomStyle.secondShade
         tableView.addTopBounceAreaView()
-        
+                
         view.bringSubviewToFront(searchScrollView)
         
         view.addSubview(introPlayer)
@@ -417,7 +508,10 @@ class SearchVC: UIViewController {
     
     // MARK: Category Selection
     @objc func categorySelection(sender: UIButton) {
-       
+        
+        searchController.searchBar.resignFirstResponder()
+        searchController.searchBar.text?.removeAll()
+
         let category = sender.titleLabel!.text!
         selectedCategory = category
         currentMode = .category
@@ -475,6 +569,7 @@ class SearchVC: UIViewController {
         FireStoreManager.fetchMoreProgramsWithinCategoryFrom(lastSnapshot: lastSnapshot!, limit: 10, category: selectedCategory!) { snapshot in
             self.isFetching = false
             if snapshot.count == 0 {
+                print("Remove spinner")
                 self.tableView.tableFooterView = nil
                 self.moreToLoad = false
             } else {
@@ -515,10 +610,15 @@ class SearchVC: UIViewController {
 extension SearchVC: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-          if isFiltering {
+        if isFiltering {
+            if filteredPrograms.count == 0 {
+                tableView.isHidden = true
+            }
             return filteredPrograms.count
-          }
-        return downloadedPrograms.count
+        } else {
+            tableView.isHidden = false
+            return downloadedPrograms.count
+        }
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -601,6 +701,7 @@ extension SearchVC: ProgramCellDelegate {
         if CurrentProgram.programsIDs().contains(program.ID) {
              duneTabBar.visit(screen: .account)
         } else if program.isPublisher {
+            isGoingForward = true
             if program.isPrimaryProgram && !program.programIDs!.isEmpty  {
                 let programVC = ProgramProfileVC()
                 programVC.program = program
@@ -610,6 +711,7 @@ extension SearchVC: ProgramCellDelegate {
                 navigationController?.pushViewController(programVC, animated: true)
             }
         } else {
+            isGoingForward = true
             let programVC = ListenerProfileVC(program: program)
             navigationController?.pushViewController(programVC, animated: true)
         }
@@ -722,18 +824,21 @@ extension SearchVC: UISearchResultsUpdating {
     func updateSearchResults(for searchController: UISearchController) {
         let searchBar = searchController.searchBar
         self.filterContentForSearchText(searchBar.text!)
-        tableView.setScrollBarToTopLeft()
-
-        FireStoreManager.searchForProgramStartingWith(string: searchBar.text!) { results in
-
-            if results.count != 0 {
+        emptyTableViewLabel.text = emptyLabelText(searchText: searchBar.text!)
+        
+        if filteredPrograms.count > 0 {
+            tableView.isHidden = false
+        }
+        
+        if searchController.searchBar.text != "" {
+            FireStoreManager.searchForProgramStartingWith(string: searchBar.text!) { results in
                 for each in results {
                     let data = each.data()
                     let imageID = data["imageID"] as? String
                     let program = Program(data: data)
-                        
+                    
                     if !self.downloadedPrograms.contains(where: { $0.ID == program.ID }) && imageID != nil {
-                         self.downloadedPrograms.append(program)
+                        self.downloadedPrograms.append(program)
                     }
                 }
             }
@@ -777,7 +882,7 @@ extension SearchVC: UISearchBarDelegate {
 //    }
 //
 //    func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
-//                searchScrollView.isHidden = false
+//        searchScrollView.isHidden = false
 //        searchButtons.isHidden = true
 //    }
 //

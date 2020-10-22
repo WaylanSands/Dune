@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import MessageUI
 import FirebaseFirestore
 
 class TrendingVC: UIViewController {
@@ -140,10 +141,11 @@ class TrendingVC: UIViewController {
     }
     
     func fetchEpisodes() {
-        FireStoreManager.fetchTrendingEpisodes() { episodes in
+        FireStoreManager.testTrendingEpisodes() { episodes in
             if self.downloadedEpisodes != episodes.sortedByLikes() {
                 self.downloadedEpisodes = episodes.sortedByLikes()
                 self.tableView.reloadData()
+                self.tableView.setScrollBarToTopLeft()
                 self.loadingView.removeFromSuperview()
             }
         }
@@ -151,6 +153,7 @@ class TrendingVC: UIViewController {
     
     func fetchTrendingEpisodes() {
         print("Fetching trending episodes")
+        
         FireStoreManager.fetchTrendingEpisodesWith(limit: 10) { snapshot in
 
             if snapshot.count == 0 {
@@ -250,10 +253,10 @@ extension TrendingVC: UITableViewDelegate, UITableViewDataSource {
         episodeCell.episode = episode
         episodeCell.episodeSettingsButton.addTarget(episodeCell, action: #selector(EpisodeCell.showSettings), for: .touchUpInside)
         episodeCell.programImageButton.addTarget(episodeCell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
-//        episodeCell.playEpisodeButton.addTarget(episodeCell, action: #selector(EpisodeCell.playEpisode), for: .touchUpInside)
         episodeCell.usernameButton.addTarget(episodeCell, action: #selector(EpisodeCell.visitProfile), for: .touchUpInside)
         episodeCell.commentButton.addTarget(episodeCell, action: #selector(EpisodeCell.showComments), for: .touchUpInside)
         episodeCell.likeButton.addTarget(episodeCell, action: #selector(EpisodeCell.likeButtonPress), for: .touchUpInside)
+        episodeCell.shareButton.addTarget(episodeCell, action: #selector(EpisodeCell.showSettings), for: .touchUpInside)
         episodeCell.moreButton.addTarget(episodeCell, action: #selector(EpisodeCell.moreUnwrap), for: .touchUpInside)
         episodeCell.normalSetUp(episode: episode)
         episodeCell.cellDelegate = self
@@ -273,6 +276,9 @@ extension TrendingVC: UITableViewDelegate, UITableViewDataSource {
         
         if let playerEpisode = dunePlayBar.episode  {
             if episode.ID == playerEpisode.ID {
+                episodeCell.episode.hasBeenPlayed = true
+                episodeCell.episode.playBackProgress = dunePlayBar.currentProgress
+                episodeCell.setupProgressBar()
                 activeCell = episodeCell
             }
         }
@@ -306,6 +312,8 @@ extension TrendingVC: UITableViewDelegate, UITableViewDataSource {
 extension TrendingVC: SettingsLauncherDelegate {
     
     func selectionOf(setting: String) {
+        let episode = downloadedEpisodes[selectedCellRow!]
+        
         switch setting {
         case "Delete":
             deleteOwnEpisode()
@@ -317,6 +325,33 @@ extension TrendingVC: SettingsLauncherDelegate {
             navigationController?.pushViewController(editEpisodeVC, animated: true)
         case "Report":
             UIApplication.shared.windows.last?.addSubview(reportProgramAlert)
+        case "Share via...":
+            if episode.username != User.username {
+                DynamicLinkHandler.createLinkFor(episode: episode) { [weak self] url in
+                    let promoText = "Check out this episode published by \(episode.programName) on Dune."
+                    let items: [Any] = [promoText, url]
+                    let ac = UIActivityViewController(activityItems: items, applicationActivities: nil)
+                    DispatchQueue.main.async {
+                        self!.present(ac, animated: true)
+                    }
+                }
+            } else {
+                DynamicLinkHandler.createLinkFor(episode: episode) { [weak self] url in
+                    let promoText = "Have a listen to my recent episode published on Dune."
+                    let items: [Any] = [promoText, url]
+                    let ac = UIActivityViewController(activityItems: items, applicationActivities: nil)
+                    DispatchQueue.main.async {
+                        self!.present(ac, animated: true)
+                    }
+                }
+            }
+        case "Share via SMS":
+            DynamicLinkHandler.createLinkFor(episode: episode) { [weak self] url in
+                let promoText = "Check out this episode published by \(episode.programName) on Dune. \(url)"
+                DispatchQueue.main.async {
+                    self?.shareViaSMSWith(messageBody: promoText)
+                }
+            }
         default:
             break
         }
@@ -411,26 +446,24 @@ extension TrendingVC: EpisodeCellDelegate {
     // MARK: Play Episode
     
     func playEpisode(cell: EpisodeCell) {
-         activeCell = cell
-         
-         if !cell.playbackBarView.playbackBarIsSetup {
-             cell.playbackBarView.setupPlaybackBar()
-         }
-         
-//       audioPlayer.yPosition = view.frame.height - self.tabBarController!.tabBar.frame.height
-         
-         let image = cell.programImageButton.imageView?.image
-         let audioID = cell.episode.audioID
-         
-        dunePlayBar.audioPlayerDelegate = self
-         dunePlayBar.setEpisodeDetailsWith(episode: cell.episode, image: image!)
-         dunePlayBar.animateToPositionIfNeeded()
-         dunePlayBar.playOrPauseEpisodeWith(audioID: audioID)
+        activeCell = cell
+        
+        if !cell.playbackBarView.playbackBarIsSetup {
+            cell.playbackBarView.setupPlaybackBar()
+        }
+        
+        let image = cell.programImageButton.imageView?.image
+        let audioID = cell.episode.audioID
         
         // Update play bar with active episode list
         dunePlayBar.activeController = .trending
         dunePlayBar.downloadedEpisodes = downloadedEpisodes
         dunePlayBar.itemCount = episodeItems.count
+        
+        dunePlayBar.audioPlayerDelegate = self
+        dunePlayBar.setEpisodeDetailsWith(episode: cell.episode, image: image)
+        dunePlayBar.animateToPositionIfNeeded()
+        dunePlayBar.playOrPauseEpisodeWith(audioID: audioID)
     }
     
     func deleteOwnEpisode() {
@@ -459,7 +492,7 @@ extension TrendingVC: EpisodeCellDelegate {
     func showSettings(cell: EpisodeCell) {
         selectedCellRow =  downloadedEpisodes.firstIndex(where: { $0.ID == cell.episode.ID })
         
-        if cell.episode.username == User.username! {
+        if cell.episode.username == User.username! || User.username! == "Master" {
             ownEpisodeSettings.showSettings()
         } else {
             subscriptionSettings.showSettings()
@@ -561,6 +594,24 @@ extension TrendingVC: NavPlayerDelegate {
         }
     }
     
+}
+
+extension TrendingVC: MFMessageComposeViewControllerDelegate {
+    
+    func shareViaSMSWith(messageBody: String) {
+        if (MFMessageComposeViewController.canSendText()) {
+            let controller = MFMessageComposeViewController()
+            controller.body = messageBody
+            controller.messageComposeDelegate = self
+            present(controller, animated: true, completion: nil)
+        }
+    }
+
+    func messageComposeViewController(_ controller: MFMessageComposeViewController, didFinishWith result: MessageComposeResult) {
+        //... handle sms screen actions
+        dismiss(animated: true, completion: nil)
+    }
+
 }
 
 

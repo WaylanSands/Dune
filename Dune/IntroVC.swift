@@ -175,6 +175,7 @@ extension IntroVC: UIScrollViewDelegate {
     @objc func continueButtonPress() {
         let rootVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "mainNavController") as! UINavigationController
         UserDefaults.standard.set(true, forKey: "completedIntro")
+        UserDefaults.standard.set([], forKey: "playedEpisodes")
         DuneDelegate.newRootView(rootVC)
     }
     

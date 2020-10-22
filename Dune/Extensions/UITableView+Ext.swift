@@ -22,6 +22,6 @@ extension UITableView {
     }
     
     var safeDunePlayBarHeight: CGFloat {
-        return 64 + duneTabBar.frame.height - UIDevice.safeBottomHeight
+        return 64 + duneTabBar.frame.height + UIDevice.safeBottomHeight
     }
 }

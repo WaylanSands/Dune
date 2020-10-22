@@ -7,22 +7,25 @@
 //
 
 import UIKit
+import FirebaseFirestore
 
 class DeleteSettings: UIView {
+    
+    var time: Double = 0.0
+    var timer: Timer?
     
     var madeSelection: (() -> Void)?
     
     private var listenerOptions = [
         "Lack of quality content",
-        "Poor audio quality",
         "Poor loading times",
+        "Too many ads",
         "Privacy reasons",
     ]
     
     private var publisherOptions = [
         "Lack of quality content",
         "Lack of listeners",
-        "Poor audio quality",
         "Studio needs work",
         "Privacy reasons",
     ]
@@ -87,6 +90,9 @@ class DeleteSettings: UIView {
     
     func showFeedbackOptions() {
         
+        timer = Timer.scheduledTimer(timeInterval:1, target:self, selector:#selector(addSecond), userInfo: nil, repeats: true)
+
+        
         if let window =  UIApplication.shared.keyWindow {
             window.addSubview(self)
             self.backgroundColor = UIColor.black.withAlphaComponent(0.95)
@@ -126,6 +132,10 @@ class DeleteSettings: UIView {
         }
     }
     
+    @objc func addSecond() {
+        time += 1
+    }
+    
     private func addListenerOptions() {
         for each in listenerOptions {
             let button = option(title: each)
@@ -151,11 +161,41 @@ class DeleteSettings: UIView {
     }
     
     @objc private func optionSelected(sender: UIButton) {
+        if time >= 4 {
+            updateFirebaseWith(reason: sender.titleLabel!.text!)
+        }
+        
         if madeSelection != nil {
             madeSelection!()
         }
         handleDismiss()
     }
+    
+    private func updateFirebaseWith(reason: String) {
+        let db = Firestore.firestore()
+        
+        DispatchQueue.global(qos: .userInitiated).async {
+            let deleteRef = db.collection("deletedAccounts").document(User.ID!)
+            
+            let locale = Locale.current
+            
+            deleteRef.setData([
+                "Reason" : reason,
+                "isSetUp": User.isSetUp!,
+                "isPublisher" : CurrentProgram.isPublisher!,
+                "regionCode" : locale.regionCode ?? "Unknown",
+            ]) { (error) in
+                if let error = error {
+                    print("Error adding delete reason: \(error.localizedDescription)")
+                } else {
+                    print("Success adding  delete reason")
+                }
+            }
+            
+        }
+        
+    }
+
     
     private func option(title: String) -> UIButton {
         let button = UIButton()
@@ -167,6 +207,8 @@ class DeleteSettings: UIView {
     }
     
     @objc private func handleDismiss() {
+        timer?.invalidate()
+        timer = nil
         headingLabel.isHidden = true
         optionStackedView.isHidden = true
         UIView.animate(withDuration: 1, animations: {

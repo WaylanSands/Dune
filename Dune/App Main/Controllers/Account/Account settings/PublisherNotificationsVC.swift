@@ -22,6 +22,7 @@ class PublisherNotificationsVC: UIViewController {
     let customNavBar: CustomNavBar = {
         let nav = CustomNavBar()
         nav.leftButton.isHidden = true
+        nav.titleLabel.text = "Publisher Notifications"
         return nav
     }()
     
@@ -63,9 +64,10 @@ class PublisherNotificationsVC: UIViewController {
         return label
     }()
     
-    let epLikesToggle: UISwitch = {
+    let episodeLikesToggle: UISwitch = {
         let toggle = UISwitch()
         toggle.isOn = true
+        toggle.addTarget(self, action: #selector(episodeLikesToggled), for: .valueChanged)
         toggle.onTintColor = CustomStyle.primaryBlue
         return toggle
     }()
@@ -108,9 +110,10 @@ class PublisherNotificationsVC: UIViewController {
         return label
     }()
     
-    let epCommentsToggle: UISwitch = {
+    let episodeCommentsToggle: UISwitch = {
         let toggle = UISwitch()
         toggle.isOn = true
+        toggle.addTarget(self, action: #selector(episodeCommentsToggled), for: .valueChanged)
         toggle.onTintColor = CustomStyle.primaryBlue
         return toggle
     }()
@@ -153,9 +156,10 @@ class PublisherNotificationsVC: UIViewController {
         return label
     }()
     
-    let newSubsToggle: UISwitch = {
+    let newSubscribersToggle: UISwitch = {
         let toggle = UISwitch()
         toggle.isOn = true
+        toggle.addTarget(self, action: #selector(newSubscribersToggled), for: .valueChanged)
         toggle.onTintColor = CustomStyle.primaryBlue
         return toggle
     }()
@@ -164,7 +168,22 @@ class PublisherNotificationsVC: UIViewController {
         super.viewDidLoad()
         styleForScreens()
         configureViews()
-        self.title = "Publisher Notifications"
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        configureNotificationToggles()
+    }
+    
+    func configureNotificationToggles() {
+        if User.didAllowNotifications == nil {
+            episodeLikesToggle.isOn = false
+            episodeCommentsToggle.isOn = false
+            newSubscribersToggle.isOn = false
+        } else {
+            episodeLikesToggle.isOn = User.didAllowEpisodeLikeNotifications!
+            episodeCommentsToggle.isOn = User.didAllowEpisodeCommentNotifications!
+            newSubscribersToggle.isOn = User.didAllowNewSubscriptionNotifications!
+        }
     }
     
     func styleForScreens() {
@@ -194,7 +213,7 @@ class PublisherNotificationsVC: UIViewController {
         
         mainstackedView.addArrangedSubview(epLikesStackedView)
         epLikesStackedView.addArrangedSubview(epLikesLabelsStackedView)
-        epLikesStackedView.addArrangedSubview(epLikesToggle)
+        epLikesStackedView.addArrangedSubview(episodeLikesToggle)
         
         epLikesLabelsStackedView.addArrangedSubview(epLikesLabel)
         epLikesLabelsStackedView.addArrangedSubview(epLikesSubView)
@@ -209,7 +228,7 @@ class PublisherNotificationsVC: UIViewController {
         
         mainstackedView.addArrangedSubview(epCommentsStackedView)
         epCommentsStackedView.addArrangedSubview(epCommentsLabelsStackedView)
-        epCommentsStackedView.addArrangedSubview(epCommentsToggle)
+        epCommentsStackedView.addArrangedSubview(episodeCommentsToggle)
         
         epCommentsLabelsStackedView.addArrangedSubview(epCommentsLabel)
         epCommentsLabelsStackedView.addArrangedSubview(epCommentsSubView)
@@ -224,7 +243,7 @@ class PublisherNotificationsVC: UIViewController {
         
         mainstackedView.addArrangedSubview(newSubsStackedView)
         newSubsStackedView.addArrangedSubview(newSubsLabelsStackedView)
-        newSubsStackedView.addArrangedSubview(newSubsToggle)
+        newSubsStackedView.addArrangedSubview(newSubscribersToggle)
         
         newSubsLabelsStackedView.addArrangedSubview(newSubsLabel)
         newSubsLabelsStackedView.addArrangedSubview(newSubsSubView)
@@ -234,7 +253,45 @@ class PublisherNotificationsVC: UIViewController {
         newSubsSubLabel.leadingAnchor.constraint(equalTo: newSubsSubView.leadingAnchor).isActive = true
         newSubsSubLabel.trailingAnchor.constraint(equalTo: newSubsSubView.trailingAnchor).isActive = true
         newSubsSubLabel.topAnchor.constraint(equalTo: newSubsSubView.topAnchor).isActive = true
-        
+    }
+    
+    @objc func episodeLikesToggled() {
+        if FirebaseNotifications.askedPermission {
+            FirebaseNotifications.toggle(notification: .episodeLikeNotifications, on: episodeLikesToggle.isOn)
+        } else {
+            let appDelegate = UIApplication.shared.delegate as! AppDelegate
+            appDelegate.promptForPushNotifications { granted in
+                if granted {
+                    self.configureNotificationToggles()
+                }
+            }
+        }
+    }
+    
+    @objc func episodeCommentsToggled() {
+        if FirebaseNotifications.askedPermission {
+            FirebaseNotifications.toggle(notification: .episodeCommentNotifications, on:  episodeCommentsToggle.isOn)
+        } else {
+            let appDelegate = UIApplication.shared.delegate as! AppDelegate
+            appDelegate.promptForPushNotifications { granted in
+                if granted {
+                    self.configureNotificationToggles()
+                }
+            }
+        }
+    }
+    
+    @objc func newSubscribersToggled() {
+        if FirebaseNotifications.askedPermission {
+            FirebaseNotifications.toggle(notification: .newSubscriberNotifications, on:  newSubscribersToggle.isOn)
+        } else {
+            let appDelegate = UIApplication.shared.delegate as! AppDelegate
+            appDelegate.promptForPushNotifications { granted in
+                if granted {
+                    self.configureNotificationToggles()
+                }
+            }
+        }
     }
     
 }

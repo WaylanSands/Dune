@@ -12,14 +12,14 @@ import FirebaseAuth
 import FirebaseFirestore
 import AuthenticationServices
 
-class SignInVC: UIViewController, UITextFieldDelegate {
+class SignInVC: UIViewController {
     
     @IBOutlet weak var emailLabel: UILabel!
     @IBOutlet weak var passwordLabel: UILabel!
     @IBOutlet weak var emailTextField: UITextField!
     @IBOutlet weak var passwordTextField: UITextField!
     @IBOutlet weak var forgotPasswordLabel: UILabel!
-    @IBOutlet weak var clickHereLabel: UIButton!
+    @IBOutlet weak var clickHereButton: UIButton!
     @IBOutlet weak var emailLabelTopAnchor: NSLayoutConstraint!
     @IBOutlet weak var passwordLabelTopConstraint: NSLayoutConstraint!
     
@@ -51,6 +51,11 @@ class SignInVC: UIViewController, UITextFieldDelegate {
     let invalidEmailAlert = CustomAlertView(alertType: .invalidEmail)
     let socialAccountNotFoundAlert = CustomAlertView(alertType: .socialAccountNotFound)
     let featureUnavailableAlert = CustomAlertView(alertType: .iOS13Needed)
+    
+    
+    // Forgot Password
+    let resetPasswordEmailSent = CustomAlertView(alertType: .resetPasswordEmailSent)
+    let resetPasswordEmptyField = CustomAlertView(alertType: .resetPasswordEmptyField)
     
     var rootVC : UIViewController!
     
@@ -209,16 +214,44 @@ class SignInVC: UIViewController, UITextFieldDelegate {
         textField.backgroundColor = CustomStyle.sixthShade
         textField.attributedPlaceholder = NSAttributedString(string: "\(placeholder)", attributes: [NSAttributedString.Key.foregroundColor: CustomStyle.fifthShade])
         textField.font = UIFont.systemFont(ofSize: 16)
-        textField.borderStyle = UITextField.BorderStyle.none
-        textField.autocorrectionType = UITextAutocorrectionType.no
-        textField.keyboardType = UIKeyboardType.default
-        textField.returnKeyType = UIReturnKeyType.done
-        textField.clearButtonMode = UITextField.ViewMode.whileEditing
+        textField.borderStyle = .none
+        textField.autocorrectionType = .no
+        textField.keyboardType = .default
+        textField.returnKeyType = .done
+        textField.clearButtonMode = .whileEditing
         textField.contentVerticalAlignment = UIControl.ContentVerticalAlignment.center
         textField.layer.cornerRadius = 6.0
         textField.layer.masksToBounds = true
         textField.setLeftPadding(20)
     }
+    
+    
+    @IBAction func forgotPasswordPress(_ sender: UIButton) {
+        
+        if !emailTextField.text!.isValidEmail {
+            UIApplication.shared.windows.last?.addSubview(resetPasswordEmptyField)
+            return
+        }
+                
+        Auth.auth().sendPasswordReset(withEmail: emailTextField.text!) { [weak self] (error) in
+            guard let vc = self else { return }
+
+            if let error = error as NSError? {
+                switch AuthErrorCode(rawValue: error.code) {
+                case .userNotFound:
+                    UIApplication.shared.windows.last?.addSubview(vc.noUserAlert)
+                case .invalidEmail, .invalidRecipientEmail, .invalidSender:
+                    UIApplication.shared.windows.last?.addSubview(vc.invalidEmailAlert)
+                default:
+                    print("Error message: \(error.localizedDescription)")
+                }
+            } else {
+                print("Reset password email has been successfully sent")
+                UIApplication.shared.windows.last?.addSubview(vc.resetPasswordEmailSent)
+            }
+        }
+    }
+    
     
     @objc func signInButtonPress() {
         guard let email =  emailTextField.text else { return }
@@ -235,16 +268,16 @@ class SignInVC: UIViewController, UITextFieldDelegate {
                     
                     switch errCode {
                     case .networkError:
-                        UIApplication.shared.keyWindow!.addSubview(vc.networkIssueAlert)
+                        UIApplication.shared.windows.last?.addSubview(vc.networkIssueAlert)
                         print("There was a networkError")
                     case .wrongPassword:
-                         UIApplication.shared.keyWindow!.addSubview(vc.wrongPasswordAlert)
+                        UIApplication.shared.windows.last?.addSubview(vc.wrongPasswordAlert)
                         print("Wrong password")
                     case .userNotFound:
-                         UIApplication.shared.keyWindow!.addSubview(vc.noUserAlert)
+                        UIApplication.shared.windows.last?.addSubview(vc.noUserAlert)
                         print("No user found")
                     case .invalidEmail:
-                         UIApplication.shared.keyWindow!.addSubview(vc.invalidEmailAlert)
+                        UIApplication.shared.windows.last?.addSubview(vc.invalidEmailAlert)
                         print("Invalid Email")
                     default:
                         print("Other error!")
@@ -300,7 +333,6 @@ class SignInVC: UIViewController, UITextFieldDelegate {
     }
     
     func sendToMainFeed() {
-//        duneTabBar.tabButtonSelection(0)
         rootVC = MainTabController()
         DuneDelegate.newRootView(rootVC)
     }
@@ -445,6 +477,24 @@ extension SignInVC: CustomAlertDelegate {
         emailTextField.becomeFirstResponder()
         signInButton.setTitle("Sign in", for: .normal)
     }
+}
+
+extension SignInVC: UITextFieldDelegate {
+    
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+       
+        if emailTextField.text != "" && passwordTextField.text != "" {
+            signInButtonPress()
+        } else if emailTextField.text == "" {
+            emailTextField.becomeFirstResponder()
+        } else if passwordTextField.text == "" {
+            passwordTextField.becomeFirstResponder()
+        }
+
+        print("Touch")
+        return true
+    }
+    
 }
 
 

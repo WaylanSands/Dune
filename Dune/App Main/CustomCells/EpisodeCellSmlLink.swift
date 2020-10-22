@@ -51,28 +51,28 @@ class EpisodeCellSmlLink: EpisodeCell {
     }()
     
     override func configureViews() {
-        self.addSubview(programImageButton)
+        contentView.addSubview(programImageButton)
         programImageButton.translatesAutoresizingMaskIntoConstraints = false
-        programImageButton.topAnchor.constraint(equalTo: self.topAnchor, constant: 15).isActive = true
-        programImageButton.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 16).isActive = true
+        programImageButton.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 15).isActive = true
+        programImageButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16).isActive = true
         programImageButton.heightAnchor.constraint(equalToConstant: imageSize).isActive = true
         programImageButton.widthAnchor.constraint(equalToConstant: imageSize).isActive = true
         
-        self.addSubview(playbackBarView)
+        contentView.addSubview(playbackBarView)
         playbackBarView.translatesAutoresizingMaskIntoConstraints = false
         playbackBarView.centerXAnchor.constraint(equalTo: programImageButton.centerXAnchor).isActive = true
         playbackBarView.topAnchor.constraint(equalTo: programImageButton.bottomAnchor, constant: 7).isActive = true
         playbackBarView.heightAnchor.constraint(equalToConstant: 5).isActive = true
         playbackBarView.widthAnchor.constraint(equalToConstant: playBarWidth).isActive = true
         
-        self.addSubview(playEpisodeImageView)
+        contentView.addSubview(playEpisodeImageView)
         playEpisodeImageView.translatesAutoresizingMaskIntoConstraints = false
         playEpisodeImageView.leadingAnchor.constraint(equalTo: programImageButton.leadingAnchor, constant: 0).isActive = true
         playEpisodeImageView.centerYAnchor.constraint(equalTo: playbackBarView.centerYAnchor).isActive = true
         playEpisodeImageView.widthAnchor.constraint(equalToConstant: 7).isActive = true
         playEpisodeImageView.heightAnchor.constraint(equalToConstant: 7).isActive = true
         
-        self.addSubview(playBarButton)
+        contentView.addSubview(playBarButton)
         playBarButton.translatesAutoresizingMaskIntoConstraints = false
         playBarButton.leadingAnchor.constraint(equalTo: playEpisodeImageView.trailingAnchor, constant: 4).isActive = true
         playBarButton.trailingAnchor.constraint(equalTo: programImageButton.trailingAnchor, constant: -1).isActive = true
@@ -86,25 +86,25 @@ class EpisodeCellSmlLink: EpisodeCell {
 //        playEpisodeButton.widthAnchor.constraint(equalTo: programImageButton.widthAnchor).isActive = true
 //        playEpisodeButton.heightAnchor.constraint(equalToConstant: 20).isActive = true
         
-        self.addSubview(programNameStackedView)
+        contentView.addSubview(programNameStackedView)
         programNameStackedView.translatesAutoresizingMaskIntoConstraints = false
-        programNameStackedView.topAnchor.constraint(equalTo: programImageButton.topAnchor, constant: -5).isActive = true
+        programNameStackedView.topAnchor.constraint(equalTo: programImageButton.topAnchor, constant: -7).isActive = true
         programNameStackedView.leadingAnchor.constraint(equalTo: programImageButton.trailingAnchor, constant: 10).isActive = true
-        programNameStackedView.trailingAnchor.constraint(lessThanOrEqualTo: self.trailingAnchor, constant: -35).isActive = true
+        programNameStackedView.trailingAnchor.constraint(lessThanOrEqualTo: contentView.trailingAnchor, constant: -35).isActive = true
         
         programNameStackedView.addArrangedSubview(programNameLabel)
         programNameStackedView.addArrangedSubview(usernameButton)
         
-        self.addSubview(episodeSettingsButton)
+        contentView.addSubview(episodeSettingsButton)
         episodeSettingsButton.translatesAutoresizingMaskIntoConstraints = false
         episodeSettingsButton.centerYAnchor.constraint(equalTo: usernameButton.centerYAnchor, constant: 0).isActive = true
-        episodeSettingsButton.trailingAnchor.constraint(lessThanOrEqualTo: self.trailingAnchor, constant: -16).isActive = true
+        episodeSettingsButton.trailingAnchor.constraint(lessThanOrEqualTo: contentView.trailingAnchor, constant: -16).isActive = true
         
-        self.addSubview(captionTextView)
+        contentView.addSubview(captionTextView)
         captionTextView.translatesAutoresizingMaskIntoConstraints = false
-        captionTextView.topAnchor.constraint(equalTo: programNameStackedView.bottomAnchor, constant: -2).isActive = true
+        captionTextView.topAnchor.constraint(equalTo: programNameStackedView.bottomAnchor, constant: -4).isActive = true
         captionTextView.leadingAnchor.constraint(equalTo: programNameStackedView.leadingAnchor).isActive = true
-        captionTextView.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -16.0).isActive = true
+        captionTextView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16.0).isActive = true
         
         addSubview(moreButton)
         moreButton.translatesAutoresizingMaskIntoConstraints = false
@@ -128,11 +128,11 @@ class EpisodeCellSmlLink: EpisodeCell {
         moreGradientView.layer.insertSublayer(moreButtonGradient, at: 0)
         bringSubviewToFront(moreButton)
         
-        self.addSubview(linkStackView)
+        contentView.addSubview(linkStackView)
         linkStackView.translatesAutoresizingMaskIntoConstraints = false
         linkStackView.topAnchor.constraint(equalTo: captionTextView.bottomAnchor, constant: 10).isActive = true
         linkStackView.leadingAnchor.constraint(equalTo: programNameStackedView.leadingAnchor).isActive = true
-        linkStackView.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -16.0).isActive = true
+        linkStackView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16.0).isActive = true
         
         linkStackView.addArrangedSubview(squarePreview)
         squarePreview.translatesAutoresizingMaskIntoConstraints = false
@@ -140,11 +140,11 @@ class EpisodeCellSmlLink: EpisodeCell {
         squarePreview.trailingAnchor.constraint(equalTo: linkStackView.trailingAnchor).isActive = true
         squarePreview.heightAnchor.constraint(equalToConstant: 72).isActive = true
         
-        self.addSubview(tagScrollView)
+        contentView.addSubview(tagScrollView)
         tagScrollView.translatesAutoresizingMaskIntoConstraints = false
         tagScrollView.topAnchor.constraint(equalTo: linkStackView.bottomAnchor, constant: 10).isActive = true
         tagScrollView.leadingAnchor.constraint(equalTo: captionTextView.leadingAnchor).isActive = true
-        tagScrollView.trailingAnchor.constraint(equalTo: self.trailingAnchor,constant: -16).isActive = true
+        tagScrollView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor,constant: -16).isActive = true
         tagScrollView.heightAnchor.constraint(equalToConstant: 22).isActive = true
         
         tagScrollView.addSubview(tagContainingStackView)
@@ -154,19 +154,19 @@ class EpisodeCellSmlLink: EpisodeCell {
         tagContainingStackView.heightAnchor.constraint(equalTo: tagScrollView.heightAnchor).isActive = true
         tagContainingStackView.trailingAnchor.constraint(equalTo: tagScrollView.trailingAnchor).isActive = true
         
-        self.addSubview(gradientOverlayView)
+        contentView.addSubview(gradientOverlayView)
         gradientOverlayView.translatesAutoresizingMaskIntoConstraints = false
         gradientOverlayView.centerYAnchor.constraint(equalTo: tagScrollView.centerYAnchor).isActive = true
         gradientOverlayView.heightAnchor.constraint(equalToConstant: 40.0).isActive = true
         gradientOverlayView.trailingAnchor.constraint(equalTo: tagScrollView.trailingAnchor).isActive = true
         gradientOverlayView.widthAnchor.constraint(equalToConstant: 22.0).isActive = true
         
-        self.addSubview(episodeOptions)
+        contentView.addSubview(episodeOptions)
         episodeOptions.translatesAutoresizingMaskIntoConstraints = false
         episodeOptions.topAnchor.constraint(equalTo: tagScrollView.bottomAnchor, constant: 5).isActive = true
-        episodeOptions.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: -5).isActive = true
+        episodeOptions.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -5).isActive = true
         episodeOptions.leadingAnchor.constraint(equalTo: tagScrollView.leadingAnchor).isActive = true
-        episodeOptions.trailingAnchor.constraint(equalTo: self.trailingAnchor).isActive = true
+        episodeOptions.trailingAnchor.constraint(equalTo: contentView.trailingAnchor).isActive = true
         episodeOptions.heightAnchor.constraint(equalToConstant: 30).isActive = true
         
         episodeOptions.addSubview(likeButton)
@@ -227,12 +227,12 @@ class EpisodeCellSmlLink: EpisodeCell {
         episodeOptions.addSubview(timeSinceReleaseLabel)
         timeSinceReleaseLabel.translatesAutoresizingMaskIntoConstraints = false
         timeSinceReleaseLabel.centerYAnchor.constraint(equalTo: episodeOptions.centerYAnchor).isActive = true
-        timeSinceReleaseLabel.trailingAnchor.constraint(equalTo: self.trailingAnchor,constant: -16).isActive = true
+        timeSinceReleaseLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor,constant: -16).isActive = true
         
-        self.addSubview(timeSinceReleaseLabel)
+        contentView.addSubview(timeSinceReleaseLabel)
         timeSinceReleaseLabel.translatesAutoresizingMaskIntoConstraints = false
-        timeSinceReleaseLabel.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: -14).isActive = true
-        timeSinceReleaseLabel.trailingAnchor.constraint(equalTo: self.trailingAnchor,constant: -16).isActive = true
+        timeSinceReleaseLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -14).isActive = true
+        timeSinceReleaseLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor,constant: -16).isActive = true
     }
     
     override func normalSetUp(episode: Episode) {

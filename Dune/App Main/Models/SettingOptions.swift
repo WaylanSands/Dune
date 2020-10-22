@@ -32,85 +32,92 @@ enum settingsType {
 class SettingOptions {
     
     static let categories: [Setting] = [
-        Setting(name: Category.arts.rawValue, imageName: nil),
+        Setting(name: Category.finance.rawValue, imageName: nil),
         Setting(name: Category.business.rawValue, imageName: nil),
         Setting(name: Category.comedy.rawValue, imageName: nil),
         Setting(name: Category.education.rawValue, imageName: nil),
         Setting(name: Category.entertainment.rawValue, imageName: nil),
-        Setting(name: Category.gamesAndHobbies.rawValue, imageName: nil),
+        Setting(name: Category.gaming.rawValue, imageName: nil),
         Setting(name: Category.healthAndFitness.rawValue, imageName: nil),
         Setting(name: Category.history.rawValue, imageName: nil),
         Setting(name: Category.mindfulness.rawValue, imageName: nil),
-        Setting(name: Category.motivation.rawValue, imageName: nil),
+        Setting(name: Category.globalNews.rawValue, imageName: nil),
         Setting(name: Category.music.rawValue, imageName: nil),
-        Setting(name: Category.news.rawValue, imageName: nil),
+        Setting(name: Category.localNews.rawValue, imageName: nil),
         Setting(name: Category.religionAndSpirituality.rawValue, imageName: nil),
         Setting(name: Category.science.rawValue, imageName: nil),
         Setting(name: Category.sports.rawValue, imageName: nil),
         Setting(name: Category.tech.rawValue, imageName: nil),
-        Setting(name: Category.trueCrime.rawValue, imageName: nil),
+        Setting(name: Category.politics.rawValue, imageName: nil),
         Setting(name: "Cancel", imageName: "cancel-icon"),
     ]
     
     static let sharing: [Setting] = [
         Setting(name: "Share via SMS", imageName: "message-friend-icon"),
-        Setting(name: "Share via email", imageName: "email-friend-icon"),
+//        Setting(name: "Share via email", imageName: "email-friend-icon"),
         Setting(name: "Share via...", imageName: "native-share-icon"),
-        Setting(name: "Share on Facebook", imageName: "facebook-friend-icon"),
-        Setting(name: "Share on Twitter", imageName: "twitter-friend-icon"),
+//        Setting(name: "Share on Facebook", imageName: "facebook-friend-icon"),
+//        Setting(name: "Share on Twitter", imageName: "twitter-friend-icon"),
         Setting(name: "Cancel", imageName: "cancel-icon"),
     ]
     
     static let subscriptionEpisode: [Setting] = [
-        Setting(name: "Report", imageName: nil),
 //        Setting(name: "Unsubscribe", imageName: nil),
+        Setting(name: "Share via SMS", imageName: "message-friend-icon"),
         Setting(name: "Share via...", imageName: "native-share-icon"),
-        Setting(name: "Share on Facebook", imageName: "facebook-friend-icon"),
-        Setting(name: "Share on Twitter", imageName: "twitter-friend-icon"),
+//        Setting(name: "Share on Facebook", imageName: "facebook-friend-icon"),
+//        Setting(name: "Share on Twitter", imageName: "twitter-friend-icon"),
+        Setting(name: "Report", imageName: "report-icon"),
         Setting(name: "Cancel", imageName: "cancel-icon"),
     ]
     
     static let nonSubscriptionEpisode: [Setting] = [
-        Setting(name: "Report", imageName: nil),
+        Setting(name: "Share via SMS", imageName: "message-friend-icon"),
         Setting(name: "Share via...", imageName: "native-share-icon"),
-        Setting(name: "Share on Facebook", imageName: "facebook-friend-icon"),
-        Setting(name: "Share on Twitter", imageName: "twitter-friend-icon"),
+        Setting(name: "Report", imageName: "report-icon"),
+
+//        Setting(name: "Share on Facebook", imageName: "facebook-friend-icon"),
+//        Setting(name: "Share on Twitter", imageName: "twitter-friend-icon"),
         Setting(name: "Cancel", imageName: "cancel-icon"),
     ]
     
     static let programSettings: [Setting] = [
-        Setting(name: "Report", imageName: nil),
+        Setting(name: "Share via SMS", imageName: "message-friend-icon"),
         Setting(name: "Share via...", imageName: "native-share-icon"),
-        Setting(name: "Share on Facebook", imageName: "facebook-friend-icon"),
-        Setting(name: "Share on Twitter", imageName: "twitter-friend-icon"),
+        Setting(name: "Report", imageName: "report-icon"),
+
+//        Setting(name: "Share on Facebook", imageName: "facebook-friend-icon"),
+//        Setting(name: "Share on Twitter", imageName: "twitter-friend-icon"),
         Setting(name: "Cancel", imageName: "cancel-icon"),
     ]
     
     static let programSettingsPrivateOn: [Setting] = [
-        Setting(name: "Report", imageName: nil),
         Setting(name: "Remove", imageName: nil),
+        Setting(name: "Share via SMS", imageName: "message-friend-icon"),
         Setting(name: "Share via...", imageName: "native-share-icon"),
-        Setting(name: "Share on Facebook", imageName: "facebook-friend-icon"),
-        Setting(name: "Share on Twitter", imageName: "twitter-friend-icon"),
+        Setting(name: "Report", imageName: "report-icon"),
+//        Setting(name: "Share on Facebook", imageName: "facebook-friend-icon"),
+//        Setting(name: "Share on Twitter", imageName: "twitter-friend-icon"),
         Setting(name: "Cancel", imageName: "cancel-icon"),
     ]
     
     static let ownEpisode: [Setting] = [
         Setting(name: "Delete", imageName: "trash-icon"),
         Setting(name: "Edit", imageName: "edit-icon"),
+        Setting(name: "Share via SMS", imageName: "message-friend-icon"),
         Setting(name: "Share via...", imageName: "native-share-icon"),
-        Setting(name: "Share on Facebook", imageName: "facebook-friend-icon"),
-        Setting(name: "Share on Twitter", imageName: "twitter-friend-icon"),
+//        Setting(name: "Share on Facebook", imageName: "facebook-friend-icon"),
+//        Setting(name: "Share on Twitter", imageName: "twitter-friend-icon"),
         Setting(name: "Cancel", imageName: "cancel-icon"),
     ]
     
     static let listenerSettings: [Setting] = [
-        Setting(name: "Report", imageName: nil),
+        Setting(name: "Report", imageName: "report-icon"),
         Setting(name: "Cancel", imageName: "cancel-icon"),
     ]
     
     static let listenerSettingsPrivateOn: [Setting] = [
-        Setting(name: "Report", imageName: nil),
+        Setting(name: "Report", imageName: "report-icon"),
         Setting(name: "Remove", imageName: nil),
         Setting(name: "Cancel", imageName: "cancel-icon"),
     ]

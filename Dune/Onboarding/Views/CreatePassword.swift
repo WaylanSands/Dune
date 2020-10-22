@@ -109,9 +109,9 @@ class CreatePassword: UIView {
         passwordTextField.returnKeyType = .next
         passwordTextField.addTarget(self, action: #selector(textFieldDidChange(_:)), for: .editingChanged)
         passwordTextField.clearButtonMode = .never
-        passwordTextField.isSecureTextEntry = false
+        passwordTextField.isSecureTextEntry = true
         passwordTextField.autocorrectionType = .no
-        passwordTextField.textContentType = .none
+        passwordTextField.textContentType = .password
         
         self.addSubview(textFieldToggle)
         textFieldToggle.translatesAutoresizingMaskIntoConstraints = false

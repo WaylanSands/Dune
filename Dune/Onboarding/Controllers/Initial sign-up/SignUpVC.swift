@@ -9,6 +9,7 @@
 import UIKit
 import CryptoKit
 import FirebaseAuth
+import FirebaseAnalytics
 import FirebaseFirestore
 import AuthenticationServices
 
@@ -126,6 +127,7 @@ class SignUpVC: UIViewController {
                         self.networkingIndicator.removeFromSuperview()
                     } else {
                         print("Successful signup using Twitter")
+                        Analytics.logEvent(AnalyticsEventSignUp, parameters: ["signup-method" : "Twitter"])
                         
                         let info = authResult!.additionalUserInfo?.profile
                         let profileImage = info!["profile_image_url_https"] as? String
@@ -316,6 +318,7 @@ extension SignUpVC: ASAuthorizationControllerDelegate, ASAuthorizationController
                 print("User signed in with Apple ID")
                 User.ID = authResult!.user.uid
                 CurrentProgram.ID = authResult!.user.uid
+                Analytics.logEvent(AnalyticsEventSignUp, parameters: ["signup-method" : "Apple"])
                 
                 FireStoreManager.checkIfUserExists(ID: User.ID!) { userExists in
                     

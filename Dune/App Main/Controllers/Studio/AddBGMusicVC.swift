@@ -43,6 +43,12 @@ class AddBGMusicVC: UIViewController {
         tableView.rowHeight = 66
     }
     
+    override func viewDidDisappear(_ animated: Bool) {
+        if let audioPlayer = audioPlayer {
+            audioPlayer.stop()
+        }
+    }
+    
     func setupNavigationBar() {
         navigationItem.title = "Add Music"
         navigationController?.navigationBar.prefersLargeTitles = true
@@ -93,7 +99,6 @@ class AddBGMusicVC: UIViewController {
     }
     
     @objc func selectButtonPress() {
-        print("Selected pressed")
         
         if audioPlayer != nil {
             playbackLink.isPaused = true

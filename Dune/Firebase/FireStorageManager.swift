@@ -192,9 +192,7 @@ struct FireStorageManager {
             let deleteRef = Storage.storage().reference().child("draftAudio/\(fileName)")
             
             deleteRef.delete { error in
-                if error != nil {
-                    print("Error deleting the draft audio from storage \(error!.localizedDescription)")
-                } else {
+                if error == nil {
                     print("Success deleting draft audio file")
                 }
             }

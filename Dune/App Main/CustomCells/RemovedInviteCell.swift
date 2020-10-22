@@ -83,27 +83,27 @@ class RemovedInviteCell: UITableViewCell {
     }
     
     func configureViews() {
-        self.addSubview(profileImageButton)
+        contentView.addSubview(profileImageButton)
         profileImageButton.translatesAutoresizingMaskIntoConstraints = false
-        profileImageButton.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 14).isActive = true
-        profileImageButton.centerYAnchor.constraint(equalTo: self.centerYAnchor).isActive = true
+        profileImageButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 14).isActive = true
+        profileImageButton.centerYAnchor.constraint(equalTo: contentView.centerYAnchor).isActive = true
         profileImageButton.heightAnchor.constraint(equalToConstant: 40).isActive = true
         profileImageButton.widthAnchor.constraint(equalToConstant: 40).isActive = true
         
-        self.addSubview(allowButton)
+        contentView.addSubview(allowButton)
         allowButton.translatesAutoresizingMaskIntoConstraints = false
         allowButton.centerYAnchor.constraint(equalTo: profileImageButton.centerYAnchor).isActive = true
-        allowButton.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -16).isActive = true
+        allowButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16).isActive = true
         allowButton.heightAnchor.constraint(equalToConstant: 26).isActive = true
         
-        self.addSubview(usernameButton)
+        contentView.addSubview(usernameButton)
         usernameButton.translatesAutoresizingMaskIntoConstraints = false
         usernameButton.topAnchor.constraint(equalTo: profileImageButton.topAnchor, constant: 5).isActive = true
         usernameButton.leadingAnchor.constraint(equalTo: profileImageButton.trailingAnchor, constant: 7).isActive = true
         usernameButton.trailingAnchor.constraint(lessThanOrEqualTo: allowButton.leadingAnchor, constant: -10).isActive = true
         usernameButton.heightAnchor.constraint(equalToConstant: usernameButton.titleLabel!.font.lineHeight).isActive = true
         
-        self.addSubview(displayNameLabel)
+        contentView.addSubview(displayNameLabel)
         displayNameLabel.translatesAutoresizingMaskIntoConstraints = false
         displayNameLabel.topAnchor.constraint(equalTo: usernameButton.bottomAnchor, constant: 5).isActive = true
         displayNameLabel.leadingAnchor.constraint(equalTo: profileImageButton.trailingAnchor, constant: 7).isActive = true

@@ -186,7 +186,6 @@ class ProgramNameVC: UIViewController {
                 if let error = error {
                     print("Error adding program ID to user: \(error.localizedDescription)")
                 } else {
-                    print("Successfully added channel ID")
                     
                     programRef.setData([
                         "subscriptionIDs" :  CurrentProgram.subscriptionIDs!,
@@ -202,10 +201,12 @@ class ProgramNameVC: UIViewController {
                         "hasMentions" : false,
                         "isPublisher" : true,
                         "ownerID" : User.ID!,
+                        "addedByDune": false,
                         "subscriberIDs": [],
                         "programIDs" : [],
                         "hasIntro" : false,
                         "repMethods" : [],
+                        "locationType": "Global",
                         "name" : name,
                         "rep" : 0,
                         "tags": []
@@ -255,8 +256,8 @@ extension ProgramNameVC: UITextFieldDelegate {
     
     @objc func textFieldDidChange(_ textField: UITextField) {
         
-        if textField.text!.count > 20  {
-            self.nameTextField.text = String(textField.text!.prefix(20))
+        if textField.text!.count > 32  {
+            self.nameTextField.text = String(textField.text!.prefix(32))
             nameTextField.shake()
         }
         
@@ -279,7 +280,7 @@ extension ProgramNameVC: UITextFieldDelegate {
             return true
         }
         
-        if nameTextField.text?.count == 20 {
+        if nameTextField.text?.count == 32 {
             nameTextField.shake()
             return false
         }

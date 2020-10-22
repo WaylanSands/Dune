@@ -758,6 +758,9 @@ extension SubProgramAccountVC: UITableViewDataSource, UITableViewDelegate {
         
         if let playerEpisode = dunePlayBar.episode  {
             if episode.ID == playerEpisode.ID {
+                episodeCell.episode.hasBeenPlayed = true
+                episodeCell.episode.playBackProgress = dunePlayBar.currentProgress
+                episodeCell.setupProgressBar()
                 activeCell = episodeCell
             }
         }
@@ -839,15 +842,15 @@ extension SubProgramAccountVC :EpisodeCellDelegate {
         let image = cell.programImageButton.imageView?.image
         let audioID = cell.episode.audioID
         
-        dunePlayBar.audioPlayerDelegate = self
-        dunePlayBar.setEpisodeDetailsWith(episode: cell.episode, image: image!)
-        dunePlayBar.animateToPositionIfNeeded()
-        dunePlayBar.playOrPauseEpisodeWith(audioID: audioID)
-        
         // Update play bar with active episode list
         dunePlayBar.activeController = .account
         dunePlayBar.downloadedEpisodes = downloadedEpisodes
         dunePlayBar.itemCount = episodeItems.count
+        
+        dunePlayBar.audioPlayerDelegate = self
+        dunePlayBar.setEpisodeDetailsWith(episode: cell.episode, image: image)
+        dunePlayBar.animateToPositionIfNeeded()
+        dunePlayBar.playOrPauseEpisodeWith(audioID: audioID)
     }
     
     func showSettings(cell: EpisodeCell) {
@@ -967,6 +970,7 @@ extension SubProgramAccountVC: DuneAudioPlayerDelegate {
         let episode = downloadedEpisodes[index]
         episode.playBackProgress = lastProgress
         downloadedEpisodes[index] = episode
+        User.appendPlayedEpisode(ID: episode.ID, progress: lastProgress)
     }
     
 }

@@ -40,6 +40,7 @@ class EditAccountVC: UIViewController {
         let view = UIScrollView()
         view.showsVerticalScrollIndicator = false
         view.contentInsetAdjustmentBehavior = .never
+        view.keyboardDismissMode = .interactive
         return view
     }()
     
@@ -96,12 +97,17 @@ class EditAccountVC: UIViewController {
         return label
     }()
     
+    var nameFieldPlaceholder: NSAttributedString {
+        return NSAttributedString(string: CurrentProgram.name!, attributes: [NSAttributedString.Key.foregroundColor : CustomStyle.fourthShade])
+    }
+    
     let nameTextField: UITextField = {
         let textField = UITextField()
         let placeholder = NSAttributedString(string: "", attributes: [NSAttributedString.Key.foregroundColor : CustomStyle.fourthShade])
         textField.attributedPlaceholder = placeholder;
         textField.textColor = CustomStyle.primaryBlack
         textField.font = UIFont.systemFont(ofSize: 15, weight: .regular)
+        textField.returnKeyType = .done
         return textField
     }()
     
@@ -136,7 +142,7 @@ class EditAccountVC: UIViewController {
         return button
     }()
     
-    let userNameUnlineView: UIView = {
+    let userNameUnderlineView: UIView = {
         let view = UIView()
         view.backgroundColor = CustomStyle.thirdShade
         return view
@@ -278,13 +284,11 @@ class EditAccountVC: UIViewController {
     
     
     override func viewWillAppear(_ animated: Bool) {
+        nameTextField.attributedPlaceholder = nameFieldPlaceholder
         usernameTextButton.setTitle(User.username, for: .normal)
         bdayTextButton.setTitle(User.birthDate, for: .normal)
         profileImageView.image = CurrentProgram.image
         emailLabelButton.text = User.email
-
-        let placeholder = NSAttributedString(string: CurrentProgram.name!, attributes: [NSAttributedString.Key.foregroundColor : CustomStyle.fourthShade])
-        nameTextField.attributedPlaceholder = placeholder
 
         navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
         navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
@@ -304,7 +308,6 @@ class EditAccountVC: UIViewController {
     override func viewWillDisappear(_ animated: Bool) {
         
         if nameTextField.text != "" && nameTextField.text != CurrentProgram.name {
-            print("Save new name")
             CurrentProgram.name = nameTextField.text
             FireStoreManager.updatePrimaryProgramName()
         }
@@ -426,12 +429,12 @@ class EditAccountVC: UIViewController {
         usernameTextButton.leadingAnchor.constraint(equalTo: handelAtLabel.trailingAnchor).isActive = true
         usernameTextButton.heightAnchor.constraint(equalToConstant: 30).isActive = true
         
-        scrollContentView.addSubview(userNameUnlineView)
-        userNameUnlineView.translatesAutoresizingMaskIntoConstraints = false
-        userNameUnlineView.topAnchor.constraint(equalTo: usernameTextButton.bottomAnchor, constant: 10).isActive = true
-        userNameUnlineView.leadingAnchor.constraint(equalTo: handelAtLabel.leadingAnchor).isActive = true
-        userNameUnlineView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        userNameUnlineView.heightAnchor.constraint(equalToConstant: 1).isActive = true
+        scrollContentView.addSubview(userNameUnderlineView)
+        userNameUnderlineView.translatesAutoresizingMaskIntoConstraints = false
+        userNameUnderlineView.topAnchor.constraint(equalTo: usernameTextButton.bottomAnchor, constant: 10).isActive = true
+        userNameUnderlineView.leadingAnchor.constraint(equalTo: handelAtLabel.leadingAnchor).isActive = true
+        userNameUnderlineView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        userNameUnderlineView.heightAnchor.constraint(equalToConstant: 1).isActive = true
         
         scrollContentView.addSubview(emailLabelButton)
         emailLabelButton.translatesAutoresizingMaskIntoConstraints = false
@@ -586,7 +589,9 @@ extension EditAccountVC: CustomDatePickerDelegate {
 
 // Alert publishers about changing name
 extension EditAccountVC: UITextFieldDelegate {
+    
     func textFieldDidBeginEditing(_ textField: UITextField) {
+        nameTextField.textColor = CustomStyle.primaryBlack
         if textField == nameTextField && CurrentProgram.isPublisher! {
             activeTextField = "displayName"
             DispatchQueue.main.async {
@@ -594,6 +599,18 @@ extension EditAccountVC: UITextFieldDelegate {
             }
         }
     }
+    
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        if nameTextField.text != "" && nameTextField.text != CurrentProgram.name {
+            CurrentProgram.name = nameTextField.text
+            FireStoreManager.updatePrimaryProgramName()
+            nameTextField.attributedPlaceholder = nameFieldPlaceholder
+            nameTextField.textColor = CustomStyle.fourthShade
+            nameTextField.resignFirstResponder()
+        }
+        return true
+    }
+    
 }
 
 // Change Account Image

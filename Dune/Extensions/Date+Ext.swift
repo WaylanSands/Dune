@@ -38,4 +38,13 @@ extension Date {
         return "\(secondsAgo / week)w"
     }
     
+    static func formattedToString(style: DateFormatter.Style) -> String {
+        let currentDateTime = Date()
+        let formatter = DateFormatter()
+        formatter.timeStyle = style
+        formatter.dateStyle = style
+        return formatter.string(from: currentDateTime)
+
+    }
+    
 }

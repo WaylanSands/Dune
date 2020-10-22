@@ -8,6 +8,12 @@
 
 import UIKit
 
+enum LocationType {
+    case global
+    case national
+    case local
+}
+
 public class Program: Comparable {
     
     var ID: String
@@ -43,6 +49,11 @@ public class Program: Comparable {
     var pendingChannels: [String]
     var deniedChannels: [String]
     var isPrivate: Bool
+    
+    // Location
+    var locationType: LocationType!
+    var regionCode: String!
+
 
     
     init(data: [String: Any]) {
@@ -70,6 +81,21 @@ public class Program: Comparable {
         subscriptionIDs = data["subscriptionIDs"] as! [String]
         primaryCategory = data["primaryCategory"] as? String
         
+        // Location
+        if let location = data["locationType"] as? String {
+            regionCode =  data["regionCode"] as? String
+            
+            switch location {
+            case "National":
+                locationType = .national
+            case "Global":
+                locationType = .global
+            case "Local":
+                locationType = .local
+            default:
+                break
+            }
+        }
         
         // Private channel
         pendingChannels = data["pendingChannels"] as! [String]

@@ -23,8 +23,11 @@ class MainTabController: UITabBarController {
     private func configureDuneTabBar() {
         view.addSubview(duneTabBar)
         duneTabBar.isHidden = false
-        duneTabBar.frame = CGRect(x: 0, y: view.frame.height - self.tabBar.frame.height - UIDevice.safeBottomHeight, width: self.view.frame.width, height: self.tabBar.frame.height +  UIDevice.safeBottomHeight)
+        duneTabBar.frame = CGRect(x: 0, y: view.frame.height - self.tabBar.frame.height - UIDevice.safeBottomHeight, width: self.view.frame.width, height: self.tabBar.frame.height + UIDevice.safeBottomHeight)
         duneTabBar.tabButtonSelection = tabSelection
+        duneTabBar.visitChannel = visitLinkedChannel
+        duneTabBar.visitEpisode = visitLinkedEpisode
+        duneTabBar.resetTabHighlight()
     }
     
     private  func configureDunePlayer() {
@@ -33,19 +36,24 @@ class MainTabController: UITabBarController {
         dunePlayBar.yPosition = view.frame.height - (self.tabBar.frame.height + UIDevice.safeBottomHeight)
     }
     
+    let mainFeedVC = MainFeedVC()
+    let trendingVC = TrendingVC()
+    
+    let programAccountNC = UINavigationController(rootViewController: ProgramAccountVC())
+    let listenerAccountNC = UINavigationController(rootViewController: ListenerAccountVC())
+    
     private func configureNavigationControllers() {
-        var accountController: UINavigationController
-        
-        if CurrentProgram.isPublisher! {
-            accountController = UINavigationController(rootViewController: ProgramAccountVC())
-        } else {
-            accountController = UINavigationController(rootViewController: ListenerAccountVC())
-        }
-        accountController.navigationBar.barStyle = .default
-
-        let mainFeedController = UINavigationController(rootViewController: MainFeedVC())
+//        var
+//        if CurrentProgram.isPublisher! {
+//            accountController = UINavigationController(rootViewController: programAccountVC)
+//        } else {
+//            accountController = UINavigationController(rootViewController: listenerAccountVC)
+//        }
+//        accountController.navigationBar.barStyle = .default
+        let accountController = accountNC()
+        let mainFeedController = UINavigationController(rootViewController: mainFeedVC)
         mainFeedController.navigationBar.barStyle = .black
-        let trendingController = UINavigationController(rootViewController: TrendingVC())
+        let trendingController = UINavigationController(rootViewController: trendingVC)
         trendingController.navigationBar.barStyle = .black
         let searchController = UINavigationController(rootViewController: SearchVC())
         searchController.navigationBar.barStyle = .black
@@ -85,16 +93,50 @@ class MainTabController: UITabBarController {
         viewControllers = [mainFeedController, trendingController, studioController, searchController, accountController]
     }
     
-    func tabSelection(index: Int) {
+    private func accountNC() -> UINavigationController {
+        var controller: UINavigationController
+        if CurrentProgram.isPublisher! {
+            controller = programAccountNC
+        } else {
+            controller = listenerAccountNC
+        }
+        controller.navigationBar.barStyle = .default
+        return controller
+    }
+    
+    private func visitLinkedEpisode(episode: Episode) {
+//        let dailyFeedVC = viewControllers![0] as! UINavigationController
+//        let dailyFeed = dailyFeedVC.viewControllers[0] as! MainFeedVC
+//        dailyFeed.showCommentsFor(episode: Episode())
+    }
+    
+    private func visitLinkedChannel(program: Program) {
+        let searchNavController = viewControllers![3] as! UINavigationController
+        let searchVC = searchNavController.viewControllers[0] as! SearchVC
+        searchVC.programToPush = program
+    }
+    
+    private func tabSelection(index: Int) {
+        determineAccountNC()
         selectedIndex = index
         
         switch selectedIndex {
         case 0:
-            let dailyFeedVC = viewControllers![0] as! UINavigationController
-            dailyFeedVC.popToRootViewController(animated: true)
+            let dailyFeedNC = viewControllers![0] as! UINavigationController
+            if dailyFeedNC.visibleViewController == mainFeedVC {
+//                mainFeedVC.tableView.setScrollBarToTopLeftAnimated()
+                dailyFeedNC.popToRootViewController(animated: true)
+            } else {
+                dailyFeedNC.popToRootViewController(animated: true)
+            }
         case 1:
-            let trendingVC = viewControllers![1] as! UINavigationController
-            trendingVC.popToRootViewController(animated: true)
+            let trendingNV = viewControllers![1] as! UINavigationController
+            if trendingNV.visibleViewController == trendingVC {
+                trendingVC.tableView.setScrollBarToTopLeft()
+//                trendingNV.popToRootViewController(animated: true)
+            } else {
+                trendingNV.popToRootViewController(animated: true)
+            }
         case 2:
             let studioVC = viewControllers![2] as! UINavigationController
             studioVC.popToRootViewController(animated: true)
@@ -102,10 +144,18 @@ class MainTabController: UITabBarController {
             let searchVC = viewControllers![3] as! UINavigationController
             searchVC.popToRootViewController(animated: true)
         case 4:
-            let accountVC = viewControllers![4] as! UINavigationController
-            accountVC.popToRootViewController(animated: true)
+             let accountVC = viewControllers![4] as! UINavigationController
+             accountVC.popToRootViewController(animated: true)
         default:
             break
+        }
+    }
+    
+    private func determineAccountNC() {
+        if CurrentProgram.isPublisher! {
+            viewControllers![4] = programAccountNC
+        } else {
+            viewControllers![4] = listenerAccountNC
         }
     }
 }

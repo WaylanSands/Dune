@@ -85,13 +85,11 @@ class AllowNotifications: UIView {
     }
     
     func styleForScreens() {
-        print("Check")
         switch UIDevice.current.deviceType {
         case .iPhone4S, .iPhoneSE:
-            buttonFontSize = 13
+            buttonFontSize = 12
             headingYConstant = 70.0
         case .iPhone8:
-            print("Size is 12")
             buttonFontSize = 13
             headingYConstant = 145.0
         case .iPhone8Plus:
@@ -161,7 +159,7 @@ class AllowNotifications: UIView {
         interestButtonsStackView.addArrangedSubview(sixthStackView)
         sixthStackView.addArrangedSubview(categoryButton(title: categories[15].rawValue))
         sixthStackView.addArrangedSubview(categoryButton(title: categories[16].rawValue))
-        
+        sixthStackView.addArrangedSubview(categoryButton(title: categories[17].rawValue))
     }
     
     @objc func categorySelected(_ sender: UIButton) {

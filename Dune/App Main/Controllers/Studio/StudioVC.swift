@@ -9,6 +9,7 @@
 
 import UIKit
 import AVFoundation
+import FirebaseAnalytics
 import FirebaseFirestore
 import MobileCoreServices
 
@@ -193,7 +194,6 @@ class StudioVC: UIViewController {
                 }
             }
         } else {
-            print("No drafts to display")
             noDraftEpisodesLabel.isHidden = false
             studioImage.isHidden = false
             tableView.isHidden = true
@@ -354,6 +354,7 @@ class StudioVC: UIViewController {
                     editingVC.selectedProgram = program
                 }
                 self.navigationController?.pushViewController(editingVC, animated: true)
+                duneTabBar.isHidden = true
                 self.fetchingDraft = false
             }
         }
@@ -441,7 +442,6 @@ extension StudioVC: UITableViewDelegate, UITableViewDataSource {
             User.draftEpisodeIDs!.removeAll { $0 == draftEpisode.ID }
             
             if User.draftEpisodeIDs?.count == 0 {
-                print("No drafts to display")
                 self.noDraftEpisodesLabel.isHidden = false
                 tableView.isHidden = true
             }
@@ -534,6 +534,7 @@ extension StudioVC: CustomAlertDelegate {
             CurrentProgram.isPublisher = true
             FireStoreManager.updateUserSetUpTo(false)
             FireStoreManager.updateProgramToPublisher()
+            Analytics.setUserProperty("publisher", forName: "publisher_or_listener")
         }
         
         editProgramVC.switchedFromStudio = true

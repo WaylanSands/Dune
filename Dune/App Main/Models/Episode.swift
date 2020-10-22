@@ -73,6 +73,8 @@ class Episode: Comparable {
         linkHeadline = data["linkHeadline"] as? String
         canonicalUrl = data["canonicalUrl"] as? String
         commentsRef = data["commentsRef"] as? CollectionReference
+        
+        hasBeenPlayed = User.hasPlayed(ID: ID)
     }
     
     static func < (lhs: Episode, rhs: Episode) -> Bool {

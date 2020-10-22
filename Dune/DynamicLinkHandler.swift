@@ -48,6 +48,18 @@ struct DynamicLinkHandler {
                     print(each)
                 }
             } else if components.path == "/programs" {
+                if let programID = queryItems.first(where: {$0.name == "programID"}) {
+                    guard let id = programID.value else { completion(nil)
+                        return
+                    }
+                    if Auth.auth().currentUser != nil {
+                        FireStoreManager.fetchAndCreatePossibleProgramWith(programID: id) { program in
+                            completion(program)
+                        }
+                    } else {
+                        completion(nil)
+                    }
+                }
                 for each in queryItems {
                     print(each)
                 }
@@ -238,6 +250,7 @@ struct DynamicLinkHandler {
                     completion(nil)
                 } else {
                     guard let url = url else { return }
+                    print(url)
                     completion(url)
                 }
             }

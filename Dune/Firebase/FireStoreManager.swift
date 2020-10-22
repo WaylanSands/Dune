@@ -6,14 +6,50 @@
 //  Copyright © 2020 Waylan Sands. All rights reserved.
 //
 
+import CloudKit
 import FirebaseAuth
 import FirebaseFirestore
+import FirebaseMessaging
 import FirebaseStorage
 
 struct FireStoreManager {
     
     static let db = Firestore.firestore()
     
+    static func addVersionControl() {
+        
+        db.collection("versionControl").document("current")
+            .addSnapshotListener { snapshot, error in
+                guard let doc = snapshot else { return }
+                guard let data = doc.data() else { return }
+                
+                let latestBuild = data["build"] as! String
+                let onAppStore = data["onAppStore"] as! Bool
+                let appStoreLink = data["appStoreLink"] as! String
+                let latestVersion = data["version"] as! String
+                
+                if (VersionControl.version != Double(latestVersion) || VersionControl.build != Double(latestBuild)) && !onAppStore {
+                    VersionControl.currentBuild = Double(latestBuild)!
+                    print("Not the right version")
+                    
+                    let appDelegate = UIApplication.shared.delegate as! AppDelegate
+                    let newBuild = CustomAlertView(alertType: .oldVersion)
+
+                    appDelegate.newVersionAlert(alert: newBuild)
+                    
+                } else if onAppStore {
+                    print("It's on the AppStore")
+                    VersionControl.appStoreLink = appStoreLink
+                    
+                    let appDelegate = UIApplication.shared.delegate as! AppDelegate
+                    let onAppStore = CustomAlertView(alertType: .onTheAppStore)
+
+                    appDelegate.newVersionAlert(alert: onAppStore)
+                }
+        }
+    }
+    
+
     static func addImagePathToProgram(with programID: String, imagePath: String, imageID: String) {
         DispatchQueue.global(qos: .userInitiated).async {
             
@@ -33,7 +69,7 @@ struct FireStoreManager {
                 if let error = error {
                     print("There has been an error adding the imagePath to program: \(error.localizedDescription)")
                 } else {
-                    print("Successfully added imagePath to program")
+                    print("Successfully added imagePath to channel")
                 }
             }
         }
@@ -149,7 +185,7 @@ struct FireStoreManager {
                 if let error = error {
                     print("There has been an error adding the imagePath to program: \(error.localizedDescription)")
                 } else {
-                    print("Successfully added imagePath to program")
+                    print("Successfully added imagePath to channel")
                 }
             }
         }
@@ -538,8 +574,31 @@ struct FireStoreManager {
         DispatchQueue.global(qos: .userInitiated).async {
             
             let episodeRef = db.collection("episodes").document()
+            let trendingRef = db.collection("lastSevenDays").document(episodeRef.documentID)
+
             let ID = episodeRef.documentID
             let currentTime = Timestamp()
+            
+            trendingRef.setData([
+                "ID": trendingRef.documentID,
+                "postedAt" : currentTime,
+                "duration" : duration,
+                "imageID" : imageID,
+                "category" : CurrentProgram.primaryCategory!,
+                "imagePath" :imagePath,
+                "programName" : programName,
+                "username" : User.username!,
+                "caption" : caption,
+                "tags" : tags,
+                "programID" : programID,
+                "ownerID" : User.ID!,
+                "audioPath" : audioURL.absoluteString,
+                "audioID" : audioID,
+                "likeCount" : 0,
+                "commentCount" : 0,
+                "shareCount" : 0,
+                "listenCount" : 0,
+            ])
             
             episodeRef.setData([
                 "ID": ID,
@@ -584,6 +643,8 @@ struct FireStoreManager {
                                 FireBaseComments.addMentionToProgramWith(usernames: usernames, caption: caption, contentID: ID, primaryEpisodeID: nil, mentionType: .episodeTag)
                             }
                             completion(true)
+                            FirebaseNotifications.notifySubscribersWith(episodeID: ID, channelID: programID, channelName: programName, imageID: imageID, caption: caption)
+                            
                         }
                     }
                     
@@ -592,15 +653,45 @@ struct FireStoreManager {
         }
     }
     
+    // MARK: - Push Subscribers With New Episode
+    
     static func publishEpisodeWithLinkMedia(programID: String, imageID: String, imagePath: String, programName: String, caption: String, richLink: String, linkIsSmall: Bool, linkImage: UIImage, linkHeadline: String, canonicalUrl: String, tags: [String], audioID: String, audioURL: URL, duration: String, completion: @escaping (Bool) ->()) {
         
         DispatchQueue.global(qos: .userInitiated).async {
             
             let episodeRef = db.collection("episodes").document()
+            let trendingRef = db.collection("lastSevenDays").document(episodeRef.documentID)
+
             let linkImageID = NSUUID().uuidString
             let ID = episodeRef.documentID
             
             let currentTime = Timestamp()
+            
+            trendingRef.setData([
+                "ID": trendingRef.documentID,
+                "postedAt" : currentTime,
+                "category" : CurrentProgram.primaryCategory!,
+                "duration" : duration,
+                "imageID" : imageID,
+                "imagePath" :imagePath,
+                "programName" : programName,
+                "username" : User.username!,
+                "caption" : caption,
+                "tags" : tags,
+                "richLink" : richLink,
+                "linkIsSmall" :  linkIsSmall,
+                "linkHeadline" : linkHeadline,
+                "canonicalUrl" : canonicalUrl,
+                "linkImageID" : linkImageID,
+                "programID" : programID,
+                "ownerID" : User.ID!,
+                "audioPath" : audioURL.absoluteString,
+                "audioID" : audioID,
+                "likeCount" : 0,
+                "commentCount" : 0,
+                "shareCount" : 0,
+                "listenCount" : 0,
+            ])
             
             episodeRef.setData([
                 "ID": ID,
@@ -933,6 +1024,8 @@ struct FireStoreManager {
                 FireStorageManager.deleteImageFileFromStorage(imageID: imageID!)
             }
             
+//            InstanceID.instanceID().deleteID
+                        
             programsRef.getDocuments { (snapshot, error) in
                 if error != nil {
                     print("Error attempting to get subscription documents \(error!.localizedDescription)")
@@ -1200,6 +1293,14 @@ struct FireStoreManager {
         
         DispatchQueue.global(qos: .userInitiated).async {
             
+            db.collection("lastSevenDays").document(ID).delete() { err in
+                if let err = err {
+                    print("Error deleting episode document: \(err)")
+                } else {
+                    print("Trending document successfully deleted!")
+                }
+            }
+            
             db.collection("episodes").document(ID).delete() { err in
                 if let err = err {
                     print("Error deleting episode document: \(err)")
@@ -1230,16 +1331,13 @@ struct FireStoreManager {
     }
     
     static func getUserData(completion: @escaping () -> ()) {
-        print("0")
 
         guard let uid = Auth.auth().currentUser?.uid else { return }
-         print("1")
         let userRef = db.collection("users").document(uid)
         
         DispatchQueue.global(qos: .userInitiated).async {
             
             userRef.getDocument { (snapshot, error) in
-                print("2")
 
                 if error != nil {
                     print("There was an error getting users document: \(error!)")
@@ -1247,7 +1345,6 @@ struct FireStoreManager {
 
                     guard let data = snapshot?.data() else { return }
                     User.modelUser(data: data)
-                    print("3")
 
                     let onBoarded = data["completedOnBoarding"] as! Bool
                     
@@ -1279,7 +1376,7 @@ struct FireStoreManager {
         }
         
         let episodeRef = db.collection("episodes").document(episodeID)
-        
+        let trendingRef = db.collection("lastSevenDays").document(episodeID)
         
         DispatchQueue.global(qos: .userInitiated).async {
             
@@ -1297,6 +1394,21 @@ struct FireStoreManager {
                     }
                 }
             }
+            
+            trendingRef.updateData([
+                 "likeCount" : FieldValue.increment(like)
+             ]) { error in
+                 
+                 if error != nil {
+                     print("There was an error updating the like count on the episode")
+                 } else {
+                     if increment == .increase {
+                         updateUserWithLiked(episodeID: episodeID)
+                     } else {
+                         updateUserWithUnLiked(episodeID: episodeID)
+                     }
+                 }
+             }
         }
     }
     

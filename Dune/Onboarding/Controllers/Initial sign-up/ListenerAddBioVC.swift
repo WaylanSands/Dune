@@ -6,7 +6,7 @@
 //
 
 import UIKit
-import OneSignal
+import FirebaseAnalytics
 import FirebaseFirestore
 
 class ListenerAddBioVC: UIViewController {
@@ -457,6 +457,7 @@ class ListenerAddBioVC: UIViewController {
         FireStoreManager.updateProgramRep(programID: CurrentProgram.ID!, repMethod: "signup", rep: 25)
         
         if CurrentProgram.imageID != nil {
+            Analytics.logEvent("user_set_up_account", parameters: nil)
             User.isSetUp = true
         }
         
@@ -485,6 +486,7 @@ class ListenerAddBioVC: UIViewController {
     }
 
     func presentDailyFeed() {
+        Analytics.setUserProperty("listener", forName: "publisher_or_listener")
         let tabBar = MainTabController()
         tabBar.selectedIndex = 0
         DuneDelegate.newRootView(tabBar)

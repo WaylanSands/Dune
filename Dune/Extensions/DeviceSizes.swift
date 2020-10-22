@@ -77,7 +77,11 @@ extension UIDevice {
         case .iPhone8Plus:
             return 64.0
         case .iPhone11:
-            return 88.0
+            if #available(iOS 14.0, *) {
+                return 92.0
+            } else {
+                return 88.0
+            }
         case .iPhone11Pro:
             return 88.0
         case .iPhone11ProMax:

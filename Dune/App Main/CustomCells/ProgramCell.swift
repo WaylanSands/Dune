@@ -237,6 +237,9 @@ class ProgramCell: UITableViewCell {
     
     // MARK: Setup Cell
     func normalSetUp(program: Program) {
+        if self.program != program {
+            programImageButton.setImage(nil, for: .normal)
+        }
         self.program = program
        
         if program.imageID != nil {
@@ -328,7 +331,7 @@ class ProgramCell: UITableViewCell {
             subs = "Subscriber"
         }
         
-        programStatsLabel.text = "\(subscribers) \(subs)  |  \(episodes.count) \(eps) |  Rep \(program.rep)"
+        programStatsLabel.text = "\(subscribers) \(subs)  |  \(episodes.count) \(eps) |  Cred \(program.rep)"
     }
     
 //    func configureSubscribeButton() {
@@ -420,14 +423,14 @@ class ProgramCell: UITableViewCell {
     }
     
     func configureViews() {
-        self.addSubview(programImageButton)
+        contentView.addSubview(programImageButton)
         programImageButton.translatesAutoresizingMaskIntoConstraints = false
-        programImageButton.topAnchor.constraint(equalTo: self.topAnchor, constant: 15).isActive = true
-        programImageButton.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 16).isActive = true
+        programImageButton.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 15).isActive = true
+        programImageButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16).isActive = true
         programImageButton.heightAnchor.constraint(equalToConstant: imageSize).isActive = true
         programImageButton.widthAnchor.constraint(equalToConstant: imageSize).isActive = true
         
-        self.addSubview(playbackBarView)
+        contentView.addSubview(playbackBarView)
         playbackBarView.translatesAutoresizingMaskIntoConstraints = false
         playbackBarView.centerXAnchor.constraint(equalTo: programImageButton.centerXAnchor).isActive = true
         playbackBarView.topAnchor.constraint(equalTo: programImageButton.bottomAnchor, constant: 7).isActive = true
@@ -460,15 +463,15 @@ class ProgramCell: UITableViewCell {
 //        programSettingsButton.topAnchor.constraint(equalTo: programImageButton.topAnchor, constant: 0).isActive = true
 //        programSettingsButton.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -16).isActive = true
         
-        self.addSubview(subscribeButton)
+        contentView.addSubview(subscribeButton)
         subscribeButton.translatesAutoresizingMaskIntoConstraints = false
         subscribeButton.topAnchor.constraint(equalTo: programImageButton.topAnchor, constant: -4).isActive = true
-        subscribeButton.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -16).isActive = true
+        subscribeButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16).isActive = true
         subscribeButton.heightAnchor.constraint(equalToConstant: 22).isActive = true
         subscribeButtonWidth = subscribeButton.widthAnchor.constraint(equalToConstant: subscribeButton.intrinsicContentSize.width)
         subscribeButtonWidth.isActive = true
         
-        self.addSubview(programNameStackedView)
+        contentView.addSubview(programNameStackedView)
         programNameStackedView.translatesAutoresizingMaskIntoConstraints = false
         programNameStackedView.topAnchor.constraint(equalTo: programImageButton.topAnchor, constant: -5).isActive = true
         programNameStackedView.leadingAnchor.constraint(equalTo: programImageButton.trailingAnchor, constant: 10).isActive = true
@@ -492,18 +495,18 @@ class ProgramCell: UITableViewCell {
 //        usernameButton.leadingAnchor.constraint(equalTo: programNameLabel.leadingAnchor, constant: -2).isActive = true
 //        usernameButton.trailingAnchor.constraint(lessThanOrEqualTo: subscribeButton.leadingAnchor, constant: -20).isActive = true
         
-        self.addSubview(captionTextView)
+        contentView.addSubview(captionTextView)
         captionTextView.translatesAutoresizingMaskIntoConstraints = false
         captionTextView.topAnchor.constraint(equalTo: programNameStackedView.bottomAnchor, constant: 2).isActive = true
         captionTextView.leadingAnchor.constraint(equalTo: programNameStackedView.leadingAnchor).isActive = true
-        captionTextView.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -16.0).isActive = true
+        captionTextView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16.0).isActive = true
         
-        self.addSubview(tagScrollView)
+        contentView.addSubview(tagScrollView)
         tagScrollView.translatesAutoresizingMaskIntoConstraints = false
         tagScrollViewTop = tagScrollView.topAnchor.constraint(equalTo: captionTextView.bottomAnchor, constant: 10)
         tagScrollViewTop.isActive = true
         tagScrollView.leadingAnchor.constraint(equalTo: captionTextView.leadingAnchor).isActive = true
-        tagScrollView.trailingAnchor.constraint(equalTo: self.trailingAnchor,constant: -16).isActive = true
+        tagScrollView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor,constant: -16).isActive = true
         tagScrollViewHeight = tagScrollView.heightAnchor.constraint(equalToConstant: 22)
         tagScrollViewHeight.isActive = true
         
@@ -514,40 +517,39 @@ class ProgramCell: UITableViewCell {
         tagContainingStackView.heightAnchor.constraint(equalTo: tagScrollView.heightAnchor).isActive = true
         tagContainingStackView.trailingAnchor.constraint(equalTo: tagScrollView.trailingAnchor).isActive = true
         
-        self.addSubview(programStatsLabel)
+        contentView.addSubview(programStatsLabel)
         programStatsLabel.translatesAutoresizingMaskIntoConstraints = false
         programStatsLabel.topAnchor.constraint(equalTo: tagScrollView.bottomAnchor,constant: 15).isActive = true
         programStatsLabel.leadingAnchor.constraint(equalTo: tagScrollView.leadingAnchor, constant: 5).isActive = true
-        programStatsLabel.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: -15).isActive = true
+        programStatsLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -15).isActive = true
         
-        self.addSubview(gradientOverlayView)
+        contentView.addSubview(gradientOverlayView)
         gradientOverlayView.translatesAutoresizingMaskIntoConstraints = false
         gradientOverlayView.centerYAnchor.constraint(equalTo: tagScrollView.centerYAnchor).isActive = true
         gradientOverlayView.heightAnchor.constraint(equalToConstant: 40.0).isActive = true
         gradientOverlayView.trailingAnchor.constraint(equalTo: tagScrollView.trailingAnchor).isActive = true
         gradientOverlayView.widthAnchor.constraint(equalToConstant: 22.0).isActive = true
         
-        self.addSubview(self.moreButton)
-        self.moreButton.translatesAutoresizingMaskIntoConstraints = false
-        self.moreButton.bottomAnchor.constraint(equalTo: self.captionTextView.bottomAnchor).isActive = true
-        self.moreButton.trailingAnchor.constraint(equalTo: self.captionTextView.trailingAnchor).isActive = true
-        self.moreButton.heightAnchor.constraint(equalToConstant: self.captionTextView.font!.lineHeight).isActive = true
-        self.moreButton.widthAnchor.constraint(equalToConstant: 40).isActive = true
+        contentView.addSubview(moreButton)
+        moreButton.translatesAutoresizingMaskIntoConstraints = false
+        moreButton.bottomAnchor.constraint(equalTo: captionTextView.bottomAnchor).isActive = true
+        moreButton.trailingAnchor.constraint(equalTo: captionTextView.trailingAnchor).isActive = true
+        moreButton.heightAnchor.constraint(equalToConstant: captionTextView.font!.lineHeight).isActive = true
+        moreButton.widthAnchor.constraint(equalToConstant: 40).isActive = true
         
-        self.captionTextView.addSubview(self.moreGradientView)
-        self.moreGradientView.translatesAutoresizingMaskIntoConstraints = false
-        self.moreGradientView.centerYAnchor.constraint(equalTo: self.moreButton.centerYAnchor).isActive = true
-        self.moreGradientView.trailingAnchor.constraint(equalTo: self.moreButton.leadingAnchor).isActive = true
-        self.moreGradientView.heightAnchor.constraint(equalToConstant: 20).isActive = true
-        self.moreGradientView.widthAnchor.constraint(equalToConstant: 20).isActive = true
+        captionTextView.addSubview(moreGradientView)
+        moreGradientView.translatesAutoresizingMaskIntoConstraints = false
+        moreGradientView.centerYAnchor.constraint(equalTo: moreButton.centerYAnchor).isActive = true
+        moreGradientView.trailingAnchor.constraint(equalTo: moreButton.leadingAnchor).isActive = true
+        moreGradientView.heightAnchor.constraint(equalToConstant: 20).isActive = true
+        moreGradientView.widthAnchor.constraint(equalToConstant: 20).isActive = true
 
-        self.moreButtonGradient.frame = CGRect(x: 0, y: 0, width: 18, height: 20)
+        moreButtonGradient.frame = CGRect(x: 0, y: 0, width: 18, height: 20)
         let whiteColor = UIColor.white
-        self.moreButtonGradient.colors = [whiteColor.withAlphaComponent(0.0).cgColor, whiteColor.withAlphaComponent(5.0).cgColor, whiteColor.withAlphaComponent(1.0).cgColor]
-
-        self.moreGradientView.transform = CGAffineTransform(rotationAngle: (-90.0 * .pi) / 180.0)
-        self.moreGradientView.layer.insertSublayer(self.moreButtonGradient, at: 0)
-        self.bringSubviewToFront(self.moreButton)
+        moreButtonGradient.colors = [whiteColor.withAlphaComponent(0.0).cgColor, whiteColor.withAlphaComponent(5.0).cgColor, whiteColor.withAlphaComponent(1.0).cgColor]
+        moreGradientView.transform = CGAffineTransform(rotationAngle: (-90.0 * .pi) / 180.0)
+        moreGradientView.layer.insertSublayer(moreButtonGradient, at: 0)
+        bringSubviewToFront(moreButton)
     }
     
     func addGradient() {

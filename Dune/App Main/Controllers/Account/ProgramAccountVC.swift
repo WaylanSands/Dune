@@ -8,6 +8,7 @@
 
 import UIKit
 import Firebase
+import MessageUI
 import MobileCoreServices
 
 protocol updateProgramAccountScrollDelegate {
@@ -87,6 +88,8 @@ class ProgramAccountVC : UIViewController {
         let button = UIButton()
         button.layer.cornerRadius = 7
         button.clipsToBounds = true
+//        button.layer.borderColor = CustomStyle.secondShade.cgColor
+//        button.layer.borderWidth = 1
         button.contentMode = .scaleAspectFill
         button.addTarget(self, action: #selector(changeImageButtonPress), for: .touchUpInside)
         return button
@@ -358,7 +361,9 @@ class ProgramAccountVC : UIViewController {
         usernameLabel.text = "@\(User.username!)"
         categoryLabel.text = CurrentProgram.primaryCategory
         repCountLabel.text = CurrentProgram.rep!.roundedWithAbbreviations
-        mainImageButton.setBackgroundImage(CurrentProgram.image!, for: .normal)
+        if let image = CurrentProgram.image {
+            mainImageButton.setBackgroundImage(image, for: .normal)
+        }
         subscriberCountLabel.text = "\(CurrentProgram.subscriberCount!.roundedWithAbbreviations)"
         
         configureSummary()
@@ -372,6 +377,7 @@ class ProgramAccountVC : UIViewController {
     
     func configureDelegates() {
         uploadIntroOptionAlert.alertDelegate = self
+        settingsLauncher.settingsDelegate = self
         nonPublisherAlert.alertDelegate = self
     }
     
@@ -857,7 +863,6 @@ class ProgramAccountVC : UIViewController {
             UIApplication.shared.keyWindow!.addSubview(nonPublisherAlert)
         } else {
             let createProgramVC = CreateProgramVC()
-//            createProgramVC.hidesBottomBarWhenPushed = true
             navigationController?.pushViewController(createProgramVC, animated: true)
         }
     }
@@ -1219,6 +1224,62 @@ extension ProgramAccountVC: UIDocumentPickerDelegate {
         navigationController?.pushViewController(editingVC, animated: true)
     }
     
+}
+
+extension ProgramAccountVC: SettingsLauncherDelegate {
+    
+    func selectionOf(setting: String) {
+        switch setting {
+        case "Share via...":
+            FireStoreManager.getProgramWith(username:  CurrentProgram.username!) { (program) in
+                if let fetchedProgram = program {
+                    DynamicLinkHandler.createLinkFor(program: fetchedProgram) { [weak self] url in
+                        guard let self = self else { return }
+                        let promoText = "Check out my channel on Dune."
+                        let items: [Any] = [promoText, url]
+                        let ac = UIActivityViewController(activityItems: items, applicationActivities: nil)
+                        DispatchQueue.main.async {
+                            self.present(ac, animated: true)
+                        }
+                    }
+                }
+            }
+        case "Share via SMS":
+            FireStoreManager.getProgramWith(username:  CurrentProgram.username!) { (program) in
+                if let fetchedProgram = program {
+                    DynamicLinkHandler.createLinkFor(program: fetchedProgram) { [weak self] url in
+                        guard let self = self else { return }
+                        let promoText = "Check out my channel on Dune. \(url)"
+                        DispatchQueue.main.async {
+                            self.shareViaSMSWith(messageBody: promoText)
+                        }
+                    }
+                }
+            }
+        default:
+            break
+        }
+    }
+    
+    
+}
+
+extension ProgramAccountVC: MFMessageComposeViewControllerDelegate {
+    
+    func shareViaSMSWith(messageBody: String) {
+        if (MFMessageComposeViewController.canSendText()) {
+            let controller = MFMessageComposeViewController()
+            controller.body = messageBody
+            controller.messageComposeDelegate = self
+            present(controller, animated: true, completion: nil)
+        }
+    }
+
+    func messageComposeViewController(_ controller: MFMessageComposeViewController, didFinishWith result: MessageComposeResult) {
+        //... handle sms screen actions
+        dismiss(animated: true, completion: nil)
+    }
+
 }
 
 

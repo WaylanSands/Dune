@@ -8,7 +8,7 @@
 
 import UIKit
 import FirebaseAuth
-import OneSignal
+import FirebaseAnalytics
 import FirebaseFirestore
 
 class AccountTypeVC: UIViewController {
@@ -103,6 +103,7 @@ class AccountTypeVC: UIViewController {
         } else if sender.titleLabel?.text == "Start Listening" {
             networkingIndicator.taskLabel.text = "Fast tracking account"
             UIApplication.shared.keyWindow!.addSubview(self.networkingIndicator)
+            Analytics.setUserProperty("listener", forName: "publisher_or_listener")
             CurrentProgram.isPublisher = false
             User.isSetUp = false
             fastTrack = true
@@ -125,6 +126,7 @@ class AccountTypeVC: UIViewController {
     
     func createNewUser() {
         DispatchQueue.global(qos: .userInitiated).async {
+            Analytics.logEvent(AnalyticsEventSignUp, parameters: ["signup-method" : "email"])
             print("creating new user")
             
             Auth.auth().createUser(withEmail: User.email!, password: User.password!) { result, error in
@@ -137,6 +139,7 @@ class AccountTypeVC: UIViewController {
                     
                     guard let uid = result?.user.uid else { return }
                     User.ID = uid
+                    User.didAllowEmailNotifications = true
                     
                     self.db.collection("users").document(uid).setData([
                         "ID" : User.ID!,
@@ -146,6 +149,7 @@ class AccountTypeVC: UIViewController {
                         "displayName": User.username!,
                         "completedOnBoarding" : false,
                         "interests" :  User.interests!,
+                        "didAllowEmailNotifications" : true,
                     ]) { err in
                         if let err = err {
                             print("Error creating new user document: \(err)")
@@ -211,7 +215,6 @@ class AccountTypeVC: UIViewController {
                 if let error = error {
                     print("There has been an error adding program ID: \(error.localizedDescription)")
                 } else {
-                    print("Successfully added channel ID")
                     
                     if CurrentProgram.imageID != nil {
                         programRef.setData(["imageID" : CurrentProgram.imageID!])
@@ -232,17 +235,19 @@ class AccountTypeVC: UIViewController {
                         "subscriberCount" : 0,
                         "hasMentions" : false,
                         "ownerID" : User.ID!,
+                        "addedByDune": false,
                         "subscriberIDs": [],
                         "programIDs" : [],
                         "hasIntro" : false,
                         "repMethods" : [],
+                        "locationType": "Global",
                         "tags" : [],
                         "rep" : 0
                     ]) { (error) in
                         if let error = error {
                             print("There has been an error adding the program: \(error.localizedDescription)")
                         } else {
-                            print("Successfully fast tracked")
+                            // Successfully fast tracked
                             self.presentSearchVC()
                         }
                     }
@@ -332,12 +337,14 @@ class AccountTypeVC: UIViewController {
         DispatchQueue.global(qos: .userInitiated).sync {
             
             let userRef = db.collection("users").document(User.ID!)
+            User.didAllowEmailNotifications = true
             
             userRef.setData([
                 "ID" : User.ID!,
                 "isSetUp" : User.isSetUp!,
                 "username" : User.username!,
                 "completedOnBoarding" : false,
+                "didAllowEmailNotifications" : true,
             ]) { error in
                 if error != nil {
                     print("Error attempting to signup Twitter user: \(error!.localizedDescription)")
@@ -395,7 +402,6 @@ class AccountTypeVC: UIViewController {
                 if let error = error {
                     print("There has been an error adding program ID: \(error.localizedDescription)")
                 } else {
-                    print("Successfully added channel ID")
                     
                     if CurrentProgram.imageID != nil {
                         programRef.setData(["imageID" : CurrentProgram.imageID!])
@@ -415,18 +421,20 @@ class AccountTypeVC: UIViewController {
                         "hasMentions" : false,
                         "subscriberCount" : 0,
                         "ownerID" : User.ID!,
+                        "addedByDune": false,
                         "subscriberIDs": [],
                         "programIDs" : [],
                         "hasIntro" : false,
                         "repMethods" : [],
                         "ID" : User.ID!,
+                        "locationType": "Global",
                         "tags": [],
                         "rep": 0
                     ]) { (error) in
                         if let error = error {
                             print("There has been an error adding the program: \(error.localizedDescription)")
                         } else {
-                            print("Successfully fast tracked")
+                            // Successfully fast tracked
                             self.presentSearchVC()
                         }
                     }
@@ -437,6 +445,12 @@ class AccountTypeVC: UIViewController {
     
     @objc func backButtonPress() {
         navigationController?.popViewController(animated: true)
+    }
+    
+    @IBAction func termsAndConditionsPress(_ sender: UIButton) {
+        if let url = URL(string: "https://www.dailyune.com/terms-and-conditions") {
+            UIApplication.shared.open(url, options: [:])
+        }
     }
     
 }

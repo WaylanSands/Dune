@@ -11,6 +11,7 @@
 	<key>com.apple.developer.associated-domains</key>
 	<array>
 		<string>applinks:dailyune.page.link</string>
+		<string>webcredentials:dailyune.com</string>
 	</array>
 	<key>com.apple.developer.icloud-container-identifiers</key>
 	<array>
@@ -27,9 +28,5 @@
 	</array>
 	<key>com.apple.developer.ubiquity-kvstore-identifier</key>
 	<string>$(TeamIdentifierPrefix)$(CFBundleIdentifier)</string>
-	<key>com.apple.security.application-groups</key>
-	<array>
-		<string>group.PMDTSY5PZ6.com.dailyune.Dune.onesignal</string>
-	</array>
 </dict>
 </plist>

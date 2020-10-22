@@ -46,14 +46,14 @@ class PrimaryCommentCell: CommentCell {
     }
     
     override func configureViews() {
-        self.addSubview(profileImageButton)
+        contentView.addSubview(profileImageButton)
         profileImageButton.translatesAutoresizingMaskIntoConstraints = false
-        profileImageButton.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 14).isActive = true
-        profileImageButton.topAnchor.constraint(equalTo: self.topAnchor, constant: 15).isActive = true
+        profileImageButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 14).isActive = true
+        profileImageButton.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 15).isActive = true
         profileImageButton.heightAnchor.constraint(equalToConstant: 40).isActive = true
         profileImageButton.widthAnchor.constraint(equalToConstant: 40).isActive = true
         
-        self.addSubview(usernameButton)
+        contentView.addSubview(usernameButton)
         usernameButton.translatesAutoresizingMaskIntoConstraints = false
         usernameButton.topAnchor.constraint(equalTo: profileImageButton.topAnchor, constant: -2).isActive = true
         usernameButton.leadingAnchor.constraint(equalTo: profileImageButton.trailingAnchor, constant: 7).isActive = true
@@ -61,47 +61,47 @@ class PrimaryCommentCell: CommentCell {
 
 //        usernameButton.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -32).isActive = true
         
-        self.addSubview(activeCommentLabel)
+        contentView.addSubview(activeCommentLabel)
         activeCommentLabel.translatesAutoresizingMaskIntoConstraints = false
         activeCommentLabel.topAnchor.constraint(equalTo: usernameButton.bottomAnchor).isActive = true
         activeCommentLabel.leadingAnchor.constraint(equalTo: usernameButton.leadingAnchor).isActive = true
-        activeCommentLabel.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -32).isActive = true
+        activeCommentLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -32).isActive = true
         activeCommentLabel.heightAnchor.constraint(greaterThanOrEqualToConstant: activeCommentLabel.font!.lineHeight).isActive = true
         
-        self.addSubview(dateLabel)
+        contentView.addSubview(dateLabel)
         dateLabel.translatesAutoresizingMaskIntoConstraints = false
         dateLabel.topAnchor.constraint(equalTo: activeCommentLabel.bottomAnchor, constant: 7).isActive = true
         dateLabel.leadingAnchor.constraint(equalTo: activeCommentLabel.leadingAnchor, constant: 5).isActive = true
         
-        self.addSubview(voteCountLabel)
+        contentView.addSubview(voteCountLabel)
         voteCountLabel.translatesAutoresizingMaskIntoConstraints = false
         voteCountLabel.leadingAnchor.constraint(equalTo: dateLabel.trailingAnchor, constant: 20).isActive = true
         voteCountLabel.centerYAnchor.constraint(equalTo: dateLabel.centerYAnchor).isActive = true
         
-        self.addSubview(replyButton)
+        contentView.addSubview(replyButton)
         replyButton.translatesAutoresizingMaskIntoConstraints = false
         replyButton.leadingAnchor.constraint(equalTo: voteCountLabel.trailingAnchor, constant: 20).isActive = true
         replyButton.centerYAnchor.constraint(equalTo: dateLabel.centerYAnchor).isActive = true
         
-        self.addSubview(voteUpButton)
+        contentView.addSubview(voteUpButton)
         voteUpButton.translatesAutoresizingMaskIntoConstraints = false
         voteUpButton.topAnchor.constraint(equalTo: profileImageButton.topAnchor, constant: 5).isActive = true
-        voteUpButton.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -17).isActive = true
+        voteUpButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -17).isActive = true
         
-        self.addSubview(voteDownButton)
+        contentView.addSubview(voteDownButton)
         voteDownButton.translatesAutoresizingMaskIntoConstraints = false
         voteDownButton.bottomAnchor.constraint(equalTo: profileImageButton.bottomAnchor, constant: 20).isActive = true
         voteDownButton.centerXAnchor.constraint(equalTo: voteUpButton.centerXAnchor).isActive = true
         
-        self.addSubview(replyDashView)
+        contentView.addSubview(replyDashView)
         replyDashView.translatesAutoresizingMaskIntoConstraints = false
         replyDashView.leadingAnchor.constraint(equalTo: activeCommentLabel.leadingAnchor).isActive = true
         replyDashView.topAnchor.constraint(equalTo: dateLabel.bottomAnchor, constant: 25).isActive = true
-        replyDashView.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: -15).isActive = true
+        replyDashView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -15).isActive = true
         replyDashView.heightAnchor.constraint(equalToConstant: 1.5).isActive = true
         replyDashView.widthAnchor.constraint(equalToConstant: 30).isActive = true
         
-        self.addSubview(replyCountButton)
+        contentView.addSubview(replyCountButton)
         replyCountButton.translatesAutoresizingMaskIntoConstraints = false
         replyCountButton.centerYAnchor.constraint(equalTo: replyDashView.centerYAnchor).isActive = true
         replyCountButton.leadingAnchor.constraint(equalTo: replyDashView.trailingAnchor, constant: 15).isActive = true

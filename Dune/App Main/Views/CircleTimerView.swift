@@ -10,7 +10,7 @@ import UIKit
 import Foundation
 
 
-class LoadingCircleView: PassThoughView {
+class CircleTimerView: PassThoughView {
     
     let shapeLayer = CAShapeLayer()
     let tracklayer = CAShapeLayer()
@@ -46,7 +46,7 @@ class LoadingCircleView: PassThoughView {
     func animate() {
         self.isHidden = false
         basicAnimation.toValue = 1
-        basicAnimation.duration = 120
+        basicAnimation.duration = 300
         
         basicAnimation.fillMode = .forwards
         basicAnimation.isRemovedOnCompletion = false

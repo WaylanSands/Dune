@@ -248,9 +248,7 @@ class CreateUserVC: UIViewController {
                 createPassword.passwordTextField.resignFirstResponder()
             case addBirthDate:
                 User.interests = addBirthDate.selectedCategories
-                print("Selected allow")
                 navigateToAccountType()
-//                askToRegisterForNotifications()
             default: return
             }
         }
@@ -273,15 +271,6 @@ class CreateUserVC: UIViewController {
 //            self.statusStyle = .default
 //            self.customNavBar.leftButton.setImage(UIImage(named: "back-button-blk"), for: .normal)
 //            self.setNeedsStatusBarAppearanceUpdate()
-        }
-    }
-    
-    func askToRegisterForNotifications() {
-        let appDelegate = UIApplication.shared.delegate as! AppDelegate
-        appDelegate.promptForPushNotifications { _ in
-            DispatchQueue.main.async {
-//                self.navigateToAccountType()
-            }
         }
     }
     

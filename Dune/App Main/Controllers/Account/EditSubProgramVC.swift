@@ -108,6 +108,10 @@ class EditSubProgramVC: UIViewController {
         return label
     }()
     
+    var namePlaceholder: NSAttributedString {
+        NSAttributedString(string: program.name, attributes: [NSAttributedString.Key.foregroundColor : CustomStyle.fourthShade])
+    }
+    
     let programNameTextView: UITextField = {
         let textField = UITextField()
         textField.text = ""
@@ -170,6 +174,7 @@ class EditSubProgramVC: UIViewController {
         textField.addTarget(self, action: #selector(linkFieldChanged), for: UIControl.Event.editingChanged)
         textField.autocapitalizationType = .none
         textField.autocorrectionType = .no
+        textField.returnKeyType = .done
         return textField
     }()
     
@@ -348,16 +353,15 @@ class EditSubProgramVC: UIViewController {
     }
     
     override func viewWillAppear(_ animated: Bool) {
-//        self.hidesBottomBarWhenPushed = true
+        programNameTextView.attributedPlaceholder = namePlaceholder
         tagScrollView.setScrollBarToTopLeft()
         scrollView.setScrollBarToTopLeft()
         configureSegmentControl()
+        configureDelegates()
         createTagButtons()
         
         profileImageView.image = program.image
         summaryTextLabel.text = program.summary
-        let placeholder = NSAttributedString(string: program.name, attributes: [NSAttributedString.Key.foregroundColor : CustomStyle.fourthShade])
-        programNameTextView.attributedPlaceholder = placeholder;
         
         var weblink: String
         
@@ -369,6 +373,11 @@ class EditSubProgramVC: UIViewController {
         
         websiteTextView.text = weblink
         websiteTextView.textColor = CustomStyle.fourthShade
+    }
+    
+    func configureDelegates() {
+        programNameTextView.delegate = self
+        websiteTextView.delegate = self
     }
     
     func  configureSegmentControl() {
@@ -763,6 +772,7 @@ class EditSubProgramVC: UIViewController {
             websiteTextView.text = "www.example.com"
             program.webLink = nil
         }
+        programNameTextView.attributedPlaceholder = namePlaceholder
         programNameTextView.resignFirstResponder()
         websiteTextView.resignFirstResponder()
         navigationItem.rightBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: nil, action: nil)
@@ -821,12 +831,9 @@ extension EditSubProgramVC: CustomAlertDelegate {
             removeIntroButton.removeFromSuperview()
         } else if deleteProgramPress {
             FireStoreManager.deleteProgram(with: program.ID, introID: program.introID, imageID: program.imageID)
-            let programIndex = CurrentProgram.subPrograms?.firstIndex(where: { program in
-                program.ID == self.program.ID
-            })
-            let idIndex = CurrentProgram.programIDs?.firstIndex(of: program.ID)
-            CurrentProgram.subPrograms?.remove(at: programIndex!)
-            CurrentProgram.programIDs?.remove(at: idIndex!)
+            CurrentProgram.subscriptionIDs?.removeAll(where: { $0 == program.ID})
+            CurrentProgram.subPrograms?.removeAll(where: { $0.ID == program.ID})
+            CurrentProgram.programIDs?.removeAll(where: { $0 == program.ID})
             navigationController?.popToRootViewController(animated: true)
         }
     }
@@ -834,6 +841,16 @@ extension EditSubProgramVC: CustomAlertDelegate {
     func cancelButtonPress() {
         removeIntroPress = false
         deleteProgramPress = false
+    }
+    
+}
+
+extension EditSubProgramVC: UITextFieldDelegate {
+    
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        saveChanges()
+        print("Touch")
+        return true
     }
     
 }

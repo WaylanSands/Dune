@@ -117,7 +117,7 @@ extension FileManager {
             let track = fileManger.contents(atPath: fileURL.path)
             return track
         } else {
-            print("There is no data with that fileName")
+            // There is no data with that fileName
             return nil
         }
     }
@@ -132,7 +132,7 @@ extension FileManager {
             let track = fileManger.contents(atPath: fileURL.path)
             return track
         } else {
-            print("There is no data with that fileName")
+            // There is no data with that fileName
             return nil
         }
     }
@@ -278,13 +278,11 @@ extension FileManager {
                 } catch {
                     print("Unable to remove file from cache \(error)")
                 }
-            } else {
-                print("There is no data with that fileName")
             }
 
             do {
                 try data.write(to: fileURL)
-                print("Adding image to cache")
+                // Adding image to cache
                 FireStorageManager.storeCachedProgram(image: image, with: imageID, for: programID)
             }
             catch {
@@ -311,13 +309,11 @@ extension FileManager {
                 } catch {
                     print("Unable to remove file from cache \(error)")
                 }
-            } else {
-                print("There is no data with that fileName")
             }
 
             do {
                 try data.write(to: fileURL)
-                print("Adding image to cache")
+                // Adding image to cache
                 FireStorageManager.storeCachedProgram(image: image, with: imageID, for: programID)
             }
             catch {
@@ -348,7 +344,7 @@ extension FileManager {
                 
                 do {
                     try data.write(to: fileURL)
-                    print("Adding image to cache")
+                    // Adding image to cache
                     FireStorageManager.storeCachedTwitter(image: image, with: imageID)
                 }
                 catch {

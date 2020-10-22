@@ -10,6 +10,7 @@ import UIKit
 import MessageUI
 import CryptoKit
 import FirebaseAuth
+import UserNotifications
 import AuthenticationServices
 
 class AccountSettingsVC: UIViewController {
@@ -20,16 +21,27 @@ class AccountSettingsVC: UIViewController {
         case email
     }
     
-    lazy var contentViewSize = CGSize(width: view.frame.width, height: 1030.0)
-    lazy var versionNumber = VersionControl.lastetVersion
+    let notificationCenter = NotificationCenter.default
+
+    lazy var contentViewSize = CGSize(width: view.frame.width, height: 1070.0)
+    lazy var versionNumber = VersionControl.version
     
     let logOutAlert = CustomAlertView(alertType: .loggingOut)
+    var logoutPress = false
+
     let deleteAccountAlert = CustomAlertView(alertType: .deleteAccount)
+    var deleteAccountPress = false
+
+    let allowNotificationsAlert = CustomAlertView(alertType: .didNotAllowPushes)
+    var allowNotificationsPress = false
+
+    
     var networkingIndicator = NetworkingProgress()
     var feedbackView = DeleteSettings()
     
-    var logoutPress = false
-    var deleteAccountPress = false
+    var notificationsAllowed = false
+    
+    
     var provider = OAuthProvider(providerID: "twitter.com")
     var signUpMethod: SignUpMethod!
     
@@ -56,15 +68,45 @@ class AccountSettingsVC: UIViewController {
         return view
     }()
     
-    lazy var inviteButton: UIButton = {
+    lazy var surveyButton: UIButton = {
         let button = UIButton()
-        button.setTitle("Promote Dune", for: .normal)
+        button.setTitle("Dune Beta Program", for: .normal)
         button.contentHorizontalAlignment = .left
-        button.setTitleColor(CustomStyle.primaryBlack, for: .normal)
+        button.setTitleColor(CustomStyle.primaryBlue, for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        button.addTarget(self, action: #selector(presentInvitePeopleVC), for: .touchUpInside)
+        button.addTarget(self, action: #selector(surveyButtonPress), for: .touchUpInside)
         button.imageEdgeInsets = UIEdgeInsets(top: 0, left: view.frame.width - 40, bottom: 0, right: 0)
         button.titleEdgeInsets = UIEdgeInsets(top: 0, left: -6, bottom: 0, right: 0)
+        button.setImage(UIImage(named: "blue-arrow"), for: .normal)
+        button.backgroundColor  = CustomStyle.primaryBlue.withAlphaComponent(0.16)
+        button.contentEdgeInsets = UIEdgeInsets(top: 20, left: 16, bottom: 20, right: -16)
+        return button
+    }()
+    
+    lazy var suggestionButton: UIButton = {
+        let button = UIButton()
+        button.setTitle("Make a suggestion", for: .normal)
+        button.contentHorizontalAlignment = .left
+        button.setTitleColor(CustomStyle.primaryBlack, for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .medium)
+        button.addTarget(self, action: #selector(suggestionButtonPress), for: .touchUpInside)
+        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: view.frame.width - 40, bottom: 0, right: 0)
+        button.titleEdgeInsets = UIEdgeInsets(top: 0, left: -6, bottom: 0, right: 0)
+        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: -16)
+        button.setImage(UIImage(named: "selection-arrow"), for: .normal)
+        return button
+    }()
+    
+    lazy var bugReportButton: UIButton = {
+        let button = UIButton()
+        button.setTitle("Report a bug", for: .normal)
+        button.contentHorizontalAlignment = .left
+        button.setTitleColor(CustomStyle.primaryBlack, for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .medium)
+        button.addTarget(self, action: #selector(bugReportButtonPress), for: .touchUpInside)
+        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: view.frame.width - 40, bottom: 0, right: 0)
+        button.titleEdgeInsets = UIEdgeInsets(top: 0, left: -6, bottom: 0, right: 0)
+        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: -16)
         button.setImage(UIImage(named: "selection-arrow"), for: .normal)
         return button
     }()
@@ -78,19 +120,7 @@ class AccountSettingsVC: UIViewController {
         button.addTarget(self, action: #selector(presentHelpCentreVC), for: .touchUpInside)
         button.imageEdgeInsets = UIEdgeInsets(top: 0, left: view.frame.width - 40, bottom: 0, right: 0)
         button.titleEdgeInsets = UIEdgeInsets(top: 0, left: -6, bottom: 0, right: 0)
-        button.setImage(UIImage(named: "selection-arrow"), for: .normal)
-        return button
-    }()
-    
-    lazy var feedbackButton: UIButton = {
-        let button = UIButton()
-        button.setTitle("Provide Feedback", for: .normal)
-        button.contentHorizontalAlignment = .left
-        button.setTitleColor(CustomStyle.primaryBlack, for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .medium)
-        button.addTarget(self, action: #selector(sendEmail), for: .touchUpInside)
-        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: view.frame.width - 40, bottom: 0, right: 0)
-        button.titleEdgeInsets = UIEdgeInsets(top: 0, left: -6, bottom: 0, right: 0)
+        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: -16)
         button.setImage(UIImage(named: "selection-arrow"), for: .normal)
         return button
     }()
@@ -104,6 +134,7 @@ class AccountSettingsVC: UIViewController {
         button.addTarget(self, action: #selector(presentEditListenerVC), for: .touchUpInside)
         button.imageEdgeInsets = UIEdgeInsets(top: 0, left: view.frame.width - 40, bottom: 0, right: 0)
         button.titleEdgeInsets = UIEdgeInsets(top: 0, left: -6, bottom: 0, right: 0)
+        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: -16)
         button.setImage(UIImage(named: "selection-arrow"), for: .normal)
         return button
     }()
@@ -204,6 +235,7 @@ class AccountSettingsVC: UIViewController {
     
     let newEpisodesToggle: UISwitch = {
         let toggle = UISwitch()
+        toggle.addTarget(self, action: #selector(newEpisodesToggled), for: .valueChanged)
         toggle.isOn = true
         toggle.onTintColor = CustomStyle.primaryBlue
         return toggle
@@ -250,6 +282,7 @@ class AccountSettingsVC: UIViewController {
     let commentReplyToggle: UISwitch = {
         let toggle = UISwitch()
         toggle.isOn = true
+        toggle.addTarget(self, action: #selector(commentReplyToggled), for: .valueChanged)
         toggle.onTintColor = CustomStyle.primaryBlue
         return toggle
     }()
@@ -292,9 +325,10 @@ class AccountSettingsVC: UIViewController {
         return label
     }()
     
-    let epMentionToggle: UISwitch = {
+    let episodeTaggedToggle: UISwitch = {
         let toggle = UISwitch()
         toggle.isOn = true
+        toggle.addTarget(self, action: #selector(episodeTaggedToggled), for: .valueChanged)
         toggle.onTintColor = CustomStyle.primaryBlue
         return toggle
     }()
@@ -340,6 +374,7 @@ class AccountSettingsVC: UIViewController {
     let marketingToggle: UISwitch = {
         let toggle = UISwitch()
         toggle.isOn = true
+        toggle.addTarget(self, action: #selector(marketingToggled), for: .valueChanged)
         toggle.onTintColor = CustomStyle.primaryBlue
         return toggle
     }()
@@ -493,15 +528,66 @@ class AccountSettingsVC: UIViewController {
         super.viewDidLoad()
         setupNavBar()
         configureViews()
+        allowNotificationsAlert.alertDelegate = self
         deleteAccountAlert.alertDelegate = self
         logOutAlert.alertDelegate = self
     }
     
+    @objc func appMovedToForeground() {
+        print("App moved to foreground!")
+        
+        let current = UNUserNotificationCenter.current()
+
+        current.getNotificationSettings(completionHandler: { (settings) in
+            if settings.authorizationStatus == .notDetermined {
+                // Notification permission has not been asked yet, go for it!
+            } else if settings.authorizationStatus == .denied {
+                FirebaseNotifications.userDidAllowNotifications(false)
+                FirebaseNotifications.unsubscribeFromAllChannels()
+                // Notification permission was previously denied, go to settings & privacy to re-enable
+            } else if settings.authorizationStatus == .authorized {
+                // Notification permission was already granted
+                print("Granted")
+                if User.didAllowNotifications == nil || User.didAllowNotifications == false {
+                    FirebaseNotifications.userDidAllowNotifications(true)
+                    FirebaseNotifications.allowAllNotifications()
+                    FirebaseNotifications.subscribeToAllChannels()
+                    DispatchQueue.main.async {
+                        self.configureNotificationToggles()
+                    }
+                }
+            }
+        })
+    }
+    
     override func viewWillAppear(_ animated: Bool) {
         feedbackView.madeSelection = addedDeletionFeedback
+        configureNotificationToggles()
         duneTabBar.isHidden = false
         configurePrivacyState()
+        notificationCenter.addObserver(self, selector: #selector(appMovedToForeground), name: UIApplication.willEnterForegroundNotification, object: nil)
     }
+    
+    func configureNotificationToggles() {
+        if User.didAllowNotifications == nil || User.didAllowNotifications == false {
+            marketingToggle.isOn = false
+            newEpisodesToggle.isOn = false
+            commentReplyToggle.isOn = false
+            episodeTaggedToggle.isOn = false
+        } else {
+            marketingToggle.isOn = User.didAllowMarketingNotifications!
+            commentReplyToggle.isOn = User.didAllowCommentNotifications!
+            episodeTaggedToggle.isOn = User.didAllowTaggingNotifications!
+            newEpisodesToggle.isOn = User.didAllowNewEpisodeNotifications!
+        }
+        
+        if User.didAllowEmailNotifications != nil {
+            emailMarketingToggle.isOn =  User.didAllowEmailNotifications!
+        } else {
+            emailMarketingToggle.isOn =  true
+        }
+    }
+
     
     func  configurePrivacyState() {
         switch CurrentProgram.privacyStatus {
@@ -515,6 +601,8 @@ class AccountSettingsVC: UIViewController {
     }
     
     override func viewWillDisappear(_ animated: Bool) {
+        notificationCenter.removeObserver(self, name: UIApplication.willEnterForegroundNotification, object: nil)
+        allowNotificationsPress = false
         deleteAccountPress = false
         logoutPress = false
     }
@@ -556,7 +644,6 @@ class AccountSettingsVC: UIViewController {
     }
     
     func configureViews() {
-        
         view.backgroundColor = .white
         view.addSubview(scrollView)
         scrollView.pinEdges(to: view)
@@ -566,12 +653,13 @@ class AccountSettingsVC: UIViewController {
         
         containerView.addSubview(topStackedView)
         topStackedView.translatesAutoresizingMaskIntoConstraints = false
-        topStackedView.topAnchor.constraint(equalTo: containerView.topAnchor,constant: 35).isActive = true
-        topStackedView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 16.0).isActive = true
-        topStackedView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -16.0).isActive = true
+        topStackedView.topAnchor.constraint(equalTo: containerView.topAnchor).isActive = true
+        topStackedView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor).isActive = true
+        topStackedView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor).isActive = true
         
-        topStackedView.addArrangedSubview(inviteButton)
-        topStackedView.addArrangedSubview(feedbackButton)
+        topStackedView.addArrangedSubview(surveyButton)
+        topStackedView.addArrangedSubview(suggestionButton)
+        topStackedView.addArrangedSubview(bugReportButton)
         topStackedView.addArrangedSubview(helpCentreButton)
         topStackedView.addArrangedSubview(editAccountButton)
         
@@ -631,7 +719,7 @@ class AccountSettingsVC: UIViewController {
         
         notificationsStackedView.addArrangedSubview(epMentionStackedView)
         epMentionStackedView.addArrangedSubview(epMentionLabelsStackedView)
-        epMentionStackedView.addArrangedSubview(epMentionToggle)
+        epMentionStackedView.addArrangedSubview(episodeTaggedToggle)
         
         epMentionLabelsStackedView.addArrangedSubview(epMentionLabel)
         epMentionLabelsStackedView.addArrangedSubview(epMentionSubView)
@@ -736,9 +824,14 @@ class AccountSettingsVC: UIViewController {
         customNavBar.pinNavBarTo(view)
     }
     
-    @objc func presentInvitePeopleVC() {
-        let inviteVC = InvitePeopleVC()
-        navigationController?.pushViewController(inviteVC, animated: true)
+    @objc func surveyButtonPress() {
+        if CurrentProgram.isPublisher! && User.isSetUp! {
+            let publisherVC = PublisherSurveyVC()
+            navigationController?.pushViewController(publisherVC, animated: true)
+        } else {
+            let listenerVC = ListenerSurveyVC()
+            navigationController?.pushViewController(listenerVC, animated: true)
+        }
     }
     
     @objc func presentHelpCentreVC() {
@@ -784,6 +877,98 @@ class AccountSettingsVC: UIViewController {
         }
     }
     
+    // MARK: - Toggle Notifications
+    
+    @objc func newEpisodesToggled() {
+        if FirebaseNotifications.askedPermission {
+            if hasAllowedNotifications() {
+                FirebaseNotifications.toggle(notification: .newEpisodes, on: newEpisodesToggle.isOn)
+                if newEpisodesToggle.isOn == false {
+                    FirebaseNotifications.unsubscribeFromAllChannels()
+                } else {
+                    FirebaseNotifications.subscribeToAllChannels()
+                }
+            } else {
+                showAlertForPushes()
+            }
+        } else {
+            let appDelegate = UIApplication.shared.delegate as! AppDelegate
+            appDelegate.promptForPushNotifications { granted in
+                if granted {
+                    FirebaseNotifications.subscribeToAllChannels()
+                    self.configureNotificationToggles()
+                }
+            }
+        }
+    }
+    
+    @objc func commentReplyToggled() {
+        if FirebaseNotifications.askedPermission {
+            if hasAllowedNotifications() {
+                FirebaseNotifications.toggle(notification: .commentNotifications, on: commentReplyToggle.isOn)
+            } else {
+                showAlertForPushes()
+            }
+        } else {
+            let appDelegate = UIApplication.shared.delegate as! AppDelegate
+            appDelegate.promptForPushNotifications { granted in
+                if granted {
+                    FirebaseNotifications.subscribeToAllChannels()
+                    self.configureNotificationToggles()
+                }
+            }
+        }
+    }
+    
+    func showAlertForPushes() {
+        allowNotificationsPress = true
+        UIApplication.shared.keyWindow!.addSubview(allowNotificationsAlert)
+    }
+    
+    func hasAllowedNotifications() -> Bool {
+        guard let allowedPushes = User.didAllowNotifications else {
+            return false
+        }
+        return allowedPushes
+    }
+    
+    @objc func episodeTaggedToggled() {
+        if FirebaseNotifications.askedPermission {
+            if hasAllowedNotifications() {
+                FirebaseNotifications.toggle(notification: .taggingNotifications, on:  episodeTaggedToggle.isOn)
+            } else {
+                showAlertForPushes()
+            }
+        } else {
+            let appDelegate = UIApplication.shared.delegate as! AppDelegate
+            appDelegate.promptForPushNotifications { granted in
+                if granted {
+                    FirebaseNotifications.subscribeToAllChannels()
+                    self.configureNotificationToggles()
+                }
+            }
+        }
+    }
+    
+    @objc func marketingToggled() {
+        if FirebaseNotifications.askedPermission {
+            if hasAllowedNotifications() {
+                FirebaseNotifications.toggle(notification: .marketingNotifications, on:  marketingToggle.isOn)
+            } else {
+                showAlertForPushes()
+            }
+        } else {
+            let appDelegate = UIApplication.shared.delegate as! AppDelegate
+            appDelegate.promptForPushNotifications { granted in
+                if granted {
+                    FirebaseNotifications.subscribeToAllChannels()
+                    self.configureNotificationToggles()
+                }
+            }
+        }
+    }
+    
+    
     func subscribeCurrentInvites() {
         let inviteIDs = CurrentProgram.pendingChannels! + CurrentProgram.deniedChannels!
         for each in inviteIDs {
@@ -792,19 +977,26 @@ class AccountSettingsVC: UIViewController {
         }
     }
     
-    @objc func sendEmail() {
-        if MFMailComposeViewController.canSendMail() {
-            let mail = MFMailComposeViewController()
-            mail.mailComposeDelegate = self
-            mail.setToRecipients(["waylan@dailyune.com"])
-            mail.setMessageBody("<p>Dune Feedback</p>", isHTML: true)
-            
-            present(mail, animated: true)
-        } else {
-            // show failure alert
-            print("Email not configured")
-        }
+    @objc func suggestionButtonPress() {
+        let suggestionVC = SuggestionVC()
+        navigationController?.pushViewController(suggestionVC, animated: true)
+//        if MFMailComposeViewController.canSendMail() {
+//            let mail = MFMailComposeViewController()
+//            mail.mailComposeDelegate = self
+//            mail.setToRecipients(["waylan@dailyune.com"])
+//            mail.setMessageBody("<p>Dune Feedback</p>", isHTML: true)
+//
+//            present(mail, animated: true)
+//        } else {
+//            // show failure alert
+//            print("Email not configured")
+//        }
     }
+    
+        @objc func bugReportButtonPress() {
+            let reportBugVC = ReportBugVC()
+            navigationController?.pushViewController(reportBugVC, animated: true)
+        }
     
     // MARK: Logging out
     @objc func logoutButtonPress() {
@@ -818,6 +1010,7 @@ class AccountSettingsVC: UIViewController {
         UIApplication.shared.keyWindow!.addSubview(deleteAccountAlert)
 //        view.addSubview(deleteAccountAlert)
     }
+    
 }
 
 extension AccountSettingsVC: MFMailComposeViewControllerDelegate {
@@ -869,6 +1062,16 @@ extension AccountSettingsVC: CustomAlertDelegate {
                         break
                     }
                     
+                }
+            }
+        } else if allowNotificationsPress {
+            print("Should open")
+            allowNotificationsPress = false
+            let url = URL(string:UIApplication.openSettingsURLString)
+            if UIApplication.shared.canOpenURL(url!) {
+                // can open succeeded.. opening the url
+                UIApplication.shared.open(url!, options: [:]) {_ in
+                    print("Did return")
                 }
             }
         }
@@ -932,7 +1135,8 @@ extension AccountSettingsVC: CustomAlertDelegate {
                         User.signOutUser()
                         CurrentProgram.signOutProgram()
                         UserDefaults.standard.set(false, forKey: "loggedIn")
-                        self.tabBarController?.tabBar.isUserInteractionEnabled = false
+                        duneTabBar.isHidden = true
+//                        self.tabBarController?.tabBar.isUserInteractionEnabled = false
                         self.navigationController?.pushViewController(signupScreen, animated: false)
                     }
                 }
@@ -943,6 +1147,7 @@ extension AccountSettingsVC: CustomAlertDelegate {
     func cancelButtonPress() {
         logoutPress = false
         deleteAccountPress = false
+        allowNotificationsPress = false
     }
   
 }

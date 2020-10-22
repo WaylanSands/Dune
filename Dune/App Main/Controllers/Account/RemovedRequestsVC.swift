@@ -149,7 +149,6 @@ class RemovedRequestsVC: UIViewController {
     func fetchPendingPrograms() {
         FireStoreManager.fetchRemovedInvitesWith(channelIDs: removedIDs)
         { [unowned self] channels in
-            print("Returned with removed: \(channels)")
             if !channels.isEmpty {
                 self.downloadedChannels = channels
                 self.tableView.reloadData()

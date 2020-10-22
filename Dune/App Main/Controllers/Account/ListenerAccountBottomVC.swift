@@ -222,8 +222,9 @@ class ListenerAccountBottomVC: UIViewController {
     }
        
     func fetchProgramsSubscriptions() {
+        print("fetchProgramsSubscriptions")
         var subscriptionIDs = CurrentProgram.subscriptionIDs!
-        subscriptionIDs.removeAll(where: { programsOwnIDs.contains($0) })
+        subscriptionIDs.removeAll(where: {$0 == CurrentProgram.ID})
         
         // here
         if subscriptionIDs.count == 0 {
@@ -237,10 +238,14 @@ class ListenerAccountBottomVC: UIViewController {
         currentSubscriptions = subscriptionIDs
         
         if downloadedPrograms.count != subscriptionIDs.count {
+            print("isnt")
+
             var subsEndIndex = 20
             
             if subscriptionIDs.count - fetchedProgramsIDs.count < subsEndIndex {
+                  print("is")
                 subsEndIndex = subscriptionIDs.count - fetchedProgramsIDs.count
+                print(subsEndIndex)
             }
             
             subsEndIndex += subsStartingIndex
@@ -248,12 +253,11 @@ class ListenerAccountBottomVC: UIViewController {
             let programIDs = Array(subscriptionIDs[subsStartingIndex..<subsEndIndex])
             fetchedProgramsIDs += programIDs
             subsStartingIndex = fetchedProgramsIDs.count
-            
             self.isFetchingPrograms = true
             FireStoreManager.fetchProgramsWith(IDs: programIDs) { programs in
                 if programs != nil {
                     DispatchQueue.main.async {
-                        self.downloadedPrograms = programs!
+                        self.downloadedPrograms += programs!
                         self.subscriptionTV.reloadData()
                         self.loadingView.isHidden = true
                         self.isFetchingPrograms = false

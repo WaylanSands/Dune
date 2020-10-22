@@ -7,8 +7,10 @@
 //
 
 import UIKit
+import CloudKit
 import Firebase
-import OneSignal
+import FirebaseMessaging
+import FirebaseFirestore
 import UserNotifications
 
 @UIApplicationMain
@@ -18,42 +20,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         
-        let _: OSHandleNotificationReceivedBlock = { notification in
-            print("Received Notification: \(String(describing: notification!.payload.notificationID))")
-         }
-
-        let _: OSHandleNotificationActionBlock = { result in
-             // This block gets called when the user reacts to a notification received
-             let payload: OSNotificationPayload = result!.notification.payload
-
-             var fullMessage = payload.body
-             print("Message = \(String(describing: fullMessage))")
-
-             if payload.additionalData != nil {
-                 if payload.title != nil {
-                     let messageTitle = payload.title
-                    print("payload.category \(String(describing: payload.category))")
-                    print("payload.subtitle \(String(describing: payload.subtitle))")
-                     print("Message Title = \(messageTitle!)")
-                 }
-
-                 let additionalData = payload.additionalData
-                 if additionalData?["actionSelected"] != nil {
-                     fullMessage = fullMessage! + "\nPressed ButtonID: \(String(describing: additionalData!["actionSelected"]))"
-                 }
-             }
-         }
-        
-        let oneSignalInitSettings = [kOSSettingsKeyAutoPrompt: false, kOSSettingsKeyInAppLaunchURL: false]
-       
-        OneSignal.setRequiresUserPrivacyConsent(true);
-        OneSignal.initWithLaunchOptions(launchOptions,
-          appId: "9f5a5e7b-642b-4e21-abf3-c2cacda049bf",
-          handleNotificationAction: nil,
-          settings: oneSignalInitSettings)
-        
-        OneSignal.inFocusDisplayType = OSNotificationDisplayType.notification;
-        
         if #available(iOS 13.0, *) { } else {
             let launchScreen = LaunchVC()
             self.window = UIWindow(frame: UIScreen.main.bounds)
@@ -61,25 +27,42 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             self.window!.makeKeyAndVisible()
         }
         
+        UIApplication.shared.applicationIconBadgeNumber = 0
+        FirebaseConfiguration.shared.setLoggerLevel(.min)
+        FirebaseApp.configure()
+        FireStoreManager.addVersionControl()
+        Messaging.messaging().delegate = self
         return true
     }
         
     func promptForPushNotifications(completion: @escaping (Bool) -> ()) {
-        OneSignal.consentGranted(true)
-        OneSignal.promptForPushNotifications(userResponse: { accepted in
-            UserDefaults.standard.set(true, forKey: "askedPermissionForNotifications")
-            UserDefaults.standard.set(accepted, forKey: "allowedNotifications")
-            print("User accepted notifications: \(accepted)")
-            if accepted {
-                OneSignal.sendTags([ "username" : User.username! ])
+        UserDefaults.standard.set(true, forKey: "askedPermissionForNotifications")
+        UNUserNotificationCenter.current().delegate = self
+        
+        let authOptions: UNAuthorizationOptions = [.alert, .badge, .sound]
+        
+        UNUserNotificationCenter.current().requestAuthorization(options: authOptions, completionHandler: { granted, error in
+            if let error = error {
+                print("Error: \(error.localizedDescription)")
+            } else {
+                DispatchQueue.main.async {
+                    UIApplication.shared.registerForRemoteNotifications()
+                    completion(granted)
+                }
             }
-            completion(accepted)
         })
+        
+        print("Prompted")
+    }
+    
+    func newVersionAlert(alert: CustomAlertView) {
+         UIApplication.shared.windows.last?.addSubview(alert)
     }
     
     override init() {
-        FirebaseConfiguration.shared.setLoggerLevel(.min)        
-        FirebaseApp.configure()
+//        FirebaseConfiguration.shared.setLoggerLevel(.min)
+//        FirebaseApp.configure()
+//        Messaging.messaging().delegate = self
     }
     
     func application(_ application: UIApplication, continue userActivity: NSUserActivity, restorationHandler: @escaping ([UIUserActivityRestoring]?) -> Void) -> Bool {
@@ -132,25 +115,67 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     
     func applicationWillTerminate(_ application: UIApplication) {
         // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
+        switch dunePlayBar.currentState {
+        case .playing, .paused:
+            User.appendPlayedEpisode(ID: dunePlayBar.episode.ID , progress: dunePlayBar.currentProgress)
+        default:
+            break
+        }
     }
     
 }
 
-extension AppDelegate {
-
-    @available(iOS 10.0, *)
-    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
-        //use response.notification.request.content.userInfo to fetch push data
-    }
-
-    // for iOS < 10
-//    func application(_ application: UIApplication, didReceive notification: UILocalNotification) {
-//        //use notification.userInfo to fetch push data
-//    }
+extension AppDelegate: UNUserNotificationCenterDelegate {
     
-    func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
-        //use userInfo to fetch push data
-    }
+    
 }
+
+extension AppDelegate: MessagingDelegate {
+    
+    
+    
+    func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable: Any]) {
+        print("Hello \(userInfo)")
+    }
+
+    func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable: Any],
+                     fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+        print("Hello two \(userInfo)")
+
+      completionHandler(UIBackgroundFetchResult.newData)
+    }
+    
+    func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String) {
+        print("Firebase registration token: \(fcmToken)")
+    }
+    
+    func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                willPresent notification: UNNotification,
+                                withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        let userInfo = notification.request.content.userInfo
+
+        // Print full message.
+         print("Hello three \(userInfo)")
+
+        // Change this to your preferred presentation option
+        completionHandler([.alert, .badge, .sound])
+    }
+
+    //When clicked
+    func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                didReceive response: UNNotificationResponse,
+                                withCompletionHandler completionHandler: @escaping () -> Void) {
+        let userInfo = response.notification.request.content.userInfo
+        // Print message ID.
+
+
+        // Print full message.
+        print("Hello four \(userInfo)")
+        //You can here parse it, and redirect.
+        completionHandler()
+    }
+    
+}
+
 
 

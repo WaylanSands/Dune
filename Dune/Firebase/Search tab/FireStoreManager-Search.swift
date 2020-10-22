@@ -9,6 +9,7 @@
 import Foundation
 
 import Foundation
+import FirebaseMessaging
 import FirebaseFirestore
 
 extension FireStoreManager {
@@ -90,7 +91,7 @@ extension FireStoreManager {
         }
     }
 
-    static func updatePublishedEpisodeWith(episodeID: String, caption: String, tags: [String]?, completion: @escaping (Bool) ->()) {
+    static func updatePublishedEpisodeWith(richLink: String?, episodeID: String, caption: String, tags: [String]?, completion: @escaping (Bool) ->()) {
 
         DispatchQueue.global(qos: .userInitiated).async {
             
@@ -101,10 +102,18 @@ extension FireStoreManager {
             }
             
             let episodeRef = db.collection("episodes").document(episodeID)
+            let trendingRef = db.collection("lastSevenDays").document(episodeID)
+            
+            trendingRef.updateData([
+                "caption" : caption,
+                "tags" : episodeTags,
+                "richLink" : richLink ?? FieldValue.delete()
+            ])
             
             episodeRef.updateData([
                 "caption" : caption,
-                "tags" : episodeTags
+                "tags" : episodeTags,
+                "richLink" : richLink ?? FieldValue.delete()
             ]) { error in
                 if error != nil {
                     print("Error updating published episode")
@@ -116,6 +125,55 @@ extension FireStoreManager {
                         FireBaseComments.addMentionToProgramWith(usernames: usernames, caption: caption, contentID: episodeID, primaryEpisodeID: nil, mentionType: .episodeTag)
                     }
                     completion(true)
+                }
+            }
+        }
+    }
+    
+    static func updatePublishedEpisodeWithLinkFor(episodeID: String, caption: String, tags: [String]?, richLink: String, linkImageID: String, linkIsSmall: Bool, linkImage: UIImage, linkHeadline: String, canonicalUrl: String, completion: @escaping (Bool) ->()) {
+
+        DispatchQueue.global(qos: .userInitiated).async {
+            
+            var episodeTags = [String]()
+            
+            if tags != nil {
+                episodeTags = tags!
+            }
+            
+            let episodeRef = db.collection("episodes").document(episodeID)
+            let trendingRef = db.collection("lastSevenDays").document(episodeID)
+            
+            trendingRef.updateData([
+                "caption" : caption,
+                "tags" : episodeTags,
+                "richLink" : richLink,
+                "linkIsSmall" :  linkIsSmall,
+                "linkHeadline" : linkHeadline,
+                "canonicalUrl" : canonicalUrl,
+                "linkImageID" : linkImageID,
+            ])
+            
+            episodeRef.updateData([
+                "caption" : caption,
+                "tags" : episodeTags,
+                "richLink" : richLink,
+                "linkIsSmall" :  linkIsSmall,
+                "linkHeadline" : linkHeadline,
+                "canonicalUrl" : canonicalUrl,
+                "linkImageID" : linkImageID,
+            ]) { error in
+                if error != nil {
+                    print("Error updating published episode")
+                    completion(false)
+                } else {
+                    print("Episode has been updated")
+                    let usernames = checkIfUserWasTagged(caption: caption)
+                    if !usernames.isEmpty {
+                        FireBaseComments.addMentionToProgramWith(usernames: usernames, caption: caption, contentID: episodeID, primaryEpisodeID: nil, mentionType: .episodeTag)
+                    }
+                    storeRichLink(image: linkImage, imageID: linkImageID) {
+                        completion(true)
+                    }
                 }
             }
         }
@@ -141,9 +199,15 @@ extension FireStoreManager {
     }
     
     static func subscribeToProgramWith(programID: String) {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 4) {
-            self.askToRegisterForNotifications()
+        if FirebaseNotifications.askedPermission {
+            print("WAS ASKED")
+            FirebaseNotifications.subscribeToChannelsNotifications(channelID: programID, register: true)
+        } else {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 4) {
+                self.registerForPushNotifications()
+            }
         }
+        
         DispatchQueue.global(qos: .userInitiated).async {
             let userRef = db.collection("programs").document(CurrentProgram.ID!)
             
@@ -151,23 +215,26 @@ extension FireStoreManager {
                 "subscriptionIDs" : FieldValue.arrayUnion([programID]),
             ]) { error in
                 if error != nil {
-                    print("Error subscribing user to program")
+                    print("Error subscribing user to channel")
                 } else {
-                    print("Success subscribing user to program")
+                    print("Success subscribing user to channel")
                 }
             }
         }
     }
     
-    static func askToRegisterForNotifications() {
-        let askedPermission = UserDefaults.standard.bool(forKey: "askedPermissionForNotifications")
-        
-        if !askedPermission {
-            let appDelegate = UIApplication.shared.delegate as! AppDelegate
-            appDelegate.promptForPushNotifications { _ in
+    static func registerForPushNotifications() {
+        let appDelegate = UIApplication.shared.delegate as! AppDelegate
+        appDelegate.promptForPushNotifications { granted in
+            if granted {
+                FirebaseNotifications.allowAllNotifications()
+                FirebaseNotifications.subscribeToAllChannels()
             }
         }
     }
+    
+    // MARK: - Register New Episode Notifications
+
     
     static func addSubscriptionToProgramWith(programID: String) {
         DispatchQueue.global(qos: .userInitiated).async {
@@ -178,9 +245,9 @@ extension FireStoreManager {
                 "subscriberCount" : FieldValue.increment(Double(1)),
             ]) { error in
                 if error != nil {
-                    print("Error subscribing user to program")
+                    print("Error adding subscriber to channel")
                 } else {
-                    print("Success subscribing user to program")
+                    print("Success adding subscriber to channel")
                 }
             }
         }
@@ -188,6 +255,8 @@ extension FireStoreManager {
 
     
     static func unsubscribeFromProgramWith(programID: String) {
+        FirebaseNotifications.subscribeToChannelsNotifications(channelID: programID, register: false)
+
         DispatchQueue.global(qos: .userInitiated).async {
             let programRef = db.collection("programs").document(CurrentProgram.ID!)
             
@@ -212,9 +281,9 @@ extension FireStoreManager {
                 "subscriberCount" : FieldValue.increment(Double(-1)),
             ]) { error in
                 if error != nil {
-                    print("Error removing subscription from user")
+                    print("Error removing subscriber from Channel")
                 } else {
-                    print("Success removing subscription from user")
+                    print("Success removing subscriber from Channel")
                 }
             }
         }
@@ -266,6 +335,17 @@ extension FireStoreManager {
         }
     }
     
+    static func change(ID: String) {
+        DispatchQueue.global(qos: .background).async {
+            let programsRef = db.collection("programs").document(ID)
+            programsRef.updateData([
+                "isGlobal": FieldValue.delete(),
+                "locationType": "Global",
+            ])
+        }
+    }
+    
+    
     static func fetchMoreProgramsWithinCategoryFrom(lastSnapshot: DocumentSnapshot, limit: Int, category: String, completion: @escaping ([QueryDocumentSnapshot]) -> ()) {
         
         let programsRef = db.collection("programs")
@@ -280,6 +360,7 @@ extension FireStoreManager {
                 print("Error fetching batch of programs: \(error!)")
             } else if snapshot?.count == 0 {
                  print("There are no programs to fetch")
+                 completion([])
             } else {
                 guard let data = snapshot?.documents else { return }
                 completion(data)
@@ -298,7 +379,6 @@ extension FireStoreManager {
             } else {
                 guard let shots = snapshot?.documents else { return }
                 completion(shots)
-                
             }
         }
     }

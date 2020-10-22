@@ -9,6 +9,7 @@
 import UIKit
 import ActiveLabel
 import AVFoundation
+import FirebaseAnalytics
 import SwiftLinkPreview
 
 class AddEpisodeDetails: UIViewController {
@@ -45,6 +46,8 @@ class AddEpisodeDetails: UIViewController {
     var captionPlaceholderIsActive = true
     var captionLabelPlaceholderText = true
     var tagPlaceholderIsActive = true
+    var linkPlaceholderText = true
+
     var tagsUsed = [String]()
     var tagCount: Int = 0
     var caption: String?
@@ -259,6 +262,41 @@ class AddEpisodeDetails: UIViewController {
         return textView
     }()
     
+    let linkBar: UIView = {
+        let view = UIView()
+        view.backgroundColor = CustomStyle.secondShade
+        return view
+    }()
+    
+    let linkBarLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Optional link"
+        label.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+        label.textColor = CustomStyle.fifthShade
+        return label
+    }()
+    
+    lazy var linkToggle: UISwitch = {
+        let toggle = UISwitch()
+        toggle.onTintColor = CustomStyle.primaryBlue
+        toggle.addTarget(self, action: #selector(checkRichLink), for: .valueChanged)
+        toggle.isOn = false
+        toggle.transform = CGAffineTransform(scaleX: 0.75, y: 0.75)
+        return toggle
+    }()
+    
+    lazy var linkTextView: UITextView = {
+        let textView = UITextView()
+        textView.font = UIFont.systemFont(ofSize: 15, weight: .regular)
+        textView.textContainer.maximumNumberOfLines = 0
+        textView.isScrollEnabled = false
+        textView.text = "Include a link"
+        textView.textColor = CustomStyle.fourthShade
+        textView.keyboardType = .twitter
+        textView.autocapitalizationType = .none
+        return textView
+    }()
+    
     lazy var passThoughView = PassThoughView(frame: CGRect(x: 0, y: 0, width: view.frame.width, height: view.frame.height))
     
     let floatingDetailsView: UIView = {
@@ -455,10 +493,10 @@ class AddEpisodeDetails: UIViewController {
         case .iPhoneSE:
             floatingBarHeight = 50.0
             imageBarViewSize = 36.0
-            scrollHeightPadding = 140
+            scrollHeightPadding = 180
             imageViewSize = 50
         case .iPhone8:
-            break
+            scrollHeightPadding = 180
         case .iPhone8Plus:
             break
         case .iPhone11:
@@ -583,9 +621,33 @@ class AddEpisodeDetails: UIViewController {
         captionTextView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -13).isActive = true
         captionTextView.heightAnchor.constraint(greaterThanOrEqualToConstant: 60).isActive = true
         
+        scrollContentView.addSubview(linkBar)
+        linkBar.translatesAutoresizingMaskIntoConstraints = false
+        linkBar.topAnchor.constraint(equalTo: captionTextView.bottomAnchor, constant: 10).isActive = true
+        linkBar.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        linkBar.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        linkBar.heightAnchor.constraint(equalToConstant: 35.0).isActive = true
+        
+        linkBar.addSubview(linkBarLabel)
+        linkBarLabel.translatesAutoresizingMaskIntoConstraints = false
+        linkBarLabel.centerYAnchor.constraint(equalTo: linkBar.centerYAnchor).isActive = true
+        linkBarLabel.leadingAnchor.constraint(equalTo: linkBar.leadingAnchor, constant: 16).isActive = true
+        
+        linkBar.addSubview(linkToggle)
+        linkToggle.translatesAutoresizingMaskIntoConstraints = false
+        linkToggle.centerYAnchor.constraint(equalTo: linkBar.centerYAnchor).isActive = true
+        linkToggle.trailingAnchor.constraint(equalTo: linkBar.trailingAnchor, constant: -10).isActive = true
+        
+        scrollContentView.addSubview(linkTextView)
+        linkTextView.translatesAutoresizingMaskIntoConstraints = false
+        linkTextView.topAnchor.constraint(equalTo: linkBar.bottomAnchor, constant: 10).isActive = true
+        linkTextView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 13).isActive = true
+        linkTextView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -13).isActive = true
+        linkTextView.delegate = self
+        
         scrollContentView.addSubview(tagBar)
         tagBar.translatesAutoresizingMaskIntoConstraints = false
-        tagBar.topAnchor.constraint(equalTo: captionTextView.bottomAnchor, constant: 10).isActive = true
+        tagBar.topAnchor.constraint(equalTo: linkTextView.bottomAnchor, constant: 10).isActive = true
         tagBar.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         tagBar.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         tagBar.heightAnchor.constraint(equalToConstant: 35.0).isActive = true
@@ -744,6 +806,16 @@ class AddEpisodeDetails: UIViewController {
         }
     }
     
+    func addLinkPlaceholderText() {
+        DispatchQueue.main.async {
+            self.linkTextView.text = "Include a link"
+            let startPosition: UITextPosition = self.linkTextView.beginningOfDocument
+            self.linkTextView.selectedTextRange = self.linkTextView.textRange(from: startPosition, to: startPosition)
+            self.linkTextView.textColor = CustomStyle.fourthShade
+            self.linkPlaceholderText = true
+        }
+    }
+    
     func enablePublishButton() {
         publishButton.isEnabled = true
         publishButton.alpha = 1
@@ -758,6 +830,17 @@ class AddEpisodeDetails: UIViewController {
         publishButton.layer.borderColor = UIColor.white.withAlphaComponent(0.8).cgColor
     }
     
+    func updateFrameHeight() {
+        var richLinkPadding: CGFloat = 0.0
+        if richLinkPresented {
+            richLinkPadding = 100
+        }
+        scrollContentHeightConstraint.constant = scrollView.frame.height
+            + captionTextView.frame.height
+            + captionLabel.frame.height
+            + scrollHeightPadding
+            + richLinkPadding
+    }
     
     // MARK: Save Episode
     
@@ -817,6 +900,8 @@ class AddEpisodeDetails: UIViewController {
     
     // MARK: Publish Episode
     func storePublishedEpisodeOnFirebase() {
+        Analytics.logEvent("episode_published", parameters: nil)
+        Analytics.setUserProperty("true", forName: "is_active_publisher")
         print("Storing episode on Firebase")
         
         var linkImage: UIImage!
@@ -1052,7 +1137,6 @@ class AddEpisodeDetails: UIViewController {
                 case AVAssetExportSessionStatus.exporting:
                     print("exporting\(exporter.error!)")
                 default:
-                    print("complete")
                     DispatchQueue.main.async {
                         self.storeTrimmedEpisodeOnFirebase(fileName: fileName, url: fileURL)
                     }
@@ -1078,20 +1162,54 @@ class AddEpisodeDetails: UIViewController {
     
     // MARK: Creating Rich Link
     
-    func checkIfLinkWasCreatedWith(input: String) {
-        let detector = try! NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue)
-        let matches = detector.matches(in: input, options: [], range: NSRange(location: 0, length: input.utf16.count))
-        
-        if matches.count > 0 && richLinkPresented == false {
-            let range = Range(matches[0].range, in: input)!
-            let url = input[range]
-            let urlString = String(url)
+//    func checkIfLinkWasCreatedWith(input: String) {
+//        let detector = try! NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue)
+//        let matches = detector.matches(in: input, options: [], range: NSRange(location: 0, length: input.utf16.count))
+//
+//        if matches.count > 0 && richLinkPresented == false {
+//            let range = Range(matches[0].range, in: input)!
+//            let url = input[range]
+//            let urlString = String(url)
+//            richLink = linkWithPrefix(urlString: urlString)
+//            swiftLinkPreview.preview(richLink!, onSuccess: { result in
+//                DispatchQueue.main.async {
+//
+//                    self.linkButton = RichLinkGenerator(response: result)
+//
+//                    if self.linkButton.linkIsRich() {
+//                        self.captionLabel.text = self.captionTextView.text!.replacingOccurrences(of: "\(urlString) ", with: "")
+//                        self.captionTextView.text! = self.captionTextView.text!.replacingOccurrences(of: "\(urlString) ", with: "")
+//                        self.linkButton.addRichLinkTo(stackedView: self.linkStackedView)
+//                        self.linkButton.imageButton.addTarget(self, action: #selector(self.linkTouched), for: .touchUpInside)
+//                        self.linkButton.linkBackgroundView.addTarget(self, action: #selector(self.linkTouched), for: .touchUpInside)
+//                        self.richLinkPresented = true
+//                    } else {
+//                        print("Link is not rich")
+//                    }
+//                }
+//
+//            }, onError: { error in
+//                print(error.localizedDescription)
+//                print("This link is not secure")
+//                UIApplication.shared.windows.last?.addSubview(self.unsafeLinkAlert)
+//            })
+//        }
+//    }
+    
+    @objc func checkRichLink() {
+        guard linkToggle.isOn else {
+            removeRichLink()
+            return
+        }
+        if linkTextView.text != "" {
+            let possibleURL = linkTextView.text.trimmingTrailingSpaces
+            let urlString = String(possibleURL)
             richLink = linkWithPrefix(urlString: urlString)
             swiftLinkPreview.preview(richLink!, onSuccess: { result in
                 DispatchQueue.main.async {
-                    
+
                     self.linkButton = RichLinkGenerator(response: result)
-                    
+
                     if self.linkButton.linkIsRich() {
                         self.captionLabel.text = self.captionTextView.text!.replacingOccurrences(of: "\(urlString) ", with: "")
                         self.captionTextView.text! = self.captionTextView.text!.replacingOccurrences(of: "\(urlString) ", with: "")
@@ -1099,17 +1217,26 @@ class AddEpisodeDetails: UIViewController {
                         self.linkButton.imageButton.addTarget(self, action: #selector(self.linkTouched), for: .touchUpInside)
                         self.linkButton.linkBackgroundView.addTarget(self, action: #selector(self.linkTouched), for: .touchUpInside)
                         self.richLinkPresented = true
+                        self.updateFrameHeight()
                     } else {
                         print("Link is not rich")
                     }
                 }
-                
+
             }, onError: { error in
-                print(error.localizedDescription)
-                print("This link is not secure")
+                print("This link is not secure or a dude")
+                self.linkToggle.isOn = false
                 UIApplication.shared.windows.last?.addSubview(self.unsafeLinkAlert)
             })
         }
+    }
+    
+    func removeRichLink() {
+        linkStackedView.removeAllArrangedSubviews()
+        richLinkPresented = false
+        updateFrameHeight()
+        richLink = nil
+        checkIfAbleToPublish()
     }
     
     @objc func linkTouched() {
@@ -1118,9 +1245,8 @@ class AddEpisodeDetails: UIViewController {
         alert.addAction(UIAlertAction(title: "Remove Link", style: .default, handler: { [weak self] (_) in
             print("User clicked remove")
             guard let self = self else { return }
-            self.richLinkPresented = false
-            self.richLink = nil
-            self.linkStackedView.removeAllArrangedSubviews()
+            self.linkToggle.isOn = false
+            self.removeRichLink()
         }))
         
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { (_) in
@@ -1149,6 +1275,12 @@ extension AddEpisodeDetails: UITextViewDelegate {
                 addTagPlaceholderText()
             }
         }
+        
+        if textView == linkTextView {
+            if linkPlaceholderText == true {
+                addLinkPlaceholderText()
+            }
+        }
     }
     
     func textViewDidChange(_ textView: UITextView) {
@@ -1163,6 +1295,16 @@ extension AddEpisodeDetails: UITextViewDelegate {
                 scrollContentHeightConstraint.constant = scrollView.frame.height + captionTextView.frame.height + scrollHeightPadding + linkStackedView.frame.height
                 captionLabel.textColor = CustomStyle.sixthShade
                 captionLabel.text = captionTextView.text
+            }
+        }
+        
+        if textView == linkTextView {
+            if linkTextView.text.isEmpty {
+                addLinkPlaceholderText()
+            } else {
+                linkTextView.textColor = CustomStyle.sixthShade
+                linkToggle.isOn = false
+                removeRichLink()
             }
         }
         
@@ -1211,10 +1353,6 @@ extension AddEpisodeDetails: UITextViewDelegate {
             UIApplication.shared.windows.last?.addSubview(hashTagAlert)
         }
         
-        if text == " " {
-            checkIfLinkWasCreatedWith(input: captionTextView.text)
-        }
-        
         // Should change captionTextView
         if textView == captionTextView {
             if captionPlaceholderIsActive == true {
@@ -1232,6 +1370,15 @@ extension AddEpisodeDetails: UITextViewDelegate {
                 tagPlaceholderIsActive = false
             } else {
                 return tagsUsed.count < 4 && tagCount <= 2
+            }
+        }
+        
+        // Should change linkTextView
+        if textView == linkTextView {
+            if linkPlaceholderText == true {
+                linkTextView.text.removeAll()
+                linkTextView.textColor = CustomStyle.fifthShade
+                linkPlaceholderText = false
             }
         }
         

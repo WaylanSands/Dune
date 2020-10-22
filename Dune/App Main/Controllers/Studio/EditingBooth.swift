@@ -121,8 +121,8 @@ class EditingBoothVC: UIViewController {
         return view
     }()
     
-    let circleTimerView: LoadingCircleView = {
-        let view = LoadingCircleView()
+    let circleTimerView: CircleTimerView = {
+        let view = CircleTimerView()
         return view
     }()
     
@@ -974,7 +974,6 @@ class EditingBoothVC: UIViewController {
             case AVAssetExportSessionStatus.exporting:
                 print("exporting\(assetExport!.error!)")
             default:
-                print("complete")
                 DispatchQueue.main.async {
                     self.recordingURL = destinationUrl
                     self.playDefaultRecording()
