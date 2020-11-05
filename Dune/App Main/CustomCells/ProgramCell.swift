@@ -240,6 +240,7 @@ class ProgramCell: UITableViewCell {
         if self.program != program {
             programImageButton.setImage(nil, for: .normal)
         }
+        
         self.program = program
        
         if program.imageID != nil {
@@ -620,7 +621,6 @@ class ProgramCell: UITableViewCell {
         
         DispatchQueue.main.async {
             self.cellDelegate?.updateRows()
-//            self.cellDelegate?.addTappedProgram(programName: self.programNameLabel.text!)
         }
     }
     

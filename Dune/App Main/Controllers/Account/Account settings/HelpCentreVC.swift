@@ -62,7 +62,7 @@ After you have made your recording a "Next" button will appear in the top-right 
     var answerSix = """
 Rich links are hyperlinks that are displayed with an image and title.
 
-To include a rich link with an episode, add a link within the link option field when publishing your episode.
+To include a rich link with an episode, add a link within the link option field when publishing your episode or via selecting the setting icon at the top right of your episode and selecting "Edit".
 
 After you have added the link turn on the toggle. If you publish your episode with the toggle off the link will not be displayed.
 """
@@ -86,6 +86,8 @@ If you believe a program has violated Dune's policies, you may find the report b
     
     var questionTen = "How to view your subscribers"
     var answerTen = "If you select your subscribers count button within your channel you will be able to  see a list of all your current subscribers."
+    var questionEleven = "How to disconnect your RSS Feed"
+    var answerEleven = "If you have had your RSS feed connected and would like to disconnect it, please contact us via the website. You always have the the option to delete or edit old episodes."
     
     let customNavBar: CustomNavBar = {
         let nav = CustomNavBar()
@@ -111,7 +113,8 @@ If you believe a program has violated Dune's policies, you may find the report b
                      FAQItem(question: questionSeven, answer: answerSeven),
                      FAQItem(question: questionEight, answer: answerEight),
                      FAQItem(question: questionNine, answer: answerNine),
-                     FAQItem(question: questionTen, answer: answerTen)
+                     FAQItem(question: questionTen, answer: answerTen),
+                     FAQItem(question: questionEleven, answer: answerEleven)
         ]
         FAQsView = FAQView(frame: view.frame, items: items)
     }

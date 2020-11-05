@@ -96,7 +96,6 @@ struct FireStoreManager {
                     if counter == IDs.count {
                         let sorted = categories.sorted(by: { $0 < $1 })
                         User.interests = Array(sorted.removingDuplicates().prefix(3))
-                        print("RAN")
                     }
                 }
             }
@@ -290,13 +289,14 @@ struct FireStoreManager {
     }
     
     static func updateUserBirthDate() {
+        print("updateUserBirthDate")
         DispatchQueue.global(qos: .userInitiated).async {
             
             let userRef = db.collection("users").document(User.ID!)
             
             userRef.updateData([
                 "birthDate" : User.birthDate!
-            ]) { (error) in
+            ]) { error in
                 if let error = error {
                     print("Error updating user's birthDate: \(error.localizedDescription)")
                 } else {
@@ -355,6 +355,25 @@ struct FireStoreManager {
                     print("Error updating user's email: \(error.localizedDescription)")
                 } else {
                     print("Successfully updated user's email")
+                }
+            }
+        }
+    }
+    
+    static func updateUserLocationWith(country: String, lat: Double, lon: Double) {
+        DispatchQueue.global(qos: .userInitiated).async {
+            
+            let userRef = db.collection("users").document(User.ID!)
+            User.country = country
+            userRef.updateData([
+                "geoPoint" :  GeoPoint(latitude: lat, longitude: lon),
+                "country" :  country,
+
+            ]) { (error) in
+                if let error = error {
+                    print("Error updating user's location: \(error.localizedDescription)")
+                } else {
+                    print("Success updating user's location")
                 }
             }
         }
@@ -1330,34 +1349,32 @@ struct FireStoreManager {
         }
     }
     
-    static func getUserData(completion: @escaping () -> ()) {
-
-        guard let uid = Auth.auth().currentUser?.uid else { return }
+    static func getUserData(completion: @escaping (Bool) -> ()) {
+        guard let uid = Auth.auth().currentUser?.uid else {
+            completion(false)
+            return
+        }
         let userRef = db.collection("users").document(uid)
-        
         DispatchQueue.global(qos: .userInitiated).async {
             
             userRef.getDocument { (snapshot, error) in
-
                 if error != nil {
                     print("There was an error getting users document: \(error!)")
                 } else {
-
                     guard let data = snapshot?.data() else { return }
                     User.modelUser(data: data)
-
                     let onBoarded = data["completedOnBoarding"] as! Bool
                     
                     if onBoarded {
                         FireStoreManager.getProgramData { success in
                             if success {
-                                completion()
+                                completion(true)
                             } else {
                                 print("Error getting program data")
                             }
                         }
                     } else {
-                        completion()
+                        completion(true)
                     }
                 }
             }
@@ -1438,10 +1455,15 @@ struct FireStoreManager {
         let listen: Double = 1
         
         let episodeRef = db.collection("episodes").document(ID)
-        
+        let trendingRef = db.collection("lastSevenDays").document(ID)
+
         DispatchQueue.global(qos: .default).async {
             
             episodeRef.updateData([
+                "listenCount" : FieldValue.increment(listen)
+            ])
+            
+            trendingRef.updateData([
                 "listenCount" : FieldValue.increment(listen)
             ])
         }

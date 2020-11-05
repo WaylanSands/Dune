@@ -205,6 +205,35 @@ extension FireStoreManager {
         }
     }
     
+    static func requestRSSConnectionFor(ID: String, urlString: String) {
+        DispatchQueue.global(qos: .userInitiated).async {
+            
+            let requestRef = db.collection("rssRequests").document(User.ID!)
+            let programRef = db.collection("programs").document(ID)
+            
+            programRef.updateData(["RSSURL" : urlString])
+
+            requestRef.setData([
+                "programID" : ID,
+                "email" : User.email ?? "Social signup",
+                "url" :  urlString,
+            ]) { (error) in
+                if let error = error {
+                    print("Error requesting rss connection: \(error.localizedDescription)")
+                } else {
+                    print("Success requesting rss connection")
+                    let url = URL(string: "https://enrm5iad8z4ra2m.m.pipedream.net")!
+
+                    let task = URLSession.shared.dataTask(with: url) {(data, response, error) in
+                        guard let data = data else { return }
+                        print(String(data: data, encoding: .utf8)!)
+                    }
+                    task.resume()
+                }
+            }
+        }
+    }
+    
     // Sub-Channel
     static func approveRequestFor(_ channelID: String, for channel: Program) {
         DispatchQueue.global(qos: .userInitiated).async {

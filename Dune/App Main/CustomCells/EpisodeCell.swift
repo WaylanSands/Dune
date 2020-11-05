@@ -11,9 +11,8 @@ import ActiveLabel
 
 protocol EpisodeCellDelegate {
     func updateLikeCountFor(episode: Episode, at indexPath: IndexPath)
-    func addTappedProgram(programName: String)
     func showCommentsFor(episode: Episode)
-    func showSettings(cell: EpisodeCell )
+    func showSettingsFor(cell: EpisodeCell)
     func episodeTagSelected(tag: String)
     func playEpisode(cell: EpisodeCell )
     func visitProfile(program: Program)
@@ -563,7 +562,6 @@ class EpisodeCell: UITableViewCell {
         
         DispatchQueue.main.async {
             self.cellDelegate?.updateRows()
-            self.cellDelegate?.addTappedProgram(programName: self.programNameLabel.text!)
         }
     }
     
@@ -657,7 +655,7 @@ class EpisodeCell: UITableViewCell {
     }
     
     @objc func showSettings() {
-        cellDelegate?.showSettings(cell: self )
+        cellDelegate?.showSettingsFor(cell: self )
     }
     
     

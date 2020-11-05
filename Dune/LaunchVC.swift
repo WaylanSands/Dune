@@ -98,10 +98,14 @@ class LaunchVC: UIViewController {
     }
     
     private func getUserData() {
-        FireStoreManager.getUserData() {
-            self.hasUserData = true
-            if self.finishedAnimation {
-                self.grantUserAccess()
+        FireStoreManager.getUserData() { success in
+            if success {
+                self.hasUserData = true
+                if self.finishedAnimation {
+                    self.grantUserAccess()
+                }
+            } else {
+                self.sendToSignUp()
             }
         }
     }

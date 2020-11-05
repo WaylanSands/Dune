@@ -45,7 +45,7 @@ class CommentThreadVC: UIViewController {
     let playbackCircleView = PlaybackCircleView()
     let loadingCircle = LoadingAudioView()
     
-    weak var delegate: NavPlayerDelegate?
+    weak var delegate: NavBarPlayerDelegate?
     
     var episode: Episode
     var keyboardUp = false
@@ -53,7 +53,6 @@ class CommentThreadVC: UIViewController {
     var attributedCharCount = 0
     var replyIsAttributed = false
     var tableView = UITableView()
-    var isModallyPresented = false
     var keyboardRectHeight: CGFloat = 0
     var downloadedComments = [Comment]()
     var tableViewBottomConstraint: NSLayoutConstraint!
@@ -122,8 +121,8 @@ class CommentThreadVC: UIViewController {
     }
     
     override func viewWillDisappear(_ animated: Bool) {
+        dunePlayBar.audioPlayerDelegate = dunePlayBar.activeViewController
         dunePlayBar.isHidden = false
-        isModallyPresented = false
     }
     
     required init?(coder: NSCoder) {
@@ -292,7 +291,6 @@ extension CommentThreadVC: UITableViewDataSource, UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         var commentCell: CommentCell
-        print(" \(downloadedComments.count) : \(indexPath.row)")
         let comment = downloadedComments[indexPath.row]
         
         if comment.subCommentCount > 0 && !comment.isUnwrapped {
@@ -544,7 +542,6 @@ extension CommentThreadVC: commentTextViewDelegate {
             attributedCharCount = 0
             downloadedComments[commentIndex] = primaryComment
             if primaryComment.isUnwrapped {
-                print("unwrapped")
                 downloadedComments.insert(comment, at: index + 1)
                 tableView.reloadData()
             } else {
@@ -563,7 +560,6 @@ extension CommentThreadVC: commentTextViewDelegate {
     
     func dismissKeyBoard() {
         DispatchQueue.main.async {
-            print("dismissKeyBoard")
             self.keyboardUp = false
             self.commentTextView.frame.size = CGSize(width: self.commentTextView.backgroundView.frame.width , height: self.commentTextView.backgroundView.frame.height)
             self.commentTextView.frame.origin.y = self.view.frame.height - (self.commentTextView.frame.height + duneTabBar.frame.height)
@@ -607,6 +603,7 @@ extension CommentThreadVC: DuneAudioPlayerDelegate {
         print("Should fetch more episodes: Needs implementation")
     }
     
+    
     func updateProgressBarWith(percentage: CGFloat, forType: PlayBackType, episodeID: String) {
         playbackCircleView.shapeLayer.strokeEnd = percentage
         playbackButton.isUserInteractionEnabled = true
@@ -614,7 +611,11 @@ extension CommentThreadVC: DuneAudioPlayerDelegate {
     }
     
     func updateActiveCell(atIndex: Int, forType: PlayBackType) {
-        //
+        // No implementation needed
+    }
+    
+    func showSettingsFor(episode: Episode) {
+        // No implementation needed
     }
     
 }

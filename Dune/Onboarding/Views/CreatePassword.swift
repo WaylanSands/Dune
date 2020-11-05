@@ -38,9 +38,9 @@ class CreatePassword: UIView {
         return label
     }()
     
-    let textFieldToggle: UIButton =  {
+    let hideShowButton: UIButton =  {
         let button = UIButton()
-        button.setTitle("Hide", for: .normal)
+        button.setTitle("Show", for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .medium)
         button.setTitleColor(CustomStyle.linkBlue, for: .normal)
         button.addTarget(self, action:#selector(toggleButtonPress), for: .touchUpInside)
@@ -111,12 +111,12 @@ class CreatePassword: UIView {
         passwordTextField.clearButtonMode = .never
         passwordTextField.isSecureTextEntry = true
         passwordTextField.autocorrectionType = .no
-        passwordTextField.textContentType = .password
+        passwordTextField.textContentType = .oneTimeCode
         
-        self.addSubview(textFieldToggle)
-        textFieldToggle.translatesAutoresizingMaskIntoConstraints = false
-        textFieldToggle.centerYAnchor.constraint(equalTo: passwordTextField.centerYAnchor).isActive = true
-        textFieldToggle.trailingAnchor.constraint(equalTo: passwordTextField.trailingAnchor, constant: -20).isActive = true
+        self.addSubview(hideShowButton)
+        hideShowButton.translatesAutoresizingMaskIntoConstraints = false
+        hideShowButton.centerYAnchor.constraint(equalTo: passwordTextField.centerYAnchor).isActive = true
+        hideShowButton.trailingAnchor.constraint(equalTo: passwordTextField.trailingAnchor, constant: -20).isActive = true
         
         self.addSubview(validationLabel)
         validationLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -128,10 +128,10 @@ class CreatePassword: UIView {
     @objc func toggleButtonPress() {
         if passwordTextField.isSecureTextEntry {
             passwordTextField.isSecureTextEntry = false
-            textFieldToggle.setTitle("Hide", for: .normal)
+            hideShowButton.setTitle("Hide", for: .normal)
         } else {
             passwordTextField.isSecureTextEntry = true
-            textFieldToggle.setTitle("Show", for: .normal)
+            hideShowButton.setTitle("Show", for: .normal)
         }
     }
 }

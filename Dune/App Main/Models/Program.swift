@@ -44,6 +44,9 @@ public class Program: Comparable {
     var hasBeenPlayed = false
     var playBackProgress: CGFloat = 0
     
+    // RSS URL
+    var RSSURL: String?
+    
     // Private Channels
     var channelState: PrivacyStatus
     var pendingChannels: [String]
@@ -72,6 +75,7 @@ public class Program: Comparable {
         isPrimaryProgram = data["isPrimaryProgram"] as! Bool
         episodeIDs = data["episodeIDs"] as! [[String : Any]]
         subscriberIDs = data["subscriberIDs"] as! [String]
+        RSSURL = data["RSSURL"] as? String
         webLink = data["webLink"] as? String
         programIDs = data["programIDs"] as? [String]
         imageID = data["imageID"] as? String

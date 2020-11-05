@@ -54,8 +54,11 @@ enum alertType {
     case boothBackOut
     case uploadIntroOption
     case didNotAllowPushes
+    case didNotAllowLocationServices
+    case deviceLocationServicesOff
     case resetPasswordEmptyField
     case resetPasswordEmailSent
+    case requestRSSConnection
 }
 
 // For implementation
@@ -86,6 +89,7 @@ class CustomAlertView: UIView {
         label.font = UIFont.systemFont(ofSize: 20, weight: .semibold)
         label.textColor = CustomStyle.primaryBlack
         label.textAlignment = .center
+        label.numberOfLines = 0
         return label
     }()
     
@@ -242,7 +246,7 @@ class CustomAlertView: UIView {
             primaryButton.setTitle("Please remove", for: .normal)
             primaryButton.addTarget(self, action: #selector(primaryButtonPress), for: .touchUpInside)
             secondaryButton.setTitle("Dismiss", for: .normal)
-            secondaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
+            secondaryButton.addTarget(self, action: #selector(cancelPress), for: .touchUpInside)
         case .deleteProgram:
             headingLabel.text = "Delete Channel"
             bodyTextLabel.text = "Are you sure you would like delete this channel? You will not be able to get it back."
@@ -252,7 +256,7 @@ class CustomAlertView: UIView {
             secondaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
         case .audioTooLong:
             headingLabel.text = "Audio Too Long"
-            bodyTextLabel.text = "Audio exceeds maximum duration of 2 minutes. Please trim or record another episode."
+            bodyTextLabel.text = "Audio exceeds maximum duration of 5 minutes. Please trim or record another episode."
             primaryButton.setTitle("Dismiss", for: .normal)
             primaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
         case .publisherNotSetUp:
@@ -448,6 +452,29 @@ Don't forget to share with your friends what you have helped to create!
                 Add your email address to the field and then select "Click here" again.
                 """
             primaryButton.setTitle("Ok got it", for: .normal)
+            primaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
+        case .requestRSSConnection:
+            headingLabel.text = "Connect to your own RSS Feed"
+            bodyTextLabel.text = """
+                Already have a podcast? Add your RSS URL and we'll sync with your show.
+
+                We will verify if your content is suitable within 24 hours.
+                """
+            primaryButton.setTitle("Request", for: .normal)
+            primaryButton.addTarget(self, action: #selector(primaryButtonPress), for: .touchUpInside)
+            secondaryButton.setTitle("Dismiss", for: .normal)
+            secondaryButton.addTarget(self, action: #selector(cancelPress), for: .touchUpInside)
+        case .didNotAllowLocationServices:
+            headingLabel.text = "Allow Location Services"
+            bodyTextLabel.text = "Currently location access for Dune is set to Never. Select allow to change this in settings."
+            primaryButton.setTitle("Allow", for: .normal)
+            primaryButton.addTarget(self, action: #selector(primaryButtonPress), for: .touchUpInside)
+            secondaryButton.setTitle("Dismiss", for: .normal)
+            secondaryButton.addTarget(self, action: #selector(cancelPress), for: .touchUpInside)
+        case .deviceLocationServicesOff:
+            headingLabel.text = "Device Location Services are off"
+            bodyTextLabel.text = "To use this option you must switch on your devices location services via Settings>Privacy"
+            primaryButton.setTitle("Dismiss", for: .normal)
             primaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
         }
         bodyTextLabel.addLineSpacingCentered(spacingValue: 3)

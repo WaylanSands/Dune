@@ -28,6 +28,11 @@ class CustomDatePicker: UIView {
         let picker = UIDatePicker()
         picker.datePickerMode = .date
         picker.backgroundColor = .white
+        if #available(iOS 13.4, *) {
+            picker.preferredDatePickerStyle = .compact
+        } else {
+            // Fallback on earlier versions
+        }
         return picker
     }()
     

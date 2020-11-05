@@ -32,6 +32,7 @@ class DuneTabBar: UIView {
         }
     }
     
+    var activeNavController: (() -> UINavigationController)!
     var tabButtonSelection: ((Int) -> Void)!
     var visitEpisode: ((Episode) -> Void)!
     var visitChannel: ((Program) -> Void)!
@@ -200,6 +201,10 @@ class DuneTabBar: UIView {
     
     @objc private func buttonPress(sender: UIButton) {
         activeButton = sender
+    }
+    
+    func selectedTabController() -> UINavigationController {
+        return activeNavController()
     }
 
 }

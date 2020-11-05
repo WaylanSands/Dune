@@ -419,7 +419,7 @@ extension ListenerProfileBottomVC: ProgramCellDelegate, MentionCellDelegate {
     }
     
     func showCommentsFor(episode: Episode) {
-        //
+        // Implementation not needed
     }
   
     func programTagSelected(tag: String) {
@@ -530,7 +530,11 @@ extension ListenerProfileBottomVC: DuneAudioPlayerDelegate {
     }
     
     func updatePastEpisodeProgress() {
-        //
+        // No implementation needed
+    }
+    
+    func showSettingsFor(episode: Episode) {
+        // No implementation needed
     }
     
 }

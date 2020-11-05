@@ -180,7 +180,6 @@
 		4849CDEC24F63040002979A7 /* EditAccountVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48FE451A2419AE07001E075B /* EditAccountVC.swift */; };
 		4849CDED24F63040002979A7 /* PendingInviteCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 486A53CA24C7EBC5006156B7 /* PendingInviteCell.swift */; };
 		4849CDEE24F63040002979A7 /* Program.swift in Sources */ = {isa = PBXBuildFile; fileRef = 487E6A9A245BCDFB00192AF2 /* Program.swift */; };
-		4849CDEF24F63040002979A7 /* ResponsiveWaveformView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48B3740524207992003F47E9 /* ResponsiveWaveformView.swift */; };
 		4849CDF024F63040002979A7 /* Int+Ext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4819C23824619A7400C6696A /* Int+Ext.swift */; };
 		4849CDF124F63040002979A7 /* UpdateProgramDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48FE95F6243B29370085C2EC /* UpdateProgramDetails.swift */; };
 		4849CDF224F63040002979A7 /* FAQView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 487EEE2424B31B4E0016AC02 /* FAQView.swift */; };
@@ -300,7 +299,6 @@
 		48AF19CA243D75D600650AB0 /* TagButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48AF19C9243D75D600650AB0 /* TagButton.swift */; };
 		48AF2DF524296F9700662F9F /* AudioEffectCreator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48AF2DF424296F9700662F9F /* AudioEffectCreator.swift */; };
 		48B26242244949DA0073ADAF /* EpisodeCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48B26241244949DA0073ADAF /* EpisodeCell.swift */; };
-		48B3740624207992003F47E9 /* ResponsiveWaveformView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48B3740524207992003F47E9 /* ResponsiveWaveformView.swift */; };
 		48B7536324ED42F20067010F /* DeleteSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48B7536224ED42F10067010F /* DeleteSettings.swift */; };
 		48B8687C23C7131A00EFEB88 /* CreateUserVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48B8687B23C7131A00EFEB88 /* CreateUserVC.swift */; };
 		48B8688023C744B800EFEB88 /* CreateUsername.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48B8687F23C744B800EFEB88 /* CreateUsername.swift */; };
@@ -510,7 +508,6 @@
 		48AF19C9243D75D600650AB0 /* TagButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagButton.swift; sourceTree = "<group>"; };
 		48AF2DF424296F9700662F9F /* AudioEffectCreator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioEffectCreator.swift; sourceTree = "<group>"; };
 		48B26241244949DA0073ADAF /* EpisodeCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EpisodeCell.swift; sourceTree = "<group>"; };
-		48B3740524207992003F47E9 /* ResponsiveWaveformView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResponsiveWaveformView.swift; sourceTree = "<group>"; };
 		48B7536224ED42F10067010F /* DeleteSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeleteSettings.swift; sourceTree = "<group>"; };
 		48B8687B23C7131A00EFEB88 /* CreateUserVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateUserVC.swift; sourceTree = "<group>"; };
 		48B8687F23C744B800EFEB88 /* CreateUsername.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateUsername.swift; sourceTree = "<group>"; };
@@ -709,7 +706,6 @@
 				48AB3359248207260013A645 /* comment thread */,
 				487E6A97245B808600192AF2 /* Search tab */,
 				4819C2352460DA5200C6696A /* Trending tab */,
-				4857A58A25182E1600910B4D /* New Group */,
 				48018F782471117F00C6BB38 /* Account tab */,
 				480A9F6124417310001A5F4B /* FireStoreManager.swift */,
 				480A9F6324417D28001A5F4B /* FireStorageManager.swift */,
@@ -781,13 +777,6 @@
 				48018F7C24714BC500C6BB38 /* BecomeAPublisherVC.swift */,
 			);
 			path = Studio;
-			sourceTree = "<group>";
-		};
-		4857A58A25182E1600910B4D /* New Group */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = "New Group";
 			sourceTree = "<group>";
 		};
 		4857A58B25182E2D00910B4D /* Notifications */ = {
@@ -1010,7 +999,6 @@
 				48F866022457816A0013A127 /* PlaybackCircleView.swift */,
 				4885A3F0245830AD00828601 /* PlaybackBarView.swift */,
 				480A0B392421A9160041CF2E /* drawWaveform.swift */,
-				48B3740524207992003F47E9 /* ResponsiveWaveformView.swift */,
 				48EC2C99242637C800F6BBB6 /* AudioTrimmerView.swift */,
 				4870767B24281F9100A635BB /* AudioPresetButton.swift */,
 				4870767D2428233500A635BB /* AudioPresetScrollView.swift */,
@@ -1073,6 +1061,7 @@
 				4849CE1024F63040002979A7 /* Resources */,
 				4849CE1924F63040002979A7 /* Embed App Extensions */,
 				7D67250B18B8EF0D0CBC0538 /* [CP] Embed Pods Frameworks */,
+				48149695254A35C2009C6C62 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -1093,6 +1082,7 @@
 				48DC720923C6E998002AB21F /* Resources */,
 				D44B28E5EF5B2A4556B75125 /* [CP] Embed Pods Frameworks */,
 				48453A6C24B7D0BB0053F12D /* Embed App Extensions */,
+				4814968E254A2FB0009C6C62 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -1171,6 +1161,42 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		4814968E254A2FB0009C6C62 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 12;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Resources/DWARF/${TARGET_NAME}",
+				"$(SRCROOT)/$(BUILT_PRODUCTS_DIR)/$(INFOPLIST_PATH)\n",
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/FirebaseCrashlytics/run\"\n";
+		};
+		48149695254A35C2009C6C62 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/FirebaseCrashlytics/run\"\n";
+		};
 		7D67250B18B8EF0D0CBC0538 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -1388,7 +1414,6 @@
 				4849CDED24F63040002979A7 /* PendingInviteCell.swift in Sources */,
 				48E8814925045A23008BBB1C /* DunePlayer.swift in Sources */,
 				4849CDEE24F63040002979A7 /* Program.swift in Sources */,
-				4849CDEF24F63040002979A7 /* ResponsiveWaveformView.swift in Sources */,
 				4849CDF024F63040002979A7 /* Int+Ext.swift in Sources */,
 				4849CDF124F63040002979A7 /* UpdateProgramDetails.swift in Sources */,
 				4849CDF224F63040002979A7 /* FAQView.swift in Sources */,
@@ -1556,7 +1581,6 @@
 				486A53CB24C7EBC5006156B7 /* PendingInviteCell.swift in Sources */,
 				48E8814825045942008BBB1C /* DunePlayer.swift in Sources */,
 				487E6A9B245BCDFB00192AF2 /* Program.swift in Sources */,
-				48B3740624207992003F47E9 /* ResponsiveWaveformView.swift in Sources */,
 				4819C23924619A7400C6696A /* Int+Ext.swift in Sources */,
 				48FE95F7243B29370085C2EC /* UpdateProgramDetails.swift in Sources */,
 				487EEE2524B31B4E0016AC02 /* FAQView.swift in Sources */,
@@ -1624,7 +1648,7 @@
 				CODE_SIGN_ENTITLEMENTS = Dune/Dune.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 25;
+				CURRENT_PROJECT_VERSION = 27;
 				DEVELOPMENT_TEAM = PMDTSY5PZ6;
 				GCC_WARN_UNUSED_PARAMETER = YES;
 				INFOPLIST_FILE = "Dune/Dev-Info.plist";
@@ -1632,7 +1656,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.dailyune.Dune;
 				PRODUCT_NAME = "Dune Dev";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1651,7 +1675,7 @@
 				CODE_SIGN_ENTITLEMENTS = Dune/Dune.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 25;
+				CURRENT_PROJECT_VERSION = 27;
 				DEVELOPMENT_TEAM = PMDTSY5PZ6;
 				GCC_WARN_UNUSED_PARAMETER = YES;
 				INFOPLIST_FILE = "Dune/Dev-Info.plist";
@@ -1659,7 +1683,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.dailyune.Dune;
 				PRODUCT_NAME = "Dune Dev";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1705,7 +1729,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
-				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -1800,7 +1824,8 @@
 				CODE_SIGN_ENTITLEMENTS = Dune/Dune.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 25;
+				CURRENT_PROJECT_VERSION = 27;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = PMDTSY5PZ6;
 				GCC_WARN_UNUSED_PARAMETER = YES;
 				INFOPLIST_FILE = Dune/Info.plist;
@@ -1808,7 +1833,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.dailyune.Dune;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1827,7 +1852,7 @@
 				CODE_SIGN_ENTITLEMENTS = Dune/Dune.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 25;
+				CURRENT_PROJECT_VERSION = 27;
 				DEVELOPMENT_TEAM = PMDTSY5PZ6;
 				GCC_WARN_UNUSED_PARAMETER = YES;
 				INFOPLIST_FILE = Dune/Info.plist;
@@ -1835,7 +1860,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.dailyune.Dune;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";

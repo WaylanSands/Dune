@@ -277,8 +277,9 @@ class SearchVC: UIViewController {
                     
                     let data = eachDocument.data()
                     let imageID = data["imageID"] as? String
+                    let isPublisher = data["isPublisher"] as? Bool
                     
-                    if imageID != nil {
+                    if imageID != nil && isPublisher == true {
                         let program = Program(data: data)
                         self.downloadedPrograms.append(program)
                     }
@@ -311,13 +312,14 @@ class SearchVC: UIViewController {
                     
                     let data = eachDocument.data()
                     let imageID = data["imageID"] as? String
+                    let isPublisher = data["isPublisher"] as? Bool
                     
                                         
                     if data["isGlobal"] != nil {
                         FireStoreManager.change(ID: data["ID"] as! String)
                     }
                     
-                    if imageID != nil {
+                    if imageID != nil && isPublisher == true {
                         let program = Program(data: data)
                         self.downloadedPrograms.append(program)
                     }
@@ -780,10 +782,6 @@ extension SearchVC: DuneAudioPlayerDelegate {
         }
     }
     
-    func updateActiveCell(atIndex: Int, forType: PlayBackType) {
-        //
-    }
-    
     func updatePastEpisodeProgress() {
         guard let index = downloadedPrograms.firstIndex(where: { $0.ID == lastPlayedID }) else { return }
         let program = downloadedPrograms[index]
@@ -815,6 +813,14 @@ extension SearchVC: DuneAudioPlayerDelegate {
             each.backgroundColor = CustomStyle.sixthShade
             each.setTitleColor(CustomStyle.fourthShade.withAlphaComponent(0.8), for: .normal)
         }
+    }
+    
+    func updateActiveCell(atIndex: Int, forType: PlayBackType) {
+        // No implementation needed
+    }
+    
+    func showSettingsFor(episode: Episode) {
+        // No implementation needed
     }
     
 }

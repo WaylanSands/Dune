@@ -301,9 +301,6 @@ extension ProgramTagLookupVC: ProgramCellDelegate {
         }
     }
     
-    func addTappedProgram(programName: String) {
-        //
-    }
 }
 
 extension ProgramTagLookupVC: DuneAudioPlayerDelegate {
@@ -311,6 +308,7 @@ extension ProgramTagLookupVC: DuneAudioPlayerDelegate {
     func fetchMoreEpisodes() {
         print("Should fetch more episodes: Needs implementation")
     }
+    
    
     func updateProgressBarWith(percentage: CGFloat, forType: PlayBackType, episodeID: String) {
         if lastPlayedID != episodeID {
@@ -330,8 +328,13 @@ extension ProgramTagLookupVC: DuneAudioPlayerDelegate {
     }
     
     func updateActiveCell(atIndex: Int, forType: PlayBackType) {
-        //
+        // No implementation needed
     }
+    
+    func showSettingsFor(episode: Episode) {
+        // No implementation needed
+    }
+    
 }
 
 extension ProgramTagLookupVC: SettingsLauncherDelegate {

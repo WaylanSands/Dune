@@ -26,16 +26,6 @@ class RecordBoothVC: UIViewController {
         case episode
     }
     
-    var lottieWave: AnimationView = {
-        var animation = AnimationView(name: "lottieWave")
-        animation.contentMode = .scaleAspectFill
-        animation.loopMode = .loop
-        animation.isHidden = true
-        animation.alpha = 0.9
-        animation.play()
-        return animation
-    }()
-    
     var selectedProgram: Program?
         
     var recordingDisplayLink: CADisplayLink!
@@ -71,10 +61,9 @@ class RecordBoothVC: UIViewController {
     // For various screens
     var imageTopConstant: CGFloat = 120
     var recordButtonBottomConstant: CGFloat = -60
-    var soundWaveCenterConstant: CGFloat = 200
+    var lottieWaveTopConstant: CGFloat = 40
 
     var maxValue: Float = Float(UIScreen.main.bounds.width) - Float(60)
-    
     
     let introTooShortAlert = CustomAlertView(alertType: .shortIntroLength)
     let boothBackOutAlert = CustomAlertView(alertType: .boothBackOut)
@@ -100,6 +89,16 @@ class RecordBoothVC: UIViewController {
         return label
     }()
     
+    var lottieWave: AnimationView = {
+        var animation = AnimationView(name: "lottieWave")
+        animation.contentMode = .scaleAspectFill
+        animation.loopMode = .loop
+        animation.isHidden = true
+        animation.alpha = 0.9
+        animation.play()
+        return animation
+    }()
+    
     let recordButton: UIButton = {
         let button = UIButton()
         button.backgroundColor = hexStringToUIColor(hex: "#FF195A")
@@ -111,17 +110,15 @@ class RecordBoothVC: UIViewController {
         return button
     }()
     
+    // Progress timer for recording
+    let circleTimerView = CircleTimerView()
+    
     let stopButtonView: UIView = {
         let view = PassThoughView()
         view.backgroundColor = CustomStyle.primaryRed
         view.layer.cornerRadius = 17.5
         view.clipsToBounds = true
         view.isHidden = true
-        return view
-    }()
-    
-    let circleTimerView: CircleTimerView = {
-        let view = CircleTimerView()
         return view
     }()
     
@@ -322,10 +319,7 @@ class RecordBoothVC: UIViewController {
         if audioPlayer != nil {
             audioPlayer.stop()
         }
-        
-        if currentScope == .intro {
-            resetTabBar()
-        }
+
     }
     
     @objc func popVC() {
@@ -412,19 +406,21 @@ class RecordBoothVC: UIViewController {
             duneLogoImageView.isHidden = true
             imageTopConstant = 80
             recordButtonBottomConstant = -20
-            soundWaveCenterConstant = 150
+            lottieWaveTopConstant = 7
         case .iPhone8:
             recordButtonBottomConstant = -25
+            lottieWaveTopConstant = 5
         case .iPhone8Plus:
             recordButtonBottomConstant = -25
-            soundWaveCenterConstant = 210
+            lottieWaveTopConstant = 12
         case .iPhone11:
-            soundWaveCenterConstant = 210
+            lottieWaveTopConstant = 40
             imageTopConstant = 180
         case .iPhone11Pro:
+            lottieWaveTopConstant = 32
             imageTopConstant = 170
         case .iPhone11ProMax:
-            soundWaveCenterConstant = 230
+            lottieWaveTopConstant = 40
             imageTopConstant = 190
         case .unknown:
             break
@@ -490,10 +486,9 @@ class RecordBoothVC: UIViewController {
         timerLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
         timerLabel.topAnchor.constraint(equalTo: programImageView.bottomAnchor, constant: 30).isActive = true
         
-        
         view.addSubview(lottieWave)
         lottieWave.translatesAutoresizingMaskIntoConstraints = false
-        lottieWave.topAnchor.constraint(equalTo: timerLabel.bottomAnchor, constant: 40).isActive = true
+        lottieWave.topAnchor.constraint(equalTo: timerLabel.bottomAnchor, constant: lottieWaveTopConstant).isActive = true
         lottieWave.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 70).isActive = true
         lottieWave.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -70).isActive = true
         lottieWave.heightAnchor.constraint(equalToConstant: 80).isActive = true
@@ -619,7 +614,6 @@ class RecordBoothVC: UIViewController {
                 }
                 
                 self.networkingIndicator.removeFromSuperview()
-                self.resetTabBar()
                 self.navigationController?.popToRootViewController(animated: true)
             }
         } else {
@@ -630,17 +624,6 @@ class RecordBoothVC: UIViewController {
     func getSelectedProgram() -> Program {
         let program = CurrentProgram.subPrograms?.first(where: { $0.ID == selectedProgram?.ID })
         return program!
-    }
-    
-    func resetTabBar() {
-//        tabBar?.barStyle = .default
-//        tabBar?.isHidden = false
-//        tabBar!.backgroundImage = .none
-//        tabBar!.items?[0].image = UIImage(named: "feed-icon")
-//        tabBar!.items?[1].image =  UIImage(named: "search-icon")
-//        tabBar!.items?[2].image =  UIImage(named: "studio-icon")
-//        tabBar!.items?[3].image =  UIImage(named: "trending-icon")
-//        tabBar!.items?[4].image =  UIImage(named: "account-icon")
     }
     
     // MARK: Continue Button Press

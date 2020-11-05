@@ -231,6 +231,8 @@ extension AddEmail: UITextFieldDelegate {
             scrollView.isHidden = true
         } else if keyboardRect.height < 260 && UIDevice.current.deviceType == .iPhone8 {
             scrollView.isHidden = false
+        } else if keyboardRect.height > 301.0 {
+            scrollView.isHidden = true
         }
         
     }

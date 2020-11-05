@@ -31,6 +31,10 @@ struct User {
     static var downVotedComments: [String]?
     static var surveysCompleted: [String]?
     
+    // Location
+    static var geoPoint: GeoPoint?
+    static var country: String?
+
     // Push notifications
     static var didAllowNotifications: Bool?
     static var didAllowNewEpisodeNotifications: Bool?
@@ -66,6 +70,10 @@ struct User {
         upVotedComments = data["upVotedComments"] as? [String]
         downVotedComments = data["downVotedComments"] as? [String]
         
+        // Location
+        country = data["country"] as? String
+        geoPoint = data["geoPoint"] as? GeoPoint
+
         //Push Notifications
         didAllowNotifications = data["didAllowNotifications"] as? Bool
         didAllowTaggingNotifications = data["didAllowTaggingNotifications"] as? Bool
@@ -88,6 +96,9 @@ struct User {
     }
     
     static var playedEpisodeIDs: [String] = {
+        if UserDefaults.standard.stringArray(forKey: "playedEpisodes") == nil {
+            UserDefaults.standard.setValue([], forKey: "playedEpisodes")
+        }
         return UserDefaults.standard.stringArray(forKey: "playedEpisodes")!
     }()
     
@@ -112,6 +123,7 @@ struct User {
     static func signOutUser() {
         username = nil
         email = nil
+        country = nil
         isSetUp = nil
         interests = nil
         socialSignUp = nil

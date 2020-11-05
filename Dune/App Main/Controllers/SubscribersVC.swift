@@ -377,11 +377,15 @@ extension SubscribersVC: DuneAudioPlayerDelegate {
     }
     
     func updateActiveCell(atIndex: Int, forType: PlayBackType) {
-        //
+        // No implementation needed
     }
     
-    func showCommentsFor(episode: Episode) {
-        //
+//    func showCommentsFor(episode: Episode) {
+//        // No implementation needed
+//    }
+    
+    func showSettingsFor(episode: Episode) {
+        // No implementation needed
     }
     
 }

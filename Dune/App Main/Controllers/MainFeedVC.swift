@@ -217,6 +217,7 @@ class MainFeedVC: UIViewController {
         notificationCenter.addObserver(self, selector: #selector(appMovedToForeground), name: UIApplication.willEnterForegroundNotification, object: nil)
         subscriptionIDs = CurrentProgram.subscriptionIDs!
         setNeedsStatusBarAppearanceUpdate()
+        checkPlayBarActiveController()
         selectedCellRow = nil
         configureNavigation()
         fetchEpisodeItems()
@@ -522,6 +523,7 @@ class MainFeedVC: UIViewController {
     
     func checkPlayBarActiveController() {
         if dunePlayBar.activeController == .dailyFeed {
+            dunePlayBar.audioPlayerDelegate = self
             dunePlayBar.downloadedEpisodes = episodes
             if selectedCategory != nil {
                 dunePlayBar.itemCount = filteredEpisodeItems.count
@@ -773,12 +775,6 @@ class MainFeedVC: UIViewController {
         tableView.reloadRows(at: [IndexPath(item: index, section: 0)], with: .fade)
     }
     
-//    @objc func showCommentFromModal(_ notification: Notification) {
-//        let episodeID = notification.userInfo?["ID"] as! String
-//        guard let episode = downloadedEpisodes.first(where: {$0.ID == episodeID}) else { return }
-//        showCommentsFor(episode: episode)
-//    }
-    
     // May be used later
     func setCurrentDate() {
         let date = Date()
@@ -1017,6 +1013,7 @@ extension MainFeedVC: EpisodeCellDelegate {
         
         dunePlayBar.audioPlayerDelegate = self
         dunePlayBar.activeController = .dailyFeed
+        dunePlayBar.activeViewController = self
         dunePlayBar.setEpisodeDetailsWith(episode: cell.episode, image: image)
         dunePlayBar.animateToPositionIfNeeded()
         dunePlayBar.playOrPauseEpisodeWith(audioID: audioID)
@@ -1027,15 +1024,14 @@ extension MainFeedVC: EpisodeCellDelegate {
         downloadedEpisodes[indexPath.row] = episode
     }
     
-    func showSettings(cell: EpisodeCell) {
+    func showSettingsFor(cell: EpisodeCell) {
         selectedCellRow =  downloadedEpisodes.firstIndex(where: { $0.ID == cell.episode.ID })
-        
+                
         if cell.episode.username == User.username! || User.username == "Master"  {
             ownEpisodeSettings.showSettings()
         } else {
             subscriptionSettings.showSettings()
         }
-        
     }
     
     func deleteOwnEpisode() {
@@ -1084,9 +1080,6 @@ extension MainFeedVC: EpisodeCellDelegate {
         }
     }
     
-    func addTappedProgram(programName: String) {
-        //
-    }
     
     func updateRows() {
         DispatchQueue.main.async {
@@ -1095,13 +1088,27 @@ extension MainFeedVC: EpisodeCellDelegate {
         }
     }
     
+    func showCommentsFor(episode: Episode) {
+        commentVC = CommentThreadVC(episode: episode)
+        commentVC.currentState = dunePlayBar.currentState
+        dunePlayBar.audioPlayerDelegate = commentVC
+        dunePlayBar.isHidden = true
+        commentVC.delegate = self
+        navigationController?.pushViewController(commentVC, animated: true)
+    }
+    
 }
 
 extension MainFeedVC: SettingsLauncherDelegate {
     
     func selectionOf(setting: String) {
-        let episode = downloadedEpisodes[selectedCellRow!]
+        var episode: Episode
         
+        if dunePlayBar.activeController != .dailyFeed {
+             episode = downloadedEpisodes[selectedCellRow!]
+        } else {
+            episode = dunePlayBar.episode
+        }
         switch setting {
         case "Delete":
             deleteOwnEpisode()
@@ -1170,21 +1177,16 @@ extension MainFeedVC: DuneAudioPlayerDelegate {
         }
     }
     
-    func showCommentsFor(episode: Episode) {
-        dunePlayBar.isHidden = true
-        commentVC = CommentThreadVC(episode: episode)
-        commentVC.currentState = dunePlayBar.currentState
-        dunePlayBar.audioPlayerDelegate = commentVC
-        commentVC.delegate = self
-        navigationController?.pushViewController(commentVC, animated: true)
+    func showSettingsFor(episode: Episode) {
+        selectedCellRow =  downloadedEpisodes.firstIndex(where: { $0.ID == episode.ID })
+                
+        if episode.username == User.username! || User.username == "Master"  {
+            ownEpisodeSettings.showSettings()
+        } else {
+            subscriptionSettings.showSettings()
+        }
     }
     
-    func makeActive(episode: Episode) {
-        episode.hasBeenPlayed = true
-        guard let index = downloadedEpisodes.firstIndex(where: { $0.ID == episode.ID }) else { return }
-        User.appendPlayedEpisode(ID: episode.ID, progress: 0.0)
-        downloadedEpisodes[index] = episode
-    }
     
     func updateProgressBarWith(percentage: CGFloat, forType: PlayBackType, episodeID: String) {
         if lastPlayedID != episodeID {
@@ -1245,7 +1247,7 @@ extension MainFeedVC: CustomAlertDelegate {
     
 }
 
-extension MainFeedVC: NavPlayerDelegate {
+extension MainFeedVC: NavBarPlayerDelegate {
     
     func playOrPauseEpisode() {
         if dunePlayBar.isOutOfPosition {

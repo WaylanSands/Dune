@@ -13,6 +13,7 @@ def available_pods
   pod 'Firebase/Messaging'
   pod 'Firebase/DynamicLinks'
   pod 'FirebaseFirestoreSwift'
+  pod 'Firebase/Crashlytics'
   pod 'MultiSlider'
   pod 'SwiftLinkPreview'
   pod 'ActiveLabel'

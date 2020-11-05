@@ -10,6 +10,9 @@ import UIKit
 import FirebaseStorage
 import FirebaseFirestore
 
+import MapKit
+import CoreLocation
+
 class EditAccountVC: UIViewController {
     
     var userFieldshaveUpdated = false
@@ -19,8 +22,11 @@ class EditAccountVC: UIViewController {
     let Under18Years = Calendar.current.date(byAdding: .year, value: -18, to: Date())
     
     let headerViewHeight: CGFloat = 300
+    
+    let locationSettingsAlert = CustomAlertView(alertType: .didNotAllowLocationServices)
+    var resetLocationSettingsTriggered = false
     let changingDisplayName = CustomAlertView(alertType: .programChangingName)
-    let datePicker = CustomDatePicker()
+    var changeDisplayNameTriggered = false
     let db = Firestore.firestore()
     
     // For various screen-sizes
@@ -28,6 +34,9 @@ class EditAccountVC: UIViewController {
     var imageViewTopConstant: CGFloat = 120
     var headerViewHeightConstant: CGFloat = 300
     var scrollPadding: CGFloat = 100
+    
+    // Location
+    let locationManager = CLLocationManager()
     
     let customNavBar: CustomNavBar = {
         let nav = CustomNavBar()
@@ -182,12 +191,26 @@ class EditAccountVC: UIViewController {
         return label
     }()
     
-    let bdayTextButton: UIButton = {
-        let button = UIButton()
-        button.setTitleColor(CustomStyle.fourthShade, for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .regular)
-        button.addTarget(self, action: #selector(changeBirthDate), for: .touchUpInside)
-        return button
+    let datePicker: UIDatePicker = {
+        let picker = UIDatePicker()
+        picker.datePickerMode = .date
+        if let date = User.birthDate {
+            picker.date = Date.stringToDate(dateString: User.birthDate!)
+        }
+        picker.addTarget(self, action: #selector(updateDateLabel), for: .editingDidEnd)
+        if #available(iOS 13.4, *) {
+            picker.preferredDatePickerStyle = .compact
+        }
+        return picker
+    }()
+    
+    let bdayTextField: UITextField = {
+        let field = UITextField()
+        field.tintColor = .clear
+        field.textAlignment = .right
+        field.font = UIFont.systemFont(ofSize: 15, weight: .regular)
+        field.textColor = CustomStyle.fourthShade
+        return field
     }()
     
     let bdayUnlineView: UIView = {
@@ -204,14 +227,16 @@ class EditAccountVC: UIViewController {
         return label
     }()
     
-    let countryTextField: UITextField = {
-        let textField = UITextField()
-        textField.isUserInteractionEnabled = false
-        let placeholder = NSAttributedString(string: "Australia", attributes: [NSAttributedString.Key.foregroundColor : CustomStyle.fourthShade])
-        textField.font = UIFont.systemFont(ofSize: 15, weight: .regular)
-        textField.attributedPlaceholder = placeholder;
-        textField.textColor = CustomStyle.primaryBlack
-        return textField
+    lazy var countryButton: UILabel = {
+        let label = UILabel()
+        let gestureRec = UITapGestureRecognizer(target: self, action: #selector(updateCountry))
+        label.addGestureRecognizer(gestureRec)
+        label.isUserInteractionEnabled = true
+        label.text = User.country ?? "Needed"
+        label.font = UIFont.systemFont(ofSize: 15, weight: .regular)
+        label.textColor = CustomStyle.fourthShade
+        label.textAlignment = .left
+        return label
     }()
     
     let countryUnlineView: UIView = {
@@ -280,14 +305,16 @@ class EditAccountVC: UIViewController {
         styleForScreens()
         configureViews()
         configureDelegates()
+        createDatePicker()
     }
     
     
     override func viewWillAppear(_ animated: Bool) {
         nameTextField.attributedPlaceholder = nameFieldPlaceholder
         usernameTextButton.setTitle(User.username, for: .normal)
-        bdayTextButton.setTitle(User.birthDate, for: .normal)
+        
         profileImageView.image = CurrentProgram.image
+        bdayTextField.text = User.birthDate ?? "Needed"
         emailLabelButton.text = User.email
 
         navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
@@ -315,9 +342,10 @@ class EditAccountVC: UIViewController {
 
     
     func configureDelegates() {
-        datePicker.delegate = self
-        nameTextField.delegate = self
+//        datePicker.delegate = self
+        locationSettingsAlert.alertDelegate = self
         changingDisplayName.alertDelegate = self
+        nameTextField.delegate = self
     }
     
     func styleForScreens() {
@@ -398,8 +426,8 @@ class EditAccountVC: UIViewController {
         userFieldsStackedView.addArrangedSubview(nameLabel)
         userFieldsStackedView.addArrangedSubview(usernameLabel)
         userFieldsStackedView.addArrangedSubview(emailLabel)
-        userFieldsStackedView.addArrangedSubview(bdayLabel)
         userFieldsStackedView.addArrangedSubview(countryLabel)
+        userFieldsStackedView.addArrangedSubview(bdayLabel)
         userFieldsStackedView.addArrangedSubview(passwordLabel)
         
         // Add user values
@@ -450,30 +478,46 @@ class EditAccountVC: UIViewController {
         emailUnlineView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         emailUnlineView.heightAnchor.constraint(equalToConstant: 1).isActive = true
         
-        scrollContentView.addSubview(bdayTextButton)
-        bdayTextButton.translatesAutoresizingMaskIntoConstraints = false
-        bdayTextButton.centerYAnchor.constraint(equalTo: bdayLabel.centerYAnchor).isActive = true
-        bdayTextButton.leadingAnchor.constraint(equalTo: userFieldsStackedView.trailingAnchor).isActive = true
-        bdayTextButton.heightAnchor.constraint(equalToConstant: 30).isActive = true
+        if #available(iOS 13.4, *) {
+            scrollContentView.addSubview(datePicker)
+            datePicker.translatesAutoresizingMaskIntoConstraints = false
+            datePicker.centerYAnchor.constraint(equalTo: bdayLabel.centerYAnchor).isActive = true
+            datePicker.leadingAnchor.constraint(equalTo: userFieldsStackedView.trailingAnchor, constant: -10).isActive = true
+            datePicker.heightAnchor.constraint(equalToConstant: 30).isActive = true
+            datePicker.subviews[0].subviews[0].backgroundColor = nil
+            
+            scrollContentView.addSubview(bdayUnlineView)
+            bdayUnlineView.translatesAutoresizingMaskIntoConstraints = false
+            bdayUnlineView.topAnchor.constraint(equalTo: datePicker.bottomAnchor, constant: 10).isActive = true
+            bdayUnlineView.leadingAnchor.constraint(equalTo: datePicker.leadingAnchor, constant: 10).isActive = true
+            bdayUnlineView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+            bdayUnlineView.heightAnchor.constraint(equalToConstant: 1).isActive = true
+        } else {
+            scrollContentView.addSubview(bdayTextField)
+            bdayTextField.translatesAutoresizingMaskIntoConstraints = false
+            bdayTextField.centerYAnchor.constraint(equalTo: bdayLabel.centerYAnchor).isActive = true
+            bdayTextField.leadingAnchor.constraint(equalTo: userFieldsStackedView.trailingAnchor).isActive = true
+            bdayTextField.heightAnchor.constraint(equalToConstant: 30).isActive = true
+            
+            scrollContentView.addSubview(bdayUnlineView)
+            bdayUnlineView.translatesAutoresizingMaskIntoConstraints = false
+            bdayUnlineView.topAnchor.constraint(equalTo: bdayTextField.bottomAnchor, constant: 10).isActive = true
+            bdayUnlineView.leadingAnchor.constraint(equalTo: bdayTextField.leadingAnchor).isActive = true
+            bdayUnlineView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+            bdayUnlineView.heightAnchor.constraint(equalToConstant: 1).isActive = true
+        }
         
-        scrollContentView.addSubview(bdayUnlineView)
-        bdayUnlineView.translatesAutoresizingMaskIntoConstraints = false
-        bdayUnlineView.topAnchor.constraint(equalTo: bdayTextButton.bottomAnchor, constant: 10).isActive = true
-        bdayUnlineView.leadingAnchor.constraint(equalTo: bdayTextButton.leadingAnchor).isActive = true
-        bdayUnlineView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        bdayUnlineView.heightAnchor.constraint(equalToConstant: 1).isActive = true
-        
-        scrollContentView.addSubview(countryTextField)
-        countryTextField.translatesAutoresizingMaskIntoConstraints = false
-        countryTextField.centerYAnchor.constraint(equalTo: countryLabel.centerYAnchor).isActive = true
-        countryTextField.leadingAnchor.constraint(equalTo: userFieldsStackedView.trailingAnchor).isActive = true
-        countryTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20).isActive = true
-        countryTextField.heightAnchor.constraint(equalToConstant: 30).isActive = true
+        scrollContentView.addSubview(countryButton)
+        countryButton.translatesAutoresizingMaskIntoConstraints = false
+        countryButton.centerYAnchor.constraint(equalTo: countryLabel.centerYAnchor).isActive = true
+        countryButton.leadingAnchor.constraint(equalTo: userFieldsStackedView.trailingAnchor).isActive = true
+        countryButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20).isActive = true
+        countryButton.heightAnchor.constraint(equalToConstant: 30).isActive = true
         
         scrollContentView.addSubview(countryUnlineView)
         countryUnlineView.translatesAutoresizingMaskIntoConstraints = false
-        countryUnlineView.topAnchor.constraint(equalTo: countryTextField.bottomAnchor, constant: 10).isActive = true
-        countryUnlineView.leadingAnchor.constraint(equalTo: countryTextField.leadingAnchor).isActive = true
+        countryUnlineView.topAnchor.constraint(equalTo: countryButton.bottomAnchor, constant: 10).isActive = true
+        countryUnlineView.leadingAnchor.constraint(equalTo: countryButton.leadingAnchor).isActive = true
         countryUnlineView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         countryUnlineView.heightAnchor.constraint(equalToConstant: 1).isActive = true
         
@@ -501,18 +545,58 @@ class EditAccountVC: UIViewController {
         customNavBar.pinNavBarTo(view)
     }
     
-    func updateDateLabel() {
+    
+    @objc func updateDateLabel() {
+        print("updateDateLabel")
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "MMM dd, yyyy"
-        let date = dateFormatter.string(from: datePicker.datePicker.date)
-        bdayTextButton.setTitle(date, for: .normal)
+        let date = dateFormatter.string(from: datePicker.date)
+        bdayTextField.text = date
         User.birthDate = date
+        datePicker.subviews[0].subviews[0].backgroundColor = nil
         FireStoreManager.updateUserBirthDate()
+        bdayTextField.resignFirstResponder()
     }
+    
+    func createDatePicker() {
+        let toolbar = UIToolbar(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 35))
+        let doneButton = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(updateDateLabel))
+        toolbar.items = [doneButton]
+        toolbar.sizeToFit()
+        
+        bdayTextField.inputAccessoryView = toolbar
+        bdayTextField.inputView = datePicker
+        
+        datePicker.datePickerMode = .date
+    }
+    
+//    @objc func confirmDateSelected(date: Date) {
+//        if date > Under18Years! {
+//
+//            let alert = UIAlertController(title: "Age Restrictions", message: """
+//                The current date entered indicates you are under 18 years old.
+//
+//                Is this correct?
+//                """, preferredStyle: .alert)
+//
+//            alert.addAction(UIAlertAction(title: "Yes", style: UIAlertAction.Style.default, handler: {(alert: UIAlertAction!) in
+//                self.updateDateLabel()
+//            }))
+//
+//            alert.addAction(UIAlertAction(title: "No", style: UIAlertAction.Style.cancel, handler: {(alert: UIAlertAction!) in
+//                self.bdayTextField.becomeFirstResponder()
+//            }))
+//
+//            self.present(alert, animated: true, completion: nil)
+//
+//        } else if date <= Under18Years! {
+//            self.updateDateLabel()
+//        }
+//    }
     
     @objc func changeBirthDate() {
         nameTextField.resignFirstResponder()
-        datePicker.presentDatePicker()
+//        datePicker.presentDatePicker()
     }
     
     @objc func textFieldDidChange(_ textField: UITextField) {
@@ -540,49 +624,90 @@ class EditAccountVC: UIViewController {
         let changePasswordVC = ChangePasswordVC()
         navigationController?.pushViewController(changePasswordVC, animated: true)
     }
+    
+    //MARK: - Get Country data
+    
+    @objc func updateCountry() {
+        locationManager.requestWhenInUseAuthorization()
+        
+        if CLLocationManager.locationServicesEnabled() {
+            switch(CLLocationManager.authorizationStatus()) {
+             case .restricted, .denied:
+                print("No access")
+                UIApplication.shared.windows.last?.addSubview(self.locationSettingsAlert)
+                resetLocationSettingsTriggered = true
+            case .notDetermined, .authorizedAlways, .authorizedWhenInUse:
+                locationManager.desiredAccuracy = kCLLocationAccuracyNearestTenMeters
+                locationManager.startUpdatingLocation()
+                locationManager.delegate = self
+                print("Access")
+            default:
+                break
+             }
+        } else {
+            // Device location settings is turned off
+            print("Fire")
+        }
+    }
+    
+}
+
+extension EditAccountVC: CLLocationManagerDelegate {
+    
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        guard let locValue: CLLocationCoordinate2D = manager.location?.coordinate else { return }
+        guard let location: CLLocation = manager.location else { return }
+        
+        fetchCityAndCountry(from: location) { [weak self] city, country, error in
+            guard let country = country, error == nil else { return }
+            self?.countryButton.text = country
+            FireStoreManager.updateUserLocationWith(country: country, lat: locValue.latitude, lon: locValue.longitude)
+        }
+    }
+    
+    func fetchCityAndCountry(from location: CLLocation, completion: @escaping (_ city: String?, _ country:  String?, _ error: Error?) -> ()) {
+        CLGeocoder().reverseGeocodeLocation(location) { placemarks, error in
+            completion(placemarks?.first?.locality,
+                       placemarks?.first?.country,
+                       error)
+        }
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+//        guard let locValue: CLLocationCoordinate2D = manager.location?.coordinate else { return }
+//        print("locations = \(locValue.latitude) \(locValue.longitude)")
+    }
+    
 }
 
 // Resign responder for custom alert
 extension EditAccountVC: CustomAlertDelegate {
     
     func primaryButtonPress() {
-        if activeTextField == "displayName" {
+        
+        if changeDisplayNameTriggered {
             nameTextField.becomeFirstResponder()
+            changeDisplayNameTriggered = false
+        } else if resetLocationSettingsTriggered {
+            resetLocationSettingsTriggered = false
+            let url = URL(string:UIApplication.openSettingsURLString)
+            if UIApplication.shared.canOpenURL(url!) {
+                UIApplication.shared.open(url!, options: [:]) {_ in
+                    print("Did return")
+                }
+            }
         }
+
     }
     
     func cancelButtonPress() {
-        if activeTextField == "displayName" {
+        
+        if changeDisplayNameTriggered {
             nameTextField.resignFirstResponder()
         }
-    }
-}
-
-// Alert user if they are under the age of 18
-extension EditAccountVC: CustomDatePickerDelegate {
-    
-    func confirmDateSelected(date: Date) {
-        if date > Under18Years! {
-            
-            let alert = UIAlertController(title: "Age Restrictions", message: """
-                The current date entered indicates you are under 18 years old.
-
-                Is this correct?
-                """, preferredStyle: .alert)
-            
-            alert.addAction(UIAlertAction(title: "Yes", style: UIAlertAction.Style.default, handler: {(alert: UIAlertAction!) in
-                self.updateDateLabel()
-            }))
-            
-            alert.addAction(UIAlertAction(title: "No", style: UIAlertAction.Style.cancel, handler: {(alert: UIAlertAction!) in
-                self.datePicker.presentDatePicker()
-            }))
-            
-            self.present(alert, animated: true, completion: nil)
-            
-        } else if date <= Under18Years! {
-            self.updateDateLabel()
-        }
+        
+        resetLocationSettingsTriggered = false
+        changeDisplayNameTriggered = false
     }
 }
 
@@ -590,12 +715,16 @@ extension EditAccountVC: CustomDatePickerDelegate {
 // Alert publishers about changing name
 extension EditAccountVC: UITextFieldDelegate {
     
+//    func textFieldDidEndEditing(_ textField: UITextField, reason: UITextField.DidEndEditingReason) {
+//        changeDisplayNameTriggered = false
+//    }
+    
     func textFieldDidBeginEditing(_ textField: UITextField) {
         nameTextField.textColor = CustomStyle.primaryBlack
         if textField == nameTextField && CurrentProgram.isPublisher! {
-            activeTextField = "displayName"
             DispatchQueue.main.async {
                 UIApplication.shared.windows.last?.addSubview(self.changingDisplayName)
+                self.changeDisplayNameTriggered = true
             }
         }
     }

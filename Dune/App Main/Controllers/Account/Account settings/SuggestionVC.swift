@@ -46,7 +46,7 @@ class SuggestionVC: UIViewController {
     
     let mainHeadingLabel: UILabel = {
         let label = UILabel()
-        label.text = "Suggest a new feature or an improvement"
+        label.text = "Suggest a new feature, an improvement or a podcast."
         label.font = UIFont.systemFont(ofSize: 23, weight: .bold)
         label.textColor = CustomStyle.primaryBlack
         label.numberOfLines = 0
@@ -58,7 +58,7 @@ class SuggestionVC: UIViewController {
                                          answers: [
                                             "A new feature",
                                             "An improvement",
-                                            "An improvement"
+                                            "A podcast"
     ])
     
     var questionTwo = SurveyQuestionView(question: "Which part of the app are you thinking?",
@@ -76,9 +76,9 @@ class SuggestionVC: UIViewController {
     var questionThree = SurveyQuestionView(question: "How essential do you deem this suggestion?",
                                          info: nil, type: .multipleChoice,
                                          answers: [
-                                            "Crucial",
                                             "It would be great",
                                             "Just an idea",
+                                            "It's crucial",
     ])
     
     let descriptionLabel: UILabel = {

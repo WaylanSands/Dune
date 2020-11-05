@@ -24,6 +24,7 @@ class MainTabController: UITabBarController {
         view.addSubview(duneTabBar)
         duneTabBar.isHidden = false
         duneTabBar.frame = CGRect(x: 0, y: view.frame.height - self.tabBar.frame.height - UIDevice.safeBottomHeight, width: self.view.frame.width, height: self.tabBar.frame.height + UIDevice.safeBottomHeight)
+        duneTabBar.activeNavController = activeNavController
         duneTabBar.tabButtonSelection = tabSelection
         duneTabBar.visitChannel = visitLinkedChannel
         duneTabBar.visitEpisode = visitLinkedEpisode
@@ -114,6 +115,10 @@ class MainTabController: UITabBarController {
         let searchNavController = viewControllers![3] as! UINavigationController
         let searchVC = searchNavController.viewControllers[0] as! SearchVC
         searchVC.programToPush = program
+    }
+    
+    private func activeNavController() -> UINavigationController {
+        return selectedViewController as! UINavigationController
     }
     
     private func tabSelection(index: Int) {

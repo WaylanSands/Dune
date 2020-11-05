@@ -30,13 +30,14 @@ enum sliderStatus {
 protocol DuneAudioPlayerDelegate {
     func updateProgressBarWith(percentage: CGFloat, forType: PlayBackType,  episodeID: String)
     func updateActiveCell(atIndex: Int, forType: PlayBackType)
+//    func showCommentsFor(episode: Episode)
+    func showSettingsFor(episode: Episode)
     func fetchMoreEpisodes()
 }
 
-extension DuneAudioPlayerDelegate {
-    func showCommentsFor(episode: Episode) {}
-    func makeActive(episode: Episode) {}
-}
+//extension DuneAudioPlayerDelegate {
+//    func makeActive(episode: Episode) {}
+//}
 
 class DunePlayer: UIView {
     
@@ -50,6 +51,8 @@ class DunePlayer: UIView {
     }
     
     var audioPlayerDelegate: DuneAudioPlayerDelegate!
+    var activeViewController: DuneAudioPlayerDelegate?
+    
     var audioSession = AVAudioSession.sharedInstance()
     var currentState: playerStatus = .ready
     var audioPlayer: AVPlayer!
@@ -251,8 +254,13 @@ class DunePlayer: UIView {
     let shareButton: UIButton = {
         let button = UIButton()
         button.setImage(UIImage(named: "share-button-icon"), for: .normal)
+        button.addTarget(self, action: #selector(shareButtonPress), for: .touchUpInside)
         return button
     }()
+    
+    @objc func shareButtonPress() {
+        audioPlayerDelegate.showSettingsFor(episode: episode)
+    }
     
     let shareCountLabel: UILabel = {
         let label = UILabel()
@@ -898,7 +906,7 @@ class DunePlayer: UIView {
     }
     
     func setEpisodeDetailsWith(episode: Episode, image: UIImage?) {
-        audioPlayerDelegate.makeActive(episode: episode)
+//        audioPlayerDelegate.makeActive(episode: episode)
         setupLikeButtonAndCounterFor(episode: episode)
         programNameLabel.text = episode.programName
         largeNameLabel.text = "@\(episode.username)"
@@ -1062,9 +1070,9 @@ class DunePlayer: UIView {
         }
     }
     
-    func episodeHadBeenPlayed() {
-        audioPlayerDelegate.showCommentsFor(episode: episode)
-    }
+//    func episodeHadBeenPlayed() {
+//        audioPlayerDelegate.showCommentsFor(episode: episode)
+//    }
     
     func setupLikeButtonAndCounterFor(episode: Episode) {
         episodeID = episode.ID
@@ -1421,14 +1429,24 @@ class DunePlayer: UIView {
         return Double(CMTimeGetSeconds(asset.duration))
     }
     
+    // MARK: - Show comments
+    
     @objc func commentButtonPress() {
-        audioPlayerDelegate.showCommentsFor(episode: episode)
+        let currentNavController = duneTabBar.selectedTabController()
+        dunePlayBar.animateCloseWith(duration: 0)
+        let commentVC = CommentThreadVC(episode: episode)
+        commentVC.currentState = dunePlayBar.currentState
+        dunePlayBar.audioPlayerDelegate = commentVC
+        dunePlayBar.isHidden = true
+        commentVC.delegate = self
+        currentNavController.pushViewController(commentVC, animated: true)
     }
     
     //MARK: RemoteTransportControls
     func setupRemoteTransportControls() {
         commandCenter.togglePlayPauseCommand.addTarget { [unowned self] event in
             if self.audioPlayer != nil {
+                User.appendPlayedEpisode(ID: episode.ID, progress: currentProgress)
                 self.playbackButtonPress()
                 return .success
             }
@@ -1437,6 +1455,7 @@ class DunePlayer: UIView {
         
         commandCenter.nextTrackCommand.addTarget { [unowned self] event in
             if self.audioPlayer != nil {
+                User.appendPlayedEpisode(ID: episode.ID, progress: currentProgress)
                 self.checkAndFetchNextEpisode()
                 return .success
             }
@@ -1445,6 +1464,7 @@ class DunePlayer: UIView {
         
         commandCenter.previousTrackCommand.addTarget { [unowned self] event in
             if self.audioPlayer != nil {
+                User.appendPlayedEpisode(ID: episode.ID, progress: currentProgress)
                 self.checkAndFetchLastEpisode()
                 return .success
             }
@@ -1479,18 +1499,18 @@ class DunePlayer: UIView {
 extension DunePlayer: AVAudioPlayerDelegate {
     
     @objc func playerDidFinishPlaying() {
-        currentState = .ready
-        playbackCircleLink.isPaused = true
         playbackButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: 3, bottom: 0, right: 0)
         playbackButton.setImage(UIImage(named: "play-episode-icon"), for: .normal)
         playPauseButton.setImage(UIImage(named: "play-audio-icon"), for: .normal)
+        User.appendPlayedEpisode(ID: episode.ID, progress: currentProgress)
+        print("Finished with \(currentProgress)")
         playbackCircleView.setupPlaybackCircle()
-        
+        playbackCircleLink.isPaused = true
+                
         guard let index = downloadedEpisodes.firstIndex(where: { $0.ID == episode!.ID }) else { return }
         
         if (downloadedEpisodes.count - 1) > index {
             playNextEpisodeWith(nextIndex: index + 1)
-            print("Yep fin")
             audioPlayerDelegate.updateActiveCell(atIndex: index + 1, forType: .episode)
         } else {
             finishSession()
@@ -1523,4 +1543,12 @@ extension DunePlayer: CachingPlayerItemDelegate {
             // Saved to cache
         })
     }
+}
+
+extension DunePlayer: NavBarPlayerDelegate {
+   
+    func playOrPauseEpisode() {
+        playOrPauseEpisodeWith(audioID: episode.audioID)
+    }
+    
 }

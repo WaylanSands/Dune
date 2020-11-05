@@ -451,7 +451,7 @@ class ProgramAccountVC : UIViewController {
         navigationController?.navigationBar.barStyle = .default
         navigationController?.navigationBar.isHidden = false
         navigationItem.largeTitleDisplayMode = .never
-        navigationItem.rightBarButtonItem = UIBarButtonItem(image: #imageLiteral(resourceName: "white-settings-icon"), style: .plain, target: self, action: #selector(settingsButtonPress))
+        navigationItem.rightBarButtonItem = UIBarButtonItem(image: UIImage(named: "highlighted-settings"), style: .plain, target: self, action: #selector(settingsButtonPress))
     }
     
     func configureEpisodeLabel() {

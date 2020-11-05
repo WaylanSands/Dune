@@ -321,6 +321,7 @@ class ProgramAccountBottomVC: UIViewController {
     
     func checkPlayBarActiveController() {
         if dunePlayBar.activeController == .account {
+            dunePlayBar.audioPlayerDelegate = self
             dunePlayBar.downloadedEpisodes = downloadedEpisodes
             dunePlayBar.itemCount = episodeItems.count
         }
@@ -555,8 +556,13 @@ extension ProgramAccountBottomVC: UITableViewDelegate, UITableViewDataSource {
 extension ProgramAccountBottomVC: SettingsLauncherDelegate {
     
     func selectionOf(setting: String) {
-        let episode = downloadedEpisodes[selectedEpisodeCellRow!]
-
+        var episode: Episode
+        
+        if dunePlayBar.activeController != .account {
+             episode = downloadedEpisodes[selectedEpisodeCellRow!]
+        } else {
+            episode = dunePlayBar.episode
+        }
         switch setting {
         case "Delete":
             deleteOwnEpisode()
@@ -642,21 +648,6 @@ extension ProgramAccountBottomVC: DuneAudioPlayerDelegate {
         print("Should fetch more episodes: Needs implementation")
     }
     
-    func showCommentsFor(episode: Episode) {
-        dunePlayBar.isHidden = true
-        commentVC = CommentThreadVC(episode: episode)
-        commentVC.currentState = dunePlayBar.currentState
-        dunePlayBar.audioPlayerDelegate = commentVC
-        commentVC.delegate = self
-        navigationController?.pushViewController(commentVC, animated: true)
-    }
-   
-    func makeActive(episode: Episode) {
-        episode.hasBeenPlayed = true
-        guard let index = downloadedEpisodes.firstIndex(where: { $0.ID == episode.ID }) else { return }
-        downloadedEpisodes[index] = episode
-    }
-    
     func updateProgressBarWith(percentage: CGFloat, forType: PlayBackType, episodeID: String) {
         
         if lastPlayedID != episodeID {
@@ -714,6 +705,11 @@ extension ProgramAccountBottomVC: DuneAudioPlayerDelegate {
         episode.playBackProgress = lastProgress
         downloadedEpisodes[index] = episode
         User.appendPlayedEpisode(ID: episode.ID, progress: lastProgress)
+    }
+    
+    func showSettingsFor(episode: Episode) {
+        selectedEpisodeCellRow =  downloadedEpisodes.firstIndex(where: { $0.ID == episode.ID })
+        ownEpisodeSettings.showSettings()
     }
     
 }
@@ -836,11 +832,6 @@ extension ProgramAccountBottomVC :EpisodeCellDelegate {
         }
     }
     
-    func addTappedProgram(programName: String) {
-        //
-    }
-    
-    
     // MARK: Play Episode
     func playEpisode(cell: EpisodeCell) {
         
@@ -859,6 +850,8 @@ extension ProgramAccountBottomVC :EpisodeCellDelegate {
         
         // Update play bar with active episode list
         dunePlayBar.activeController = .account
+        dunePlayBar.activeViewController = self
+
         dunePlayBar.downloadedEpisodes = downloadedEpisodes
         dunePlayBar.itemCount = episodeItems.count
         
@@ -869,7 +862,7 @@ extension ProgramAccountBottomVC :EpisodeCellDelegate {
     
     }
     
-    func showSettings(cell: EpisodeCell) {
+    func showSettingsFor(cell: EpisodeCell) {
         selectedEpisodeCellRow = downloadedEpisodes.firstIndex(where: { $0.ID == cell.episode.ID })
         ownEpisodeSettings.showSettings()
         selectedEpisodeSetting = true
@@ -877,6 +870,15 @@ extension ProgramAccountBottomVC :EpisodeCellDelegate {
     
     func updateLikeCountFor(episode: Episode, at indexPath: IndexPath) {
         //
+    }
+    
+    func showCommentsFor(episode: Episode) {
+        commentVC = CommentThreadVC(episode: episode)
+        commentVC.currentState = dunePlayBar.currentState
+        dunePlayBar.audioPlayerDelegate = commentVC
+        dunePlayBar.isHidden = true
+        commentVC.delegate = self
+        navigationController?.pushViewController(commentVC, animated: true)
     }
     
 }
@@ -900,7 +902,7 @@ extension ProgramAccountBottomVC: CustomAlertDelegate {
     
 }
 
-extension ProgramAccountBottomVC: NavPlayerDelegate {
+extension ProgramAccountBottomVC: NavBarPlayerDelegate {
     
     func playOrPauseEpisode() {
         if dunePlayBar.isOutOfPosition {

@@ -405,20 +405,20 @@ extension ListenerAccountBottomVC: SettingsLauncherDelegate {
 extension ListenerAccountBottomVC: ProgramCellDelegate, MentionCellDelegate {
    
     func updateRows() {
-        //
+        // Implementation not needed
     }
     
     func showCommentsFor(episode: Episode) {
-        //
+        // Implementation not needed
+    }
+    
+    func noIntroAlert() {
+        // Implementation not needed
     }
   
     func programTagSelected(tag: String) {
         let tagSelectedVC = ProgramTagLookupVC(tag: tag)
         navigationController?.pushViewController(tagSelectedVC, animated: true)
-    }
-   
-    func noIntroAlert() {
-        //         view.addSubview(noIntroRecordedAlert)
     }
     
     func unsubscribeFrom(program: Program) {
@@ -451,8 +451,7 @@ extension ListenerAccountBottomVC: ProgramCellDelegate, MentionCellDelegate {
         }
     }
     
-    //MARK: Play program's cell
-    
+    //MARK: - Play program's cell
     func playProgramIntro(cell: ProgramCell) {
         activeProgramCell = cell
         
@@ -518,7 +517,11 @@ extension ListenerAccountBottomVC: DuneAudioPlayerDelegate {
     }
     
     func updatePastEpisodeProgress() {
-        //
+        // No implementation needed
+    }
+    
+    func showSettingsFor(episode: Episode) {
+        // No implementation needed
     }
     
 }

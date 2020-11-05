@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import Lottie
 import AVFoundation
 import MultiSlider
 
@@ -47,7 +48,7 @@ class EditingBoothVC: UIViewController {
     var draftID: String?
     
     var currentState = recordState.preview
-    var maxRecordingTime: Double = 120
+    var maxRecordingTime: Double = 300
     var recordingSnapshot: Double = 0
     var normalizedTime: CGFloat?
     var scrubbedTime: Double = 0
@@ -64,7 +65,7 @@ class EditingBoothVC: UIViewController {
     // For various screens
     var imageTopConstant: CGFloat = 120
     var recordButtonBottomConstant: CGFloat = -60
-    var soundWaveCenterConstant: CGFloat = 200
+    var lottieWaveTopConstant: CGFloat = 200
     
     var maxValue: Float = Float(UIScreen.main.bounds.width) - Float(60)
     
@@ -78,13 +79,7 @@ class EditingBoothVC: UIViewController {
     let nextVersionAlert = CustomAlertView(alertType: .nextVersion)
     let audioTooLong = CustomAlertView(alertType: .audioTooLong)
     
-    let responsiveSoundWave: ResponsiveWaveformView = {
-        let view = ResponsiveWaveformView()
-        view.waveColor = CustomStyle.white
-        view.backgroundColor = .clear
-        view.isHidden = true
-        return view
-    }()
+
     
     let playBackBars: StaticWaveCreator = {
         let view = StaticWaveCreator()
@@ -99,6 +94,16 @@ class EditingBoothVC: UIViewController {
         label.font = UIFont.monospacedDigitSystemFont(ofSize: 16, weight: UIFont.Weight.bold)
         label.textColor = .white
         return label
+    }()
+    
+    var lottieWave: AnimationView = {
+        var animation = AnimationView(name: "lottieWave")
+        animation.contentMode = .scaleAspectFill
+        animation.loopMode = .loop
+        animation.isHidden = true
+        animation.alpha = 0.9
+        animation.play()
+        return animation
     }()
     
     let recordButton: UIButton = {
@@ -121,10 +126,8 @@ class EditingBoothVC: UIViewController {
         return view
     }()
     
-    let circleTimerView: CircleTimerView = {
-        let view = CircleTimerView()
-        return view
-    }()
+    // Progress timer for recording
+    let circleTimerView = CircleTimerView()
     
     lazy var playBackSlider: UISlider = {
         let slider = UISlider()
@@ -499,19 +502,21 @@ class EditingBoothVC: UIViewController {
             duneLogoImageView.isHidden = true
             imageTopConstant = 80
             recordButtonBottomConstant = -20
-            soundWaveCenterConstant = 150
+            lottieWaveTopConstant = 7
         case .iPhone8:
             recordButtonBottomConstant = -25
+            lottieWaveTopConstant = 5
         case .iPhone8Plus:
             recordButtonBottomConstant = -25
-            soundWaveCenterConstant = 210
+            lottieWaveTopConstant = 12
         case .iPhone11:
-            soundWaveCenterConstant = 210
+            lottieWaveTopConstant = 40
             imageTopConstant = 180
         case .iPhone11Pro:
+            lottieWaveTopConstant = 32
             imageTopConstant = 170
         case .iPhone11ProMax:
-            soundWaveCenterConstant = 230
+            lottieWaveTopConstant = 230
             imageTopConstant = 190
         case .unknown:
             break
@@ -576,12 +581,12 @@ class EditingBoothVC: UIViewController {
         timerLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
         timerLabel.topAnchor.constraint(equalTo: programImageView.bottomAnchor, constant: 30).isActive = true
                 
-        view.addSubview(responsiveSoundWave)
-        responsiveSoundWave.translatesAutoresizingMaskIntoConstraints = false
-        responsiveSoundWave.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: soundWaveCenterConstant).isActive = true
-        responsiveSoundWave.heightAnchor.constraint(equalToConstant: 1200).isActive = true
-        responsiveSoundWave.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-        responsiveSoundWave.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        view.addSubview(lottieWave)
+        lottieWave.translatesAutoresizingMaskIntoConstraints = false
+        lottieWave.topAnchor.constraint(equalTo: timerLabel.bottomAnchor, constant: 40).isActive = true
+        lottieWave.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 70).isActive = true
+        lottieWave.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -70).isActive = true
+        lottieWave.heightAnchor.constraint(equalToConstant: 80).isActive = true
         
         view.addSubview(playBackBars)
         playBackBars.translatesAutoresizingMaskIntoConstraints = false
@@ -736,7 +741,7 @@ class EditingBoothVC: UIViewController {
             timerLabel.text = "0:00"
             circleTimerView.terminate()
             finishRecording(success: true)
-            responsiveSoundWave.isHidden = true
+            lottieWave.isHidden = true
             recordingWaveFeedbackLink.isPaused = true
             recordButton.setImage(UIImage(named: "play-audio-icon"), for: .normal)
             recordButton.backgroundColor = CustomStyle.white
@@ -1013,8 +1018,7 @@ extension EditingBoothVC: AVAudioRecorderDelegate, AVAudioPlayerDelegate {
             audioRecorder = try AVAudioRecorder(url: recordingURL, settings: settings)
             audioRecorder.delegate = self
             audioRecorder.record()
-            responsiveSoundWave.isHidden = false
-            fadeInWave()
+            lottieWave.isHidden = false
             audioRecorder.isMeteringEnabled = true
             recordingWaveFeedbackLink = CADisplayLink(target: self, selector: #selector(updateMeters))
             recordingWaveFeedbackLink.add(to: RunLoop.current, forMode: RunLoop.Mode.common)
@@ -1024,19 +1028,9 @@ extension EditingBoothVC: AVAudioRecorderDelegate, AVAudioPlayerDelegate {
         }
     }
     
-    func fadeInWave() {
-        responsiveSoundWave.alpha = 0
-        UIView.animate(withDuration: 1) {
-            self.responsiveSoundWave.alpha = 1
-        }
-    }
     
     @objc func updateMeters() {
         audioRecorder.updateMeters()
-
-        let normalizedValue = pow(10, audioRecorder.averagePower(forChannel: 0) / 20)
-        responsiveSoundWave.updateWithLevel(CGFloat(normalizedValue))
-        
         timerLabel.text = timeString(time: audioRecorder.currentTime)
         
         if audioRecorder.currentTime >= maxRecordingTime {

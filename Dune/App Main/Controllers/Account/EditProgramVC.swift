@@ -18,15 +18,19 @@ class EditProgramVC: UIViewController {
     lazy var viewHeight = view.frame.height
     lazy var tagscrollViewWidth = tagScrollView.frame.width
     
+    let requestRSSConnectionAlert = CustomAlertView(alertType: .requestRSSConnection)
+    var requestConnectionPressed = false
     let deleteIntroAlert = CustomAlertView(alertType: .removeIntro)
+    var removeIntroPressed = false
     let invalidURLAlert = CustomAlertView(alertType: .invalidURL)
+
     let settingsLauncher = SettingsLauncher(options: SettingOptions.categories, type: .categories)
     
     // For various screen-sizes
     var imageSize: CGFloat = 90
     var imageViewTopConstant: CGFloat = 120
     var headerViewHeightConstant: CGFloat = 300
-    var scrollPadding: CGFloat = 100
+    var scrollPadding: CGFloat = 260
     
     var switchedAccount = false
     var switchedFromStudio = false
@@ -174,6 +178,33 @@ class EditProgramVC: UIViewController {
     }()
     
     let websiteUnderlineView: UIView = {
+        let view = UIView()
+        view.backgroundColor = CustomStyle.thirdShade
+        return view
+    }()
+    
+    let RSSLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 15, weight: .regular)
+        label.textColor = CustomStyle.primaryBlack
+        label.text = "Optional RSS URL"
+        return label
+    }()
+    
+    let RSSTextView: UITextField = {
+        let textField = UITextField()
+        let placeholder = NSAttributedString(string: CurrentProgram.RSSURL ?? "www.example.rss", attributes: [NSAttributedString.Key.foregroundColor : CustomStyle.fourthShade])
+        textField.attributedPlaceholder = placeholder;
+        textField.textColor = CustomStyle.primaryBlack
+        textField.font = UIFont.systemFont(ofSize: 15, weight: .regular)
+        textField.addTarget(self, action: #selector(rssFieldChanged), for: UIControl.Event.editingChanged)
+        textField.autocapitalizationType = .none
+        textField.autocorrectionType = .no
+        textField.returnKeyType = .send
+        return textField
+    }()
+    
+    let RSSUnderlineView: UIView = {
         let view = UIView()
         view.backgroundColor = CustomStyle.thirdShade
         return view
@@ -352,9 +383,11 @@ class EditProgramVC: UIViewController {
     }
     
     func configureDelegates() {
+        requestRSSConnectionAlert.alertDelegate = self
         settingsLauncher.settingsDelegate = self
         programNameTextView.delegate = self
         websiteTextView.delegate = self
+        RSSTextView.delegate = self
     }
     
     func checkIfPrimaryProgram() {
@@ -407,10 +440,11 @@ class EditProgramVC: UIViewController {
             imageSize = 80
             headerViewHeightConstant = 260
             imageViewTopConstant = 90
-            scrollPadding = 140
+            scrollPadding = 260
         case .iPhone8:
             headerViewHeightConstant = 260
             imageViewTopConstant = 90
+            scrollPadding = 260
         case .iPhone8Plus:
             imageViewTopConstant = 110
         case .iPhone11:
@@ -479,6 +513,7 @@ class EditProgramVC: UIViewController {
         userFieldsStackedView.addArrangedSubview(programNameLabel)
         userFieldsStackedView.addArrangedSubview(summaryLabel)
         userFieldsStackedView.addArrangedSubview(websiteLabel)
+        userFieldsStackedView.addArrangedSubview(RSSLabel)
         userFieldsStackedView.addArrangedSubview(primaryGenreLabel)
         userFieldsStackedView.addArrangedSubview(tagsLabel)
         userFieldsStackedView.addArrangedSubview(programIntroLabel)
@@ -526,6 +561,20 @@ class EditProgramVC: UIViewController {
         websiteUnderlineView.leadingAnchor.constraint(equalTo: websiteTextView.leadingAnchor).isActive = true
         websiteUnderlineView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         websiteUnderlineView.heightAnchor.constraint(equalToConstant: 1).isActive = true
+        
+        scrollContentView.addSubview(RSSTextView)
+        RSSTextView.translatesAutoresizingMaskIntoConstraints = false
+        RSSTextView.centerYAnchor.constraint(equalTo: RSSLabel.centerYAnchor).isActive = true
+        RSSTextView.leadingAnchor.constraint(equalTo: programNameTextView.leadingAnchor).isActive = true
+        RSSTextView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -10).isActive = true
+        RSSTextView.heightAnchor.constraint(equalToConstant: 30).isActive = true
+        
+        scrollContentView.addSubview(RSSUnderlineView)
+        RSSUnderlineView.translatesAutoresizingMaskIntoConstraints = false
+        RSSUnderlineView.topAnchor.constraint(equalTo: RSSTextView.bottomAnchor, constant: 10).isActive = true
+        RSSUnderlineView.leadingAnchor.constraint(equalTo: websiteTextView.leadingAnchor).isActive = true
+        RSSUnderlineView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        RSSUnderlineView.heightAnchor.constraint(equalToConstant: 1).isActive = true
         
         scrollContentView.addSubview(tagScrollView)
         tagScrollView.translatesAutoresizingMaskIntoConstraints = false
@@ -655,6 +704,8 @@ class EditProgramVC: UIViewController {
     @objc func selectGenrePress() {
         settingsLauncher.showSettings()
         programNameTextView.resignFirstResponder()
+        websiteTextView.resignFirstResponder()
+        RSSTextView.resignFirstResponder()
     }
     
     @objc func changeImageButtonPress() {
@@ -673,6 +724,7 @@ class EditProgramVC: UIViewController {
     }
     
     @objc func removeIntroButtonPress () {
+        removeIntroPressed = true
         deleteIntroAlert.alertDelegate = self
         UIApplication.shared.keyWindow!.addSubview(deleteIntroAlert)
     }
@@ -694,6 +746,14 @@ class EditProgramVC: UIViewController {
             websiteTextView.textColor = CustomStyle.primaryBlack
         } else {
              websiteTextView.textColor = CustomStyle.fourthShade
+        }
+    }
+    
+    @objc func rssFieldChanged() {
+        if  RSSTextView.text != CurrentProgram.RSSURL {
+            RSSTextView.textColor = CustomStyle.primaryBlack
+        } else {
+             RSSTextView.textColor = CustomStyle.fourthShade
         }
     }
     
@@ -762,26 +822,64 @@ extension EditProgramVC: UIImagePickerControllerDelegate, UINavigationController
 }
 
 extension EditProgramVC: CustomAlertDelegate {
+
+    
     func primaryButtonPress() {
-        CurrentProgram.hasIntro = false
         
-        FireStoreManager.removeIntroFromProgram()
-        FireStorageManager.deleteIntroAudioFromStorage(audioID: CurrentProgram.introID!)
-        recordIntroButton.titleLabel?.text = "Record"
-        removeIntroButton.removeFromSuperview()
+        if requestConnectionPressed {
+            print("Make a request")
+            if RSSTextView.text != "" {
+                CurrentProgram.RSSURL = RSSTextView.text
+                FireStoreManager.requestRSSConnectionFor(ID: CurrentProgram.ID!, urlString: RSSTextView.text!)
+                RSSTextView.resignFirstResponder()
+            }
+        } else if removeIntroPressed {
+            CurrentProgram.hasIntro = false
+            FireStoreManager.removeIntroFromProgram()
+            FireStorageManager.deleteIntroAudioFromStorage(audioID: CurrentProgram.introID!)
+            recordIntroButton.titleLabel?.text = "Record"
+            removeIntroButton.removeFromSuperview()
+        }
     }
     
     func cancelButtonPress() {
-        //
+        removeIntroPressed = false
+
+        if requestConnectionPressed {
+            RSSTextView.text = CurrentProgram.RSSURL ?? ""
+            requestConnectionPressed = false
+        }
     }
     
 }
 
 extension EditProgramVC: UITextFieldDelegate {
     
+    func textFieldDidBeginEditing(_ textField: UITextField) {
+        scrollView.setScrollBarToBottom()
+    }
+    
+    func textFieldDidEndEditing(_ textField: UITextField, reason: UITextField.DidEndEditingReason) {
+
+        if textField == RSSTextView {
+            if RSSTextView.text != CurrentProgram.RSSURL {
+                RSSTextView.text = ""
+            }
+        }
+        
+    }
+    
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        
+        if textField == RSSTextView {
+            textField.textColor = CustomStyle.fourthShade
+            if textField.text != "" && textField.text != CurrentProgram.RSSURL {
+                UIApplication.shared.windows.last?.addSubview(requestRSSConnectionAlert)
+                requestConnectionPressed = true
+            }
+        }
+        
         saveChanges()
-        print("Touch")
         return true
     }
     

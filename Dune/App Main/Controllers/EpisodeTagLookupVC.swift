@@ -280,6 +280,7 @@ extension EpisodeTagLookupVC: EpisodeCellDelegate {
         dunePlayBar.activeProfile = tag
         dunePlayBar.audioPlayerDelegate = self
         dunePlayBar.activeController = .tagLookup
+        dunePlayBar.activeViewController = self
         
         dunePlayBar.downloadedEpisodes = downloadedEpisodes
         dunePlayBar.itemCount = downloadedEpisodes.count
@@ -295,7 +296,7 @@ extension EpisodeTagLookupVC: EpisodeCellDelegate {
         downloadedEpisodes[indexPath.row] = episode
     }
 
-    func showSettings(cell: EpisodeCell) {
+    func showSettingsFor(cell: EpisodeCell) {
         selectedCellRow =  downloadedEpisodes.firstIndex(where: { $0.ID == cell.episode.ID })
 
         if cell.episode.username == User.username! {
@@ -327,13 +328,6 @@ extension EpisodeTagLookupVC: EpisodeCellDelegate {
         if downloadedEpisodes.count == 0 {
              resetTableView()
         }
-
-//        audioPlayer.transitionOutOfView()
-
-    }
-
-    func addTappedProgram(programName: String) {
-        //
     }
 
     func updateRows() {
@@ -342,12 +336,27 @@ extension EpisodeTagLookupVC: EpisodeCellDelegate {
             self.tableView.endUpdates()
         }
     }
+    
+    func showCommentsFor(episode: Episode) {
+        commentVC = CommentThreadVC(episode: episode)
+        commentVC.currentState = dunePlayBar.currentState
+        dunePlayBar.audioPlayerDelegate = commentVC
+        dunePlayBar.isHidden = true
+        commentVC.delegate = self
+        navigationController?.pushViewController(commentVC, animated: true)
+    }
 }
 
 extension EpisodeTagLookupVC: SettingsLauncherDelegate {
 
     func selectionOf(setting: String) {
-        let episode = downloadedEpisodes[selectedCellRow!]
+        var episode: Episode
+        
+        if dunePlayBar.activeController != .tagLookup {
+             episode = downloadedEpisodes[selectedCellRow!]
+        } else {
+            episode = dunePlayBar.episode
+        }
 
         switch setting {
         case "Delete":
@@ -409,21 +418,6 @@ extension EpisodeTagLookupVC: DuneAudioPlayerDelegate {
     func fetchMoreEpisodes() {
         print("Should fetch more episodes: Needs implementation")
     }
-    
-    func showCommentsFor(episode: Episode) {
-        dunePlayBar.isHidden = true
-        commentVC = CommentThreadVC(episode: episode)
-        commentVC.currentState = dunePlayBar.currentState
-        dunePlayBar.audioPlayerDelegate = commentVC
-        commentVC.delegate = self
-        navigationController?.pushViewController(commentVC, animated: true)
-    }
-   
-    func makeActive(episode: Episode) {
-        episode.hasBeenPlayed = true
-        guard let index = downloadedEpisodes.firstIndex(where: { $0.ID == episode.ID }) else { return }
-        downloadedEpisodes[index] = episode
-    }
 
     func updateProgressBarWith(percentage: CGFloat, forType: PlayBackType, episodeID: String) {
         guard let cell = activeCell else { return }
@@ -438,6 +432,16 @@ extension EpisodeTagLookupVC: DuneAudioPlayerDelegate {
                 cell.removePlayIcon()
                 activeCell = cell
             }
+        }
+    }
+    
+    func showSettingsFor(episode: Episode) {
+        selectedCellRow =  downloadedEpisodes.firstIndex(where: { $0.ID == episode.ID })
+                
+        if episode.username == User.username! || User.username == "Master"  {
+            ownEpisodeSettings.showSettings()
+        } else {
+            subscriptionSettings.showSettings()
         }
     }
 
@@ -458,7 +462,7 @@ extension EpisodeTagLookupVC: CustomAlertDelegate {
 
 }
 
-extension EpisodeTagLookupVC: NavPlayerDelegate {
+extension EpisodeTagLookupVC: NavBarPlayerDelegate {
     
     func playOrPauseEpisode() {
         if dunePlayBar.isOutOfPosition {

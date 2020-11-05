@@ -44,7 +44,13 @@ extension Date {
         formatter.timeStyle = style
         formatter.dateStyle = style
         return formatter.string(from: currentDateTime)
-
+    }
+    
+    static func stringToDate(dateString: String) -> Date {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d, yyyy"
+        formatter.timeZone = .current
+        return formatter.date(from: dateString)!
     }
     
 }

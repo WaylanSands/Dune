@@ -9,6 +9,7 @@
 import UIKit
 import CloudKit
 import Firebase
+import FirebaseCrashlytics
 import FirebaseMessaging
 import FirebaseFirestore
 import UserNotifications

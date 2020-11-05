@@ -9,7 +9,7 @@
 import UIKit
 import WebKit
 
-protocol NavPlayerDelegate: class {
+protocol NavBarPlayerDelegate: class {
     func playOrPauseEpisode()
 }
 
@@ -43,7 +43,7 @@ class WebVC: UIViewController {
     let playbackCircleView = PlaybackCircleView()
     let loadingCircle = LoadingAudioView()
     
-    var delegate: NavPlayerDelegate!
+    var delegate: NavBarPlayerDelegate!
     var webView = WKWebView()
     
     let playbackButton: ExtendedButton = {
@@ -223,7 +223,6 @@ extension WebVC: DuneAudioPlayerDelegate {
         print("Should fetch more episodes: Needs implementation")
     }
     
-    
     func updateProgressBarWith(percentage: CGFloat, forType: PlayBackType, episodeID: String) {
         if currentStatus ==  .ready {
             currentStatus = .playing
@@ -233,7 +232,15 @@ extension WebVC: DuneAudioPlayerDelegate {
     }
     
     func updateActiveCell(atIndex: Int, forType: PlayBackType) {
-        //
+        // No implementation needed
+    }
+    
+//    func showCommentsFor(episode: Episode) {
+//        // No implementation needed
+//    }
+    
+    func showSettingsFor(episode: Episode) {
+        // No implementation needed
     }
     
 }

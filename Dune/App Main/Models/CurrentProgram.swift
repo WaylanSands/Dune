@@ -48,6 +48,9 @@ struct CurrentProgram {
     static var deniedChannels: [String]?
     static var isPrivate: Bool?
     
+    // RSS Feed
+    static var RSSURL: String?
+    
     static func modelProgram(data: [String: Any]) {
         ID = data["ID"] as? String
         rep = data["rep"] as? Int
@@ -72,6 +75,9 @@ struct CurrentProgram {
         subscriberIDs = data["subscriberIDs"] as? [String]
         subscriptionIDs = data["subscriptionIDs"] as? [String]
         isPublisher = data["isPublisher"] as? Bool
+        
+        // RSS Feed
+        RSSURL = data["RSSURL"] as? String
         
         // Private channel
         pendingChannels = data["pendingChannels"] as? [String]
@@ -127,6 +133,7 @@ struct CurrentProgram {
         rep = nil
         ID = nil
         name = nil
+        RSSURL = nil
         username = nil
         ownerID = nil
         image = nil

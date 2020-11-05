@@ -1065,11 +1065,9 @@ extension AccountSettingsVC: CustomAlertDelegate {
                 }
             }
         } else if allowNotificationsPress {
-            print("Should open")
             allowNotificationsPress = false
             let url = URL(string:UIApplication.openSettingsURLString)
             if UIApplication.shared.canOpenURL(url!) {
-                // can open succeeded.. opening the url
                 UIApplication.shared.open(url!, options: [:]) {_ in
                     print("Did return")
                 }
