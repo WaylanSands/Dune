@@ -28,7 +28,7 @@ class CustomNavBar: PassThoughView {
     var titleLabel: UILabel = {
         let label = UILabel()
         label.text = ""
-        label.font = UIFont.systemFont(ofSize: 16.0, weight: .semibold)
+        label.font = UIFont.systemFont(ofSize: 17.0, weight: .semibold)
         label.textColor = .white
         return label
     }()

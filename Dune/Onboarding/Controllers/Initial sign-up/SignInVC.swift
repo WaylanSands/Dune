@@ -160,9 +160,11 @@ class SignInVC: UIViewController {
             emailLabelTopAnchor.constant = 70
         case .iPhone11:
             emailLabelTopAnchor.constant = 120
-        case .iPhone11Pro:
+        case .iPhone11Pro, .iPhone12:
             emailLabelTopAnchor.constant = 70
         case .iPhone11ProMax:
+            emailLabelTopAnchor.constant = 120
+        case .iPhone12ProMax:
             emailLabelTopAnchor.constant = 120
         case .unknown:
             break

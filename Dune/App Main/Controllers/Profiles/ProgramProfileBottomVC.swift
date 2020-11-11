@@ -597,7 +597,7 @@ extension ProgramProfileBottomVC: DuneAudioPlayerDelegate {
     func showSettingsFor(episode: Episode) {
         selectedEpisodeCellRow =  downloadedEpisodes.firstIndex(where: { $0.ID == episode.ID })
         episodeSettings.showSettings()
-//        if episode.username == User.username! || User.username == "Master"  {
+//        if episode.username == User.username! || User.username == "Dune"  {
 //            ownEpisodeSettings.showSettings()
 //        } else {
 //            subscriptionSettings.showSettings()

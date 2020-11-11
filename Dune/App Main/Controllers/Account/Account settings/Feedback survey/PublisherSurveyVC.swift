@@ -17,6 +17,8 @@ class PublisherSurveyVC: UIViewController {
     let betaVersion = "Version: \(VersionControl.version) - Build: \(VersionControl.build)"
     lazy var contentViewSize = CGSize(width: view.frame.width, height: 3180.0)
     
+    let leavingSurveyAlert = CustomAlertView(alertType: .leavingFeedbackForm)
+    
     var surveyQuestions = [SurveyQuestionView]()
     var answers = [String]()
     
@@ -53,13 +55,9 @@ class PublisherSurveyVC: UIViewController {
     let mainSubHeadingLabel: UILabel = {
         let label = UILabel()
         label.text = """
-        Thanks for taking a moment to provide some feedback. Whether it’s positive or negative we want to hear you out. It’s only early days for Dune so we need to build this app from the ground app based on your thoughts and suggestions.
+        Thanks for taking a moment to provide some quick feedback. Your thoughts and suggestions are essential for us to build a better product tailored to you.
         
-        During each new release this survey will be updated so we can check that we have fulfilled your wishes. This being your first time, the survey is more about the app and you.
-        
-        The survey supplied in the next update will be focused more on the new release.
-        
-        We can’t thank you enough.
+        During each new release this survey will be updated so we can check that we have fulfilled your wishes.
         """
         label.font = UIFont.systemFont(ofSize: 14, weight: .regular)
         label.textColor = CustomStyle.primaryBlack
@@ -80,10 +78,10 @@ class PublisherSurveyVC: UIViewController {
     var questionTwo = SurveyQuestionView(question: "2) What would be your ideal duration for an episode?",
                                          info: nil, type: .multipleChoice,
                                          answers: [
-                                            "1 - 2 minutes",
-                                            "2 - 5 minutes",
-                                            "5 -10 minutes",
-                                            "10 -15 minutes",
+                                            "1 - 5 minutes",
+                                            "5 - 10 minutes",
+                                            "10 - 15 minutes",
+                                            "15 - 20 minutes",
     ])
     
     var questionThree = SurveyQuestionView(question: "3) How often would you consider publishing episodes?",
@@ -209,8 +207,10 @@ If you have any further ideas please add them to our "Make a suggestion form".
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        configureNavigation()
         styleForScreens()
         configureViews()
+        leavingSurveyAlert.alertDelegate = self
         thankYouView.sendSMS = shareViaSMS
     }
     
@@ -221,6 +221,18 @@ If you have any further ideas please add them to our "Make a suggestion form".
                 thankYouView.pinEdges(to: view)
                 duneTabBar.isHidden = true
             }
+        }
+    }
+    
+    func configureNavigation() {
+        navigationItem.leftBarButtonItem = UIBarButtonItem(image: UIImage(named: "back-button-white"), style: .plain, target: self, action: #selector(backButtonPress))
+    }
+    
+    @objc func backButtonPress() {
+        if User.surveysCompleted == nil || !User.surveysCompleted!.contains(betaVersion) {
+            UIApplication.shared.windows.last?.addSubview(leavingSurveyAlert)
+        } else {
+            navigationController?.popViewController(animated: true)
         }
     }
     
@@ -236,7 +248,11 @@ If you have any further ideas please add them to our "Make a suggestion form".
             contentViewSize = CGSize(width: view.frame.width, height: 3400.0)
         case .iPhone11Pro:
             contentViewSize = CGSize(width: view.frame.width, height: 3570.0)
+        case .iPhone12:
+            contentViewSize = CGSize(width: view.frame.width, height: 3570.0)
         case .iPhone11ProMax:
+            contentViewSize = CGSize(width: view.frame.width, height: 3410.0)
+        case .iPhone12ProMax:
             contentViewSize = CGSize(width: view.frame.width, height: 3410.0)
         case .unknown:
             break
@@ -467,7 +483,6 @@ If you have any further ideas please add them to our "Make a suggestion form".
             present(controller, animated: true, completion: nil)
         }
     }
-    
 }
 
 extension PublisherSurveyVC: MFMessageComposeViewControllerDelegate {
@@ -477,4 +492,16 @@ extension PublisherSurveyVC: MFMessageComposeViewControllerDelegate {
         dismiss(animated: true, completion: nil)
     }
     
+}
+
+extension PublisherSurveyVC: CustomAlertDelegate {
+    
+    func primaryButtonPress() {
+            navigationController?.popViewController(animated: true)
+    }
+    
+    func cancelButtonPress() {
+        // No implementation needed
+    }
+
 }

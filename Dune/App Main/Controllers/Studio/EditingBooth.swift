@@ -48,7 +48,7 @@ class EditingBoothVC: UIViewController {
     var draftID: String?
     
     var currentState = recordState.preview
-    var maxRecordingTime: Double = 300
+    var maxRecordingTime: Double = 600
     var recordingSnapshot: Double = 0
     var normalizedTime: CGFloat?
     var scrubbedTime: Double = 0
@@ -512,10 +512,10 @@ class EditingBoothVC: UIViewController {
         case .iPhone11:
             lottieWaveTopConstant = 40
             imageTopConstant = 180
-        case .iPhone11Pro:
+        case .iPhone11Pro, .iPhone12:
             lottieWaveTopConstant = 32
             imageTopConstant = 170
-        case .iPhone11ProMax:
+        case .iPhone11ProMax, .iPhone12ProMax:
             lottieWaveTopConstant = 230
             imageTopConstant = 190
         case .unknown:

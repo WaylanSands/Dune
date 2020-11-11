@@ -123,6 +123,7 @@ struct FirebaseNotifications {
         
         DispatchQueue.global(qos: .userInitiated).async {
             let userRef = db.collection("users").document(User.ID!)
+            Analytics.logEvent("allowed_pushes", parameters: nil)
             
             userRef.updateData([
                 "didAllowNotifications" : true,

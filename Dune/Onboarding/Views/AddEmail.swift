@@ -143,9 +143,9 @@ class AddEmail: UIView {
             headingYConstant = 180.0
         case .iPhone11:
             break
-        case .iPhone11Pro:
+        case .iPhone11Pro, .iPhone12:
             headingYConstant = 220.0
-        case .iPhone11ProMax:
+        case .iPhone11ProMax, .iPhone12ProMax:
             break
         case .unknown:
             break

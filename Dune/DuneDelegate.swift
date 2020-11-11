@@ -12,7 +12,7 @@ struct DuneDelegate {
     
     static func newRootView(_ viewController: UIViewController) {
         if #available(iOS 13.0, *) {
-            let sceneDelegate = UIApplication.shared.connectedScenes.first!.delegate as! SceneDelegate
+            guard let sceneDelegate = UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate else { return }
              sceneDelegate.window?.rootViewController = viewController
         } else {
             let appDelegate = UIApplication.shared.delegate as! AppDelegate

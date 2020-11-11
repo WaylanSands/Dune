@@ -59,6 +59,7 @@ enum alertType {
     case resetPasswordEmptyField
     case resetPasswordEmailSent
     case requestRSSConnection
+    case leavingFeedbackForm
 }
 
 // For implementation
@@ -256,7 +257,7 @@ class CustomAlertView: UIView {
             secondaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
         case .audioTooLong:
             headingLabel.text = "Audio Too Long"
-            bodyTextLabel.text = "Audio exceeds maximum duration of 5 minutes. Please trim or record another episode."
+            bodyTextLabel.text = "Audio exceeds maximum duration of 10-minutes. Please trim or record another episode."
             primaryButton.setTitle("Dismiss", for: .normal)
             primaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
         case .publisherNotSetUp:
@@ -421,7 +422,7 @@ class CustomAlertView: UIView {
             bodyTextLabel.text = """
             We have a new and improved version available on TestFlight!
             
-            Open the app and install build \(VersionControl.currentBuild) apologies for any inconvenience.
+            Open the app and install the latest build apologies for any inconvenience.
             """
             primaryButton.setTitle("Open TestFlight", for: .normal)
             primaryButton.addTarget(self, action: #selector(getTheLatest), for: .touchUpInside)
@@ -476,6 +477,17 @@ Don't forget to share with your friends what you have helped to create!
             bodyTextLabel.text = "To use this option you must switch on your devices location services via Settings>Privacy"
             primaryButton.setTitle("Dismiss", for: .normal)
             primaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
+        case .leavingFeedbackForm:
+            headingLabel.text = "Almost lost you"
+            bodyTextLabel.text = """
+            Dune is different to other apps. During each new release we review suggestions and allow people to vote on what features they would like the most.
+
+            Filling this form allows you to shape the app to your liking.
+            """
+            primaryButton.setTitle("I'll come back", for: .normal)
+            primaryButton.addTarget(self, action: #selector(primaryButtonPress), for: .touchUpInside)
+            secondaryButton.setTitle("Dismiss", for: .normal)
+            secondaryButton.addTarget(self, action: #selector(cancelPress), for: .touchUpInside)
         }
         bodyTextLabel.addLineSpacingCentered(spacingValue: 3)
     }
@@ -551,7 +563,7 @@ Don't forget to share with your friends what you have helped to create!
     }
     
     @objc func getTheLatest() {
-        if let url = URL(string: "https://apps.apple.com/au/app/testflight/id899247664") {
+        if let url = URL(string: "https://apps.apple.com/us/app/dune-daily-updates/id1499893273") {
             UIApplication.shared.open(url, options: [:], completionHandler: nil)
         }
     }

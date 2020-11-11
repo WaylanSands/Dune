@@ -79,10 +79,10 @@ class IntroScreenView: UIView {
             paddingRight = -20
         case .iPhone11:
             break
-        case .iPhone11Pro:
+        case .iPhone11Pro, .iPhone12:
             paddingLeft = 10
             paddingRight = -10
-        case .iPhone11ProMax:
+        case .iPhone11ProMax, .iPhone12ProMax:
             break
         case .unknown:
             break

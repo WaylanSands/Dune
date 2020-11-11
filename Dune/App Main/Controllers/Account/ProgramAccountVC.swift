@@ -9,6 +9,7 @@
 import UIKit
 import Firebase
 import MessageUI
+import AVFoundation
 import MobileCoreServices
 
 protocol updateProgramAccountScrollDelegate {
@@ -41,7 +42,8 @@ class ProgramAccountVC : UIViewController {
     let uploadIntroOptionAlert = CustomAlertView(alertType: .uploadIntroOption)
     let nonPublisherAlert = CustomAlertView(alertType: .publisherNotSetUp)
     
-    
+    let notificationCenter = NotificationCenter.default
+    var recordingSession: AVAudioSession!
     
     lazy var headerBarButtons: [UIButton] = [episodesButton, subscriptionsButton, mentionsButton]
     
@@ -400,7 +402,7 @@ class ProgramAccountVC : UIViewController {
         }
     }
     
-    override func viewDidAppear(_ animated: Bool) {        
+    override func viewDidAppear(_ animated: Bool) {
         headerHeight = (minHeight)...headerHeightCalculated()
         prepareSetup()
         updateScrollContent()
@@ -409,10 +411,6 @@ class ProgramAccountVC : UIViewController {
                 self.addMoreButton()
             }
         }
-    }
-    
-    override func viewWillDisappear(_ animated: Bool) {
-        //
     }
     
     override func viewDidDisappear(_ animated: Bool) {
@@ -536,9 +534,9 @@ class ProgramAccountVC : UIViewController {
             break
         case .iPhone11:
             break
-        case .iPhone11Pro:
+        case .iPhone11Pro, .iPhone12:
             break
-        case .iPhone11ProMax:
+        case .iPhone11ProMax, .iPhone12ProMax:
             break
         case .unknown:
             break
@@ -1000,7 +998,12 @@ class ProgramAccountVC : UIViewController {
     
     @objc func editProgramButtonPress() {
         let editProgramVC = EditProgramVC()
-//        editProgramVC.hidesBottomBarWhenPushed = true
+        navigationController?.pushViewController(editProgramVC, animated: true)
+    }
+    
+    @objc func forceToSetupProgram() {
+        let editProgramVC = EditProgramVC()
+        editProgramVC.highLightNeededFields = true
         navigationController?.pushViewController(editProgramVC, animated: true)
     }
     
@@ -1121,7 +1124,7 @@ extension ProgramAccountVC: CustomAlertDelegate {
         if !createProgramPress {
             selectDocument()
         } else {
-            editProgramButtonPress()
+            forceToSetupProgram()
         }
     }
     
@@ -1129,11 +1132,54 @@ extension ProgramAccountVC: CustomAlertDelegate {
         if createProgramPress {
             createProgramPress = false
         } else {
-            duneTabBar.isHidden = true
-            dunePlayBar.finishSession()
-            let recordBoothVC = RecordBoothVC()
-            recordBoothVC.currentScope = .intro
-            navigationController?.pushViewController(recordBoothVC, animated: true)
+            switch AVCaptureDevice.authorizationStatus(for: .audio) {
+            case .notDetermined:
+                requestRecordPermission()
+            case .authorized:
+                visitIntroStudioVC()
+            case .denied:
+                visitAppSettings()
+            default:
+                break
+            }
+        }
+    }
+    
+    func visitAppSettings() {
+        let url = URL(string:UIApplication.openSettingsURLString)
+        if UIApplication.shared.canOpenURL(url!) {
+            UIApplication.shared.open(url!, options: [:]) {_ in
+                print("Did return")
+            }
+        }
+    }
+    
+    func visitIntroStudioVC() {
+        duneTabBar.isHidden = true
+        dunePlayBar.finishSession()
+        let recordBoothVC = RecordBoothVC()
+        recordBoothVC.currentScope = .intro
+        navigationController?.pushViewController(recordBoothVC, animated: true)
+    }
+    
+    //MARK: - Record Intro
+    
+    func requestRecordPermission() {
+        recordingSession = AVAudioSession.sharedInstance()
+        do {
+            try recordingSession.setCategory(.playAndRecord, mode: .default)
+            try recordingSession.setActive(true)
+            recordingSession.requestRecordPermission() { [unowned self] allowed in
+                DispatchQueue.main.async {
+                    if allowed {
+                        visitIntroStudioVC()
+                    } else {
+                        print("Refused to record")
+                    }
+                }
+            }
+        } catch {
+            print("Unable to start recording \(error)")
         }
     }
     

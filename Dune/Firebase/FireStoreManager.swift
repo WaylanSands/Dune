@@ -28,14 +28,14 @@ struct FireStoreManager {
                 let appStoreLink = data["appStoreLink"] as! String
                 let latestVersion = data["version"] as! String
                 
-                if (VersionControl.version != Double(latestVersion) || VersionControl.build != Double(latestBuild)) && !onAppStore {
-                    VersionControl.currentBuild = Double(latestBuild)!
-                    print("Not the right version")
-                    
-                    let appDelegate = UIApplication.shared.delegate as! AppDelegate
-                    let newBuild = CustomAlertView(alertType: .oldVersion)
-
-                    appDelegate.newVersionAlert(alert: newBuild)
+                if (VersionControl.version != latestVersion || VersionControl.build != Double(latestBuild)) && !onAppStore {
+//                    VersionControl.currentBuild = Double(latestBuild)!
+//                    print("Not the right version")
+//
+//                    let appDelegate = UIApplication.shared.delegate as! AppDelegate
+//                    let newBuild = CustomAlertView(alertType: .oldVersion)
+//
+//                    appDelegate.newVersionAlert(alert: newBuild)
                     
                 } else if onAppStore {
                     print("It's on the AppStore")

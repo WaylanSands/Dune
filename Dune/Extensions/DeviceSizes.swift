@@ -42,8 +42,10 @@ extension UIDevice {
         case iPhone8
         case iPhone8Plus
         case iPhone11
+        case iPhone12
         case iPhone11Pro
         case iPhone11ProMax
+        case iPhone12ProMax
         case unknown
     }
     
@@ -61,8 +63,12 @@ extension UIDevice {
             return .iPhone11
         case 2436:
             return .iPhone11Pro
+        case 2532:
+            return .iPhone12
         case 2688:
             return .iPhone11ProMax
+        case 2778:
+            return .iPhone12ProMax
         default:
             return .unknown
         }
@@ -82,9 +88,9 @@ extension UIDevice {
             } else {
                 return 88.0
             }
-        case .iPhone11Pro:
+        case .iPhone11Pro, .iPhone12:
             return 88.0
-        case .iPhone11ProMax:
+        case .iPhone11ProMax, .iPhone12ProMax:
             return 88.0
         case .unknown:
             return 64.0
@@ -101,9 +107,13 @@ extension UIDevice {
             return 25.0
         case .iPhone11:
             return 50.0
+        case .iPhone12:
+            return 50.0
         case .iPhone11Pro:
             return 50.0
         case .iPhone11ProMax:
+            return 50.0
+        case .iPhone12ProMax:
             return 50.0
         case .unknown:
             return 45.0

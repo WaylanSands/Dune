@@ -112,6 +112,7 @@ class SuggestionVC: UIViewController {
         return button
     }()
     
+    
     private func styleForScreens() {
         switch UIDevice.current.deviceType {
         case .iPhone4S, .iPhoneSE:
@@ -124,7 +125,11 @@ class SuggestionVC: UIViewController {
             contentViewSize = CGSize(width: view.frame.width, height: 1220.0)
         case .iPhone11Pro:
             contentViewSize = CGSize(width: view.frame.width, height: 1220.0)
+        case .iPhone12:
+            contentViewSize = CGSize(width: view.frame.width, height: 1220.0)
         case .iPhone11ProMax:
+            contentViewSize = CGSize(width: view.frame.width, height: 1220.0)
+        case .iPhone12ProMax:
             contentViewSize = CGSize(width: view.frame.width, height: 1220.0)
         case .unknown:
             break

@@ -740,9 +740,9 @@ class DunePlayer: UIView {
             imageViewYConstant = 50
         case .iPhone11:
             break
-        case .iPhone11Pro:
+        case .iPhone11Pro, .iPhone12:
             break
-        case .iPhone11ProMax:
+        case .iPhone11ProMax, .iPhone12ProMax:
             break
         case .unknown:
             break

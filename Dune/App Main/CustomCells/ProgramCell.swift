@@ -237,10 +237,6 @@ class ProgramCell: UITableViewCell {
     
     // MARK: Setup Cell
     func normalSetUp(program: Program) {
-        if self.program != program {
-            programImageButton.setImage(nil, for: .normal)
-        }
-        
         self.program = program
        
         if program.imageID != nil {
@@ -414,9 +410,13 @@ class ProgramCell: UITableViewCell {
             break
         case .iPhone11:
             break
+        case .iPhone12:
+            break
         case .iPhone11Pro:
             break
         case .iPhone11ProMax:
+            break
+        case .iPhone12ProMax:
             break
         case .unknown:
             break

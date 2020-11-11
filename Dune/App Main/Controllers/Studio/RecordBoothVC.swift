@@ -43,7 +43,7 @@ class RecordBoothVC: UIViewController {
     var voiceURL: URL?
     
     var currentState = recordState.ready
-    var maxRecordingTime: Double = 300
+    var maxRecordingTime: Double = 600
     var minRecordingTime: Double = 10
     var recordingSnapshot: Double = 0
     var normalizedTime: CGFloat?
@@ -416,10 +416,10 @@ class RecordBoothVC: UIViewController {
         case .iPhone11:
             lottieWaveTopConstant = 40
             imageTopConstant = 180
-        case .iPhone11Pro:
+        case .iPhone11Pro, .iPhone12:
             lottieWaveTopConstant = 32
             imageTopConstant = 170
-        case .iPhone11ProMax:
+        case .iPhone11ProMax, .iPhone12ProMax:
             lottieWaveTopConstant = 40
             imageTopConstant = 190
         case .unknown:

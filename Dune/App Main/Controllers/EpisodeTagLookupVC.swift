@@ -438,7 +438,7 @@ extension EpisodeTagLookupVC: DuneAudioPlayerDelegate {
     func showSettingsFor(episode: Episode) {
         selectedCellRow =  downloadedEpisodes.firstIndex(where: { $0.ID == episode.ID })
                 
-        if episode.username == User.username! || User.username == "Master"  {
+        if episode.username == User.username! || User.username == "Dune"  {
             ownEpisodeSettings.showSettings()
         } else {
             subscriptionSettings.showSettings()

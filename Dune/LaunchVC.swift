@@ -130,6 +130,7 @@ class LaunchVC: UIViewController {
     
     private func sendToIntro() {
         rootVC = IntroVC()
-        DuneDelegate.newRootView(rootVC)
+//        DuneDelegate.newRootView(rootVC)
+        UIApplication.shared.keyWindow?.rootViewController = rootVC
     }
 }

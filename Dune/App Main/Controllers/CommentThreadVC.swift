@@ -581,11 +581,11 @@ extension CommentThreadVC: CustomAlertDelegate {
     func primaryButtonPress() {
         if CurrentProgram.isPublisher! {
             let editProgramVC = EditProgramVC()
-//            editProgramVC.hidesBottomBarWhenPushed = true
+            editProgramVC.highLightNeededFields = true
             navigationController?.pushViewController(editProgramVC, animated: true)
         } else {
             let editListenerVC = EditListenerVC()
-//            editListenerVC.hidesBottomBarWhenPushed = true
+            editListenerVC.highLightNeededFields = true
             navigationController?.pushViewController(editListenerVC, animated: true)
         }
     }

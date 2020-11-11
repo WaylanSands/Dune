@@ -746,7 +746,6 @@ extension FireStoreManager {
     
     static func fetchProgramsSubscribersWith(subscriberIDs: [String], completion: @escaping ([Program]?) -> ()) {
         DispatchQueue.global(qos: .userInitiated).async {
-            print(subscriberIDs)
             var programs = [Program]()
             for eachID in subscriberIDs {
                 db.collection("programs").document(eachID).getDocument { snapshot, error in
@@ -756,7 +755,6 @@ extension FireStoreManager {
                     }
                     guard let data = snapshot?.data() else { return }
                     programs.append(Program(data: data))
-                    print(Program(data: data).name)                    
                     if programs.count == subscriberIDs.count {
                         completion(programs)
                     }

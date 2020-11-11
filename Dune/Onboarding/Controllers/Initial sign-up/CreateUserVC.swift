@@ -103,9 +103,9 @@ class CreateUserVC: UIViewController {
              progressBarTopAnchor.constant = 70.0
         case .iPhone11:
             progressBarTopAnchor.constant = 100.0
-        case .iPhone11Pro:
+        case .iPhone11Pro, .iPhone12:
             progressBarTopAnchor.constant = 70.0
-        case .iPhone11ProMax:
+        case .iPhone11ProMax, .iPhone12ProMax:
             progressBarTopAnchor.constant = 90.0
         default:
             break

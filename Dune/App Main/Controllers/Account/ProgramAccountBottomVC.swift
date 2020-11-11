@@ -141,9 +141,9 @@ class ProgramAccountBottomVC: UIViewController {
             break
         case .iPhone11:
             emptyTableViewTopConstant = 80
-        case .iPhone11Pro:
+        case .iPhone11Pro, .iPhone12:
             break
-        case .iPhone11ProMax:
+        case .iPhone11ProMax, .iPhone12ProMax:
              emptyTableViewTopConstant = 80
         case .unknown:
             break

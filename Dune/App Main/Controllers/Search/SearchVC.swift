@@ -640,6 +640,7 @@ extension SearchVC: UITableViewDelegate, UITableViewDataSource {
 //        programCell.programSettingsButton.addTarget(programCell, action: #selector(ProgramCell.showSettings), for: .touchUpInside)
         programCell.subscribeButton.addTarget(programCell, action: #selector(ProgramCell.subscribeButtonPress), for: .touchUpInside)
         programCell.usernameButton.addTarget(programCell, action: #selector(ProgramCell.visitProfile), for: .touchUpInside)
+        programCell.programImageButton.setImage(program.image ?? nil, for: .normal)
         programCell.normalSetUp(program: program)
         programCell.cellDelegate = self
         

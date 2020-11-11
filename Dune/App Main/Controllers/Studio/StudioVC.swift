@@ -279,7 +279,21 @@ class StudioVC: UIViewController {
             }
         }
     
+    func visitAppSettings() {
+        let url = URL(string:UIApplication.openSettingsURLString)
+        if UIApplication.shared.canOpenURL(url!) {
+            UIApplication.shared.open(url!, options: [:]) {_ in
+                print("Did return")
+            }
+        }
+    }
+    
     @objc func recordButtonPress() {
+        
+        if AVCaptureDevice.authorizationStatus(for: .audio) == .denied {
+            visitAppSettings()
+            return
+        }
         
         if CurrentProgram.isPublisher! && User.isSetUp! {
             recordingSession = AVAudioSession.sharedInstance()
@@ -292,7 +306,6 @@ class StudioVC: UIViewController {
                             dunePlayBar.finishSession()
                             self.moveToRecordBooth()
                         } else {
-                            // Test this here
                             print("Refused to record")
                         }
                     }
@@ -302,10 +315,8 @@ class StudioVC: UIViewController {
             }
         } else  if CurrentProgram.isPublisher! && !User.isSetUp! {
             UIApplication.shared.keyWindow!.addSubview(publisherNotSetUpAlert)
-//            view.addSubview(publisherNotSetUpAlert)
         } else if !CurrentProgram.isPublisher! {
             UIApplication.shared.keyWindow!.addSubview(notAPublisherAlert)
-//            view.addSubview(notAPublisherAlert)
         }
     }
     
@@ -538,7 +549,7 @@ extension StudioVC: CustomAlertDelegate {
         }
         
         editProgramVC.switchedFromStudio = true
-//        editProgramVC.hidesBottomBarWhenPushed = true
+        editProgramVC.highLightNeededFields = true
         navigationController?.pushViewController(editProgramVC, animated: true)
     }
     

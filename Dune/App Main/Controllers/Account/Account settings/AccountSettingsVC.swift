@@ -634,9 +634,9 @@ class AccountSettingsVC: UIViewController {
             break
         case .iPhone11:
             break
-        case .iPhone11Pro:
+        case .iPhone11Pro, .iPhone12:
             break
-        case .iPhone11ProMax:
+        case .iPhone11ProMax, .iPhone12ProMax:
             break
         case .unknown:
             break
@@ -980,17 +980,6 @@ class AccountSettingsVC: UIViewController {
     @objc func suggestionButtonPress() {
         let suggestionVC = SuggestionVC()
         navigationController?.pushViewController(suggestionVC, animated: true)
-//        if MFMailComposeViewController.canSendMail() {
-//            let mail = MFMailComposeViewController()
-//            mail.mailComposeDelegate = self
-//            mail.setToRecipients(["waylan@dailyune.com"])
-//            mail.setMessageBody("<p>Dune Feedback</p>", isHTML: true)
-//
-//            present(mail, animated: true)
-//        } else {
-//            // show failure alert
-//            print("Email not configured")
-//        }
     }
     
         @objc func bugReportButtonPress() {

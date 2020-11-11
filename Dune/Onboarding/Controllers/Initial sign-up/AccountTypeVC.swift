@@ -88,9 +88,9 @@ class AccountTypeVC: UIViewController {
             break
         case .iPhone11:
             break
-        case .iPhone11Pro:
+        case .iPhone11Pro, .iPhone12:
             break
-        case .iPhone11ProMax:
+        case .iPhone11ProMax, .iPhone12ProMax:
             break
         case .unknown:
             break
@@ -248,7 +248,7 @@ class AccountTypeVC: UIViewController {
                             print("There has been an error adding the program: \(error.localizedDescription)")
                         } else {
                             // Successfully fast tracked
-                            self.presentSearchVC()
+                            self.presentMainFeedVC()
                         }
                     }
                 }
@@ -268,21 +268,18 @@ class AccountTypeVC: UIViewController {
         }
     }
     
-    func presentSearchVC() {
+    func presentMainFeedVC() {
         DispatchQueue.main.async {
 //            duneTabBar.tabButtonSelection(0)
             self.networkingIndicator.removeFromSuperview()
             let tabBar = MainTabController()
             tabBar.selectedIndex = 0
-//            DuneDelegate.newRootView(tabBar)
-
             
 //            if User.recommendedProgram != nil {
 //                let searchNav = tabBar.selectedViewController as! UINavigationController
 //                let searchVC = searchNav.viewControllers[0] as! SearchVC
 //                searchVC.programToPush = User.recommendedProgram!
 //            }
-            
             DuneDelegate.newRootView(tabBar)
         }
     }
@@ -338,12 +335,15 @@ class AccountTypeVC: UIViewController {
             
             let userRef = db.collection("users").document(User.ID!)
             User.didAllowEmailNotifications = true
+            User.interests = []
+
             
             userRef.setData([
                 "ID" : User.ID!,
                 "isSetUp" : User.isSetUp!,
                 "username" : User.username!,
                 "completedOnBoarding" : false,
+                "interests" :  User.interests!,
                 "didAllowEmailNotifications" : true,
             ]) { error in
                 if error != nil {
@@ -435,7 +435,7 @@ class AccountTypeVC: UIViewController {
                             print("There has been an error adding the program: \(error.localizedDescription)")
                         } else {
                             // Successfully fast tracked
-                            self.presentSearchVC()
+                            self.presentMainFeedVC()
                         }
                     }
                 }

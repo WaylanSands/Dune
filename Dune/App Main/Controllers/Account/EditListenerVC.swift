@@ -10,6 +10,9 @@ import UIKit
 import FirebaseAnalytics
 
 class EditListenerVC: UIViewController {
+    
+    // When  asked to set up account
+    var highLightNeededFields = false
         
     let headerViewHeight: CGFloat = 300
     lazy var viewHeight = view.frame.height
@@ -202,6 +205,7 @@ class EditListenerVC: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         programNameTextView.attributedPlaceholder = namePlaceholder
+        checkToHighlightFieldsForSetUPCompletion()
         scrollView.setScrollBarToTopLeft()
         configureDelegates()
         summaryTextLabel.text = CurrentProgram.summary
@@ -233,8 +237,30 @@ class EditListenerVC: UIViewController {
         }
     }
     
+    @objc func popVC() {
+        highLightNeededFields = false
+        navigationController?.popViewController(animated: true)
+    }
+    
+    func checkToHighlightFieldsForSetUPCompletion() {
+        if highLightNeededFields {
+
+            if CurrentProgram.summary == "" {
+                summaryLabel.textColor = CustomStyle.warningRed
+            } else {
+                summaryLabel.textColor = CustomStyle.primaryBlack
+            }
+            
+            if CurrentProgram.image == #imageLiteral(resourceName: "missing-image-large")  {
+                changeImageButton.setTitleColor( CustomStyle.warningRed, for: .normal)
+            } else {
+                changeImageButton.setTitleColor(hexStringToUIColor(hex: "#4875FF"), for: .normal)
+            }
+        }
+    }
+    
     func configureNavBar() {
-        navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
+        navigationItem.leftBarButtonItem = UIBarButtonItem(image: UIImage(named: "back-button-white"), style: .plain, target: self, action: #selector(popVC))
         navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
         navigationController?.navigationBar.backIndicatorTransitionMaskImage = #imageLiteral(resourceName: "back-button-white")
         navigationController?.navigationBar.prefersLargeTitles = false
@@ -263,9 +289,9 @@ class EditListenerVC: UIViewController {
             imageViewTopConstant = 110
         case .iPhone11:
             break
-        case .iPhone11Pro:
+        case .iPhone11Pro, .iPhone12:
             break
-        case .iPhone11ProMax:
+        case .iPhone11ProMax, .iPhone12ProMax:
             break
         case .unknown:
             break
@@ -474,6 +500,7 @@ extension EditListenerVC: UIImagePickerControllerDelegate, UINavigationControlle
         if let selectedImage = selectedImageFromPicker {
             CurrentProgram.image = selectedImage
             profileImageView.image = selectedImage
+            checkToHighlightFieldsForSetUPCompletion()
             
             FileManager.storeSelectedProgramImage(image: selectedImage, imageID: CurrentProgram.imageID, programID: CurrentProgram.ID!)
             dismiss(animated: true, completion: nil)

@@ -489,7 +489,7 @@ extension TrendingVC: EpisodeCellDelegate {
     func showSettings(cell: EpisodeCell) {
         selectedCellRow =  downloadedEpisodes.firstIndex(where: { $0.ID == cell.episode.ID })
         
-        if cell.episode.username == User.username! || User.username! == "Master" {
+        if cell.episode.username == User.username! || User.username! == "Dune" {
             ownEpisodeSettings.showSettings()
         } else {
             subscriptionSettings.showSettings()
@@ -574,7 +574,7 @@ extension TrendingVC: DuneAudioPlayerDelegate {
     
     func showSettingsFor(cell: EpisodeCell) {
         selectedCellRow =  downloadedEpisodes.firstIndex(where: { $0.ID == cell.episode.ID })
-        if cell.episode.username == User.username! || User.username == "Master"  {
+        if cell.episode.username == User.username! || User.username == "Dune"  {
             ownEpisodeSettings.showSettings()
         } else {
             subscriptionSettings.showSettings()
@@ -584,7 +584,7 @@ extension TrendingVC: DuneAudioPlayerDelegate {
     func showSettingsFor(episode: Episode) {
         selectedCellRow =  downloadedEpisodes.firstIndex(where: { $0.ID == episode.ID })
                 
-        if episode.username == User.username! || User.username == "Master"  {
+        if episode.username == User.username! || User.username == "Dune"  {
             ownEpisodeSettings.showSettings()
         } else {
             subscriptionSettings.showSettings()

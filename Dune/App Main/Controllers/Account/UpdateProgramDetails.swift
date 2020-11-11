@@ -207,6 +207,65 @@ class UpdateProgramDetails: UIViewController {
         return textView
     }()
     
+    let locationTypeBar: UIView = {
+        let view = UIView()
+        view.backgroundColor = CustomStyle.secondShade
+        return view
+    }()
+    
+    let locationTypeLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Location Type"
+        label.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+        label.textColor = CustomStyle.fifthShade
+        return label
+    }()
+    
+    let locationTypeSegment: UISegmentedControl = {
+        let control = UISegmentedControl(items: ["Global", "National", "Local"])
+        control.selectedSegmentIndex = 0
+        control.setTitleTextAttributes([NSAttributedString.Key.foregroundColor : CustomStyle.linkBlue,  NSAttributedString.Key.font : UIFont.systemFont(ofSize: 12, weight: .semibold)], for: .selected)
+        control.setTitleTextAttributes([NSAttributedString.Key.foregroundColor : CustomStyle.fourthShade,  NSAttributedString.Key.font : UIFont.systemFont(ofSize: 12, weight: .medium)], for: .normal)
+        control.addTarget(self, action: #selector(locationTypeSelection), for: .valueChanged)
+        return control
+    }()
+    
+    let countrySegment: UISegmentedControl = {
+        let control = UISegmentedControl(items: ["AUS", "NZ", "US", "CAN", "UK", "Other"])
+        control.selectedSegmentIndex = 0
+        control.setTitleTextAttributes([NSAttributedString.Key.foregroundColor : CustomStyle.linkBlue,  NSAttributedString.Key.font : UIFont.systemFont(ofSize: 12, weight: .semibold)], for: .selected)
+        control.setTitleTextAttributes([NSAttributedString.Key.foregroundColor : CustomStyle.fourthShade,  NSAttributedString.Key.font : UIFont.systemFont(ofSize: 12, weight: .medium)], for: .normal)
+        control.addTarget(self, action: #selector(locationTypeSelection), for: .valueChanged)
+        return control
+    }()
+    
+    let countryBar: UIView = {
+        let view = UIView()
+        view.backgroundColor = CustomStyle.secondShade
+        return view
+    }()
+    
+    let countryLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Country"
+        label.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+        label.textColor = CustomStyle.fifthShade
+        return label
+    }()
+    
+    @objc func locationTypeSelection() {
+        switch locationTypeSegment.selectedSegmentIndex {
+        case 0:
+            break
+        case 1:
+            break
+        case 2:
+            break
+        default:
+            break
+        }
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         summaryTextView.delegate = self
@@ -330,9 +389,9 @@ class UpdateProgramDetails: UIViewController {
             break
         case .iPhone11:
             break
-        case .iPhone11Pro:
+        case .iPhone11Pro, .iPhone12:
             break
-        case .iPhone11ProMax:
+        case .iPhone11ProMax, .iPhone12ProMax:
             break
         case .unknown:
             break
@@ -468,6 +527,42 @@ class UpdateProgramDetails: UIViewController {
         tagTextView.topAnchor.constraint(equalTo: tagBar.bottomAnchor, constant: 10).isActive = true
         tagTextView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 13).isActive = true
         tagTextView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -13).isActive = true
+        
+//        scrollContentView.addSubview(locationTypeBar)
+//        locationTypeBar.translatesAutoresizingMaskIntoConstraints = false
+//        locationTypeBar.topAnchor.constraint(equalTo: tagTextView.bottomAnchor, constant: 10).isActive = true
+//        locationTypeBar.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+//        locationTypeBar.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+//        locationTypeBar.heightAnchor.constraint(equalToConstant: 35.0).isActive = true
+//        
+//        locationTypeBar.addSubview(locationTypeLabel)
+//        locationTypeLabel.translatesAutoresizingMaskIntoConstraints = false
+//        locationTypeLabel.centerYAnchor.constraint(equalTo: locationTypeBar.centerYAnchor).isActive = true
+//        locationTypeLabel.leadingAnchor.constraint(equalTo: locationTypeBar.leadingAnchor, constant: 16).isActive = true
+//
+//        scrollContentView.addSubview(locationTypeSegment)
+//        locationTypeSegment.translatesAutoresizingMaskIntoConstraints = false
+//        locationTypeSegment.topAnchor.constraint(equalTo: locationTypeBar.bottomAnchor, constant: 15).isActive = true
+//        locationTypeSegment.leadingAnchor.constraint(equalTo: locationTypeBar.leadingAnchor, constant: 16).isActive = true
+//        locationTypeSegment.trailingAnchor.constraint(equalTo: locationTypeBar.trailingAnchor, constant: -16).isActive = true
+//
+//        scrollContentView.addSubview(countryBar)
+//        countryBar.translatesAutoresizingMaskIntoConstraints = false
+//        countryBar.topAnchor.constraint(equalTo: locationTypeSegment.bottomAnchor, constant: 15).isActive = true
+//        countryBar.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+//        countryBar.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+//        countryBar.heightAnchor.constraint(equalToConstant: 35.0).isActive = true
+//
+//        countryBar.addSubview(countryLabel)
+//        countryLabel.translatesAutoresizingMaskIntoConstraints = false
+//        countryLabel.centerYAnchor.constraint(equalTo: countryBar.centerYAnchor).isActive = true
+//        countryLabel.leadingAnchor.constraint(equalTo: countryBar.leadingAnchor, constant: 16).isActive = true
+//
+//        scrollContentView.addSubview(countrySegment)
+//        countrySegment.translatesAutoresizingMaskIntoConstraints = false
+//        countrySegment.topAnchor.constraint(equalTo: countryBar.bottomAnchor, constant: 15).isActive = true
+//        countrySegment.leadingAnchor.constraint(equalTo: countryBar.leadingAnchor, constant: 16).isActive = true
+//        countrySegment.trailingAnchor.constraint(equalTo: countryBar.trailingAnchor, constant: -16).isActive = true
         
         view.addSubview(customNavBar)
         customNavBar.pinNavBarTo(view)

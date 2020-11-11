@@ -119,9 +119,9 @@ class ListenerAccountBottomVC: UIViewController {
             emptyTableViewTopConstant = 100
         case .iPhone11:
             emptyTableViewTopConstant = 140
-        case .iPhone11Pro:
+        case .iPhone11Pro, .iPhone12:
               emptyTableViewTopConstant = 100
-        case .iPhone11ProMax:
+        case .iPhone11ProMax, .iPhone12ProMax:
              emptyTableViewTopConstant = 80
         case .unknown:
             break

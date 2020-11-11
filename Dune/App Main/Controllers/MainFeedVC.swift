@@ -74,7 +74,7 @@ class MainFeedVC: UIViewController {
         let label = UILabel()
         label.text = "Daily feed"
         label.textColor = .white
-        label.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
+        label.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
         return label
     }()
     
@@ -298,9 +298,9 @@ class MainFeedVC: UIViewController {
             categoryInset = 10
         case .iPhone11:
             break
-        case .iPhone11Pro:
+        case .iPhone11Pro, .iPhone12:
             break
-        case .iPhone11ProMax:
+        case .iPhone11ProMax, .iPhone12ProMax:
             break
         case .unknown:
             break
@@ -1027,7 +1027,7 @@ extension MainFeedVC: EpisodeCellDelegate {
     func showSettingsFor(cell: EpisodeCell) {
         selectedCellRow =  downloadedEpisodes.firstIndex(where: { $0.ID == cell.episode.ID })
                 
-        if cell.episode.username == User.username! || User.username == "Master"  {
+        if cell.episode.username == User.username! || User.username == "Dune"  {
             ownEpisodeSettings.showSettings()
         } else {
             subscriptionSettings.showSettings()
@@ -1157,10 +1157,8 @@ extension MainFeedVC: EpisodeEditorDelegate {
     
     func updateCell(episode: Episode) {
         let episodeIndex = downloadedEpisodes.firstIndex(where: {$0.ID == episode.ID})
-        let indexPath = IndexPath(item: selectedCellRow!, section: 0)
-        
         downloadedEpisodes[episodeIndex!] = episode
-        tableView.reloadRows(at: [indexPath], with: .fade)
+        tableView.reloadData()
     }
     
 }
@@ -1180,7 +1178,7 @@ extension MainFeedVC: DuneAudioPlayerDelegate {
     func showSettingsFor(episode: Episode) {
         selectedCellRow =  downloadedEpisodes.firstIndex(where: { $0.ID == episode.ID })
                 
-        if episode.username == User.username! || User.username == "Master"  {
+        if episode.username == User.username! || User.username == "Dune"  {
             ownEpisodeSettings.showSettings()
         } else {
             subscriptionSettings.showSettings()

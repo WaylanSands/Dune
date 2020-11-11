@@ -184,9 +184,9 @@ class SubscribersVC: UIViewController {
             introYConstant = 0
         case .iPhone11:
             break
-        case .iPhone11Pro:
+        case .iPhone11Pro, .iPhone12:
             break
-        case .iPhone11ProMax:
+        case .iPhone11ProMax, .iPhone12ProMax:
             break
         case .unknown:
             break
@@ -249,8 +249,8 @@ class SubscribersVC: UIViewController {
             loadingView.isHidden = true
             tableView.isHidden = true
         } else if downloadedPrograms.count != subscriberIDs.count {
-            loadingView.isHidden = false
-            tableView.isHidden = false
+//            loadingView.isHidden = false
+//            tableView.isHidden = false
             fetchPrograms()
         }
     }

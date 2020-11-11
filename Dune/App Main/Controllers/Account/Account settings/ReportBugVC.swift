@@ -128,9 +128,9 @@ class ReportBugVC: UIViewController {
             contentViewSize = CGSize(width: view.frame.width, height: 950.0)
         case .iPhone11:
             contentViewSize = CGSize(width: view.frame.width, height: 1020.0)
-        case .iPhone11Pro:
+        case .iPhone11Pro, .iPhone12:
             contentViewSize = CGSize(width: view.frame.width, height: 1020.0)
-        case .iPhone11ProMax:
+        case .iPhone11ProMax, .iPhone12ProMax:
             contentViewSize = CGSize(width: view.frame.width, height: 1020.0)
         case .unknown:
             break

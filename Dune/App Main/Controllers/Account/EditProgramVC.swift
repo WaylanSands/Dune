@@ -7,9 +7,13 @@
 //
 
 import UIKit
+import AVFoundation
 import FirebaseAnalytics
 
 class EditProgramVC: UIViewController {
+    
+    // When  asked to set up Channel
+    var highLightNeededFields = false
     
     var tagContentWidth: NSLayoutConstraint!
     var tags: [String]?
@@ -34,6 +38,8 @@ class EditProgramVC: UIViewController {
     
     var switchedAccount = false
     var switchedFromStudio = false
+    
+    var recordingSession: AVAudioSession!
     
     let customNavBar: CustomNavBar = {
         let nav = CustomNavBar()
@@ -248,7 +254,7 @@ class EditProgramVC: UIViewController {
         return view
     }()
     
-    let primaryGenreLabel: UILabel = {
+    let primaryCategoryLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 15, weight: .regular)
         label.textColor = CustomStyle.primaryBlack
@@ -356,9 +362,10 @@ class EditProgramVC: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         programNameTextView.attributedPlaceholder = namePlaceholder
         summaryTextLabel.text = CurrentProgram.summary
+        checkToHighlightFieldsForSetUPCompletion()
         tagScrollView.setScrollBarToTopLeft()
         scrollView.setScrollBarToTopLeft()
-        
+                
         var weblink: String
         
         if CurrentProgram.webLink == nil ||  CurrentProgram.webLink == "" {
@@ -379,6 +386,36 @@ class EditProgramVC: UIViewController {
             FireStoreManager.updateUserSetUpTo(true)
             FireStoreManager.updateProgramRep(programID: CurrentProgram.ID!, repMethod: "accountSetup", rep: 15)
             CurrentProgram.rep! += 15
+        }
+    }
+    
+    func checkToHighlightFieldsForSetUPCompletion() {
+        if highLightNeededFields {
+            
+            if CurrentProgram.summary == "" {
+                summaryLabel.textColor = CustomStyle.warningRed
+            } else {
+                summaryLabel.textColor = CustomStyle.primaryBlack
+            }
+            
+            if CurrentProgram.image == #imageLiteral(resourceName: "missing-image-large")  {
+                changeImageButton.setTitleColor( CustomStyle.warningRed, for: .normal)
+            } else {
+                changeImageButton.setTitleColor(hexStringToUIColor(hex: "#4875FF"), for: .normal)
+            }
+            
+            if CurrentProgram.primaryCategory == nil {
+                primaryCategoryLabel.textColor = CustomStyle.warningRed
+            } else {
+                primaryCategoryLabel.textColor = CustomStyle.primaryBlack
+            }
+            
+            if CurrentProgram.tags!.isEmpty {
+                tagsLabel.textColor = CustomStyle.warningRed
+            } else {
+                tagsLabel.textColor = CustomStyle.primaryBlack
+            }
+
         }
     }
     
@@ -422,6 +459,7 @@ class EditProgramVC: UIViewController {
     }
     
     @objc func popToCorrectVC() {
+        highLightNeededFields = false
 
         if switchedAccount {
             duneTabBar.visit(screen: .account)
@@ -449,9 +487,9 @@ class EditProgramVC: UIViewController {
             imageViewTopConstant = 110
         case .iPhone11:
             break
-        case .iPhone11Pro:
+        case .iPhone11Pro, .iPhone12:
             break
-        case .iPhone11ProMax:
+        case .iPhone11ProMax, .iPhone12ProMax:
             break
         case .unknown:
             break
@@ -514,7 +552,7 @@ class EditProgramVC: UIViewController {
         userFieldsStackedView.addArrangedSubview(summaryLabel)
         userFieldsStackedView.addArrangedSubview(websiteLabel)
         userFieldsStackedView.addArrangedSubview(RSSLabel)
-        userFieldsStackedView.addArrangedSubview(primaryGenreLabel)
+        userFieldsStackedView.addArrangedSubview(primaryCategoryLabel)
         userFieldsStackedView.addArrangedSubview(tagsLabel)
         userFieldsStackedView.addArrangedSubview(programIntroLabel)
         
@@ -606,13 +644,13 @@ class EditProgramVC: UIViewController {
         
         scrollContentView.addSubview(primaryGenreLabelButton)
         primaryGenreLabelButton.translatesAutoresizingMaskIntoConstraints = false
-        primaryGenreLabelButton.topAnchor.constraint(equalTo: primaryGenreLabel.topAnchor, constant: -5).isActive = true
+        primaryGenreLabelButton.topAnchor.constraint(equalTo: primaryCategoryLabel.topAnchor, constant: -5).isActive = true
         primaryGenreLabelButton.leadingAnchor.constraint(equalTo: userFieldsStackedView.trailingAnchor).isActive = true
         primaryGenreLabelButton.heightAnchor.constraint(equalToConstant: 30).isActive = true
         
         scrollContentView.addSubview(primaryGenreButton)
         primaryGenreButton.translatesAutoresizingMaskIntoConstraints = false
-        primaryGenreButton.topAnchor.constraint(equalTo: primaryGenreLabel.topAnchor, constant: -5).isActive = true
+        primaryGenreButton.topAnchor.constraint(equalTo: primaryCategoryLabel.topAnchor, constant: -5).isActive = true
         primaryGenreButton.leadingAnchor.constraint(equalTo: userFieldsStackedView.trailingAnchor).isActive = true
         primaryGenreButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
         primaryGenreButton.heightAnchor.constraint(equalToConstant: 30).isActive = true
@@ -715,12 +753,55 @@ class EditProgramVC: UIViewController {
         present(imagePicker, animated: true, completion: nil)
     }
     
+    //MARK: - Record Intro Press
+    
     @objc func recordIntroButtonPress() {
+        switch AVCaptureDevice.authorizationStatus(for: .audio) {
+        case .notDetermined:
+            requestRecordPermission()
+        case .authorized:
+            visitIntroStudioVC()
+        case .denied:
+            visitAppSettings()
+        default:
+            break
+        }
+    }
+    
+    func visitAppSettings() {
+        let url = URL(string:UIApplication.openSettingsURLString)
+        if UIApplication.shared.canOpenURL(url!) {
+            UIApplication.shared.open(url!, options: [:]) {_ in
+                print("Did return")
+            }
+        }
+    }
+    
+    func visitIntroStudioVC() {
         let recordBoothVC = RecordBoothVC()
         recordBoothVC.currentScope = .intro
         duneTabBar.isHidden = true
         dunePlayBar.finishSession()
         navigationController?.pushViewController(recordBoothVC, animated: true)
+    }
+    
+    func requestRecordPermission() {
+        recordingSession = AVAudioSession.sharedInstance()
+        do {
+            try recordingSession.setCategory(.playAndRecord, mode: .default)
+            try recordingSession.setActive(true)
+            recordingSession.requestRecordPermission() { [unowned self] allowed in
+                DispatchQueue.main.async {
+                    if allowed {
+                        visitIntroStudioVC()
+                    } else {
+                        print("Refused to record")
+                    }
+                }
+            }
+        } catch {
+            print("Unable to start recording \(error)")
+        }
     }
     
     @objc func removeIntroButtonPress () {
@@ -795,6 +876,7 @@ extension EditProgramVC: SettingsLauncherDelegate {
  
     func selectionOf(setting: String) {
         primaryGenreLabelButton.setTitle(setting, for: .normal)
+        checkToHighlightFieldsForSetUPCompletion()
         FireStoreManager.updatePrimaryCategory()
     }
 }
@@ -814,6 +896,7 @@ extension EditProgramVC: UIImagePickerControllerDelegate, UINavigationController
         if let selectedImage = selectedImageFromPicker {
             CurrentProgram.image = selectedImage
             profileImageView.image = selectedImage
+            checkToHighlightFieldsForSetUPCompletion()
             
             FileManager.storeSelectedProgramImage(image: selectedImage, imageID: CurrentProgram.imageID, programID: CurrentProgram.ID!)
             dismiss(animated: true, completion: nil)

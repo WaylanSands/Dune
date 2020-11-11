@@ -169,15 +169,18 @@ class EditAccountVC: UIViewController {
         let label = UILabel()
         let gestureRec = UITapGestureRecognizer(target: self, action: #selector(changeEmailPress))
         label.addGestureRecognizer(gestureRec)
-        label.isUserInteractionEnabled = true
-        label.text = User.email
+        if User.email == nil {
+            label.isUserInteractionEnabled = false
+        } else {
+            label.isUserInteractionEnabled = true
+        }
         label.font = UIFont.systemFont(ofSize: 15, weight: .regular)
         label.textColor = CustomStyle.fourthShade
         label.textAlignment = .left
         return label
     }()
     
-    let emailUnlineView: UIView = {
+    let emailUnderlineView: UIView = {
         let view = UIView()
         view.backgroundColor = CustomStyle.thirdShade
         return view
@@ -213,7 +216,7 @@ class EditAccountVC: UIViewController {
         return field
     }()
     
-    let bdayUnlineView: UIView = {
+    let bdayUnderlineView: UIView = {
         let view = UIView()
         view.backgroundColor = CustomStyle.thirdShade
         return view
@@ -239,7 +242,7 @@ class EditAccountVC: UIViewController {
         return label
     }()
     
-    let countryUnlineView: UIView = {
+    let countryUnderlineView: UIView = {
         let view = UIView()
         view.backgroundColor = CustomStyle.thirdShade
         return view
@@ -315,7 +318,7 @@ class EditAccountVC: UIViewController {
         
         profileImageView.image = CurrentProgram.image
         bdayTextField.text = User.birthDate ?? "Needed"
-        emailLabelButton.text = User.email
+        emailLabelButton.text = User.email ?? "Not Needed"
 
         navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
         navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
@@ -362,9 +365,9 @@ class EditAccountVC: UIViewController {
             imageViewTopConstant = 110
         case .iPhone11:
             break
-        case .iPhone11Pro:
+        case .iPhone11Pro, .iPhone12:
             break
-        case .iPhone11ProMax:
+        case .iPhone11ProMax, .iPhone12ProMax:
             break
         case .unknown:
             break
@@ -428,9 +431,9 @@ class EditAccountVC: UIViewController {
         userFieldsStackedView.addArrangedSubview(emailLabel)
         userFieldsStackedView.addArrangedSubview(countryLabel)
         userFieldsStackedView.addArrangedSubview(bdayLabel)
-        userFieldsStackedView.addArrangedSubview(passwordLabel)
-        
-        // Add user values
+        if User.email != nil {
+            userFieldsStackedView.addArrangedSubview(passwordLabel)
+        }
         
         scrollContentView.addSubview(nameTextField)
         nameTextField.translatesAutoresizingMaskIntoConstraints = false
@@ -471,12 +474,26 @@ class EditAccountVC: UIViewController {
         emailLabelButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20).isActive = true
         emailLabelButton.heightAnchor.constraint(equalToConstant: 30).isActive = true
         
-        scrollContentView.addSubview(emailUnlineView)
-        emailUnlineView.translatesAutoresizingMaskIntoConstraints = false
-        emailUnlineView.topAnchor.constraint(equalTo: emailLabelButton.bottomAnchor, constant: 10).isActive = true
-        emailUnlineView.leadingAnchor.constraint(equalTo: emailLabelButton.leadingAnchor).isActive = true
-        emailUnlineView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        emailUnlineView.heightAnchor.constraint(equalToConstant: 1).isActive = true
+        scrollContentView.addSubview(emailUnderlineView)
+        emailUnderlineView.translatesAutoresizingMaskIntoConstraints = false
+        emailUnderlineView.topAnchor.constraint(equalTo: emailLabelButton.bottomAnchor, constant: 10).isActive = true
+        emailUnderlineView.leadingAnchor.constraint(equalTo: emailLabelButton.leadingAnchor).isActive = true
+        emailUnderlineView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        emailUnderlineView.heightAnchor.constraint(equalToConstant: 1).isActive = true
+        
+        scrollContentView.addSubview(countryButton)
+        countryButton.translatesAutoresizingMaskIntoConstraints = false
+        countryButton.centerYAnchor.constraint(equalTo: countryLabel.centerYAnchor).isActive = true
+        countryButton.leadingAnchor.constraint(equalTo: userFieldsStackedView.trailingAnchor).isActive = true
+        countryButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20).isActive = true
+        countryButton.heightAnchor.constraint(equalToConstant: 30).isActive = true
+        
+        scrollContentView.addSubview(countryUnderlineView)
+        countryUnderlineView.translatesAutoresizingMaskIntoConstraints = false
+        countryUnderlineView.topAnchor.constraint(equalTo: countryButton.bottomAnchor, constant: 10).isActive = true
+        countryUnderlineView.leadingAnchor.constraint(equalTo: countryButton.leadingAnchor).isActive = true
+        countryUnderlineView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        countryUnderlineView.heightAnchor.constraint(equalToConstant: 1).isActive = true
         
         if #available(iOS 13.4, *) {
             scrollContentView.addSubview(datePicker)
@@ -486,12 +503,12 @@ class EditAccountVC: UIViewController {
             datePicker.heightAnchor.constraint(equalToConstant: 30).isActive = true
             datePicker.subviews[0].subviews[0].backgroundColor = nil
             
-            scrollContentView.addSubview(bdayUnlineView)
-            bdayUnlineView.translatesAutoresizingMaskIntoConstraints = false
-            bdayUnlineView.topAnchor.constraint(equalTo: datePicker.bottomAnchor, constant: 10).isActive = true
-            bdayUnlineView.leadingAnchor.constraint(equalTo: datePicker.leadingAnchor, constant: 10).isActive = true
-            bdayUnlineView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-            bdayUnlineView.heightAnchor.constraint(equalToConstant: 1).isActive = true
+            scrollContentView.addSubview(bdayUnderlineView)
+            bdayUnderlineView.translatesAutoresizingMaskIntoConstraints = false
+            bdayUnderlineView.topAnchor.constraint(equalTo: datePicker.bottomAnchor, constant: 10).isActive = true
+            bdayUnderlineView.leadingAnchor.constraint(equalTo: datePicker.leadingAnchor, constant: 10).isActive = true
+            bdayUnderlineView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+            bdayUnderlineView.heightAnchor.constraint(equalToConstant: 1).isActive = true
         } else {
             scrollContentView.addSubview(bdayTextField)
             bdayTextField.translatesAutoresizingMaskIntoConstraints = false
@@ -499,47 +516,37 @@ class EditAccountVC: UIViewController {
             bdayTextField.leadingAnchor.constraint(equalTo: userFieldsStackedView.trailingAnchor).isActive = true
             bdayTextField.heightAnchor.constraint(equalToConstant: 30).isActive = true
             
-            scrollContentView.addSubview(bdayUnlineView)
-            bdayUnlineView.translatesAutoresizingMaskIntoConstraints = false
-            bdayUnlineView.topAnchor.constraint(equalTo: bdayTextField.bottomAnchor, constant: 10).isActive = true
-            bdayUnlineView.leadingAnchor.constraint(equalTo: bdayTextField.leadingAnchor).isActive = true
-            bdayUnlineView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-            bdayUnlineView.heightAnchor.constraint(equalToConstant: 1).isActive = true
+            scrollContentView.addSubview(bdayUnderlineView)
+            bdayUnderlineView.translatesAutoresizingMaskIntoConstraints = false
+            bdayUnderlineView.topAnchor.constraint(equalTo: bdayTextField.bottomAnchor, constant: 10).isActive = true
+            bdayUnderlineView.leadingAnchor.constraint(equalTo: bdayTextField.leadingAnchor).isActive = true
+            bdayUnderlineView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+            bdayUnderlineView.heightAnchor.constraint(equalToConstant: 1).isActive = true
         }
         
-        scrollContentView.addSubview(countryButton)
-        countryButton.translatesAutoresizingMaskIntoConstraints = false
-        countryButton.centerYAnchor.constraint(equalTo: countryLabel.centerYAnchor).isActive = true
-        countryButton.leadingAnchor.constraint(equalTo: userFieldsStackedView.trailingAnchor).isActive = true
-        countryButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20).isActive = true
-        countryButton.heightAnchor.constraint(equalToConstant: 30).isActive = true
-        
-        scrollContentView.addSubview(countryUnlineView)
-        countryUnlineView.translatesAutoresizingMaskIntoConstraints = false
-        countryUnlineView.topAnchor.constraint(equalTo: countryButton.bottomAnchor, constant: 10).isActive = true
-        countryUnlineView.leadingAnchor.constraint(equalTo: countryButton.leadingAnchor).isActive = true
-        countryUnlineView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        countryUnlineView.heightAnchor.constraint(equalToConstant: 1).isActive = true
-        
-        scrollContentView.addSubview(passwordButton)
-        passwordButton.translatesAutoresizingMaskIntoConstraints = false
-        passwordButton.topAnchor.constraint(equalTo: passwordLabel.topAnchor).isActive = true
-        passwordButton.leadingAnchor.constraint(equalTo: userFieldsStackedView.trailingAnchor).isActive = true
-        passwordButton.heightAnchor.constraint(equalToConstant: 26).isActive = true
-        
-        scrollContentView.addSubview(topUnderlineView)
-        topUnderlineView.translatesAutoresizingMaskIntoConstraints = false
-        topUnderlineView.topAnchor.constraint(equalTo: profileInfoView.topAnchor, constant: 0).isActive = true
-        topUnderlineView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-        topUnderlineView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        topUnderlineView.heightAnchor.constraint(equalToConstant: 1).isActive = true
-        
-        scrollContentView.addSubview(bottomlineView)
-        bottomlineView.translatesAutoresizingMaskIntoConstraints = false
-        bottomlineView.topAnchor.constraint(equalTo: passwordButton.bottomAnchor, constant: 20).isActive = true
-        bottomlineView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-        bottomlineView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        bottomlineView.heightAnchor.constraint(equalToConstant: 1).isActive = true
+        if User.email != nil {
+            scrollContentView.addSubview(passwordButton)
+            passwordButton.translatesAutoresizingMaskIntoConstraints = false
+            passwordButton.topAnchor.constraint(equalTo: passwordLabel.topAnchor).isActive = true
+            passwordButton.leadingAnchor.constraint(equalTo: userFieldsStackedView.trailingAnchor).isActive = true
+            passwordButton.heightAnchor.constraint(equalToConstant: 26).isActive = true
+            
+            scrollContentView.addSubview(bottomlineView)
+            bottomlineView.translatesAutoresizingMaskIntoConstraints = false
+            bottomlineView.topAnchor.constraint(equalTo: passwordButton.bottomAnchor, constant: 20).isActive = true
+            bottomlineView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+            bottomlineView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+            bottomlineView.heightAnchor.constraint(equalToConstant: 1).isActive = true
+        } else {
+            bdayUnderlineView.removeFromSuperview()
+            
+            scrollContentView.addSubview(bottomlineView)
+            bottomlineView.translatesAutoresizingMaskIntoConstraints = false
+            bottomlineView.topAnchor.constraint(equalTo: bdayLabel.bottomAnchor, constant: 20).isActive = true
+            bottomlineView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+            bottomlineView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+            bottomlineView.heightAnchor.constraint(equalToConstant: 1).isActive = true
+        }
         
         view.addSubview(customNavBar)
         customNavBar.pinNavBarTo(view)
@@ -604,11 +611,13 @@ class EditAccountVC: UIViewController {
     }
     
     @objc func changeUsernamePress() {
+        nameTextField.resignFirstResponder()
         let usernameVC = ChangeUsernameVC()
         navigationController?.pushViewController(usernameVC, animated: true)
     }
     
     @objc func changeEmailPress() {
+        nameTextField.resignFirstResponder()
         let emailVC = ChangeEmailVC()
         navigationController?.pushViewController(emailVC, animated: true)
     }
