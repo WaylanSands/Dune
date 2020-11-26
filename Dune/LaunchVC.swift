@@ -131,7 +131,7 @@ class LaunchVC: UIViewController {
     private func sendToIntro() {
         rootVC = IntroVC()
         
-//        DuneDelegate.newRootView(rootVC) - Was causing fatal error
+//        DuneDelegate.newRootView(rootVC)
         UIApplication.shared.keyWindow?.rootViewController = rootVC
     }
 }
