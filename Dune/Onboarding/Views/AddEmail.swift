@@ -17,10 +17,11 @@ class AddEmail: UIView {
     var nextButtonActive = false
     var headingYConstant: CGFloat = 260.0
     var textFieldYPosition: CGFloat = -37
-    var nextButtonDelegate: NextButtonDelegate!
     let defaultSubHeadingText = "You’ll need to confirm this later"
     let invalidMessage = "Please enter a valid email address"
     let takenEmailMessage = "This email is already in use"
+    
+    weak var nextButtonDelegate: NextButtonDelegate?
     
     var emailAvailable: Bool?
     let db = Firestore.firestore()
@@ -204,7 +205,7 @@ class AddEmail: UIView {
     @objc func emailButtonPress(sender: UIButton) {
         if  emailTextField.text != "" {
             emailTextField.text = "\(emailTextField.text!)\(sender.titleLabel!.text!).com"
-            nextButtonDelegate.makeNextButton(active: true)
+            nextButtonDelegate?.makeNextButton(active: true)
             nextButtonActive = true
             resetSubHeading()
             textFieldDidChange(emailTextField)
@@ -221,7 +222,7 @@ extension AddEmail: UITextFieldDelegate {
         
         func textFieldShouldReturn(_ textField: UITextField) -> Bool {
             print("Touch")
-            nextButtonDelegate.keyboardNextButtonPress()
+            nextButtonDelegate?.keyboardNextButtonPress()
             return true
         }
         
@@ -239,7 +240,7 @@ extension AddEmail: UITextFieldDelegate {
     
     @objc func textFieldDidChange(_ textField: UITextField) {
         nextButtonActive = false
-        nextButtonDelegate.makeNextButton(active: false)
+        nextButtonDelegate?.makeNextButton(active: false)
         
         if textField.text != ""  {
             if textField.text!.isValidEmail {
@@ -256,11 +257,11 @@ extension AddEmail: UITextFieldDelegate {
                 self.checkEmailAvailability()
             }
             if isTaken {
-                self.nextButtonDelegate.makeNextButton(active: false)
+                self.nextButtonDelegate?.makeNextButton(active: false)
                 self.nextButtonActive = false
                 self.emailAvailable = false
             } else {
-                self.nextButtonDelegate.makeNextButton(active: true)
+                self.nextButtonDelegate?.makeNextButton(active: true)
                 self.nextButtonActive = true
                 self.emailAvailable = true
             }

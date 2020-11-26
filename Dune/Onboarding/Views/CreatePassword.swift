@@ -15,12 +15,12 @@ class CreatePassword: UIView {
     var nextButtonActive = false
     var headingYConstant: CGFloat = 260.0
     var textFieldYPosition: CGFloat = -37
-    var nextButtonDelegate: NextButtonDelegate!
     let defaultSubHeadingText = "Passwords must contain at least one upper & lowercase character, one number & be at least 8 characters long"
-    
     lazy var headingLabel = CustomStyle.styleSignupHeading(view: self, title: "Create a password")
     lazy var passwordTextField = CustomStyle.styleSignUpTextField(color: CustomStyle.secondShade, view: self, placeholder: "Password")
     
+    weak var nextButtonDelegate: NextButtonDelegate?
+
     let subHeadingLabel: UILabel =  {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 14, weight: .medium)
@@ -139,7 +139,7 @@ class CreatePassword: UIView {
 extension CreatePassword: UITextFieldDelegate {
     
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-        nextButtonDelegate.keyboardNextButtonPress()
+        nextButtonDelegate?.keyboardNextButtonPress()
         return true
     }
     
@@ -150,17 +150,17 @@ extension CreatePassword: UITextFieldDelegate {
                 nextButtonActive = true
                 validationLabel.text = "Strong"
                 validationLabel.isHidden = false
-                nextButtonDelegate.makeNextButton(active: true)
+                nextButtonDelegate?.makeNextButton(active: true)
                 self.password = passwordTextField.text
             } else {
                 nextButtonActive = false
                 validationLabel.isHidden = true
-                nextButtonDelegate.makeNextButton(active: false)
+                nextButtonDelegate?.makeNextButton(active: false)
             }
         } else {
             nextButtonActive = false
             validationLabel.isHidden = true
-            nextButtonDelegate.makeNextButton(active: false)
+            nextButtonDelegate?.makeNextButton(active: false)
         }
         
     }

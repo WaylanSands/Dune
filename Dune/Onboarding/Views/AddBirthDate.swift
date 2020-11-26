@@ -15,11 +15,12 @@ class AllowNotifications: UIView {
     var categoryButtons = [UIButton]()
     var selectedCategories = [String]()
     var headingYConstant: CGFloat = 200.0
-    var nextButtonDelegate: NextButtonDelegate!
     let defaultSubHeadingText = "Discover relevant content"
     
     lazy var headingLabel = CustomStyle.styleSignupHeading(view: self, title: "Select categories that interest you")
     lazy var dateTextField = CustomStyle.styleSignUpTextField(color: CustomStyle.secondShade, view: self, placeholder: "")
+    
+    weak var nextButtonDelegate: NextButtonDelegate?
     
     lazy var subHeadingLabel: UILabel =  {
         let label = UILabel()
@@ -172,9 +173,9 @@ class AllowNotifications: UIView {
         }
 
         if selectedCategories.count > 0 {
-            nextButtonDelegate.makeNextButton(active: true)
+            nextButtonDelegate?.makeNextButton(active: true)
         } else {
-            nextButtonDelegate.makeNextButton(active: false)
+            nextButtonDelegate?.makeNextButton(active: false)
         }
     }
     

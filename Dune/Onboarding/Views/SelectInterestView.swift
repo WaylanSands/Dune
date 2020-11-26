@@ -11,11 +11,9 @@ import UIKit
 class SelectInterestView: UIView {
         
     var headingYConstant: CGFloat = 260.0
-    var nextButtonDelegate: NextButtonDelegate!
     let defaultSubHeadingText = "Discover relevant content."
-    
     lazy var dateTextField = CustomStyle.styleSignUpTextField(color: CustomStyle.secondShade, view: self, placeholder: "")
-    
+        
     let headingLabel: UILabel =  {
         let label = UILabel()
         label.text = "Select categories that interest you"

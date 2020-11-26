@@ -23,7 +23,7 @@ class CreateUsername: UIView {
     let maxCharacterMessage = "Maximum characters is 15"
     let spaceOrSpecialCharacterEntered = "Oops, Usernames can only contain Latin letters, numbers and 1 - _ or . but no special characters"
     
-    unowned var nextButtonDelegate: NextButtonDelegate!
+    weak var nextButtonDelegate: NextButtonDelegate?
     
     var timer = Timer()
     
@@ -165,13 +165,13 @@ extension CreateUsername: UITextFieldDelegate {
     
     @objc func textFieldDidChange(_ textField: UITextField) {
         nextButtonActive = false
-        nextButtonDelegate.makeNextButton(active: false)
+        nextButtonDelegate?.makeNextButton(active: false)
         checkUsernameIsFree()
     }
     
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         print("Touch")
-        nextButtonDelegate.keyboardNextButtonPress()
+        nextButtonDelegate?.keyboardNextButtonPress()
         return true
     }
     
@@ -185,7 +185,7 @@ extension CreateUsername: UITextFieldDelegate {
             validationIcon.isHidden = true
             unavailableLabel.isHidden = true
             nextButtonActive = false
-            nextButtonDelegate.makeNextButton(active: false)
+            nextButtonDelegate?.makeNextButton(active: false)
         } else {
             spinner.isHidden = false
             if FirebaseStatus.isChecking == false {
@@ -211,14 +211,14 @@ extension CreateUsername: UITextFieldDelegate {
                     self.validationIcon.isHidden = false
                     self.unavailableLabel.isHidden = true
                     self.nextButtonActive = true
-                    self.nextButtonDelegate.makeNextButton(active: true)
+                    self.nextButtonDelegate?.makeNextButton(active: true)
                     self.username = self.userTextField.text
                 } else if success == false && FirebaseStatus.isChecking == false {
                     // Username is taken
                     self.nameTaken = true
                     self.unavailableLabel.isHidden = false
                     self.nextButtonActive = false
-                    self.nextButtonDelegate.makeNextButton(active: false)
+                    self.nextButtonDelegate?.makeNextButton(active: false)
                 }
             }
         }
