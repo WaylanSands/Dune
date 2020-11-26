@@ -155,20 +155,8 @@ extension IntroVC: UIScrollViewDelegate {
        
         view.backgroundColor = scrollColor(percent: Double(percentOffset.x))
 
-        
-        if(percentOffset.x > 0 && percentOffset.x <= 0.33) {
-            //            introScreens[0].headingLabel.alpha = 1 - percentOffset.x
-            //            introScreens[0].imageView.transform = CGAffineTransform(scaleX: (0.33-percentOffset.x)/0.33, y: (0.33-percentOffset.x)/0.33)
-            //            introScreens[1].imageView.transform = CGAffineTransform(scaleX: percentOffset.x/0.33, y: percentOffset.x/0.33)
-            
-        } else if(percentOffset.x > 0.33 && percentOffset.x <= 0.50) {
-            //            introScreens[1].imageView.transform = CGAffineTransform(scaleX: (0.66-percentOffset.x)/0.33, y: (0.50-percentOffset.x)/0.33)
-            //            introScreens[2].imageView.transform = CGAffineTransform(scaleX: percentOffset.x/0.66, y: percentOffset.x/0.66)
-            
-        } else if(percentOffset.x > 0.50 && percentOffset.x <= 1) {
-//            view.backgroundColor = hexStringToUIColor(hex: "254DFF")
+        if (percentOffset.x > 0.50 && percentOffset.x <= 1) {
             skipButton.setTitle("Continue", for: .normal)
-            //            introScreens[2].imageView.transform = CGAffineTransform(scaleX: (0.99-percentOffset.x)/0.99, y: (0.75-percentOffset.x)/0.33)
         }
     }
         
