@@ -11,7 +11,7 @@ import Firebase
 import FirebaseAuth
 import FirebaseFirestore
 
-class publisherImageVC: UIViewController {
+class PublisherImageVC: UIViewController {
     
     @IBOutlet weak var headingLabel: UILabel!
     @IBOutlet weak var uploadImageButton: UIButton!
@@ -93,13 +93,13 @@ class publisherImageVC: UIViewController {
     }
     
     func presentNextVC() {
-        if let categoriesController = UIStoryboard(name: "OnboardingPublisher", bundle: nil).instantiateViewController(withIdentifier: "categoriesController") as? publisherCategoriesVC {
+        if let categoriesController = UIStoryboard(name: "OnboardingPublisher", bundle: nil).instantiateViewController(withIdentifier: "categoriesController") as? PublisherCategoriesVC {
             navigationController?.pushViewController(categoriesController, animated: true)
         }
     }
 }
 
-extension publisherImageVC: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+extension PublisherImageVC: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
     
     @IBAction func uploadImageButtonPress() {
         let imagePicker = UIImagePickerController()
@@ -129,7 +129,7 @@ extension publisherImageVC: UIImagePickerControllerDelegate, UINavigationControl
     }
 }
 
-extension publisherImageVC: CustomAlertDelegate {
+extension PublisherImageVC: CustomAlertDelegate {
     
     func primaryButtonPress() {
         presentNextVC()

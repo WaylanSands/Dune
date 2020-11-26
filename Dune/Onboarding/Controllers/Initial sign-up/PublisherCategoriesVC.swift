@@ -11,7 +11,7 @@ import Firebase
 import FirebaseAuth
 import FirebaseFirestore
 
-class publisherCategoriesVC: UIViewController {
+class PublisherCategoriesVC: UIViewController {
     
     @IBOutlet weak var continueButton: UIButton!
     @IBOutlet var categoryButtons: [UIButton]!

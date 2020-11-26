@@ -230,11 +230,11 @@ class ProgramNameVC: UIViewController {
     
     func presentNextVC() {
         if CurrentProgram.image != nil {
-            if let categoriesController = UIStoryboard(name: "OnboardingPublisher", bundle: nil).instantiateViewController(withIdentifier: "categoriesController") as? publisherCategoriesVC {
+            if let categoriesController = UIStoryboard(name: "OnboardingPublisher", bundle: nil).instantiateViewController(withIdentifier: "categoriesController") as? PublisherCategoriesVC {
                 navigationController?.pushViewController(categoriesController, animated: true)
             }
         } else {
-            if let imageController = UIStoryboard(name: "OnboardingPublisher", bundle: nil).instantiateViewController(withIdentifier: "ImageController") as? publisherImageVC {
+            if let imageController = UIStoryboard(name: "OnboardingPublisher", bundle: nil).instantiateViewController(withIdentifier: "ImageController") as? PublisherImageVC {
                 navigationController?.pushViewController(imageController, animated: true)
             }
         }
