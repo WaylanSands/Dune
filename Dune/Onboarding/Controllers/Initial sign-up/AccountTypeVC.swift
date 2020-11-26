@@ -471,5 +471,4 @@ extension AccountTypeVC: CustomAlertDelegate {
         updateOrCreateUser()
     }
     
-    
 }
