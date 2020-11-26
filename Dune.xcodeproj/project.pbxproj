@@ -328,12 +328,12 @@
 		48ED47952439F1C2003A326A /* EditProgramVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48ED47942439F1C2003A326A /* EditProgramVC.swift */; };
 		48EE6880256F2006004DABAB /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 48DC721323C6E998002AB21F /* Main.storyboard */; };
 		48EE6881256F2006004DABAB /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 48DC721323C6E998002AB21F /* Main.storyboard */; };
-		48EE6882256F2006004DABAB /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 484D8682251301C1008543C0 /* Main.storyboard */; };
-		48EE6883256F2006004DABAB /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 484D8682251301C1008543C0 /* Main.storyboard */; };
+		48EE6882256F2006004DABAB /* Main.strings in Resources */ = {isa = PBXBuildFile; fileRef = 484D8682251301C1008543C0 /* Main.strings */; };
+		48EE6883256F2006004DABAB /* Main.strings in Resources */ = {isa = PBXBuildFile; fileRef = 484D8682251301C1008543C0 /* Main.strings */; };
 		48EE6884256F2006004DABAB /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 48DC721823C6E999002AB21F /* LaunchScreen.storyboard */; };
 		48EE6885256F2006004DABAB /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 48DC721823C6E999002AB21F /* LaunchScreen.storyboard */; };
-		48EE6886256F2006004DABAB /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 484D8683251301C3008543C0 /* LaunchScreen.storyboard */; };
-		48EE6887256F2006004DABAB /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 484D8683251301C3008543C0 /* LaunchScreen.storyboard */; };
+		48EE6886256F2006004DABAB /* LaunchScreen.strings in Resources */ = {isa = PBXBuildFile; fileRef = 484D8683251301C3008543C0 /* LaunchScreen.strings */; };
+		48EE6887256F2006004DABAB /* LaunchScreen.strings in Resources */ = {isa = PBXBuildFile; fileRef = 484D8683251301C3008543C0 /* LaunchScreen.strings */; };
 		48EF84F6240C569400A150B6 /* Episode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48EF84F5240C569400A150B6 /* Episode.swift */; };
 		48F4C0F1242C7A44005D84DE /* AddBGMusicVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48F4C0F0242C7A44005D84DE /* AddBGMusicVC.swift */; };
 		48F84C05256EE51700EE5D8E /* FirebaseNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4857A58C25182E4600910B4D /* FirebaseNotifications.swift */; };
@@ -437,9 +437,9 @@
 		484B435924E698020068CB94 /* UIBarButtonItem+Ext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIBarButtonItem+Ext.swift"; sourceTree = "<group>"; };
 		484C7E2824C642A300AAB50E /* end.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = end.mp3; sourceTree = "<group>"; };
 		484D7830248CA6E900655C83 /* MentionTV.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MentionTV.swift; sourceTree = "<group>"; };
-		484D8682251301C1008543C0 /* Main.storyboard */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Main.storyboard; path = ../../../Main.strings; sourceTree = "<group>"; };
-		484D8683251301C3008543C0 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = LaunchScreen.storyboard; path = ../LaunchScreen.strings; sourceTree = "<group>"; };
-		484D8684251301FB008543C0 /* Localizable.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; path = Localizable.strings; sourceTree = "<group>"; };
+		484D8682251301C1008543C0 /* Main.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; path = Main.strings; sourceTree = "<group>"; };
+		484D8683251301C3008543C0 /* LaunchScreen.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = LaunchScreen.strings; path = Onboarding/Storyboards/LaunchScreen.strings; sourceTree = "<group>"; };
+		484D8684251301FB008543C0 /* Localizable.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Localizable.strings; path = Dune/Onboarding/Storyboards/Localizable.strings; sourceTree = "<group>"; };
 		484DCAAB244FB8EC001118E9 /* DraftEpisodeCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraftEpisodeCell.swift; sourceTree = "<group>"; };
 		484DCAAD244FD717001118E9 /* Date+Ext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Date+Ext.swift"; sourceTree = "<group>"; };
 		484E411724CFD18F00AE7F58 /* DisplayNameVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayNameVC.swift; sourceTree = "<group>"; };
@@ -534,8 +534,8 @@
 		48DC0F83240CE5E4003D489B /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
 		48DC720B23C6E998002AB21F /* Dune.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Dune.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		48DC720E23C6E998002AB21F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		48DC721323C6E998002AB21F /* Main.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Main.storyboard; path = ../../../Main.storyboard; sourceTree = "<group>"; };
-		48DC721823C6E999002AB21F /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = ../LaunchScreen.storyboard; sourceTree = "<group>"; };
+		48DC721323C6E998002AB21F /* Main.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = Main.storyboard; sourceTree = "<group>"; };
+		48DC721823C6E999002AB21F /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = Onboarding/Storyboards/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		48DC721A23C6E999002AB21F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		48DC7643245F729600FC3575 /* LaunchVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchVC.swift; sourceTree = "<group>"; };
 		48DE328224C8575B00581F4A /* RemovedRequestsVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemovedRequestsVC.swift; sourceTree = "<group>"; };
@@ -554,7 +554,7 @@
 		48F8DDCD243682DA00A3971E /* UILabel+Ext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UILabel+Ext.swift"; sourceTree = "<group>"; };
 		48F90EB6241C5DBC0005FB9C /* FileManager+Ext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FileManager+Ext.swift"; sourceTree = "<group>"; };
 		48F977F724065096005FE445 /* VersionControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VersionControl.swift; sourceTree = "<group>"; };
-		48FC1B3B23D10CA800318113 /* OnboardingPublisher.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = OnboardingPublisher.storyboard; path = ../../../OnboardingPublisher.storyboard; sourceTree = "<group>"; };
+		48FC1B3B23D10CA800318113 /* OnboardingPublisher.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = OnboardingPublisher.storyboard; sourceTree = "<group>"; };
 		48FE2A322508885B00724F84 /* CachingPlayerItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CachingPlayerItem.swift; sourceTree = "<group>"; };
 		48FE45182419A39C001E075B /* PublisherNotificationsVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublisherNotificationsVC.swift; sourceTree = "<group>"; };
 		48FE451A2419AE07001E075B /* EditAccountVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditAccountVC.swift; sourceTree = "<group>"; };
@@ -976,6 +976,8 @@
 				48DC720E23C6E998002AB21F /* AppDelegate.swift */,
 				48BBCDAC247CBF7A00A1BFB5 /* SceneDelegate.swift */,
 				48852A7F24D8FDBA007B44F6 /* DuneDelegate.swift */,
+				48DC721823C6E999002AB21F /* LaunchScreen.storyboard */,
+				484D8683251301C3008543C0 /* LaunchScreen.strings */,
 				48DC7643245F729600FC3575 /* LaunchVC.swift */,
 				48AEB3D624ADEAC80082C319 /* IntroVC.swift */,
 				48AEB3D824ADEFD50082C319 /* IntroScreenView.swift */,
@@ -985,8 +987,6 @@
 				480485E023CBB5AF00F8CA89 /* Extensions */,
 				48616F0623FA4E8200E91530 /* App Main */,
 				4801619923C7F5FC0038318B /* Onboarding */,
-				48DC721823C6E999002AB21F /* LaunchScreen.storyboard */,
-				484D8683251301C3008543C0 /* LaunchScreen.storyboard */,
 				48DC721A23C6E999002AB21F /* Info.plist */,
 				4887D3C6250A00F100DE17FC /* Dev-Info.plist */,
 			);
@@ -1032,7 +1032,7 @@
 			isa = PBXGroup;
 			children = (
 				48DC721323C6E998002AB21F /* Main.storyboard */,
-				484D8682251301C1008543C0 /* Main.storyboard */,
+				484D8682251301C1008543C0 /* Main.strings */,
 				48FC1B3B23D10CA800318113 /* OnboardingPublisher.storyboard */,
 			);
 			path = Storyboards;
@@ -1145,10 +1145,10 @@
 			files = (
 				4849CE1124F63040002979A7 /* end.mp3 in Resources */,
 				48EE6885256F2006004DABAB /* LaunchScreen.storyboard in Resources */,
-				48EE6887256F2006004DABAB /* LaunchScreen.storyboard in Resources */,
+				48EE6887256F2006004DABAB /* LaunchScreen.strings in Resources */,
 				4849CE1324F63040002979A7 /* Assets.xcassets in Resources */,
 				48EE6881256F2006004DABAB /* Main.storyboard in Resources */,
-				48EE6883256F2006004DABAB /* Main.storyboard in Resources */,
+				48EE6883256F2006004DABAB /* Main.strings in Resources */,
 				48B9C15F25411785006D35CB /* lottieWave.json in Resources */,
 				4849CE1524F63040002979A7 /* OnboardingPublisher.storyboard in Resources */,
 				4887D3C52509FD9F00DE17FC /* GoogleService-Info.plist in Resources */,
@@ -1161,12 +1161,12 @@
 			files = (
 				484C7E2924C642A300AAB50E /* end.mp3 in Resources */,
 				48EE6884256F2006004DABAB /* LaunchScreen.storyboard in Resources */,
-				48EE6886256F2006004DABAB /* LaunchScreen.storyboard in Resources */,
+				48EE6886256F2006004DABAB /* LaunchScreen.strings in Resources */,
 				4844916623CFCD9F000E13FA /* Assets.xcassets in Resources */,
 				48B9C15E25411785006D35CB /* lottieWave.json in Resources */,
 				484D8685251301FB008543C0 /* Localizable.strings in Resources */,
 				48EE6880256F2006004DABAB /* Main.storyboard in Resources */,
-				48EE6882256F2006004DABAB /* Main.storyboard in Resources */,
+				48EE6882256F2006004DABAB /* Main.strings in Resources */,
 				48FC1B3C23D10CA800318113 /* OnboardingPublisher.storyboard in Resources */,
 				48D8ADEA240CBCA800F09731 /* GoogleService-Info.plist in Resources */,
 			);

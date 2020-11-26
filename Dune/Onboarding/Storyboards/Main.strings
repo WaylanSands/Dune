@@ -1,0 +1,63 @@
+
+/* Class = "UILabel"; text = "Finish setting up your account and earn Cred or simply start listening."; ObjectID = "1ab-mg-g2N"; */
+"1ab-mg-g2N.text" = "Finish setting up your account and earn Cred or simply start listening.";
+
+/* Class = "UIBarButtonItem"; title = " "; ObjectID = "1sW-xS-eKA"; */
+"1sW-xS-eKA.title" = " ";
+
+/* Class = "UILabel"; text = "Welcome to Dune"; ObjectID = "5a1-yi-Lwl"; */
+"5a1-yi-Lwl.text" = "Welcome to Dune";
+
+/* Class = "UITextField"; placeholder = "Enter email"; ObjectID = "8Tg-4I-LEH"; */
+"8Tg-4I-LEH.placeholder" = "Enter email";
+
+/* Class = "UIButton"; normalTitle = "Sign in"; ObjectID = "92B-aK-QaX"; */
+"92B-aK-QaX.normalTitle" = "Sign in";
+
+/* Class = "UIButton"; normalTitle = "Sign up with email"; ObjectID = "9BM-xa-7vb"; */
+"9BM-xa-7vb.normalTitle" = "Sign up with email";
+
+/* Class = "UILabel"; text = "By making a selection you agree to the terms and conditions provided here."; ObjectID = "Ciz-CS-ntc"; */
+"Ciz-CS-ntc.text" = "By making a selection you agree to the";
+
+/* Class = "UIButton"; normalTitle = "Use Twitter"; ObjectID = "DXt-1L-iNe"; */
+"DXt-1L-iNe.normalTitle" = "Use Twitter";
+
+/* Class = "UILabel"; text = "Password"; ObjectID = "Iu3-vL-H7H"; */
+"Iu3-vL-H7H.text" = "Password";
+
+/* Class = "UILabel"; text = "Forgot your password?"; ObjectID = "NLn-QP-mwm"; */
+"NLn-QP-mwm.text" = "Forgot your password?";
+
+/* Class = "UILabel"; text = "Daily Updates, News\n& Entertainment"; ObjectID = "O8u-ke-AGD"; */
+"O8u-ke-AGD.text" = "Daily Updates, News\n& Entertainment";
+
+/* Class = "UITextField"; placeholder = "Enter password"; ObjectID = "Pg0-Wm-2SS"; */
+"Pg0-Wm-2SS.placeholder" = "Enter password";
+
+/* Class = "UILabel"; text = "Email"; ObjectID = "Pps-vy-L4V"; */
+"Pps-vy-L4V.text" = "Email";
+
+/* Class = "UIButton"; normalTitle = "Finish Setup"; ObjectID = "Tv2-55-1OO"; */
+"Tv2-55-1OO.normalTitle" = "Finish Setup";
+
+/* Class = "UIButton"; normalTitle = "Sign up with Twitter"; ObjectID = "Y9o-ea-yD4"; */
+"Y9o-ea-yD4.normalTitle" = "Sign up with Twitter";
+
+/* Class = "UILabel"; text = "Dune"; ObjectID = "bKj-jM-XQ4"; */
+"bKj-jM-XQ4.text" = "Dune";
+
+/* Class = "UIButton"; normalTitle = "Sign up with Apple"; ObjectID = "fvv-T2-xch"; */
+"fvv-T2-xch.normalTitle" = "Sign up with Apple";
+
+/* Class = "UIButton"; normalTitle = "Use Apple"; ObjectID = "hev-aF-AVl"; */
+"hev-aF-AVl.normalTitle" = "Use Apple";
+
+/* Class = "UIButton"; normalTitle = "Click here"; ObjectID = "l72-qd-ayg"; */
+"l72-qd-ayg.normalTitle" = "Click here";
+
+/* Class = "UILabel"; text = "Already have an account?"; ObjectID = "oRE-d2-iyh"; */
+"oRE-d2-iyh.text" = "Already have an account?";
+
+/* Class = "UIButton"; normalTitle = "Start Listening"; ObjectID = "yh3-Tr-Dav"; */
+"yh3-Tr-Dav.normalTitle" = "Start Listening";
