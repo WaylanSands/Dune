@@ -270,7 +270,6 @@ class AccountTypeVC: UIViewController {
     
     func presentMainFeedVC() {
         DispatchQueue.main.async {
-//            duneTabBar.tabButtonSelection(0)
             self.networkingIndicator.removeFromSuperview()
             let tabBar = MainTabController()
             tabBar.selectedIndex = 0
