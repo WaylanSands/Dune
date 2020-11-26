@@ -130,7 +130,8 @@ class LaunchVC: UIViewController {
     
     private func sendToIntro() {
         rootVC = IntroVC()
-//        DuneDelegate.newRootView(rootVC)
+        
+//        DuneDelegate.newRootView(rootVC) - Was causing fatal error
         UIApplication.shared.keyWindow?.rootViewController = rootVC
     }
 }
