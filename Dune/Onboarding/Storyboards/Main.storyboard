@@ -49,12 +49,6 @@
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="By making a selection you agree to the terms and conditions provided here." textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Ciz-CS-ntc">
-                                <rect key="frame" x="20" y="813" width="374" height="29"/>
-                                <fontDescription key="fontDescription" type="system" weight="medium" pointSize="12"/>
-                                <color key="textColor" red="0.30588235289999999" green="0.3294117647" blue="0.3803921569" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                <nil key="highlightedColor"/>
-                            </label>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Welcome to Dune" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="5a1-yi-Lwl">
                                 <rect key="frame" x="16" y="261" width="382" height="38.5"/>
                                 <fontDescription key="fontDescription" type="boldSystem" pointSize="32"/>
@@ -102,6 +96,22 @@
                                 <color key="textColor" red="0.64705882349999999" green="0.68235294120000001" blue="0.79215686269999996" alpha="1" colorSpace="calibratedRGB"/>
                                 <nil key="highlightedColor"/>
                             </label>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="8Yr-JL-qyo">
+                                <rect key="frame" x="149" y="815" width="116" height="27"/>
+                                <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="12"/>
+                                <state key="normal" title="Terms &amp; Conditions">
+                                    <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                </state>
+                                <connections>
+                                    <action selector="termsAndConditionsPress:" destination="oNU-tP-yyR" eventType="touchUpInside" id="LHs-eN-Grd"/>
+                                </connections>
+                            </button>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="By making a selection you agree to the" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Ciz-CS-ntc">
+                                <rect key="frame" x="20" y="800" width="374" height="14.5"/>
+                                <fontDescription key="fontDescription" type="system" weight="medium" pointSize="12"/>
+                                <color key="textColor" red="0.30588235289999999" green="0.3294117647" blue="0.3803921569" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <nil key="highlightedColor"/>
+                            </label>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="KLq-ld-kZE"/>
                         <color key="backgroundColor" red="0.090196078431372548" green="0.098039215686274508" blue="0.10980392156862745" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
@@ -111,11 +121,13 @@
                             <constraint firstItem="1ab-mg-g2N" firstAttribute="top" secondItem="5a1-yi-Lwl" secondAttribute="bottom" constant="20" id="7ym-Ht-ziv"/>
                             <constraint firstItem="KLq-ld-kZE" firstAttribute="trailing" secondItem="5a1-yi-Lwl" secondAttribute="trailing" constant="16" id="CbT-Py-myw"/>
                             <constraint firstItem="y28-qc-lnf" firstAttribute="centerY" secondItem="Z74-Ja-ZZI" secondAttribute="centerY" constant="30" id="GhS-i3-e8l"/>
-                            <constraint firstItem="KLq-ld-kZE" firstAttribute="bottom" secondItem="Ciz-CS-ntc" secondAttribute="bottom" constant="20" id="HhV-JS-XLM"/>
                             <constraint firstItem="KLq-ld-kZE" firstAttribute="trailing" secondItem="Ciz-CS-ntc" secondAttribute="trailing" constant="20" id="IOs-4n-70f"/>
                             <constraint firstItem="y28-qc-lnf" firstAttribute="leading" secondItem="KLq-ld-kZE" secondAttribute="leading" constant="16" id="Kc8-wI-CPR"/>
                             <constraint firstItem="KLq-ld-kZE" firstAttribute="trailing" secondItem="y28-qc-lnf" secondAttribute="trailing" constant="16" id="Meh-n2-pQz"/>
+                            <constraint firstItem="8Yr-JL-qyo" firstAttribute="centerX" secondItem="KLq-ld-kZE" secondAttribute="centerX" id="gdS-7j-J6u"/>
+                            <constraint firstItem="Ciz-CS-ntc" firstAttribute="top" secondItem="8Yr-JL-qyo" secondAttribute="top" constant="-15" id="gl3-wO-l8S"/>
                             <constraint firstItem="Tv2-55-1OO" firstAttribute="top" secondItem="1ab-mg-g2N" secondAttribute="bottom" constant="80" id="pB5-fU-mDF"/>
+                            <constraint firstItem="KLq-ld-kZE" firstAttribute="bottom" secondItem="8Yr-JL-qyo" secondAttribute="bottom" constant="20" id="qif-DU-AY4"/>
                             <constraint firstItem="KLq-ld-kZE" firstAttribute="trailing" secondItem="1ab-mg-g2N" secondAttribute="trailing" constant="40" id="rb9-nf-CYZ"/>
                             <constraint firstItem="1ab-mg-g2N" firstAttribute="leading" secondItem="KLq-ld-kZE" secondAttribute="leading" constant="40" id="v2p-xU-ooE"/>
                         </constraints>
@@ -159,7 +171,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" alignment="bottom" spacing="80" translatesAutoresizingMaskIntoConstraints="NO" id="2gE-yX-ncC">
-                                <rect key="frame" x="16" y="184.5" width="382" height="169.5"/>
+                                <rect key="frame" x="16" y="179.5" width="382" height="174.5"/>
                                 <subviews>
                                     <stackView opaque="NO" contentMode="scaleToFill" spacing="7" translatesAutoresizingMaskIntoConstraints="NO" id="afp-LA-IaW">
                                         <rect key="frame" x="10" y="0.0" width="372" height="32"/>
@@ -173,17 +185,17 @@
                                             </imageView>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Dune" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="bKj-jM-XQ4">
                                                 <rect key="frame" x="39" y="0.0" width="333" height="32"/>
-                                                <fontDescription key="fontDescription" type="boldSystem" pointSize="26"/>
+                                                <fontDescription key="fontDescription" type="boldSystem" pointSize="30"/>
                                                 <color key="textColor" red="0.99999600649999998" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                                 <nil key="highlightedColor"/>
                                             </label>
                                         </subviews>
                                     </stackView>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="O8u-ke-AGD">
-                                        <rect key="frame" x="10" y="112" width="372" height="57.5"/>
+                                        <rect key="frame" x="10" y="112" width="372" height="62.5"/>
                                         <string key="text">Daily Updates, News
 &amp; Entertainment</string>
-                                        <fontDescription key="fontDescription" type="boldSystem" pointSize="24"/>
+                                        <fontDescription key="fontDescription" type="boldSystem" pointSize="26"/>
                                         <color key="textColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                         <nil key="highlightedColor"/>
                                     </label>

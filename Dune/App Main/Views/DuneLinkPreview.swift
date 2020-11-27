@@ -47,12 +47,6 @@ class DuneLinkPreview: UIView {
     
     override init(frame: CGRect) {
         super.init(frame: frame)
-//        self.layer.shadowColor = UIColor.black.cgColor
-//        self.layer.shadowOpacity = 0.05
-//        self.layer.shadowOffset = .zero
-//        self.layer.shadowRadius = 10
-//        self.layer.rasterizationScale = UIScreen.main.scale
-//        self.layer.shouldRasterize = true
         configureViews()
     }
     

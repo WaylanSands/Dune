@@ -70,7 +70,7 @@ class AccountSettingsVC: UIViewController {
     
     lazy var surveyButton: UIButton = {
         let button = UIButton()
-        button.setTitle("Dune Beta Program", for: .normal)
+        button.setTitle("Feedback Program", for: .normal)
         button.contentHorizontalAlignment = .left
         button.setTitleColor(CustomStyle.primaryBlue, for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)

@@ -758,6 +758,17 @@
 			path = "Account settings";
 			sourceTree = "<group>";
 		};
+		4830AC0025709AF10070DFC3 /* Daily feed */ = {
+			isa = PBXGroup;
+			children = (
+				48616F0723FA4F1700E91530 /* MainFeedVC.swift */,
+				48018F762470C88F00C6BB38 /* EpisodeTagLookupVC.swift */,
+				48AB33552481E7020013A645 /* CommentThreadVC.swift */,
+				48DA761624B498CA000C74C5 /* WebVC.swift */,
+			);
+			path = "Daily feed";
+			sourceTree = "<group>";
+		};
 		4849CD6724F62F7A002979A7 /* Dune plist */ = {
 			isa = PBXGroup;
 			children = (
@@ -852,11 +863,7 @@
 			children = (
 				48616F1223FA5BAC00E91530 /* MainTabController.swift */,
 				483A312D2502589A008F0B9F /* DuneTabBar.swift */,
-				48616F0723FA4F1700E91530 /* MainFeedVC.swift */,
-				48018F762470C88F00C6BB38 /* EpisodeTagLookupVC.swift */,
-				48AB33552481E7020013A645 /* CommentThreadVC.swift */,
-				48341EB3248DE41F009EDB45 /* SubscribersVC.swift */,
-				48DA761624B498CA000C74C5 /* WebVC.swift */,
+				4830AC0025709AF10070DFC3 /* Daily feed */,
 				48616F0D23FA5A4900E91530 /* TrendingVC.swift */,
 				480BE7BB247A7622000E93AC /* Search */,
 				484FD692241F2A2E008087AA /* Studio */,
@@ -869,6 +876,7 @@
 		4864BCC22489001300DDF2B5 /* Profiles */ = {
 			isa = PBXGroup;
 			children = (
+				48341EB3248DE41F009EDB45 /* SubscribersVC.swift */,
 				480BE7BC247A777B000E93AC /* ProgramProfileVC.swift */,
 				481495E1248FA4CB008F4E59 /* SingleProgramProfile.swift */,
 				484EB37524D2E09C00DE6953 /* ListenerProfileVC.swift */,

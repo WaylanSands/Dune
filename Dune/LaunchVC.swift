@@ -68,13 +68,13 @@ class LaunchVC: UIViewController {
     private func configureView() {
         
         view.addSubview(duneLabel)
-        duneLabel.frame = CGRect(x: view.frame.width / 2 - duneLabel.intrinsicContentSize.width, y: view.frame.height / 2 - (20 + 20), width: duneLabel.intrinsicContentSize.width, height: 40)
+        duneLabel.frame = CGRect(x: view.frame.width / 2 - duneLabel.intrinsicContentSize.width, y: view.frame.height / 2 - (40), width: duneLabel.intrinsicContentSize.width, height: 40)
         
         view.addSubview(labelMask)
-        labelMask.frame = CGRect(x: view.frame.width / 2 - duneLabel.intrinsicContentSize.width, y: view.frame.height / 2 - (20 + 20), width: duneLabel.intrinsicContentSize.width, height: 40)
+        labelMask.frame = CGRect(x: view.frame.width / 2 - duneLabel.intrinsicContentSize.width, y: view.frame.height / 2 - (40), width: duneLabel.intrinsicContentSize.width, height: 40)
         
         view.addSubview(logoImageView)
-        logoImageView.frame = CGRect(x: view.frame.width / 2 - 20, y: view.frame.height / 2 - (20 + 20), width: 40, height: 40)
+        logoImageView.frame = CGRect(x: view.frame.width / 2 - 20, y: view.frame.height / 2 - (40), width: 40, height: 40)
 
     }
     

@@ -56,41 +56,12 @@ class ProgramCell: UITableViewCell {
         return button
     }()
     
-//    lazy var playProgramButton: UIButton = {
-//        let button = UIButton()
-//        button.setImage(UIImage(named: "play-episode-btn"), for: .normal)
-//        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: -imageSize + 15, bottom: 0, right: 0)
-//        return button
-//    }()
-    
-//    let playEpisodeImageView: UIImageView = {
-//        let imageView = UIImageView()
-//        imageView.image = UIImage(named: "play-episode-btn")
-//        return imageView
-//    }()
-//
-//    let playBarButton: UIButton = {
-//        let button = UIButton()
-//        button.backgroundColor = CustomStyle.thirdShade
-//        button.isUserInteractionEnabled = false
-//        button.layer.cornerRadius = 2
-//        return button
-//    }()
-    
     let programNameStackedView: UIStackView = {
         let view = UIStackView()
         view.spacing = 5
         return view
     }()
-    
-//    let programSettingsButton: ExtendedButton = {
-//        let button = ExtendedButton()
-//        button.setImage(#imageLiteral(resourceName: "episode-settings") , for: .normal)
-//        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: -5)
-//        button.padding = 10
-//        return button
-//    }()
-    
+
     lazy var programNameButton: UIButton = {
         let button = UIButton()
         button.titleLabel?.font = UIFont.systemFont(ofSize: nameSize, weight: .bold)
@@ -196,17 +167,6 @@ class ProgramCell: UITableViewCell {
         return button
     }()
     
-//    let visitButton: UIButton = {
-//        let button = UIButton()
-//        button.setTitle("Visit", for: .normal)
-//        button.titleLabel!.font = UIFont.systemFont(ofSize: 12, weight: .medium)
-//        button.setTitleColor(CustomStyle.secondShade, for: .normal)
-//        button.backgroundColor = CustomStyle.linkBlue
-//        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 15, bottom: 1, right: 15)
-//        button.layer.cornerRadius = 12
-//        return button
-//    }()
-    
     let programStatsLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 12, weight: .medium)
@@ -235,7 +195,7 @@ class ProgramCell: UITableViewCell {
         clearTagButtons()
     }
     
-    // MARK: Setup Cell
+    // MARK: - Setup Cell
     func normalSetUp(program: Program) {
         self.program = program
        
@@ -251,7 +211,6 @@ class ProgramCell: UITableViewCell {
         
         if CurrentProgram.programsIDs().contains(program.ID) {
             subscribeButton.isHidden = true
-//            subscribeButton.setTitle("Visit", for: .normal)
         } else {
             configureSubscribeButton()
             subscribeButton.isHidden = false

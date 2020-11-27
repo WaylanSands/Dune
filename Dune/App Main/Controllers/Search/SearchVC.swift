@@ -637,16 +637,21 @@ extension SearchVC: UITableViewDelegate, UITableViewDataSource {
         programCell.moreButton.addTarget(programCell, action: #selector(ProgramCell.moreUnwrap), for: .touchUpInside)
         programCell.programImageButton.addTarget(programCell, action: #selector(ProgramCell.visitProfile), for: .touchUpInside)
         programCell.programNameButton.addTarget(programCell, action: #selector(ProgramCell.visitProfile), for: .touchUpInside)
-//        programCell.programSettingsButton.addTarget(programCell, action: #selector(ProgramCell.showSettings), for: .touchUpInside)
         programCell.subscribeButton.addTarget(programCell, action: #selector(ProgramCell.subscribeButtonPress), for: .touchUpInside)
         programCell.usernameButton.addTarget(programCell, action: #selector(ProgramCell.visitProfile), for: .touchUpInside)
         programCell.programImageButton.setImage(program.image ?? nil, for: .normal)
+        
+        if programCell.program.image != program.image {
+            programCell.programImageButton.setImage(nil, for: .normal)
+        }
+        
         programCell.normalSetUp(program: program)
         programCell.cellDelegate = self
         
         if lastPlayedID == program.ID {
             activeProgram = program
         }
+        
         
         if program.ID == lastPlayedID {
             programCell.playbackBarView.setProgressWith(percentage: lastProgress)

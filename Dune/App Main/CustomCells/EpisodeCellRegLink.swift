@@ -201,6 +201,12 @@ class EpisodeCellRegLink: EpisodeCell {
      }
     
     override func normalSetUp(episode: Episode) {
+        
+        // This works better in the cellForRowAt function but not sure of the right way to implement it
+        if episode.richLink != self.episode.richLink {
+            regularPreview.imageButton.setImage(nil, for: .normal)
+        }
+        
         includeRichLink()
         setupLikeButtonAndCounterFor(episode: episode)
         
@@ -235,6 +241,7 @@ class EpisodeCellRegLink: EpisodeCell {
     }
     
     func includeRichLink() {
+    
         FileManager.getLinkImageWith(imageID: episode.linkImageID!) { image in
             DispatchQueue.main.async {
                  self.regularPreview.imageButton.setImage(image, for: .normal)
