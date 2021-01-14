@@ -158,6 +158,7 @@ class ProgramNameVC: UIViewController {
             
             User.ID = uid
             CurrentProgram.rep = 0
+            CurrentProgram.isPrivate = false
             CurrentProgram.isPublisher = true
             CurrentProgram.hasMentions = false
             CurrentProgram.repMethods = [String]()
@@ -197,6 +198,7 @@ class ProgramNameVC: UIViewController {
                         "isPrimaryProgram" : true,
                         "pendingChannels": [],
                         "deniedChannels" : [],
+                        "isPrivate" : false,
                         "subscriberCount" : 0,
                         "hasMentions" : false,
                         "isPublisher" : true,

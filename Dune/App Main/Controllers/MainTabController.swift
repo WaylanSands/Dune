@@ -8,7 +8,10 @@
 
 import UIKit
 
+// A globally accessed AVPlayer
 let dunePlayBar = DunePlayer()
+
+// A globally accessed custom tabBar which communicates to this MainTabController
 let duneTabBar = DuneTabBar()
 
 class MainTabController: UITabBarController {
@@ -44,13 +47,7 @@ class MainTabController: UITabBarController {
     let listenerAccountNC = UINavigationController(rootViewController: ListenerAccountVC())
     
     private func configureNavigationControllers() {
-//        var
-//        if CurrentProgram.isPublisher! {
-//            accountController = UINavigationController(rootViewController: programAccountVC)
-//        } else {
-//            accountController = UINavigationController(rootViewController: listenerAccountVC)
-//        }
-//        accountController.navigationBar.barStyle = .default
+
         let accountController = accountNC()
         let mainFeedController = UINavigationController(rootViewController: mainFeedVC)
         mainFeedController.navigationBar.barStyle = .black
@@ -61,35 +58,7 @@ class MainTabController: UITabBarController {
         let studioController = UINavigationController(rootViewController:StudioVC())
         studioController.navigationBar.barStyle = .black
         
-//        self.tabBarController?.tabBar.isUserInteractionEnabled = false
         tabBar.isHidden = true
-
-//        tabBar.isUserInteractionEnabled = false
-//        tabBar.backgroundImage = UIImage()
-//        tabBar.shadowImage = UIImage()
-//        tabBar.clipsToBounds = true
-
-//        mainFeedController.tabBarItem.image = UIImage(imageLiteralResourceName: "feed-icon")
-//        mainFeedController.tabBarItem.imageInsets = UIEdgeInsets(top: 5, left: 0, bottom: -5, right: 0)
-//        mainFeedController.tabBarItem.selectedImage = UIImage(imageLiteralResourceName: "feed-icon-selected")
-//
-//        searchController.tabBarItem.image = UIImage(imageLiteralResourceName: "search-icon")
-//        searchController.tabBarItem.imageInsets = UIEdgeInsets(top: 5, left: 0, bottom: -5, right: 0)
-//        searchController.tabBarItem.selectedImage = UIImage(imageLiteralResourceName: "search-icon-selected")
-//        searchController.navigationBar.barStyle = .black
-//
-//        studioController.tabBarItem.image = UIImage(imageLiteralResourceName: "studio-icon")
-//        studioController.tabBarItem.imageInsets = UIEdgeInsets(top: 5, left: 0, bottom: -5, right: 0)
-//        studioController.tabBarItem.selectedImage = UIImage(imageLiteralResourceName: "studio-icon")
-//
-//        trendingController.tabBarItem.image = UIImage(imageLiteralResourceName: "trending-icon")
-//        trendingController.tabBarItem.imageInsets = UIEdgeInsets(top: 5, left: 0, bottom: -5, right: 0)
-//        trendingController.tabBarItem.selectedImage = UIImage(imageLiteralResourceName: "trending-icon-selected")
-//        trendingController.navigationBar.barStyle = .black
-//
-//        accountController.tabBarItem.image = UIImage(imageLiteralResourceName: "account-icon")
-//        accountController.tabBarItem.imageInsets = UIEdgeInsets(top: 5, left: 0, bottom: -5, right: 0)
-//        accountController.tabBarItem.selectedImage = UIImage(imageLiteralResourceName: "account-icon-selected")
         
         viewControllers = [mainFeedController, trendingController, studioController, searchController, accountController]
     }

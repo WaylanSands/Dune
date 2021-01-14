@@ -314,8 +314,8 @@ class CustomAlertView: UIView {
             primaryButton.setTitle("Dismiss", for: .normal)
             primaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
         case .nextVersion:
-            headingLabel.text = "Withheld Feature"
-            bodyTextLabel.text = "This feature is being withheld pending the official Appstore release."
+            headingLabel.text = "Work in progress"
+            bodyTextLabel.text = "This feature is currently still in developmet."
             primaryButton.setTitle("Dismiss", for: .normal)
             primaryButton.addTarget(self, action: #selector(dismiss), for: .touchUpInside)
         case .hashTagUsed:

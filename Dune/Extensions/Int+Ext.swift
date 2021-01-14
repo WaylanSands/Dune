@@ -8,8 +8,6 @@
 
 import Foundation
 
-
-
 extension Int {
     
     var roundedWithAbbreviations: String {

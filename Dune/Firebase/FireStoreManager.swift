@@ -1359,7 +1359,7 @@ struct FireStoreManager {
             
             userRef.getDocument { (snapshot, error) in
                 if error != nil {
-                    print("There was an error getting users document: \(error!)")
+                    print("There was an error getting users document: \(snapshot!)")
                 } else {
                     guard let data = snapshot?.data() else { return }
                     User.modelUser(data: data)

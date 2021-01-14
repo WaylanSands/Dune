@@ -9,6 +9,10 @@
 import UIKit
 import Firebase
 
+
+// This being the first app I have developed in Swift I started out with the intention of this
+// being a Singleton. As this is clearly not a singleton time needs to be put in to refactor this code.
+
 struct User {
     
     static var ID: String?

@@ -428,7 +428,7 @@
 		48437A34243F2A1500AF9905 /* CustomDatePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomDatePicker.swift; sourceTree = "<group>"; };
 		48437A36243F4B1E00AF9905 /* ChangeUsernameVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChangeUsernameVC.swift; sourceTree = "<group>"; };
 		48441C2E245036F60061180B /* EditingBooth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditingBooth.swift; sourceTree = "<group>"; };
-		4844916523CFCD9F000E13FA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = Dune/Assets.xcassets; sourceTree = "<group>"; };
+		4844916523CFCD9F000E13FA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		4848885C24D17868006E7D94 /* ListenerAccountBottomVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListenerAccountBottomVC.swift; sourceTree = "<group>"; };
 		4848885E24D186CD006E7D94 /* EditListenerVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditListenerVC.swift; sourceTree = "<group>"; };
 		4849CD6924F63014002979A7 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
@@ -438,8 +438,8 @@
 		484C7E2824C642A300AAB50E /* end.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = end.mp3; sourceTree = "<group>"; };
 		484D7830248CA6E900655C83 /* MentionTV.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MentionTV.swift; sourceTree = "<group>"; };
 		484D8682251301C1008543C0 /* Main.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; path = Main.strings; sourceTree = "<group>"; };
-		484D8683251301C3008543C0 /* LaunchScreen.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = LaunchScreen.strings; path = Onboarding/Storyboards/LaunchScreen.strings; sourceTree = "<group>"; };
-		484D8684251301FB008543C0 /* Localizable.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Localizable.strings; path = Dune/Onboarding/Storyboards/Localizable.strings; sourceTree = "<group>"; };
+		484D8683251301C3008543C0 /* LaunchScreen.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; path = LaunchScreen.strings; sourceTree = "<group>"; };
+		484D8684251301FB008543C0 /* Localizable.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; path = Localizable.strings; sourceTree = "<group>"; };
 		484DCAAB244FB8EC001118E9 /* DraftEpisodeCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraftEpisodeCell.swift; sourceTree = "<group>"; };
 		484DCAAD244FD717001118E9 /* Date+Ext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Date+Ext.swift"; sourceTree = "<group>"; };
 		484E411724CFD18F00AE7F58 /* DisplayNameVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayNameVC.swift; sourceTree = "<group>"; };
@@ -952,11 +952,31 @@
 			path = "Feedback survey";
 			sourceTree = "<group>";
 		};
+		48C3BA7825AFF27700133A93 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				4844916523CFCD9F000E13FA /* Assets.xcassets */,
+				484D8683251301C3008543C0 /* LaunchScreen.strings */,
+				484D8684251301FB008543C0 /* Localizable.strings */,
+				48F8DDCC2435856D00A3971E /* Dune.entitlements */,
+				484C7E2824C642A300AAB50E /* end.mp3 */,
+				48B9C15D25411785006D35CB /* lottieWave.json */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		48C3BA7925AFF2D000133A93 /* Intro */ = {
+			isa = PBXGroup;
+			children = (
+				48AEB3D624ADEAC80082C319 /* IntroVC.swift */,
+				48AEB3D824ADEFD50082C319 /* IntroScreenView.swift */,
+			);
+			path = Intro;
+			sourceTree = "<group>";
+		};
 		48DC720223C6E998002AB21F = {
 			isa = PBXGroup;
 			children = (
-				484D8684251301FB008543C0 /* Localizable.strings */,
-				4844916523CFCD9F000E13FA /* Assets.xcassets */,
 				48DC720D23C6E998002AB21F /* Dune */,
 				48DC720C23C6E998002AB21F /* Products */,
 				693C5F3B0B0AA5A9EB8389EB /* Pods */,
@@ -976,20 +996,16 @@
 		48DC720D23C6E998002AB21F /* Dune */ = {
 			isa = PBXGroup;
 			children = (
-				484C7E2824C642A300AAB50E /* end.mp3 */,
-				48B9C15D25411785006D35CB /* lottieWave.json */,
-				480A9F60244172CD001A5F4B /* Firebase */,
-				48FE95F8243B4EA20085C2EC /* Custom Kit */,
-				48F8DDCC2435856D00A3971E /* Dune.entitlements */,
+				48C3BA7925AFF2D000133A93 /* Intro */,
 				48DC720E23C6E998002AB21F /* AppDelegate.swift */,
 				48BBCDAC247CBF7A00A1BFB5 /* SceneDelegate.swift */,
 				48852A7F24D8FDBA007B44F6 /* DuneDelegate.swift */,
-				48DC721823C6E999002AB21F /* LaunchScreen.storyboard */,
-				484D8683251301C3008543C0 /* LaunchScreen.strings */,
-				48DC7643245F729600FC3575 /* LaunchVC.swift */,
-				48AEB3D624ADEAC80082C319 /* IntroVC.swift */,
-				48AEB3D824ADEFD50082C319 /* IntroScreenView.swift */,
 				486B9A1D24AC96DB008F98D4 /* DynamicLinkHandler.swift */,
+				48DC721823C6E999002AB21F /* LaunchScreen.storyboard */,
+				48DC7643245F729600FC3575 /* LaunchVC.swift */,
+				48C3BA7825AFF27700133A93 /* Resources */,
+				480A9F60244172CD001A5F4B /* Firebase */,
+				48FE95F8243B4EA20085C2EC /* Custom Kit */,
 				480907AD242AA5C3008FC504 /* Custom Animations */,
 				4801619A23C7F6170038318B /* Custom style */,
 				480485E023CBB5AF00F8CA89 /* Extensions */,
@@ -1661,7 +1677,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.2;
+				MARKETING_VERSION = 1.0.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.dailyune.Dune;
 				PRODUCT_NAME = "Dune Dev";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1688,7 +1704,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.2;
+				MARKETING_VERSION = 1.0.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.dailyune.Dune;
 				PRODUCT_NAME = "Dune Dev";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1838,7 +1854,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.2;
+				MARKETING_VERSION = 1.0.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.dailyune.Dune;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1865,7 +1881,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.2;
+				MARKETING_VERSION = 1.0.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.dailyune.Dune;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";

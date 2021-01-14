@@ -651,6 +651,34 @@ extension FireStoreManager {
         }
     }
     
+    static func addIsPrivate() {
+        print("Should")
+        let programRef = db.collection("programs")
+            
+        programRef.getDocuments(completion: { (snapshot, error) in
+            if error != nil {
+                let docs = snapshot!.documents
+                for each in docs {
+                    let data = each.data()
+                    if data["isPrivate"] == nil {
+                        print("will")
+                        updateDoc(doc: data["ID"] as! String)
+                    }
+                }
+
+            }
+        })
+    }
+    
+    static func updateDoc(doc: String) {
+       
+        let programRef = db.collection("programs").document(doc)
+        
+        programRef.updateData(["isPrivate" : false])
+        print("Done")
+        
+    }
+    
     // Fetch 'another' batch of program's episodes, ordered by date, starting from the last snapshot
 //    static func fetchProgramsEpisodesFrom(with programID: String, lastSnapshot: DocumentSnapshot, limit: Int, completion: @escaping ([QueryDocumentSnapshot]) -> ()) {
 //

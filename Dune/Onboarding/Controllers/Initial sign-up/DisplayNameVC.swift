@@ -158,6 +158,7 @@ class DisplayNameVC: UIViewController {
             
             User.ID = uid
             CurrentProgram.rep = 0
+            CurrentProgram.isPrivate = false
             CurrentProgram.isPublisher = false
             CurrentProgram.hasMentions = false
             CurrentProgram.repMethods = [String]()
@@ -202,6 +203,7 @@ class DisplayNameVC: UIViewController {
                         "hasMentions" : false,
                         "ownerID" : User.ID!,
                         "subscriberIDs": [],
+                        "isPrivate" : false,
                         "programIDs" : [],
                         "hasIntro" : false,
                         "repMethods" : [],

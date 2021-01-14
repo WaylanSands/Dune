@@ -178,6 +178,7 @@ class AccountTypeVC: UIViewController {
             CurrentProgram.tags = [String]()
             User.completedOnBoarding = true
             CurrentProgram.hasIntro = false
+            CurrentProgram.isPrivate = false
             CurrentProgram.hasMentions = false
             CurrentProgram.isPublisher = false
             CurrentProgram.programIDs = [String]()
@@ -237,6 +238,7 @@ class AccountTypeVC: UIViewController {
                         "ownerID" : User.ID!,
                         "addedByDune": false,
                         "subscriberIDs": [],
+                        "isPrivate" : false,
                         "programIDs" : [],
                         "hasIntro" : false,
                         "repMethods" : [],
@@ -358,6 +360,7 @@ class AccountTypeVC: UIViewController {
             CurrentProgram.rep = 0
             User.completedOnBoarding = true
             CurrentProgram.hasIntro = false
+            CurrentProgram.isPrivate = false
             CurrentProgram.isPublisher = false
             CurrentProgram.hasMentions = false
             CurrentProgram.tags = [String]()
@@ -414,6 +417,7 @@ class AccountTypeVC: UIViewController {
                         "hasMentions" : false,
                         "subscriberCount" : 0,
                         "ownerID" : User.ID!,
+                        "isPrivate" : false,
                         "addedByDune": false,
                         "subscriberIDs": [],
                         "programIDs" : [],

@@ -18,7 +18,47 @@ class EpisodeCellRegLink: EpisodeCell {
         view.contentMode = .scaleToFill
         return view
     }()
-   
+    
+    override func prepareForReuse() {
+        captionTextView.numberOfLines = 3
+        regularPreview.imageButton.setImage(nil, for: .normal)
+     }
+    
+    override func normalSetUp(episode: Episode) {
+        
+        includeRichLink()
+        setupLikeButtonAndCounterFor(episode: episode)
+        
+        FileManager.getImageWith(imageID: episode.imageID) { image in
+            DispatchQueue.main.async {
+                self.programImageButton.setImage(image, for: .normal)
+            }
+        }
+        
+        listenCountLabel.text = episode.listenCount.roundedWithAbbreviations
+        programNameLabel.text = episode.programName
+        usernameButton.setTitle("@\(episode.username)", for: .normal)
+        timeSinceReleaseLabel.text = episode.timeSince
+        captionTextView.text = episode.caption
+        episodeTags = episode.tags!
+        
+        createTagButtons()
+        setupProgressBar()
+        
+        DispatchQueue.main.async {
+            self.addGradient()
+            if self.captionTextView.lineCount() > 3 {
+                self.moreButtonGradient.isHidden = false
+                self.moreGradientView.isHidden = false
+                self.moreButton.isHidden = false
+            } else {
+                self.moreButtonGradient.isHidden = true
+                self.moreGradientView.isHidden = true
+                self.moreButton.isHidden = true
+            }
+        }
+    }
+    
     override func configureViews() {
         contentView.addSubview(programImageButton)
         programImageButton.translatesAutoresizingMaskIntoConstraints = false
@@ -196,49 +236,6 @@ class EpisodeCellRegLink: EpisodeCell {
         timeSinceReleaseLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor,constant: -16).isActive = true
     }
     
-    override func prepareForReuse() {
-        captionTextView.numberOfLines = 3
-     }
-    
-    override func normalSetUp(episode: Episode) {
-        
-        // This works better in the cellForRowAt function but not sure of the right way to implement it
-        if episode.richLink != self.episode.richLink {
-            regularPreview.imageButton.setImage(nil, for: .normal)
-        }
-        
-        includeRichLink()
-        setupLikeButtonAndCounterFor(episode: episode)
-        
-        FileManager.getImageWith(imageID: episode.imageID) { image in
-            DispatchQueue.main.async {
-                self.programImageButton.setImage(image, for: .normal)
-            }
-        }
-        
-        listenCountLabel.text = episode.listenCount.roundedWithAbbreviations
-        programNameLabel.text = episode.programName
-        usernameButton.setTitle("@\(episode.username)", for: .normal)
-        timeSinceReleaseLabel.text = episode.timeSince
-        captionTextView.text = episode.caption
-        episodeTags = episode.tags!
-        
-        createTagButtons()
-        setupProgressBar()
-        
-        DispatchQueue.main.async {
-            self.addGradient()
-            if self.captionTextView.lineCount() > 3 {
-                self.moreButtonGradient.isHidden = false
-                self.moreGradientView.isHidden = false
-                self.moreButton.isHidden = false
-            } else {
-                self.moreButtonGradient.isHidden = true
-                self.moreGradientView.isHidden = true
-                self.moreButton.isHidden = true
-            }
-        }
-    }
     
     func includeRichLink() {
     
